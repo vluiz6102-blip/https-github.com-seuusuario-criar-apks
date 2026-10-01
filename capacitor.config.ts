@@ -1,9 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.vluiz6102.criarapks',
+  appId: 'com.carreirafc.simulador',
   appName: 'Carreira FC',
-  webDir: 'dist'
+  webDir: 'www',
+  android: {
+    backgroundColor: '#0f1f2a'
+  }
 };
 
 export default config;
