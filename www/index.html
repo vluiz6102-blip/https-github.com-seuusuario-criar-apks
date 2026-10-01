@@ -346,6 +346,27 @@ function compFind(){
 
 function compSchedule(){(S.comps||[]).forEach((c,i)=>{if(c.active&&c.nextAt==null)c.nextAt=3+i*2})}
 
+function compPlay(){
+ if(!S||S.phase!='comp'||!Number.isInteger(S.cmp))return;
+ const c=S.comps?.[S.cmp];
+ if(!c||!c.active){S.phase='pre';S.cmp=null;render();return}
+ if(c.nextAt!=null&&c.nextAt>S.r&&!c.last){S.phase='pre';S.cmp=null;render();return}
+ S.nt=[];
+ compResult(c);
+ if(!c.last)return;
+ c.last.stage=c.last.stage||compStage(c);
+ c.last.opp=c.opp||compOpp(c);
+ c.opp=null;
+ if(c.last.g>0){sfx('goal');first('gc','Primeiro gol em '+c.name)}
+ c.last.rank=[...c.sc].sort((a,b)=>b.g-a.g).findIndex(x=>x.me)+1;
+ compAdvance(c);
+ c.last.ended=!c.active;
+ c.last.done=1;
+ const left=Math.max(1,18-S.r),rem=Math.max(1,c.max-c.round);
+ c.nextAt=c.active?S.r+Math.max(1,Math.floor(left/(rem+1))):null;
+ chkF();render()
+}
+
 function compV(){const c=S.comps?.[S.cmp];if(!c)return '<div class="card"><h2>Competições</h2><p class="mu">Nenhum torneio pendente.</p></div>';const l=c.last&&c.last.done?c.last:null;c.sc=c.sc||[];if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name,g:0,me:1});const top=[...c.sc].filter(x=>x&&x.g>0).sort((a,b)=>b.g-a.g).slice(0,5);c.opp=c.opp||compOpp(c);return ntV()+`<div class="card wc"><span class="round">${c.name}</span><h2>${l?l.stage:compStage(c)}</h2>${l?`<div class="sc">${S.club.n} ${l.my} × ${l.og} ${l.opp}</div><p class="mu">${l.pen?(l.win?'Classificado nos pênaltis. ':'Eliminado nos pênaltis. '):''}${l.played?'Sua atuação: '+l.g+' gol(s) · '+l.as+' assistência(s) · '+l.played+' min':'Você não entrou em campo.'}</p>`:`<p class="mu">Próximo adversário: ${c.opp}</p>`}<div style="margin-top:8px"><b>Artilharia</b>${top.length?'':'<p class="mu">Nenhum gol marcado ainda.</p>'}${top.map((x,i)=>`<div class="row"><span>${i+1}. ${x.n}${x.me?' ★':''}</span><b>${x.g}</b></div>`).join('')}</div>${l?(l.ended?'<p style="margin-top:8px"><b>Torneio encerrado para o '+S.club.n+'.</b></p>':'')+'<button class="btn go" onclick="next()">Continuar</button>':'<button class="btn go" onclick="compPlay()">Jogar partida</button>'}</div>`}
 function join(c){
  if(!S||!c||!Number.isFinite(+c.tier)||+c.tier<0||+c.tier>VZ)return;
