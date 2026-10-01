@@ -70,6 +70,7 @@ tr.me td{color:var(--am);font-weight:700}
 .go{animation:pulse 2s infinite}
 .btn{animation:up .3s both}
 .still *{animation:none!important}
+ .pill{display:inline-block;border:1px solid var(--ln);border-radius:999px;padding:4px 8px;margin:3px;color:var(--mu)}
 </style>
 </head>
 <body>
@@ -174,12 +175,14 @@ const ADV=['Pedir conselho a um veterano','+mental, +moral',()=>{at('men',.3);mo
 EV.forEach(e=>e.o.length<3&&e.o.push(ADV));
 let S=null,tab='game';
 const fm=v=>{const a=Math.abs(v);return(v<0?'-':'')+(a>=1000?(a/1000).toFixed(1).replace('.',',')+' mi':Math.round(a)+' mil')};
-const ovr=()=>Math.round(AK.reduce((a,k,i)=>a+S.at[k]*OW[S.pos][i],0));
+const ovr=()=>Math.round(AK.reduce((a,k,i)=>a+(S.at?.[k]??50)*OW[S.pos][i],0));
+const ATTR_NAMES={fin:'Finalização',pas:'Passe',dri:'Drible',vel:'Velocidade',ace:'Aceleração',fis:'Físico',def:'Defesa',cru:'Cruzamento',con:'Controle',men:'Mentalidade',pos:'Posicionamento',res:'Resistência'};
+const PLAYER_STYLE=()=>{const a=S.at||{};if(S.pos=='GOL')return a.def>=a.men?'Paredão':'Goleiro seguro';if(S.pos=='ZAG')return a.def+a.fis>=a.pas+a.pos?'Xerife':'Zagueiro técnico';const q=[['Finalizador',a.fin+a.pos],['Driblador',a.dri+a.con],['Criador',a.pas+a.men],['Velocista',a.vel+a.ace],['Ponta',a.cru+a.vel],['Completo',AK.reduce((x,k)=>x+a[k],0)]];return q.sort((x,y)=>y[1]-x[1])[0][0]};
 const clubs=t=>LG[t].c.map(x=>{const[n,s]=x.split(':');return{n,s:+s+RI(-3,3)}});
 const pts=t=>t.w*3+t.d;
 function fix(teams){const a=teams.map((_,i)=>i),n=a.length,rs=[];for(let r=0;r<n-1;r++){const p=[];for(let i=0;i<n/2;i++)p.push([a[i],a[n-1-i]]);rs.push(p);a.splice(1,0,a.pop())}return rs.concat(rs.map(r=>r.map(([h,w])=>[w,h])))}
 function join(c){const tm=clubs(c.tier);let i=tm.findIndex(t=>t.n==c.n);if(i<0)i=RI(0,9);tm[i]={n:c.n,s:c.s};S.club=c;S.teams=tm;S.me=i;S.tbl=tm.map(()=>({w:0,d:0,l:0,gf:0,ga:0}));S.fx=fix(tm);S.r=0;S.ss={g:0,a:0,j:0,rt:0};S.last=null;S.ev=null;S.phase='pre'}
-function start(){const name=$('nm').value.trim()||'Jogador',pos=$('ps').value,st=$('st').value;S={v:3,name,pos,age:17,at:{},energy:90,morale:70,fame:0,money:0,inj:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal'};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);const c=clubs(0).find(x=>x.n==$('cl').value)||clubs(0)[0];c.tier=0;join(c);S.clubs=[{n:c.n,y:S.year}];first('f1','Primeiro clube profissional: '+c.n);tab='game';render()}
+function start(){const name=$('nm').value.trim()||'Jogador',pos=$('ps').value,st=$('st').value;S={v:4,name,pos,age:17,at:{},energy:90,morale:70,fame:0,money:0,inj:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',awards:[],marketPeak:0};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);S.marketPeak=mv();const c=clubs(0).find(x=>x.n==$('cl').value)||clubs(0)[0];c.tier=0;join(c);S.clubs=[{n:c.n,y:S.year}];first('f1','Primeiro clube profissional: '+c.n);tab='game';render()}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
 function strength(i){let s=S.teams[i].s;if(i==S.me)s+=(ovr()-s)*.1+(S.energy>80?1:S.energy<25?-3:(S.energy-60)/30)+(S.morale-60)/25+(S.coach-50)/50;return s}
@@ -197,13 +200,13 @@ function play(){
  if(min>0){rt=cl(6+g*1.1+as*.6+R(-.9,.9)+(my>op?.4:my<op?-.3:0)+(o-S.club.s)/60,3,10);if(min<45)rt=6.5+(rt-6.5)/2;rt=Math.round(rt*10)/10;
   if(Math.random()<.01+(100-S.energy)/700){S.inj=RI(1,6);lines.push(['Lesão! Você fica fora por '+S.inj+' rodada(s).','y'])}
   S.ss.j++;S.ss.rt+=rt;S.ss.g+=g;S.ss.a+=as;S.tot.j++;S.tot.g+=g;S.tot.a+=as;
-  S.morale=cl(S.morale+(rt-6.5)*3+(my>op?3:my<op?-3:0));S.fame=cl(S.fame+Math.max(0,(rt-7)*1.2)+g*.8);S.energy=cl(S.energy-min/90*8);S.strk=g>0?(S.strk||0)+1:0;S.nog=g>0?0:(S.nog||0)+1;if(g>0)first('g1','Primeiro gol profissional');if(g>=3)first('ht','Primeiro hat-trick');rcd('mg',g,'Gols em uma partida');rcd('stk',S.strk,'Sequência de jogos marcando');rcd('sg',S.ss.g,'Gols na temporada');rcd('sa',S.ss.a,'Assistências na temporada');co((rt-6.5)*.8)
+  S.morale=cl(S.morale+(rt-6.5)*3+(my>op?3:my<op?-3:0));S.fame=cl(S.fame+Math.max(0,(rt-7)*1.2)+g*.8);S.energy=cl(S.energy-min/90*8);S.marketPeak=Math.max(S.marketPeak||0,mv());S.strk=g>0?(S.strk||0)+1:0;S.nog=g>0?0:(S.nog||0)+1;if(g>0)first('g1','Primeiro gol profissional');if(g>=3){first('ht','Primeiro hat-trick');S.awards.push('Hat-trick')}if(g>=5){toast('🔥 PARTIDA HISTÓRICA',S.name+' marcou '+g+' gols!');S.awards.push('5+ gols em uma partida')}rcd('mg',g,'Gols em uma partida');rcd('stk',S.strk,'Sequência de jogos marcando');rcd('sg',S.ss.g,'Gols na temporada');rcd('sa',S.ss.a,'Assistências na temporada');co((rt-6.5)*.8)
  }else if(!S.inj)S.morale=cl(S.morale-2);
  mn(S.wage*12/18);
  S.last={h:S.teams[L.h].n,a:S.teams[L.a].n,gh:L.gh,ga:L.ga,lines,rt,g,as,min,inj:S.inj};
  S.r++;S.iv='';S.phase='post'
 }
-function train(k){if(S.inj>0)en(20);else if(k=='rest'){en(40);mo(3)}else{const f=(S.age<22?1.3:S.age<27?1:S.age<31?.7:.4)*(S.energy>40?1:.6),L={tec:['fin','pas','dri','con','cru'],fis:['fis','vel','ace','res'],men:['men','pos'],pos:['fin','pas']}[k]||['fin','pas'];let m=k=='pers'?1.7:1,c=k=='pers'?10:6;if(k=='pers')mn(-30);L.slice(0,k=='pers'?3:2).forEach(a=>S.at[a]=cl(S.at[a]+R(.3,1)*f*m,25,99));en(-c);co(.4)}play();render()}
+function train(k){if(S.inj>0){en(20);mo(-1)}else if(k=='rest'){en(40);mo(3)}else if(k=='ment'){at('men',.8);mo(2);en(-4);co(.5)}else if(k=='pos'){const m={ATA:['fin','pos'],MEI:['pas','con'],ZAG:['def','pos'],GOL:['def','men']}[S.pos]||['pas','con'];m.forEach(a=>S.at[a]=cl(S.at[a]+R(.5,1.1),25,99));en(-6);co(.5)}else{const f=(S.age<22?1.3:S.age<27?1:S.age<31?.7:.4)*(S.energy>40?1:.6),L={tec:['fin','pas','dri','con','cru'],fis:['fis','vel','ace','res'],men:['men','pos'],pos:['fin','pas']}[k]||['fin','pas'];let m=k=='pers'?1.7:1,c=k=='pers'?10:6;if(k=='pers')mn(-30);L.slice(0,k=='pers'?3:2).forEach(a=>S.at[a]=cl(S.at[a]+R(.3,1)*f*m,25,99));en(-c);co(.4)}play();render()}
 function itv(k){const t=[['Você elogiou o grupo e o vestiário agradece.',()=>mo(3)],['Você assumiu a responsabilidade e a torcida gostou.',()=>{fa(2);at('men',.2)}],['Você provocou o rival e a polêmica está garantida.',()=>{fa(4);mo(-2)}]][k];t[1]();S.iv=t[0];render(1)}
 function next(){if(S.r>=18)endSeason();else{S.phase='pre';const ok=EV.map((e,i)=>i).filter(i=>!EV[i].c||EV[i].c());S.ev=Math.random()<.22?ok[RI(0,ok.length-1)]:null}render()}
 function pick(i){EV[S.ev].o[i][2]();S.ev=null;render()}
@@ -211,7 +214,7 @@ function order(){return S.teams.map((_,i)=>i).sort((a,b)=>{const A=S.tbl[a],B=S.
 function endSeason(){
  const pos=order().indexOf(S.me)+1,avg=S.ss.j?S.ss.rt/S.ss.j:0;
  S.hist.push({y:S.year,c:S.club.n,t:TIERS[S.club.tier],p:pos,g:S.ss.g,a:S.ss.a,j:S.ss.j,avg:avg.toFixed(1)});
- if(pos==1)S.titles++;
+ if(pos==1){S.titles++;S.tro.push({n:'Campeonato: '+TIERS[S.club.tier],y:S.year,c:S.club.n,p:'Brasil'})}
  ['tec','fis','men'].forEach(k=>{const a=S.age;let d=a<22?R(2,4.5):a<27?R(.5,2.5):a<31?R(-1,1):R(-3,.3);if(k=='fis'&&a>=29)d-=R(.5,1.5);if(k=='men'&&a>=27)d+=R(.5,1.5);S[k]=cl(S[k]+d,25,99)});
  S.age++;S.year++;S.inj=0;S.energy=100;S.yrs=Math.max(0,S.yrs-1);
  const sc=ovr()+(avg-6.5)*4+S.fame/10,of=[],pool=[],seen={},ex=[],y=S.year-1;
@@ -233,7 +236,8 @@ function co(n){S.coach=cl(S.coach+n)}
 function reset(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;render()}
 const bar=(l,v,c)=>`<div class="bar"><span>${l} ${Math.round(v)}</span><div><i style="width:${v}%;background:${c}"></i></div></div>`;
 function head(){return`<div class="card"><div class="head"><div class="ovr">${ovr()}<small>geral</small></div><div><h1>${S.name}</h1><div class="mu">${POSN[S.pos]}, ${S.age} anos</div><div class="mu">${S.club.n} · ${TIERS[S.club.tier]}</div>${S.inj>0?'<span class="tag">Lesionado</span>':''}</div></div>${bar('Energia',S.energy,S.energy<35?'var(--rd)':'var(--gr)')}${bar('Moral',S.morale,'var(--am)')}${bar('Fama',S.fame,'#6fa8dc')}<div class="mu" style="margin-top:8px">Técnica ${Math.round(S.tec)} · Físico ${Math.round(S.fis)} · Mental ${Math.round(S.men)}</div><div class="row" style="margin-top:6px"><span>Saldo em conta</span><b class="mny ${S.lm==null||S.lm==S.money?'':S.money>S.lm?'gain':'loss'}">R$ ${fm(S.money)}</b></div></div>`}
-const tabs=()=>`<div class="tabs">${[['game','Jogo'],['tbl','Tabela'],['news','Notícias'],['car','Carreira']].map(([k,l])=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';render()">${l}</button>`).join('')}</div>`;
+const tabs=()=>`<div class="tabs">${[['game','🎮','Jogo'],['tbl','📊','Tabela'],['ply','🧍','Jogador'],['news','📰','Notícias'],['car','📖','Carreira']].map(([k,i,l])=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';render()">${i}<br><small>${l}</small></button>`).join('')}</div>`;
+const playerPanel=()=>`<div class="card"><h2>${PLAYER_STYLE()}</h2><div class="mu">Técnico: <b>${Math.round(S.coach)}/100</b> · Valor: <b>R$ ${fm(mv())}</b></div>${AK.map(k=>bar(ATTR_NAMES[k],S.at[k],'var(--gr)')).join('')}</div><div class="card"><h2>Carreira</h2><div class="row"><span>Jogos</span><b>${S.tot.j}</b></div><div class="row"><span>Gols</span><b>${S.tot.g}</b></div><div class="row"><span>Assistências</span><b>${S.tot.a}</b></div><div class="row"><span>Títulos</span><b>${S.titles}</b></div></div>`;
 const conf=e=>`<div class="cf">${Array.from({length:10},(_,i)=>`<span style="--x:${5+i*10}%;--d:${(i*.15).toFixed(2)}s">${e}</span>`).join('')}</div>`;
 const art=a=>`<div class="art">${a.map(x=>`<span>${x}</span>`).join('')}</div>`;
 function gameV(){
@@ -273,11 +277,12 @@ function save(){try{localStorage.setItem('carreirafc2',JSON.stringify(S))}catch(
 function render(still){
  const A=$('app');A.className=still?'still':'';if(!S){A.innerHTML=intro();return}
  let h=head();
- if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():careerV());
+ if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='ply'?playerPanel():tab=='news'?newsV():careerV());
  A.innerHTML=h;S.lm=S.money;save();
  if(!still){window.scrollTo(0,0);if(document.querySelectorAll)document.querySelectorAll('.btn').forEach((b,i)=>b.style.animationDelay=i*.05+'s')}
 }
 try{S=JSON.parse(localStorage.getItem('carreirafc2'))}catch(e){S=null}
+if(S){S.at=S.at||{};S.awards=S.awards||[];S.marketPeak=S.marketPeak||0;S.v=4}
 if(S&&(!S.teams||!S.club||!S.fx||!S.tbl))S=null;
 render();
 </script>
