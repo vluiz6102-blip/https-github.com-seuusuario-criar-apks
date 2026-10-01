@@ -1,20 +1,19 @@
 {
-  "name": "criar-apks",
+  "name": "carreira-fc",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "description": "Carreira FC - simulador de carreira de futebol",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "node -e \"require('fs').copyFileSync('index.html','www/index.html')\"",
+    "cap": "npx cap sync",
+    "android:add": "npx cap add android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/core": "7.4.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.7"
+    "@capacitor/cli": "7.4.3",
+    "@capacitor/android": "7.4.3"
   }
 }
