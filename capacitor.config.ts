@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Carreira FC',
   webDir: 'www',
   android: {
-    backgroundColor: '#0f1f2a'
+    backgroundColor: '#000000'
   }
 };
 
