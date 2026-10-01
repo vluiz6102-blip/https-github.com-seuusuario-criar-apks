@@ -192,8 +192,27 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 <div id="app"></div>
 <script>
 const $=id=>document.getElementById(id);
-let audioOK=true,AC=null;try{audioOK=localStorage.getItem('carreirafc_som')!='0'}catch(e){}
-function sfx(type){if(!audioOK)return;try{const C=window.AudioContext||window.webkitAudioContext;AC=AC||new C();const c=AC,o=c.createOscillator(),g=c.createGain(),now=c.currentTime,seq=type=='trophy'?[523,659,784,1047]:type=='correct'?[659,784,988]:type=='goal'?[392,523,659]:[220,196];o.connect(g);g.connect(c.destination);seq.forEach((f,i)=>o.frequency.setValueAtTime(f,now+i*.12));g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.12,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+seq.length*.12+.1);o.start();o.stop(now+seq.length*.12+.15)}catch(e){}}
+let audioOK=true,AC=null,introStep=0;try{audioOK=localStorage.getItem('carreirafc_som')!='0'}catch(e){}
+function sfx(type){
+ if(!audioOK)return;
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;
+  AC=AC||new C();const c=AC;
+  if(c.state==='suspended')c.resume();
+  const M={start:[[392,.08],[523,.08],[659,.12],[784,.18]],click:[[620,.035]],train:[[330,.07],[440,.09]],rest:[[260,.08],[220,.14]],whistle:[[880,.06],[1175,.14]],goal:[[392,.07],[523,.07],[659,.09],[784,.12],[988,.18]],correct:[[659,.07],[784,.09],[988,.16]],wrong:[[260,.1],[196,.18]],injury:[[220,.12],[175,.2]],card:[[740,.06],[520,.08],[330,.18]],transfer:[[523,.08],[659,.08],[784,.08],[1047,.2]],trophy:[[523,.08],[659,.08],[784,.08],[1047,.12],[1319,.24]]};
+  const seq=M[type]||M.click,now=c.currentTime;
+  seq.forEach((x,i)=>{
+   const o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
+   o.type=type==='whistle'?'square':(type==='goal'||type==='trophy'?'triangle':'sine');
+   o.frequency.setValueAtTime(x[0],t);
+   g.gain.setValueAtTime(.0001,t);
+   g.gain.exponentialRampToValueAtTime(type==='click'?.045:.10,t+.008);
+   g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
+   o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
+  });
+ }catch(e){}
+}
+document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('button'))sfx('click')},{passive:true});
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('carreirafc_som',audioOK?'1':'0')}catch(e){}render(1)}
 const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
@@ -420,7 +439,7 @@ function join(c){
 
 let START_OFFERS=[];
 function makeStartOffers(){const pool=[];LG.forEach((l,t)=>{if(t>2)return;l.c.forEach(x=>{const[n,s]=x.split(':');pool.push({n,tier:t,s:+s})})});const of=[],used={};const pos=$('ps')?.value||'ATA';const tiers=[0,1,2].sort(()=>Math.random()-.5);pool.sort(()=>Math.random()-.5);tiers.forEach(t=>{const choices=pool.filter(c=>c.tier==t&&!used[c.n]);if(choices.length&&of.length<3){const c=choices[RI(0,choices.length-1)];used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});if(of.length<3)pool.filter(c=>!used[c.n]).slice(0,3-of.length).forEach(c=>{used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})});if(Math.random()<.28){const v=LG[VZ].c[RI(0,LG[VZ].c.length-1)].split(':');of[RI(0,of.length-1)]={n:v[0],tier:VZ,s:+v[1],w:0,varzea:true}}return of}
-function chooseStart(o){if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
+function chooseStart(o){sfx('transfer');if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
 function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);chooseStart(o)}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
@@ -432,6 +451,7 @@ const MX=[['Bola na trave! A bola explode no travessão.','o',0],['Gol seu anula
 function play(){
  if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.r>=18)return;
  sanitizeState();
+ sfx('whistle');
  if(!Array.isArray(S.fx)||!Array.isArray(S.fx[S.r]))S.fx=fix(S.teams);
  const round=S.fx[S.r];
  if(!Array.isArray(round))return;
@@ -467,7 +487,7 @@ function play(){
  }
  if(min>0){
    for(let i=0;i<2;i++)if(Math.random()<.35){const x=MX[RI(0,MX.length-1)];ev.push({m:RI(5,88),t:'x',x:x[0],c:x[1]});adj+=x[2]}
-   if(Math.random()<.012){ev.push({m:RI(30,88),t:'x',x:'Cartão vermelho! Você é expulso e cumpre suspensão na próxima rodada.',c:'o'});adj-=1.5;mo(-8);co(-4);S.sus=1}
+   if(Math.random()<.012){sfx('card');ev.push({m:RI(30,88),t:'x',x:'Cartão vermelho! Você é expulso e cumpre suspensão na próxima rodada.',c:'o'});adj-=1.5;mo(-8);co(-4);S.sus=1}
    if(min<90)ev.push({m:90-min,t:'x',x:'Substituição: você entra no decorrer do jogo.',c:''});
  }
  ev.sort((a,b)=>a.m-b.m).forEach(e=>lines.push(e.t=='x'?[e.m+"' "+e.x,e.c]:e.t=='g'?[e.m+"' Gol seu! Você balança a rede.",'y']:e.t=='a'?[e.m+"' Gol do "+cn+', com assistência sua.','y']:e.t=='t'?[e.m+"' Gol do "+cn+'.','']:[e.m+"' Gol do "+opn+'.','o']));
@@ -476,7 +496,7 @@ function play(){
   if(min<45)rt=6.5+(rt-6.5)/2;
   rt=Math.round(rt*10)/10;
   const ir=(.008+(S.energy<25?(25-S.energy)/400:(100-S.energy)/1500)+(S.age>30?(S.age-30)*.002:0)+(S.ih||0)*.004)*(S.prot?.4:1);
-  if(Math.random()<ir){const r=Math.random();S.inj=r<.6?1:r<.9?RI(2,4):RI(5,10);S.ih=(S.ih||0)+1;mo(-5);lines.push(['Lesão '+(S.inj==1?'leve':S.inj<=4?'moderada':'grave')+'! Você fica fora por '+S.inj+' rodada(s).','y'])}
+  if(Math.random()<ir){sfx('injury');const r=Math.random();S.inj=r<.6?1:r<.9?RI(2,4):RI(5,10);S.ih=(S.ih||0)+1;mo(-5);lines.push(['Lesão '+(S.inj==1?'leve':S.inj<=4?'moderada':'grave')+'! Você fica fora por '+S.inj+' rodada(s).','y'])}
   S.ss=S.ss&&typeof S.ss=='object'?S.ss:{g:0,a:0,j:0,rt:0};
   S.ss.j++;S.ss.rt+=rt;S.ss.g+=g;S.ss.a+=as;S.tot.j++;S.tot.g+=g;S.tot.a+=as;
   S.morale=cl(S.morale+(rt-6.5)*3+(my>op?3:my<op?-3:0)+(S.cap?.5:0));
@@ -505,6 +525,7 @@ function train(k){
  sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
  if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
  S.nt=[];
+ sfx(k=='rest'?'rest':'train');
  if(S.inj>0)en(20);
  else if(k=='rest'){en(40);mo(3)}
  else if(k=='prev'){S.prot=1;en(8);co(.2)}
@@ -661,7 +682,7 @@ function keep(){if(!S||S.phase!='end')return;S.nt=[];join({n:S.club.n,tier:S.clu
 function retire(){if(!S||S.phase!='end')return;S.phase='retired';render()}
 
 function co(n){S.coach=cl(S.coach+n)}
-function reset(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];render()}
+function reset(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=0;render()}
 const bar=(l,v,c)=>`<div class="bar"><span>${l} ${Math.round(v)}</span><div><i style="width:${v}%;background:${c}"></i></div></div>`;
 function head(){return`<div class="card"><div class="head"><div class="ovr">${ovr()}<small>geral</small></div><div><h1>${S.name}</h1><div class="mu">${POSN[S.pos]}, ${S.age} anos</div><div class="mu">${S.club.n} · ${TIERS[S.club.tier]}</div>${S.inj>0?'<span class="tag">Lesionado</span>':S.sus>0?'<span class="tag">Suspenso</span>':''}</div></div>${bar('Energia',S.energy,S.energy<35?'var(--rd)':'var(--gr)')}${bar('Moral',S.morale,'var(--am)')}${bar('Fama',S.fame,'#6fa8dc')}<div style="margin-top:8px"><span class="pill">${STY()}</span><span class="pill">${rep()}</span>${S.cap?'<span class="pill">© Capitão</span>':''}<span class="pill">Valor R$ ${fm(mv())}</span></div><div class="mu" style="margin-top:8px">Técnica ${Math.round(S.tec)} · Físico ${Math.round(S.fis)} · Mental ${Math.round(S.men)}</div><div class="row" style="margin-top:6px"><span>Saldo em conta</span><b class="mny ${S.lm==null||S.lm==S.money?'':S.money>S.lm?'gain':'loss'}">R$ ${fm(S.money)}</b></div></div>`}
 const sndB=()=>`<div class="sound"><button class="chip" onclick="toggleSound()">${audioOK?'🔊 Som ligado':'🔇 Som desligado'}</button></div>`;
@@ -727,7 +748,13 @@ function playerV(){const l=['Muito ruim','Ruim','Normal','Boa','Ótima','Excelen
 function endV(){const m=S.sum;return ntV()+`<div class="card">${m.champ?conf('🎉'):''}${art([m.champ?'🏆':'📅','🎉'])}<h2>Fim da temporada ${S.year-1}</h2><p>${m.champ?'Seu time foi campeão!':'Seu time terminou em '+m.pos+'º lugar.'}</p>${m.ex.map(x=>`<p>${x}</p>`).join('')}<p class="mu">${m.j} jogos · ${m.g} gols · ${m.a} assistências · nota média ${m.avg}</p></div><div class="card">${art(['✈️','💼'])}<h2>Seu futuro</h2>${S.yrs>0?`<button class="btn" onclick="keep()"><b>Cumprir o contrato</b><span>Restam ${S.yrs} ano(s) · R$ ${fm(S.wage)}/mês</span></button>`:''}<button class="btn" onclick="stay(2)"><b>Ficar no ${S.club.n}</b><span>Renovar por 2 anos · R$ ${fm(S.stayW)}/mês</span></button><button class="btn" onclick="stay(4)"><b>Renovar por 4 anos</b><span>Salário 12% maior · R$ ${fm(Math.round(S.stayW*1.12))}/mês</span></button>${S.offers.map((o,i)=>`<button class="btn" onclick="go(${i})"><b>${o.n}</b><span>${o.pre?'Pré-contrato assinado · ':''}${TIERS[o.tier]} · 3 anos · R$ ${fm(o.w)}/mês${o.role?`<br>${o.role} · camisa ${o.num}`:''}</span></button>`).join('')}${S.age>=32?`<button class="btn" onclick="retire()"><b>Aposentar</b><span>Encerrar a carreira aos ${S.age} anos</span></button>`:''}</div>`}
 const phrase=()=>S.titles>=10?'Uma carreira marcada por títulos e grandes decisões.':S.tot.g>=250?'Uma carreira construída com gols e regularidade.':(S.sel||0)>=40?'Um atleta que brilhou também com a camisa da seleção.':S.clubs.length>=6?'Uma carreira de muitas estradas e muitos desafios.':S.clubs.length<=2?'Um jogador que virou símbolo de poucos clubes.':'Uma carreira de superação, trabalho e boas histórias.';
 function retV(){return`<div class="card">${conf('🏆')}${art(['🏅','🏆'])}<h2>Fim de carreira</h2><p>${S.name} se aposentou aos ${S.age} anos como <b>${rep()}</b>.</p><p class="mu" style="margin:6px 0">${phrase()}</p>${rows([['Jogos',S.tot.j],['Gols',S.tot.g],['Assistências',S.tot.a],['Títulos',S.titles],['Clubes',S.clubs.length],['Patrimônio','R$ '+fm(S.money)]])}<button class="btn go" onclick="reset()">Começar nova carreira</button></div>${resV()}${trV()}${tlV()}`}
-function intro(){const o=a=>a.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');if(!START_OFFERS.length)START_OFFERS=makeStartOffers();return`<div class="card">${art(['⚽','🏆','🌍'])}<h1 style="font-size:30px">Carreira FC</h1><p class="mu">Você começa aos 17 anos. Clubes podem apostar em você antes da fama.</p><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Seu nome"></label><label>Posição<select id="ps">${o(Object.keys(POSN).map(k=>[k,POSN[k]]))}</select></label><label>Ponto forte<select id="st">${o([['tec','Técnica'],['fis','Físico'],['men','Mental']])}</select></label><h3 style="margin-top:14px">Clubes interessados em você</h3>${START_OFFERS.map((x,i)=>`<button class="btn" onclick="start(${i})"><b>${x.n}</b><span>${TIERS[x.tier]} · ${x.varzea?'Várzea · sem salário fixo':'Profissional · R$ '+fm(x.w)+'/mês'}</span></button>`).join('')}</div>`}
+function intro(){
+ const o=a=>a.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
+ if(introStep===0)return '<div class="card" style="text-align:center;padding:28px 18px">'+art(['⚽','🏆','🌎'])+'<div class="mu" style="letter-spacing:2px">UM JOGO CRIADO NO BRASIL</div><h1 style="font-size:38px;margin:8px 0">CARREIRA FC</h1><p style="font-size:18px;margin:8px 0 18px">Sua carreira começa aqui.</p><div class="card" style="background:#050505;margin:12px 0;padding:18px"><div class="mu">Criado e desenvolvido por</div><h2 style="margin:6px 0">Victor Maia</h2><p class="mu">Um simulador de carreira de futebol feito para acompanhar sua jornada, do primeiro contrato ao topo do mundo.</p></div><button class="btn go" onclick="beginGame()"><b>COMEÇAR CARREIRA</b><span>Escolher nome, posição e clube</span></button><p class="mu" style="margin-top:16px;font-size:12px">Carreira FC · edição independente</p></div>';
+ if(!START_OFFERS.length)START_OFFERS=makeStartOffers();
+ return '<div class="card">'+art(['⚽','🏆','🌍'])+'<h1 style="font-size:30px">Carreira FC</h1><p class="mu">Você começa aos 17 anos. Clubes podem apostar em você antes da fama.</p><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Seu nome"></label><label>Posição<select id="ps">'+o(Object.keys(POSN).map(k=>[k,POSN[k]]))+'</select></label><label>Ponto forte<select id="st">'+o([['tec','Técnica'],['fis','Físico'],['men','Mental']])+'</select></label><h3 style="margin-top:14px">Clubes interessados em você</h3>'+START_OFFERS.map((x,i)=>'<button class="btn" onclick="start('+i+')"><b>'+x.n+'</b><span>'+TIERS[x.tier]+' · '+(x.varzea?'Várzea · sem salário fixo':'Profissional · R$ '+fm(x.w)+'/mês')+'</span></button>').join('')+'</div>';
+}
+function beginGame(){introStep=1;sfx('start');render(1)}
 function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
  if(w.q==0)return`<div class="card wc">${art(['🇧🇷','🏆'])}<span class="round">${WCR[w.r]}</span><h2>Brasil x ${w.opp[w.r]}</h2><p>Copa do Mundo ${S.year-1}. ${w.r<3?'Pontos no grupo: '+w.pts+'. ':'Jogo eliminatório: quem perder está fora. '}Como o Brasil vai jogar?</p><button class="btn" onclick="wcPlay(0)"><b>Atacar</b><span>Mais chances de gol, maior desgaste</span></button><button class="btn" onclick="wcPlay(1)"><b>Equilibrar</b><span>Controle e segurança</span></button><button class="btn" onclick="wcPlay(2)"><b>Jogar no contra-ataque</b><span>Menos gols sofridos, menos desgaste</span></button></div>`;
  if(w.q==1)return`<div class="card wc"><span class="round">${l.st}</span><h2>Brasil ${l.my} x ${l.og} ${l.opp}</h2><p><b>Acréscimos.</b> ${df?'O adversário parte em contra-ataque perigoso na sua direção.':'A bola sobra para você na entrada da área.'}</p><button class="btn go" onclick="wcDec(1)"><b>${df?'Fazer a intervenção':'Assumir a finalização'}</b><span>Depende de ${df?'defesa':'finalização'} e moral</span></button><button class="btn" onclick="wcDec(0)"><b>${df?'Deixar para a defesa':'Tocar para o companheiro'}</b><span>Menos pressão sobre você</span></button></div>`;
