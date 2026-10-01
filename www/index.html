@@ -702,12 +702,17 @@ function render(still){
 }
 function sanitizeState(){
  if(!S)return;
+ S.v=5;
+ S.name=String(S.name||'Jogador').replace(/[<>&"'\`]/g,'').slice(0,20)||'Jogador';
+ S.pos=['ATA','MEI','ZAG','GOL'].includes(S.pos)?S.pos:'ATA';
  S.energy=cl(Number.isFinite(+S.energy)?+S.energy:90);
  S.morale=cl(Number.isFinite(+S.morale)?+S.morale:70);
  S.fame=cl(Number.isFinite(+S.fame)?+S.fame:0);
  S.money=Number.isFinite(+S.money)?+S.money:0;
  S.age=Number.isFinite(+S.age)?Math.max(17,Math.floor(+S.age)):17;
  S.year=Number.isFinite(+S.year)?Math.max(2026,Math.floor(+S.year)):2026;
+ S.wage=Number.isFinite(+S.wage)?Math.max(0,+S.wage):0;
+ S.yrs=Number.isFinite(+S.yrs)?Math.max(0,Math.floor(+S.yrs)):0;
  S.r=Number.isFinite(+S.r)?Math.max(0,Math.min(18,Math.floor(+S.r))):0;
  S.inj=Number.isFinite(+S.inj)?Math.max(0,Math.floor(+S.inj)):0;
  S.sus=Number.isFinite(+S.sus)?Math.max(0,Math.floor(+S.sus)):0;
@@ -715,8 +720,11 @@ function sanitizeState(){
  S.titles=Number.isFinite(+S.titles)?Math.max(0,Math.floor(+S.titles)):0;
  S.sel=Number.isFinite(+S.sel)?Math.max(0,Math.floor(+S.sel)):0;
  S.sgl=Number.isFinite(+S.sgl)?Math.max(0,Math.floor(+S.sgl)):0;
+ S.tac=['atk','bal','def'].includes(S.tac)?S.tac:'bal';
  S.tot=(S.tot&&typeof S.tot=='object')?S.tot:{g:0,a:0,j:0};
- ['g','a','j'].forEach(k=>{if(!Number.isFinite(+S.tot[k]))S.tot[k]=0;S.tot[k]=Math.max(0,Math.floor(+S.tot[k]))});
+ ['g','a','j'].forEach(k=>{if(!Number.isFinite(+S.tot[k]))S.tot[k]=0;S.tot[k]=Math.max(0,Math.floor(S.tot[k]))});
+ S.ss=(S.ss&&typeof S.ss=='object')?S.ss:{g:0,a:0,j:0,rt:0};
+ ['g','a','j','rt'].forEach(k=>{if(!Number.isFinite(+S.ss[k]))S.ss[k]=0;S.ss[k]=Math.max(0,+S.ss[k])});
  S.at=S.at&&typeof S.at=='object'?S.at:{};
  AK.forEach(k=>{const v=Number(S.at[k]);S.at[k]=cl(Number.isFinite(v)?v:50,25,99)});
  S.hist=Array.isArray(S.hist)?S.hist:[];
@@ -732,50 +740,58 @@ function sanitizeState(){
  S.rf=S.rf&&typeof S.rf=='object'?S.rf:{};
  S.done=S.done&&typeof S.done=='object'?S.done:{};
  S.comps=Array.isArray(S.comps)?S.comps:[];
- S.ev=Number.isInteger(S.ev)?S.ev:null;
+ S.ev=Number.isInteger(S.ev)&&typeof EV!='undefined'&&EV[S.ev]?S.ev:null;
  S.iv=typeof S.iv=='string'?S.iv:'';
+ S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
+ S.prot=S.prot?1:0;
+ S.cmp=Number.isInteger(S.cmp)?S.cmp:null;
  if(!['pre','post','comp','vac','end','retired','wc'].includes(S.phase))S.phase='pre';
  if(!S.club||typeof S.club!='object')S.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  S.club.tier=cl(Number.isFinite(+S.club.tier)?Math.floor(+S.club.tier):0,0,VZ);
- S.club.s=Number.isFinite(+S.club.s)?+S.club.s:52;
- if(!Array.isArray(S.teams)||S.teams.length!==10){
-   S.teams=clubs(S.club.tier);
- }
- S.teams=S.teams.map(t=>t&&typeof t=='object'?{n:String(t.n||'Time'),s:Number.isFinite(+t.s)?+t.s:50}:{n:'Time',s:50});
+ S.club.n=String(S.club.n||LG[S.club.tier].c[0].split(':')[0]);
+ S.club.s=Number.isFinite(+S.club.s)?cl(+S.club.s,25,99):52;
+ if(!Array.isArray(S.teams)||S.teams.length!==10)S.teams=clubs(S.club.tier);
+ S.teams=S.teams.map(t=>t&&typeof t=='object'?{n:String(t.n||'Time'),s:Number.isFinite(+t.s)?cl(+t.s,25,99):50}:{n:'Time',s:50});
  let mi=Number.isInteger(S.me)?S.me:-1;
  if(mi<0||mi>=S.teams.length||S.teams[mi].n!==S.club.n){
    mi=S.teams.findIndex(t=>t.n===S.club.n);
-   if(mi<0){mi=0;S.club={...S.club,n:S.teams[0].n,s:S.teams[0].s}};
+   if(mi<0){mi=0;S.club={...S.club,n:S.teams[0].n,s:S.teams[0].s}}
  }
  S.me=mi;
  if(!Array.isArray(S.tbl)||S.tbl.length!==S.teams.length)S.tbl=S.teams.map(()=>({w:0,d:0,l:0,gf:0,ga:0}));
  S.tbl=S.tbl.map(t=>{t=t&&typeof t=='object'?t:{};return{w:Number.isFinite(+t.w)?Math.max(0,+t.w):0,d:Number.isFinite(+t.d)?Math.max(0,+t.d):0,l:Number.isFinite(+t.l)?Math.max(0,+t.l):0,gf:Number.isFinite(+t.gf)?Math.max(0,+t.gf):0,ga:Number.isFinite(+t.ga)?Math.max(0,+t.ga):0}});
  if(!Array.isArray(S.fx)||S.fx.length<18||S.fx.some(r=>!Array.isArray(r)))S.fx=fix(S.teams);
  if(S.phase=='pre'&&S.r>=18)S.r=17;
- if(S.phase=='post'&&!S.last)S.phase='pre';
- if(S.phase=='comp'){
-   if(!Number.isInteger(S.cmp)||!S.comps[S.cmp]||!S.comps[S.cmp].active){
-     const ix=S.comps.findIndex(c=>c&&c.active);
-     if(ix>=0)S.cmp=ix;else{S.phase='pre';S.cmp=null}
-   }
+ if(S.phase=='post'){
+   if(!S.last||typeof S.last!='object'||!Number.isFinite(+S.last.gh)||!Number.isFinite(+S.last.ga))S.phase='pre';
+   else{S.last.lines=Array.isArray(S.last.lines)?S.last.lines:[];S.last.g=Number.isFinite(+S.last.g)?Math.max(0,+S.last.g):0;S.last.as=Number.isFinite(+S.last.as)?Math.max(0,+S.last.as):0;S.last.min=Number.isFinite(+S.last.min)?Math.max(0,+S.last.min):0}
  }
+ if(S.phase=='comp'&&(!Number.isInteger(S.cmp)||!S.comps[S.cmp]||!S.comps[S.cmp].active)){
+   const ix=S.comps.findIndex(c=>c&&c.active);if(ix>=0)S.cmp=ix;else{S.phase='pre';S.cmp=null}
+ }
+ if(S.phase=='wc'){
+   const w=S.wc;
+   if(!w||typeof w!='object'||w.v!==2||!Array.isArray(w.opp)||w.opp.length<7||!Number.isInteger(w.r)||w.r<0||w.r>6){
+     S.wc=null;S.phase='vac';S.sum=S.sum||{ex:[]};
+   }else{w.r=Math.floor(w.r);w.q=Number.isInteger(w.q)&&w.q>=0&&w.q<=2?w.q:0;w.pts=Number.isFinite(+w.pts)?Math.max(0,+w.pts):0;w.g=Number.isFinite(+w.g)?Math.max(0,+w.g):0;w.j=Number.isFinite(+w.j)?Math.max(0,Math.floor(+w.j)):0}
+ }
+ if(S.phase=='end'){S.offers=S.offers||[];S.sum=S.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]};S.sum.ex=Array.isArray(S.sum.ex)?S.sum.ex:[];S.stayW=Number.isFinite(+S.stayW)?+S.stayW:S.wage}
  S.comps.forEach(c=>{
    if(!c||typeof c!='object')return;
    c.round=Number.isFinite(+c.round)?Math.max(0,Math.floor(+c.round)):0;
    c.max=Number.isFinite(+c.max)?Math.max(1,Math.floor(+c.max)):1;
    c.nextAt=Number.isFinite(+c.nextAt)?+c.nextAt:null;
    c.groupLen=Number.isFinite(+c.groupLen)?Math.max(1,Math.floor(+c.groupLen)):6;
-   c.pts=Number.isFinite(+c.pts)?+c.pts:0;
+   c.pts=Number.isFinite(+c.pts)?Math.max(0,+c.pts):0;
    c.sc=Array.isArray(c.sc)?c.sc:[];
-   if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name||'Jogador',g:0,me:1});
-   c.sc.forEach(x=>{if(!x||typeof x!='object')return;x.g=Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0});
+   let me=c.sc.find(x=>x&&x.me);if(!me){me={n:S.name,g:0,me:1};c.sc.push(me)}
+   c.sc.forEach(x=>{if(x&&typeof x=='object')x.g=Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0});
  });
- S.min=Number.isFinite(+S.min)?+S.min:null;
- S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
- S.prot=S.prot?1:0;
+ if(!S.clubs.length)S.clubs=[{n:S.club.n,y:S.year}];
  syncPlayerStats();
- return S;
+ return S
 }
+
 function mig(s){if(!s||!s.teams||!s.club||!s.fx||!s.tbl)return null;
  s=Object.assign({v:3,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',sel:0,sgl:0,promos:0,sus:0,tro:[],nt:[],scoutOffers:[]},s);
  if(!s.at){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
