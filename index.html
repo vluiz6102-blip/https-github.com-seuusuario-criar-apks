@@ -766,7 +766,7 @@ function sanitizeState(){
    if(!S.last||typeof S.last!='object'||!Number.isFinite(+S.last.gh)||!Number.isFinite(+S.last.ga))S.phase='pre';
    else{S.last.lines=Array.isArray(S.last.lines)?S.last.lines:[];S.last.g=Number.isFinite(+S.last.g)?Math.max(0,+S.last.g):0;S.last.as=Number.isFinite(+S.last.as)?Math.max(0,+S.last.as):0;S.last.min=Number.isFinite(+S.last.min)?Math.max(0,+S.last.min):0}
  }
- if(S.phase=='comp'&&(!Number.isInteger(S.cmp)||!S.comps[S.cmp]||!S.comps[S.cmp].active)){
+ if(S.phase=='comp'&&(!Number.isInteger(S.cmp)||!S.comps[S.cmp])){
    const ix=S.comps.findIndex(c=>c&&c.active);if(ix>=0)S.cmp=ix;else{S.phase='pre';S.cmp=null}
  }
  if(S.phase=='wc'){
