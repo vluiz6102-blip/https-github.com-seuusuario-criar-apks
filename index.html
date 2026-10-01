@@ -845,6 +845,7 @@ function sanitizeState(){
 function mig(s){
  if(!s||typeof s!='object')return null;
  s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
+ if(!s.at||typeof s.at!='object'){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
  if(!s.club||typeof s.club!='object')s.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  const tier=cl(Number.isFinite(+s.club.tier)?Math.floor(+s.club.tier):0,0,VZ);
  s.club={n:String(s.club.n||LG[tier].c[0].split(':')[0]),tier,s:Number.isFinite(+s.club.s)?+s.club.s:52};
@@ -857,6 +858,7 @@ function mig(s){
  if(s.phase=='comp'&&!Array.isArray(s.comps))s.comps=[];
  if(s.phase=='comp'&&(!Number.isInteger(s.cmp)||!s.comps[s.cmp]))s.cmp=null;
  if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase='vac';s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
+ if(!Number.isFinite(+s.stayW))s.stayW=Number.isFinite(+s.wage)?+s.wage:0;
  return s
 }
 
