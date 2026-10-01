@@ -183,6 +183,37 @@ E(['©️','💪'],'O técnico quer que você seja o novo capitão do time.',[['
 E(['🧠','📋'],'O técnico chama você para conversar sobre seu papel no time.',[['Pedir mais minutos','+técnico se estiver bem, senão -técnico',()=>co(S.ss.j&&S.ss.rt/S.ss.j>=6.8?6:-6)],['Aceitar o que ele decidir','+técnico',()=>co(4)],['Reclamar da reserva','+moral, --técnico',()=>{mo(2);co(-8)}]],()=>S.r>3),
 E(['🩹','🏋️'],'O fisioterapeuta sugere um programa de prevenção de lesões.',[['Fazer o programa','-R$ 20 mil, menos risco de lesão',()=>{mn(-20);S.ih=Math.max(0,(S.ih||0)-1)}],['Recusar','+energia',()=>en(5)]],()=>(S.ih||0)>=1)
 );
+EV.push(
+E(['🚌','⏱️'],'O ônibus do time quebra a caminho do jogo e a chegada fica apertada.',[['Manter a calma','+mental',()=>at('men',.3)],['Aquecer rapidamente','+físico, -energia',()=>{at('fis',.3);en(-4)}],['Reclamar com o clube','+fama leve, -moral',()=>{fa(1);mo(-2)}]]),
+E(['🍝','🥗'],'O nutricionista percebe que sua alimentação está irregular.',[['Seguir o plano','+físico, +energia',()=>{at('fis',.4);en(6)}],['Manter sua dieta','+moral',()=>mo(2)],['Chutar o balde por um dia','+moral, -energia',()=>{mo(4);en(-6)}]]),
+E(['🧠','🎯'],'O psicólogo esportivo propõe um exercício de concentração antes do jogo.',[['Aceitar','+mental',()=>{at('men',.6);mo(2)}],['Fazer sozinho','+mental leve',()=>at('men',.3)],['Dispensar','+energia',()=>en(3)]]),
+E(['📚','⚽'],'Você recebe vídeos do próximo adversário para estudar.',[['Estudar os movimentos','+posicionamento, -energia',()=>{at('pos',.5);en(-3)}],['Focar em seu jogo','+moral',()=>mo(2)],['Ignorar','sem efeito',()=>{}]]),
+E(['🧤','🌧️'],'O treino é cancelado por causa de uma tempestade.',[['Descansar','+energia',()=>en(12)],['Treinar na academia','+físico, -energia',()=>{at('fis',.5);en(-5)}],['Estudar futebol','+mental',()=>at('men',.4)]]),
+E(['📞','🏠'],'Sua família liga antes de uma partida importante.',[['Conversar bastante','+moral, -energia',()=>{mo(5);en(-2)}],['Fazer uma chamada rápida','+moral',()=>mo(3)],['Manter o foco','+mental',()=>at('men',.2)]]),
+E(['🧑‍🤝‍🧑','🗣️'],'Um companheiro mais jovem pede conselhos sobre como lidar com a pressão.',[['Ajudar','+mental, +moral',()=>{at('men',.4);mo(3)}],['Dar uma dica rápida','+moral',()=>mo(1)],['Mandar falar com o técnico','+liderança',()=>{if(S.cap)mo(2);else at('men',.2)}]]),
+E(['🧑‍✈️','🤝'],'O capitão pede sua ajuda para organizar o vestiário.',[['Assumir a frente','+liderança',()=>{at('men',.5);S.cap=1;mo(3)}],['Ajudar nos bastidores','+moral',()=>mo(2)],['Deixar com o capitão','+energia',()=>en(3)]]),
+E(['🟨','🚨'],'Você recebe um cartão em um treino coletivo e a comissão técnica chama sua atenção.',[['Aceitar a bronca','+mental',()=>at('men',.4)],['Responder','+fama, -moral',()=>{fa(1);mo(-3)}],['Pedir desculpas','+moral',()=>mo(2)]]),
+E(['🏟️','🎟️'],'A torcida organiza uma festa antes do clássico.',[['Participar','+moral, -energia',()=>{mo(6);en(-3)}],['Apenas agradecer','+fama',()=>fa(2)],['Descansar','+energia',()=>en(6)]]),
+E(['🧳','✈️'],'Você perde sua mala durante uma viagem internacional.',[['Resolver pessoalmente','-energia, +mental',()=>{en(-4);at('men',.3)}],['Deixar o clube resolver','+energia',()=>en(4)],['Fazer uma piada nas redes','+fama',()=>fa(3)]]),
+E(['💡','📈'],'Um analista mostra um detalhe do seu jogo que pode melhorar muito seu desempenho.',[['Aplicar no próximo jogo','+técnica',()=>at('tec',.5)],['Treinar depois','+técnica, -energia',()=>{at('tec',.7);en(-5)}],['Ignorar','+moral',()=>mo(1)]]),
+E(['🏃','⏱️'],'O preparador físico oferece um teste extra de velocidade.',[['Fazer o teste','+físico, -energia',()=>{at('fis',.5);en(-5)}],['Poupar as pernas','+energia',()=>en(6)],['Desafiar um companheiro','+moral, risco',()=>{mo(4);if(Math.random()<.12)S.inj=RI(1,2)}]]),
+E(['🎯','🥅'],'O treinador cria uma disputa de cobranças no treino.',[['Cobrar primeiro','+mental, risco',()=>{at('men',.3);if(Math.random()<.25)mo(-3);else mo(3)}],['Observar os outros','+posicionamento',()=>at('pos',.3)],['Recusar','+energia',()=>en(2)]]),
+E(['📋','🔄'],'O clube apresenta uma nova estratégia para a temporada.',[['Estudar a estratégia','+mental',()=>at('men',.5)],['Treinar a estratégia','+técnica, -energia',()=>{at('tec',.4);en(-5)}],['Questionar o plano','+moral',()=>mo(2)]]),
+E(['🏆','📸'],'Seu antigo clube convida você para uma homenagem.',[['Aceitar','+fama, +moral',()=>{fa(5);mo(5)}],['Mandar um vídeo','+fama',()=>fa(3)],['Recusar por calendário','+energia',()=>en(4)]],()=>S.age>=22),
+E(['🧑‍⚖️','📄'],'A liga abre uma investigação sobre uma confusão envolvendo seu clube.',[['Cooperar','+mental',()=>at('men',.3)],['Não comentar','+moral',()=>mo(1)],['Criticar a liga','+fama, -moral',()=>{fa(3);mo(-3)}]]),
+E(['💼','📊'],'Seu empresário apresenta um relatório sobre o crescimento do seu valor de mercado.',[['Ouvir tudo','+mental, +moral',()=>{at('men',.3);mo(2)}],['Focar no futebol','+moral',()=>mo(3)],['Pedir novas propostas','+fama',()=>fa(2)]]),
+E(['📣','👕'],'Uma torcida organizada cria uma faixa gigante com seu nome.',[['Agradecer','+fama, +moral',()=>{fa(3);mo(4)}],['Tirar foto','+fama',()=>fa(2)],['Evitar exposição','+energia',()=>en(3)]]),
+E(['🚑','🩺'],'Um colega se machuca no treino e o ambiente fica abalado.',[['Visitar o colega','+moral',()=>mo(5)],['Mandar mensagem','+moral',()=>mo(3)],['Focar no treino','+mental',()=>at('men',.3)]]),
+E(['🌱','⚽'],'A diretoria pede que os jogadores ajudem a revelar um jovem da base.',[['Treinar com ele','+liderança, -energia',()=>{at('men',.3);en(-3)}],['Dar conselhos','+moral',()=>mo(3)],['Deixar o técnico cuidar','+energia',()=>en(3)]]),
+E(['📰','⭐'],'Seu nome aparece entre os jogadores que mais evoluíram no mês.',[['Compartilhar','+fama',()=>fa(4)],['Agradecer ao treinador','+coach, +moral',()=>{co(.6);mo(3)}],['Ignorar','+mental',()=>at('men',.2)]]),
+E(['💰','📉'],'Você percebe que gastou demais fora do futebol neste mês.',[['Cortar gastos','+dinheiro, -moral',()=>{mn(20);mo(-2)}],['Manter o padrão','+moral, -R$ 30 mil',()=>{mn(-30);mo(4)}],['Pedir ajuda financeira','+R$ 20 mil, -fama',()=>{mn(20);fa(-1)}]]),
+E(['🌍','📬'],'Uma proposta de intercâmbio esportivo chega de outro país.',[['Aceitar convite','+fama, -energia',()=>{fa(5);en(-7)}],['Recusar por calendário','+energia',()=>en(6)],['Pedir mais informações','+mental',()=>at('men',.2)]]),
+E(['🎙️','🔥'],'Um jornalista pergunta se você se considera pronto para ser estrela.',[['Responder com confiança','+fama, pressão',()=>{fa(5);mo(-1)}],['Responder com humildade','+moral',()=>mo(4)],['Não responder','+energia',()=>en(2)]]),
+E(['🏃','🧊'],'O fisiologista sugere uma rotina de recuperação depois dos jogos.',[['Seguir rotina','+energia',()=>en(8)],['Fazer só quando cansar','+energia leve',()=>en(4)],['Dispensar','+moral',()=>mo(1)]]),
+E(['🎁','🤝'],'Um companheiro deixa um presente no seu armário antes do jogo.',[['Agradecer','+moral',()=>mo(4)],['Retribuir depois','+moral, -R$ 10 mil',()=>{mo(5);mn(-10)}],['Brincar com a situação','+moral',()=>mo(2)]]),
+E(['🗺️','🏟️'],'Você descobre um estádio novo e enorme na próxima rodada.',[['Conhecer o estádio','+mental, -energia',()=>{at('men',.2);en(-2)}],['Descansar','+energia',()=>en(5)],['Estudar o gramado','+posicionamento',()=>at('pos',.3)]]),
+E(['🏅','🎯'],'Você está a uma boa sequência de entrar para a seleção da temporada.',[['Buscar números','+fama, -energia',()=>{fa(3);en(-5)}],['Jogar pelo time','+moral',()=>mo(4)],['Conversar com o técnico','+coach',()=>co(1)]])
+);
 const ADV=['Pedir conselho a um veterano','+mental, +moral',()=>{at('men',.3);mo(2)}];
 EV.forEach(e=>e.o.length<3&&e.o.push(ADV));
 let S=null,tab='game';
@@ -385,6 +416,7 @@ function render(still){
 function mig(s){if(!s||!s.teams||!s.club||!s.fx||!s.tbl)return null;
  s=Object.assign({v:3,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',sel:0,sgl:0,promos:0,sus:0,tro:[],nt:[]},s);
  if(!s.at){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
+ AK.forEach(k=>{if(typeof s.at[k]!='number'||!isFinite(s.at[k]))s.at[k]=50});['coach','money','energy','morale','fame','titles','sel','sgl'].forEach(k=>{if(typeof s[k]!='number'||!isFinite(s[k]))s[k]={coach:50,energy:90,morale:70}[k]||0});s.tot=s.tot||{g:0,a:0,j:0};
  s.tro=s.tro.map(t=>typeof t=='string'?{n:t,y:'',c:'',p:''}:t);
  if(!s.clubs.length)s.clubs=[{n:s.club.n,y:s.year}];
  if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase=s.age>=38?'retired':'vac';s.offers=s.offers||[];s.stayW=s.stayW||s.wage;s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
