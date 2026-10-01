@@ -146,6 +146,46 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 
 /* final stability */
 html,body{background:#000!important;overflow-x:hidden}body{overscroll-behavior-x:none}#app{width:100%;max-width:560px;overflow-x:clip}.card,.btn,.chip,.row,input,select{min-width:0;max-width:100%}.btn,.chip{touch-action:manipulation}.btn:active,.chip:active{transform:scale(.985)}
+/* mobile AMOLED stability */
+:root{--bg:#000;--pn:#090909;--ln:#202020;--tx:#f4f4f4;--mu:#8a8a8a;--gr:#42d77d;--am:#ffca3a;--rd:#ff5c5c}
+html,body{width:100%;min-width:0;max-width:100%;overflow-x:hidden;background:#000!important}
+body{-webkit-text-size-adjust:100%;overscroll-behavior-x:none;touch-action:pan-y;background:#000}
+button,input,select{font:inherit;max-width:100%}
+button{cursor:pointer;touch-action:manipulation}
+#app{width:100%;min-width:0;max-width:560px;margin:0 auto;overflow-x:clip}
+.card{width:100%;min-width:0;overflow:hidden;background:#090909;border-color:#202020}
+.head{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;align-items:start}
+.head>*{min-width:0}
+.ovr{min-width:70px}
+.tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}
+.tabs button{width:100%;min-width:0;min-height:54px;padding:7px 2px;white-space:normal;word-break:normal;overflow:hidden}
+.tabs button span{display:block;line-height:1.1}
+.btn{display:flex;flex-direction:column;justify-content:center;width:100%;min-width:0;min-height:56px;margin:10px 0 0!important;padding:13px 14px;white-space:normal;overflow:hidden;overflow-wrap:anywhere;word-break:break-word}
+.btn b,.btn span{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.btn span{margin-top:4px}
+.chips{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;width:100%;overflow:visible}
+.chip{width:100%;min-width:0;min-height:50px;margin:0!important;padding:11px 12px;white-space:normal;overflow-wrap:anywhere}
+input,select{width:100%;min-width:0;min-height:52px}
+.row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;min-width:0}
+.row>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+table{width:100%;table-layout:fixed;font-size:12px}
+td,th{padding:8px 3px;white-space:normal;overflow-wrap:anywhere}
+td:nth-child(1),th:nth-child(1){width:9%}
+td:nth-child(2),th:nth-child(2){width:41%}
+td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
+.art{max-width:100%;overflow:hidden}
+.sc{max-width:100%;overflow-wrap:anywhere}
+.sound{position:relative!important;float:none!important;width:100%;margin:0 0 8px!important}
+@media(max-width:390px){
+ body{padding-left:8px!important;padding-right:8px!important}
+ .card{padding:12px;border-radius:12px;margin-bottom:12px}
+ .head{grid-template-columns:62px minmax(0,1fr);gap:10px}
+ .ovr{min-width:62px!important;font-size:46px!important}
+ .tabs{gap:4px!important}
+ .tabs button{min-height:52px;font-size:12px}
+ .btn{min-height:54px;font-size:15px}
+}
+@media(min-width:561px){body{padding-left:18px;padding-right:18px}}
 </style>
 </head>
 <body>
@@ -350,6 +390,7 @@ function compPlay(){
  if(!S||S.phase!='comp'||!Number.isInteger(S.cmp))return;
  const c=S.comps?.[S.cmp];
  if(!c||!c.active){S.phase='pre';S.cmp=null;render();return}
+ if(c.last&&c.last.done)return;
  if(c.nextAt!=null&&c.nextAt>S.r&&!c.last){S.phase='pre';S.cmp=null;render();return}
  S.nt=[];
  compResult(c);
@@ -379,7 +420,7 @@ function join(c){
 
 let START_OFFERS=[];
 function makeStartOffers(){const pool=[];LG.forEach((l,t)=>{if(t>2)return;l.c.forEach(x=>{const[n,s]=x.split(':');pool.push({n,tier:t,s:+s})})});const of=[],used={};const pos=$('ps')?.value||'ATA';const tiers=[0,1,2].sort(()=>Math.random()-.5);pool.sort(()=>Math.random()-.5);tiers.forEach(t=>{const choices=pool.filter(c=>c.tier==t&&!used[c.n]);if(choices.length&&of.length<3){const c=choices[RI(0,choices.length-1)];used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});if(of.length<3)pool.filter(c=>!used[c.n]).slice(0,3-of.length).forEach(c=>{used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})});if(Math.random()<.28){const v=LG[VZ].c[RI(0,LG[VZ].c.length-1)].split(':');of[RI(0,of.length-1)]={n:v[0],tier:VZ,s:+v[1],w:0,varzea:true}}return of}
-function chooseStart(o){if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';scr='game';render()}
+function chooseStart(o){if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
 function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);chooseStart(o)}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
@@ -461,7 +502,7 @@ const TR={fin:['fin','pos'],vel:['vel','ace'],pas:['pas','men'],dri:['dri','con'
 const TRL=[['pos','Treino de posição','Reforça os atributos que mais pesam na sua função'],['fin','Finalização','Finalização e posicionamento'],['vel','Velocidade','Velocidade e aceleração'],['pas','Passe e visão','Passe e mentalidade'],['dri','Drible e controle','Drible e controle de bola'],['fis','Físico','Físico e resistência'],['def','Defesa e cruzamento','Defesa e cruzamento'],['pers','Personal trainer','R$ 30 mil · evolui 3 atributos, risco de lesão maior'],['prev','Treino preventivo','Menos risco de lesão no próximo jogo, +energia'],['rest','Descanso','Recupera energia e moral']];
 function topAt(n){return AK.map((k,i)=>[k,OW[S.pos][i]]).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])}
 function train(k){
- if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
+ sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
  if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
  S.nt=[];
  if(S.inj>0)en(20);
@@ -702,12 +743,17 @@ function render(still){
 }
 function sanitizeState(){
  if(!S)return;
+ S.v=5;
+ S.name=String(S.name||'Jogador').replace(/[<>&"'\`]/g,'').slice(0,20)||'Jogador';
+ S.pos=['ATA','MEI','ZAG','GOL'].includes(S.pos)?S.pos:'ATA';
  S.energy=cl(Number.isFinite(+S.energy)?+S.energy:90);
  S.morale=cl(Number.isFinite(+S.morale)?+S.morale:70);
  S.fame=cl(Number.isFinite(+S.fame)?+S.fame:0);
  S.money=Number.isFinite(+S.money)?+S.money:0;
  S.age=Number.isFinite(+S.age)?Math.max(17,Math.floor(+S.age)):17;
  S.year=Number.isFinite(+S.year)?Math.max(2026,Math.floor(+S.year)):2026;
+ S.wage=Number.isFinite(+S.wage)?Math.max(0,+S.wage):0;
+ S.yrs=Number.isFinite(+S.yrs)?Math.max(0,Math.floor(+S.yrs)):0;
  S.r=Number.isFinite(+S.r)?Math.max(0,Math.min(18,Math.floor(+S.r))):0;
  S.inj=Number.isFinite(+S.inj)?Math.max(0,Math.floor(+S.inj)):0;
  S.sus=Number.isFinite(+S.sus)?Math.max(0,Math.floor(+S.sus)):0;
@@ -715,8 +761,11 @@ function sanitizeState(){
  S.titles=Number.isFinite(+S.titles)?Math.max(0,Math.floor(+S.titles)):0;
  S.sel=Number.isFinite(+S.sel)?Math.max(0,Math.floor(+S.sel)):0;
  S.sgl=Number.isFinite(+S.sgl)?Math.max(0,Math.floor(+S.sgl)):0;
+ S.tac=['atk','bal','def'].includes(S.tac)?S.tac:'bal';
  S.tot=(S.tot&&typeof S.tot=='object')?S.tot:{g:0,a:0,j:0};
- ['g','a','j'].forEach(k=>{if(!Number.isFinite(+S.tot[k]))S.tot[k]=0;S.tot[k]=Math.max(0,Math.floor(+S.tot[k]))});
+ ['g','a','j'].forEach(k=>{if(!Number.isFinite(+S.tot[k]))S.tot[k]=0;S.tot[k]=Math.max(0,Math.floor(S.tot[k]))});
+ S.ss=(S.ss&&typeof S.ss=='object')?S.ss:{g:0,a:0,j:0,rt:0};
+ ['g','a','j','rt'].forEach(k=>{if(!Number.isFinite(+S.ss[k]))S.ss[k]=0;S.ss[k]=Math.max(0,+S.ss[k])});
  S.at=S.at&&typeof S.at=='object'?S.at:{};
  AK.forEach(k=>{const v=Number(S.at[k]);S.at[k]=cl(Number.isFinite(v)?v:50,25,99)});
  S.hist=Array.isArray(S.hist)?S.hist:[];
@@ -732,31 +781,49 @@ function sanitizeState(){
  S.rf=S.rf&&typeof S.rf=='object'?S.rf:{};
  S.done=S.done&&typeof S.done=='object'?S.done:{};
  S.comps=Array.isArray(S.comps)?S.comps:[];
- S.ev=Number.isInteger(S.ev)?S.ev:null;
+ S.ev=Number.isInteger(S.ev)&&typeof EV!='undefined'&&EV[S.ev]?S.ev:null;
  S.iv=typeof S.iv=='string'?S.iv:'';
+ S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
+ S.prot=S.prot?1:0;
+ S.cmp=Number.isInteger(S.cmp)?S.cmp:null;
  if(!['pre','post','comp','vac','end','retired','wc'].includes(S.phase))S.phase='pre';
  if(!S.club||typeof S.club!='object')S.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  S.club.tier=cl(Number.isFinite(+S.club.tier)?Math.floor(+S.club.tier):0,0,VZ);
- S.club.s=Number.isFinite(+S.club.s)?+S.club.s:52;
- if(!Array.isArray(S.teams)||S.teams.length!==10){
-   S.teams=clubs(S.club.tier);
- }
- S.teams=S.teams.map(t=>t&&typeof t=='object'?{n:String(t.n||'Time'),s:Number.isFinite(+t.s)?+t.s:50}:{n:'Time',s:50});
+ S.club.n=String(S.club.n||LG[S.club.tier].c[0].split(':')[0]);
+ S.club.s=Number.isFinite(+S.club.s)?cl(+S.club.s,25,99):52;
+ if(!Array.isArray(S.teams)||S.teams.length!==10)S.teams=clubs(S.club.tier);
+ S.teams=S.teams.map(t=>t&&typeof t=='object'?{n:String(t.n||'Time'),s:Number.isFinite(+t.s)?cl(+t.s,25,99):50}:{n:'Time',s:50});
  let mi=Number.isInteger(S.me)?S.me:-1;
  if(mi<0||mi>=S.teams.length||S.teams[mi].n!==S.club.n){
    mi=S.teams.findIndex(t=>t.n===S.club.n);
-   if(mi<0){mi=0;S.club={...S.club,n:S.teams[0].n,s:S.teams[0].s}};
+   if(mi<0){mi=0;S.club={...S.club,n:S.teams[0].n,s:S.teams[0].s}}
  }
  S.me=mi;
  if(!Array.isArray(S.tbl)||S.tbl.length!==S.teams.length)S.tbl=S.teams.map(()=>({w:0,d:0,l:0,gf:0,ga:0}));
  S.tbl=S.tbl.map(t=>{t=t&&typeof t=='object'?t:{};return{w:Number.isFinite(+t.w)?Math.max(0,+t.w):0,d:Number.isFinite(+t.d)?Math.max(0,+t.d):0,l:Number.isFinite(+t.l)?Math.max(0,+t.l):0,gf:Number.isFinite(+t.gf)?Math.max(0,+t.gf):0,ga:Number.isFinite(+t.ga)?Math.max(0,+t.ga):0}});
  if(!Array.isArray(S.fx)||S.fx.length<18||S.fx.some(r=>!Array.isArray(r)))S.fx=fix(S.teams);
  if(S.phase=='pre'&&S.r>=18)S.r=17;
- if(S.phase=='post'&&!S.last)S.phase='pre';
- if(S.phase=='comp'){
-   if(!Number.isInteger(S.cmp)||!S.comps[S.cmp]||!S.comps[S.cmp].active){
-     const ix=S.comps.findIndex(c=>c&&c.active);
-     if(ix>=0)S.cmp=ix;else{S.phase='pre';S.cmp=null}
+ if(S.phase=='post'){
+   if(!S.last||typeof S.last!='object'||!Number.isFinite(+S.last.gh)||!Number.isFinite(+S.last.ga))S.phase='pre';
+   else{S.last.lines=Array.isArray(S.last.lines)?S.last.lines:[];S.last.g=Number.isFinite(+S.last.g)?Math.max(0,+S.last.g):0;S.last.as=Number.isFinite(+S.last.as)?Math.max(0,+S.last.as):0;S.last.min=Number.isFinite(+S.last.min)?Math.max(0,+S.last.min):0}
+ }
+ if(S.phase=='comp'&&(!Number.isInteger(S.cmp)||!S.comps[S.cmp])){
+   const ix=S.comps.findIndex(c=>c&&c.active);if(ix>=0)S.cmp=ix;else{S.phase='pre';S.cmp=null}
+ }
+ if(S.phase=='wc'){
+   const w=S.wc;
+   if(!w||typeof w!='object'||w.v!==2||!Array.isArray(w.opp)||w.opp.length<7||!Number.isInteger(w.r)||w.r<0||w.r>6){
+     S.wc=null;S.phase='vac';S.sum=S.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}
+   }else{
+     w.r=Math.floor(w.r);w.q=Number.isInteger(w.q)&&w.q>=0&&w.q<=2?w.q:0;
+     w.pts=Number.isFinite(+w.pts)?Math.max(0,+w.pts):0;w.g=Number.isFinite(+w.g)?Math.max(0,+w.g):0;w.j=Number.isFinite(+w.j)?Math.max(0,Math.floor(+w.j)):0;
+     if(w.q>0&&(!w.last||typeof w.last!='object'))w.q=0;
+     if(w.last){
+       w.last.my=Number.isFinite(+w.last.my)?Math.max(0,+w.last.my):0;
+       w.last.og=Number.isFinite(+w.last.og)?Math.max(0,+w.last.og):0;
+       w.last.g=Number.isFinite(+w.last.g)?Math.max(0,+w.last.g):0;
+       w.last.ln=Array.isArray(w.last.ln)?w.last.ln:[];
+     }
    }
  }
  S.comps.forEach(c=>{
@@ -765,28 +832,45 @@ function sanitizeState(){
    c.max=Number.isFinite(+c.max)?Math.max(1,Math.floor(+c.max)):1;
    c.nextAt=Number.isFinite(+c.nextAt)?+c.nextAt:null;
    c.groupLen=Number.isFinite(+c.groupLen)?Math.max(1,Math.floor(+c.groupLen)):6;
-   c.pts=Number.isFinite(+c.pts)?+c.pts:0;
+   c.pts=Number.isFinite(+c.pts)?Math.max(0,+c.pts):0;
    c.sc=Array.isArray(c.sc)?c.sc:[];
-   if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name||'Jogador',g:0,me:1});
-   c.sc.forEach(x=>{if(!x||typeof x!='object')return;x.g=Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0});
+   let me=c.sc.find(x=>x&&x.me);if(!me){me={n:S.name,g:0,me:1};c.sc.push(me)}
+   c.sc.forEach(x=>{if(x&&typeof x=='object')x.g=Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0});
  });
- S.min=Number.isFinite(+S.min)?+S.min:null;
- S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
- S.prot=S.prot?1:0;
+ if(!S.clubs.length)S.clubs=[{n:S.club.n,y:S.year}];
  syncPlayerStats();
- return S;
+ return S
 }
-function mig(s){if(!s||!s.teams||!s.club||!s.fx||!s.tbl)return null;
- s=Object.assign({v:3,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',sel:0,sgl:0,promos:0,sus:0,tro:[],nt:[],scoutOffers:[]},s);
- if(!s.at){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
- AK.forEach(k=>{if(typeof s.at[k]!='number'||!isFinite(s.at[k]))s.at[k]=50});['coach','money','energy','morale','fame','titles','sel','sgl'].forEach(k=>{if(typeof s[k]!='number'||!isFinite(s[k]))s[k]={coach:50,energy:90,morale:70}[k]||0});s.tot=s.tot||{g:0,a:0,j:0};
- s.tro=s.tro.map(t=>typeof t=='string'?{n:t,y:'',c:'',p:''}:t);
- if(!s.clubs.length)s.clubs=[{n:s.club.n,y:s.year}];
- if(s.phase=='comp'&&!((s.comps||[])[s.cmp]||{}).active){s.phase='pre';s.cmp=null}
- if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase=s.age>=38?'retired':'vac';s.offers=s.offers||[];s.stayW=s.stayW||s.wage;s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
- return s}
+
+function mig(s){
+ if(!s||typeof s!='object')return null;
+ s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
+ if(!s.club||typeof s.club!='object')s.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
+ const tier=cl(Number.isFinite(+s.club.tier)?Math.floor(+s.club.tier):0,0,VZ);
+ s.club={n:String(s.club.n||LG[tier].c[0].split(':')[0]),tier,s:Number.isFinite(+s.club.s)?+s.club.s:52};
+ if(!Array.isArray(s.teams)||s.teams.length!==10)s.teams=clubs(s.club.tier);
+ if(!Array.isArray(s.tbl)||s.tbl.length!==10)s.tbl=s.teams.map(()=>({w:0,d:0,l:0,gf:0,ga:0}));
+ if(!Array.isArray(s.fx)||s.fx.length<18)s.fx=fix(s.teams);
+ if(!Array.isArray(s.tro))s.tro=[];
+ s.tro=s.tro.map(t=>typeof t=='string'?{n:t,y:'',c:'',p:''}:t&&typeof t=='object'?t:{n:String(t||''),y:'',c:'',p:''});
+ if(!Array.isArray(s.clubs))s.clubs=[{n:s.club.n,y:s.year}];
+ if(s.phase=='comp'&&!Array.isArray(s.comps))s.comps=[];
+ if(s.phase=='comp'&&(!Number.isInteger(s.cmp)||!s.comps[s.cmp]))s.cmp=null;
+ if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase='vac';s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
+ return s
+}
+
 try{S=mig(JSON.parse(localStorage.getItem('carreirafc2')))}catch(e){S=null}
-if(S){sanitizeState();if(!S.comps.length){compSetup();compSchedule()}S.comps.forEach(c=>{if(!c.groupLen&&c.kind!='cup')c.groupLen=c.id=='ucl'?8:6;c.sc=c.sc||[];if(!c.sc.some(x=>x.me))c.sc.push({n:S.name,g:0,me:1})});}
+if(S){
+ sanitizeState();
+ if(!S.comps.length){compSetup();compSchedule()}
+ S.comps.forEach(c=>{
+  if(!c||typeof c!='object')return;
+  if(!c.groupLen&&c.kind!='cup')c.groupLen=c.id=='ucl'?8:6;
+  c.sc=Array.isArray(c.sc)?c.sc:[];
+  if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name,g:0,me:1});
+ });
+}
 render();
 </script>
 </body>
