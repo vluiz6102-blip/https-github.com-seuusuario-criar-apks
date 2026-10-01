@@ -773,10 +773,19 @@ function sanitizeState(){
  if(S.phase=='wc'){
    const w=S.wc;
    if(!w||typeof w!='object'||w.v!==2||!Array.isArray(w.opp)||w.opp.length<7||!Number.isInteger(w.r)||w.r<0||w.r>6){
-     S.wc=null;S.phase='vac';S.sum=S.sum||{ex:[]};
-   }else{w.r=Math.floor(w.r);w.q=Number.isInteger(w.q)&&w.q>=0&&w.q<=2?w.q:0;w.pts=Number.isFinite(+w.pts)?Math.max(0,+w.pts):0;w.g=Number.isFinite(+w.g)?Math.max(0,+w.g):0;w.j=Number.isFinite(+w.j)?Math.max(0,Math.floor(+w.j)):0}
+     S.wc=null;S.phase='vac';S.sum=S.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}
+   }else{
+     w.r=Math.floor(w.r);w.q=Number.isInteger(w.q)&&w.q>=0&&w.q<=2?w.q:0;
+     w.pts=Number.isFinite(+w.pts)?Math.max(0,+w.pts):0;w.g=Number.isFinite(+w.g)?Math.max(0,+w.g):0;w.j=Number.isFinite(+w.j)?Math.max(0,Math.floor(+w.j)):0;
+     if(w.q>0&&(!w.last||typeof w.last!='object'))w.q=0;
+     if(w.last){
+       w.last.my=Number.isFinite(+w.last.my)?Math.max(0,+w.last.my):0;
+       w.last.og=Number.isFinite(+w.last.og)?Math.max(0,+w.last.og):0;
+       w.last.g=Number.isFinite(+w.last.g)?Math.max(0,+w.last.g):0;
+       w.last.ln=Array.isArray(w.last.ln)?w.last.ln:[];
+     }
+   }
  }
- if(S.phase=='end'){S.offers=S.offers||[];S.sum=S.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]};S.sum.ex=Array.isArray(S.sum.ex)?S.sum.ex:[];S.stayW=Number.isFinite(+S.stayW)?+S.stayW:S.wage}
  S.comps.forEach(c=>{
    if(!c||typeof c!='object')return;
    c.round=Number.isFinite(+c.round)?Math.max(0,Math.floor(+c.round)):0;
