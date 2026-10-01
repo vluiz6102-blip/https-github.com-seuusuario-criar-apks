@@ -810,3 +810,19 @@ function mig(s){
  if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase='vac';s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
  return s
 }
+
+try{S=mig(JSON.parse(localStorage.getItem('carreirafc2')))}catch(e){S=null}
+if(S){
+ sanitizeState();
+ if(!S.comps.length){compSetup();compSchedule()}
+ S.comps.forEach(c=>{
+  if(!c||typeof c!='object')return;
+  if(!c.groupLen&&c.kind!='cup')c.groupLen=c.id=='ucl'?8:6;
+  c.sc=Array.isArray(c.sc)?c.sc:[];
+  if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name,g:0,me:1});
+ });
+}
+render();
+</script>
+</body>
+</html>
