@@ -527,8 +527,7 @@ function posRoleCard(){ensurePremiumState();const p=POSROLE[S.pos];const st=p.st
 function positionMomentPool(){return S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:S.pos=='MEI'?DMM:DMA}
 function newPositionMoment(){const p=positionMomentPool();return Object.assign({},p[RI(0,p.length-1)])}
 function train(k){
- sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.busy)return; S.busy=1;
- if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
+ sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.busy)return; if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return; S.busy=1;
  S.nt=[];
  if(S.inj>0)en(20);
  else if(k=='rest'){en(40);mo(3)}
@@ -703,7 +702,7 @@ const tabs=()=>sndB()+`<div class="tabs">${[['game','🎮','Jogo'],['tbl','📊'
 const ntV=()=>(S.nt||[]).map(t=>`<div class="card nt"><h2>${t[0]}</h2><p>${t[1]}</p></div>`).join('');
 const conf=e=>`<div class="cf">${Array.from({length:10},(_,i)=>`<span style="--x:${5+i*10}%;--d:${(i*.15).toFixed(2)}s">${e}</span>`).join('')}</div>`;
 const art=a=>`<div class="art">${a.map(x=>`<span>${x}</span>`).join('')}</div>`;
-function gameV(){return ntV()+gameV0()}
+function gameV(){ensurePremiumState();return posRoleCard()+ntV()+gameV0()}
 function scoutOffers(){const pool=[],o=ovr();LG.forEach((l,t)=>{if(t<VZ)l.c.forEach(x=>{const[n,s]=x.split(':');if(+s<=o+10&&+s>=o-12)pool.push({n,tier:t,s:+s})})});pool.sort(()=>Math.random()-.5);const of=[],seen={};pool.forEach(c=>{if(of.length<3&&!seen[c.tier]){seen[c.tier]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});return of}
 function acceptScout(i){if(!S||S.phase!='post'||!Array.isArray(S.scoutOffers)||!S.scoutOffers[i])return;const o=S.scoutOffers[i];S.nt=[];S.scoutOffers=[];S.wage=o.w;S.yrs=3;join(o);fa(5);mo(5);toast('🔎 OLHEIRO','Um clube fez uma proposta depois de te observar na várzea.');render()}
 
