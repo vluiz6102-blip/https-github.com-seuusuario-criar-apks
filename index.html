@@ -537,9 +537,9 @@ function train(k){
  }
  syncPlayerStats();
  S.min=mins();
- if(S.min>0&&Math.random()<.3){
-   const P=S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:DMA;
-   S.dm=Object.assign({m:RI(Math.max(60,92-S.min),90)},P[RI(0,P.length-1)]);
+ if(S.min>0&&Math.random()<(S.premium?.55:.42)){
+   const P=positionMomentPool();
+   S.dm=Object.assign({m:RI(Math.max(60,92-S.min),90)},newPositionMoment());
    render();return;
  }
  play();
@@ -551,6 +551,11 @@ const DMA=[{pen:1,t:'Pênalti a favor do seu time e o capitão deixa a cobrança
 {t:'O time pressiona nos acréscimos e a bola é lançada nas costas da defesa.',o:[['Correr no lance',.45,'Você ganha a corrida e finaliza para o gol!','Você chega atrasado.','vel'],['Dominar no peito',.35,'Domínio perfeito e gol!','O domínio sai longo.','con'],['Cruzar para a área',.4,'Seu cruzamento encontra o companheiro, gol!','O cruzamento sai forte demais.','cru','a']]},
 {t:'Falta perigosa na entrada da área.',o:[['Bater por cima da barreira',.35,'A bola morre no ângulo. Golaço de falta!','A bola passa por cima do gol.','fin'],['Rolar para o companheiro',.35,'A jogada ensaiada funciona e sai o gol!','A barreira corta o passe.','pas','a'],['Bater forte no canto do goleiro',.3,'O goleiro não segura, gol!','O goleiro encaixa.','fis']]},
 {t:'Você recebe livre pela ponta com espaço para avançar.',o:[['Partir para o drible',.4,'Você deixa dois marcadores para trás e marca!','Você perde a bola no drible.','dri'],['Cortar para dentro e chutar',.35,'Chute colocado no ângulo, gol!','O chute sai torto.','fin'],['Esperar a ultrapassagem',.45,'A tabela sai perfeita e seu passe vira gol!','A jogada é desarmada.','pas','a']]}];
+const DMM=[
+{t:'Você recebe a bola entre as linhas e o atacante ataca o espaço.',o:[['Enfiada pela esquerda',.52,'Passe perfeito nas costas da defesa! O atacante marca!','O zagueiro corta o passe.','pas','a'],['Passe curto por dentro',.67,'Você acha o companheiro e a jogada vira gol!','A marcação fecha o corredor.','men','a'],['Chute colocado da entrada da área',.38,'Chutaço no canto! Golaço!','O goleiro defende.','fin']]},
+{t:'Você conduz pelo meio e a defesa recua.',o:[['Lançamento para a ponta',.48,'Lançamento preciso e assistência!','A bola sai forte demais.','pas','a'],['Tabela pelo centro',.56,'A tabela desmonta a defesa e você dá o passe final!','O companheiro perde a bola.','con','a'],['Chute de média distância',.34,'A bola pega no canto e entra!','O chute é bloqueado.','fin']]},
+{t:'Últimos minutos e seu time precisa de uma jogada.',o:[['Passe vertical',.55,'Passe entre linhas. Assistência!','A defesa intercepta.','pas','a'],['Virada de jogo',.66,'A inversão encontra o companheiro livre. Gol na sequência!','A bola é roubada.','men','a'],['Chutar de primeira',.32,'Você bate de primeira e marca!','A bola passa perto da trave.','fin']]
+];
 const DMD=[{t:'Contra-ataque perigoso: o atacante parte em velocidade contra você.',o:[['Dar o bote',.5,'Desarme perfeito, a torcida vibra!','Ele passa por você e marca.','def'],['Acompanhar e fechar o ângulo',.6,'O atacante chuta fraco, sem perigo.','O atacante corta para dentro e marca.','pos'],['Falta tática',.7,'Você para a jogada com inteligência.','A falta é na entrada da área e eles convertem.','men']]},
 {t:'Escanteio contra, e o adversário tem um centroavante muito alto.',o:[['Marcar homem a homem',.55,'Você ganha a disputa e afasta de cabeça!','Ele sobe mais que você e marca.','fis'],['Antecipar no primeiro pau',.5,'Antecipação perfeita, bola afastada!','A bola passa por você e eles marcam.','def'],['Ficar na zona',.55,'Você corta o cruzamento.','A bola sobra livre na área e eles marcam.','pos']]},
 {t:'Bola longa nas costas da defesa, e o atacante adversário é mais rápido.',o:[['Correr no duelo',.45,'Você recupera e toma a bola no carrinho!','Ele chega antes e marca.','vel'],['Deixar para o goleiro',.5,'O goleiro sai bem e fica com a bola.','O goleiro hesita e eles marcam.','men'],['Pedir impedimento e parar',.4,'O bandeirinha marca impedimento!','Não tinha impedimento, gol deles.','pos']]}];
@@ -558,11 +563,14 @@ const DMG=[{t:'Pênalti contra o seu time.',o:[['Pular no canto esquerdo',.35,'V
 {t:'Chute de fora da área em direção ao ângulo.',o:[['Voar no ângulo',.5,'Defesa espetacular no ângulo!','A bola passa da ponta dos dedos.','def'],['Espalmar para escanteio',.55,'Você espalma para escanteio.','Você espalma para o meio da área e eles marcam no rebote.','pos'],['Tentar encaixar',.4,'Você encaixa com segurança.','A bola escapa das luvas e entra.','con']]},
 {t:'O atacante sai cara a cara com você.',o:[['Sair abafando',.5,'Você fecha o ângulo e fica com a bola!','Ele toca por cima de você.','ace'],['Esperar o chute',.45,'Reflexo rápido, grande defesa!','Ele chuta rasteiro e marca.','pos'],['Fechar o ângulo',.55,'O chute bate em você e sai.','Ele dribla e marca.','men']]}];
 function dec(i){
- if(!S||S.phase!='pre'||!S.dm||!S.dm.o?.[i])return;
+ if(!S||S.phase!='pre'||!S.dm||!S.dm.o?.[i]||S.busy)return;S.busy=1;
  const d=S.dm,o=d.o[i],a=o[4],p=cl(o[1]+(S.at[a]-60)/150+(S.energy<25?-.08:S.energy>80?.03:0)+(S.morale-60)/500,.08,.9),ok=Math.random()<p;
  sfx(ok?'correct':'wrong');
- S.dec={ok,m:d.m,l:ok?o[2]:o[3],k:S.pos=='GOL'||S.pos=='ZAG'?'def':'atk',t:o[5]||'g',pen:d.pen};
- S.dm=null;play();render()
+ const dc={ok,m:d.m,l:ok?o[2]:o[3],k:S.pos=='GOL'||S.pos=='ZAG'?'def':'atk',t:o[5]||'g',pen:d.pen,skill:a,pos:S.pos};
+ if(S.chain)S.dec2=dc;else S.dec=dc;
+ S.dm=null;
+ if(S.premium&&!S.chain){S.chain=1;S.dm=newPositionMoment();S.busy=0;render();return}
+ S.chain=0;play();S.busy=0;render()
 }
 
 function res(){const l=S.last,hm=l.h==S.club.n,my=hm?l.gh:l.ga,og=hm?l.ga:l.gh;return{my,og,win:my>og,loss:my<og}}
