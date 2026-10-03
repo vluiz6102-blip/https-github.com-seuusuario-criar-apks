@@ -4,17 +4,19 @@
   "private": true,
   "description": "Carreira FC - simulador de carreira de futebol",
   "scripts": {
-    "build": "node -e \"require('fs').copyFileSync('index.html','www/index.html')\"",
+    "build": "vite build --outDir www --emptyOutDir",
     "cap": "npx cap sync",
     "android:add": "npx cap add android",
     "android:open": "npx cap open android"
   },
   "dependencies": {
-    "@capacitor/core": "7.4.3"
+    "@capacitor/core": "7.4.3",
+    "capacitor-plugin-cdv-purchase": "13.18.0"
   },
   "devDependencies": {
     "@capacitor/cli": "7.4.3",
     "@capacitor/android": "7.4.3",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vite": "8.3.2"
   }
 }
