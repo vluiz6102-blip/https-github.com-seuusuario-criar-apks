@@ -524,6 +524,10 @@ async function restorePremium(){if(!S)return;try{if(window.CarreiraFCBilling&&ty
 function proTrain(){if(!S||!S.premium||S.proTrainYear===S.year||S.phase!='pre'||S.ev!=null||S.dm)return;ensurePremiumState();topAt(3).forEach(k=>S.at[k]=cl(S.at[k]+R(1.2,2.4),25,99));S.proTrainYear=S.year;en(-5);co(2);mo(3);toast('⚡ Treino PRO','Os 3 atributos principais da sua posição evoluíram.');syncPlayerStats();chkF();render()}
 function proNegotiate(){if(!S||!S.premium||S.phase!='end'||S.proNegotiationYear===S.year-1)return;S.proNegotiationYear=S.year-1;S.wage=Math.round(Math.max(S.wage,S.stayW||S.wage)*1.12);toast('🤝 Agente PRO','Seu agente conseguiu +12% no salário.');render()}
 function posRoleCard(){ensurePremiumState();const p=POSROLE[S.pos];const st=p.stats.map(x=>'<div class="row"><span>'+x[0]+'</span><b>'+((S.posStats&&S.posStats[x[1]])||0)+'</b></div>').join('');return '<div class="card roleCard"><div class="roleAccent">'+p.icon+' '+p.title+'</div><h2 style="margin-top:5px">Seu jogo muda com a posição</h2><p class="mu">'+p.desc+'</p><div class="chips wr">'+p.skills.map(k=>'<span class="chip on">'+AN[k]+'</span>').join('')+'</div>'+st+(S.premium?'<span class="proBadge" style="margin-top:8px">PRO · 2 decisões quando houver lance</span>':'')+'</div>'}
+function shopV(){
+ ensurePremiumState();
+ return ntV()+'<div class="card proCard">'+art(['💎','⚽','🏆'])+'<span class="proBadge">CARREIRA FC PRO</span><h2 style="margin-top:8px">R$ 9,99 · compra única</h2><p class="mu">Novos sistemas de gameplay, não apenas bônus de atributo.</p><div class="proFeature">🎮 <b>Lances PRO</b><br><span class="mu">Uma segunda decisão em lances da mesma partida.</span></div><div class="proFeature">⚡ <b>Treino PRO</b><br><span class="mu">Uma vez por temporada, evolui os 3 atributos mais importantes da sua posição.</span></div><div class="proFeature">🤝 <b>Agente PRO</b><br><span class="mu">Negociação especial de salário no fim da temporada.</span></div><div class="proFeature">📊 <b>Estatísticas de posição</b><br><span class="mu">Defesas, desarmes, passes-chave ou finalizações entram no histórico.</span></div>'+(S.premium?'<button class="btn go" disabled>✅ PRO desbloqueado</button>':'<button class="btn go" onclick="buyPremium()"><b>COMPRAR POR R$ 9,99</b><span>Compra única · confirmação pela loja Android</span></button>')+'<button class="btn" onclick="restorePremium()"><b>Restaurar compra</b><span>Recupera uma compra já confirmada pela loja.</span></button></div>'+(S.premium?'<div class="card"><h2>Ferramentas PRO</h2><button class="btn go" onclick="proTrain()" '+(S.proTrainYear===S.year?'disabled':'')+'><b>⚡ Treino PRO</b><span>'+(S.proTrainYear===S.year?'Já usado nesta temporada':'Usar nesta temporada')+'</span></button></div>':'');
+}
 function positionMomentPool(){return S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:S.pos=='MEI'?DMM:DMA}
 function newPositionMoment(){const p=positionMomentPool();return Object.assign({},p[RI(0,p.length-1)])}
 function train(k){
@@ -818,6 +822,7 @@ function sanitizeState(){
  S.iv=typeof S.iv=='string'?S.iv:'';
  S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
  S.prot=S.prot?1:0;
+ S.busy=0;S.chain=(S.premium&&S.chain&&S.dm)?1:0;if(!S.chain)S.dec2=null;
  S.cmp=Number.isInteger(S.cmp)?S.cmp:null;
  if(!['pre','post','comp','vac','end','retired','wc'].includes(S.phase))S.phase='pre';
  if(!S.club||typeof S.club!='object')S.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
