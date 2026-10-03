@@ -1,1 +1,20 @@
-{"name":"carreira-fc","version":"1.0.0","private":true,"description":"Carreira FC - simulador de carreira de futebol","scripts":{"build":"echo 'Carreira FC usa www/index.html como aplicação web'","cap":"npx cap sync","android:add":"npx cap add android","android:open":"npx cap open android"},"dependencies":{"@capacitor/core":"7.4.3"},"devDependencies":{"@capacitor/cli":"7.4.3","@capacitor/android":"7.4.3","typescript":"^5.9.2"}}
+{
+  "name": "carreira-fc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Carreira FC - simulador de carreira de futebol",
+  "scripts": {
+    "build": "node -e \"require('fs').copyFileSync('index.html','www/index.html')\"",
+    "cap": "npx cap sync",
+    "android:add": "npx cap add android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.4.3",
+    "@capacitor/android": "7.4.3",
+    "typescript": "5.9.2"
+  }
+}

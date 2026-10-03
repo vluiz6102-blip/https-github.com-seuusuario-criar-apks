@@ -84,7 +84,7 @@ h1{font-size:clamp(26px,7vw,34px)} h2{font-size:21px;line-height:1.25;margin-bot
 .card{background:var(--pn);border:1px solid var(--ln);border-radius:14px;padding:14px;margin:0 0 14px;box-shadow:none}
 .head{gap:14px;align-items:flex-start}.ovr{min-width:70px;font-size:50px}.mu{line-height:1.45}
 .row{min-height:38px;gap:12px;align-items:center;padding:8px 0}.bar{margin-top:10px}.bar div{height:8px;background:#1d1d1d}
-.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:0 0 14px}
 .tabs button{min-width:0;min-height:58px;padding:8px 3px;border-radius:11px;font-size:14px;line-height:1.15;overflow:hidden}
 .tabs button small{font-size:11px;white-space:nowrap}
 .sound{float:none;display:flex;justify-content:flex-end;align-items:center;min-height:40px;margin:0 0 8px}
@@ -113,7 +113,7 @@ button{cursor:pointer}
 .card{width:100%;min-width:0;overflow:hidden;background:#090909}
 .head{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;align-items:start}
 .head>*{min-width:0}
-.tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}
+.tabs{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;width:100%}
 .tabs button{width:100%;min-width:0;min-height:56px;padding:7px 2px;white-space:normal;word-break:normal;overflow:hidden}
 .tabs button small{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .sound{position:relative!important;float:none!important;width:100%;margin:0 0 8px!important}
@@ -157,7 +157,7 @@ button{cursor:pointer;touch-action:manipulation}
 .head{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;align-items:start}
 .head>*{min-width:0}
 .ovr{min-width:70px}
-.tabs{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}
+.tabs{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;width:100%}
 .tabs button{width:100%;min-width:0;min-height:54px;padding:7px 2px;white-space:normal;word-break:normal;overflow:hidden}
 .tabs button span{display:block;line-height:1.1}
 .btn{display:flex;flex-direction:column;justify-content:center;width:100%;min-width:0;min-height:56px;margin:10px 0 0!important;padding:13px 14px;white-space:normal;overflow:hidden;overflow-wrap:anywhere;word-break:break-word}
@@ -186,6 +186,14 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
  .btn{min-height:54px;font-size:15px}
 }
 @media(min-width:561px){body{padding-left:18px;padding-right:18px}}
+
+/* Carreira FC PRO */
+.proCard{border-color:#5c4bdc;background:linear-gradient(180deg,#11101a,#090909)}
+.proBadge{display:inline-block;padding:4px 8px;border-radius:999px;background:#5c4bdc;color:#fff;font-size:12px;font-weight:800}
+.proPrice{font-size:24px;font-weight:800;color:#ffca3a}
+.proFeature{padding:8px 0;border-bottom:1px solid #202020}
+.roleCard{border-color:#334b62;background:linear-gradient(180deg,#0e141a,#090909)}
+.roleAccent{font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:#8aa5b8;font-weight:800}
 </style>
 </head>
 <body>
@@ -448,6 +456,13 @@ const TT={atk:[1.2,1.2],bal:[1,1],def:[.8,.8]};
 function sim(h,a){const d=(strength(h)-strength(a))/70,t=TT[S.tac||'bal'];return[pois(Math.max(.2,(1.5*(1+d)+.2)*(h==S.me?t[0]:a==S.me?t[1]:1))),pois(Math.max(.2,1.4*(1-d)*(a==S.me?t[0]:h==S.me?t[1]:1)))]}
 function mins(){return S.inj>0||S.sus>0?0:(ovr()>=S.club.s-8-(S.coach-50)/8||Math.random()<.2)?90:(Math.random()<.6?RI(15,35):0)}
 const MX=[['Bola na trave! A bola explode no travessão.','o',0],['Gol seu anulado por impedimento milimétrico.','o',0],['Grande defesa do goleiro adversário em chute seu.','o',.1],['Cartão amarelo para você.','o',-.3],['Erro de passe seu quase vira contra-ataque.','o',-.25],['Você cria uma grande chance, mas o companheiro desperdiça.','',.2],['Contra-ataque rápido puxado por você.','',.15],['Desarme importante seu no meio-campo.','',.15]];
+function addPositionMatchStats(my,op,g,as){
+ ensurePremiumState();const p=S.posStats;
+ if(S.pos=='GOL'){const saves=Math.min(10,Math.max(0,RI(1,3)+Math.max(0,op-1)));p.saves+=saves;if(op==0)p.cleanSheets++;return {def:saves*.08,saves}}
+ if(S.pos=='ZAG'){const tackles=RI(2,5),interceptions=RI(1,4),clearances=RI(1,4);p.tackles+=tackles;p.interceptions+=interceptions;p.clearances+=clearances;return {def:tackles*.05+interceptions*.06+clearances*.03+(op==0?.25:0),tackles,interceptions,clearances}}
+ if(S.pos=='MEI'){const keyPasses=RI(1,4),shots=RI(Math.max(1,g),Math.max(2,g+3));p.keyPasses+=keyPasses;p.assistsCreated+=as;p.shots+=shots;return {def:keyPasses*.05,keyPasses,shots}}
+ const shots=RI(Math.max(2,g*2),Math.max(4,g*2+4));p.shots+=shots;p.goals+=g;p.goalInvolvements+=g+as;return {def:shots*.025,shots}
+}
 function play(){
  if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.r>=18)return;
  sanitizeState();
@@ -455,10 +470,10 @@ function play(){
  if(!Array.isArray(S.fx)||!Array.isArray(S.fx[S.r]))S.fx=fix(S.teams);
  const round=S.fx[S.r];
  if(!Array.isArray(round))return;
- const o=ovr(),dc=S.dec,sus=S.sus>0;let L=null;
+ const o=ovr(),dc=S.dec,dc2=S.dec2,sus=S.sus>0;let L=null;
  const min=S.min!=null?S.min:mins();S.min=null;S.dec=null;
  if(S.inj>0)S.inj--;else if(sus)S.sus--;
- const xg=dc&&dc.k=='atk'&&dc.ok?1:0,xo=dc&&dc.k=='def'&&!dc.ok?1:0;
+ const decisions=[dc,dc2].filter(Boolean),xg=decisions.filter(d=>d.k=='atk'&&d.ok).length,xo=decisions.filter(d=>d.k=='def'&&!d.ok).length;
  round.forEach(pair=>{
    if(!Array.isArray(pair)||pair.length<2)return;
    const h=pair[0],a=pair[1];
@@ -481,10 +496,7 @@ function play(){
    if(t=='g')g++;if(t=='a')as++;ev.push({m:RI(2,90),t});
  }
  for(let i=0;i<Math.max(0,op-xo);i++)ev.push({m:RI(2,90),t:'o'});
- if(dc){
-   ev.push({m:dc.m,t:'x',x:dc.l,c:dc.ok?'y':'o'});
-   if(xg){if(dc.t=='a')as++;else g++}adj+=dc.ok?.5:-.3;
- }
+ decisions.forEach((d,idx)=>{ev.push({m:d.m+idx*.1,t:'x',x:d.l,c:d.ok?'y':'o'});if(d.k=='atk'&&d.ok){if(d.t=='a')as++;else g++}if(d.k=='def'&&d.ok&&d.pen&&S.pos=='GOL')S.posStats.penSaves++;adj+=d.ok?.5:-.3});
  if(min>0){
    for(let i=0;i<2;i++)if(Math.random()<.35){const x=MX[RI(0,MX.length-1)];ev.push({m:RI(5,88),t:'x',x:x[0],c:x[1]});adj+=x[2]}
    if(Math.random()<.012){sfx('card');ev.push({m:RI(30,88),t:'x',x:'Cartão vermelho! Você é expulso e cumpre suspensão na próxima rodada.',c:'o'});adj-=1.5;mo(-8);co(-4);S.sus=1}
@@ -492,6 +504,7 @@ function play(){
  }
  ev.sort((a,b)=>a.m-b.m).forEach(e=>lines.push(e.t=='x'?[e.m+"' "+e.x,e.c]:e.t=='g'?[e.m+"' Gol seu! Você balança a rede.",'y']:e.t=='a'?[e.m+"' Gol do "+cn+', com assistência sua.','y']:e.t=='t'?[e.m+"' Gol do "+cn+'.','']:[e.m+"' Gol do "+opn+'.','o']));
  if(min>0){
+  const pd=addPositionMatchStats(my,op,g,as);adj+=pd.def;
   rt=cl(6+g*1.1+as*.6+R(-.9,.9)+(my>op?.4:my<op?-.3:0)+(o-S.club.s)/60+adj+(S.energy>80?.15:S.energy<25?-.4:0)+(S.pos=='GOL'||S.pos=='ZAG'?(op==0?.8:op>=3?-.6:0):0),3,10);
   if(min<45)rt=6.5+(rt-6.5)/2;
   rt=Math.round(rt*10)/10;
@@ -508,11 +521,11 @@ function play(){
   rcd('mg',g,'Gols em uma partida');rcd('stk',S.strk,'Sequência de jogos marcando');rcd('sg',S.ss.g,'Gols na temporada');rcd('sa',S.ss.a,'Assistências na temporada');
   if(S.ss.g>=12&&g&&!S.rf.th){S.rf.th=1;hl('🔥',S.name+' vive temporada histórica','Já são '+S.ss.g+' gols na temporada.')}
   if(S.nog==5&&S.pos!='GOL'&&S.pos!='ZAG')hl('📉',S.name+' atravessa jejum de gols','Já são 5 jogos sem balançar a rede.');
-  if(dc&&!dc.ok&&dc.pen){mo(-6);hl('😬',S.name+' desperdiça pênalti decisivo','O lance pesou no resultado e a pressão aumenta.')}
+  if(decisions.some(d=>d&&!d.ok&&d.pen)){mo(-6);hl('😬',S.name+' desperdiça pênalti decisivo','O lance pesou no resultado e a pressão aumenta.')}
  }else if(!S.inj&&!sus)mo(-2);
  S.prot=0;en(RI(3,6));S.ih=Math.max(0,(S.ih||0)-.15);
  mn(S.wage*12/18);
- S.last={h:S.teams[L.h].n,a:S.teams[L.a].n,gh:L.gh,ga:L.ga,lines,rt,g,as,min,inj:S.inj,sus};
+ S.last={h:S.teams[L.h].n,a:S.teams[L.a].n,gh:L.gh,ga:L.ga,lines,rt,g,as,min,inj:S.inj,sus,pos:S.pos};S.dec=null;S.dec2=null;S.chain=0;
  S.r++;S.iv='';
  if(S.club.tier==VZ&&S.last.min&&S.last.rt>=7&&Math.random()<Math.min(.65,.12+(S.last.rt-7)*.12+S.fame*.003)){S.scoutOffers=scoutOffers();if(S.scoutOffers.length)fa(2)}
  S.phase='post';chkF();syncPlayerStats();
@@ -521,6 +534,18 @@ function play(){
 const TR={fin:['fin','pos'],vel:['vel','ace'],pas:['pas','men'],dri:['dri','con'],fis:['fis','res'],def:['def','cru']};
 const TRL=[['pos','Treino de posição','Reforça os atributos que mais pesam na sua função'],['fin','Finalização','Finalização e posicionamento'],['vel','Velocidade','Velocidade e aceleração'],['pas','Passe e visão','Passe e mentalidade'],['dri','Drible e controle','Drible e controle de bola'],['fis','Físico','Físico e resistência'],['def','Defesa e cruzamento','Defesa e cruzamento'],['pers','Personal trainer','R$ 30 mil · evolui 3 atributos, risco de lesão maior'],['prev','Treino preventivo','Menos risco de lesão no próximo jogo, +energia'],['rest','Descanso','Recupera energia e moral']];
 function topAt(n){return AK.map((k,i)=>[k,OW[S.pos][i]]).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])}
+const PREMIUM_PRODUCT='carreira_fc_pro_v1';
+const POSROLE={GOL:{title:'Goleiro',icon:'🧤',desc:'Sua carreira vive de defesas, posicionamento e leitura do lance.',skills:['def','pos','con'],stats:[['Defesas','saves'],['Jogos sem sofrer gols','cleanSheets'],['Pênaltis defendidos','penSaves']]},ZAG:{title:'Zagueiro',icon:'🛡️',desc:'Sua carreira é construída em desarmes, antecipações e cortes.',skills:['def','pos','fis'],stats:[['Desarmes','tackles'],['Interceptações','interceptions'],['Cortes','clearances']]},MEI:{title:'Meia',icon:'🎯',desc:'Você dita o ritmo, escolhe passes, cria e decide quando chutar.',skills:['pas','con','men'],stats:[['Passes-chave','keyPasses'],['Assistências criadas','assistsCreated'],['Chutes','shots']]},ATA:{title:'Atacante',icon:'⚡',desc:'Sua carreira gira em torno de movimentação, finalizações e gols.',skills:['fin','pos','dri'],stats:[['Finalizações','shots'],['Gols','goals'],['Participações em gol','goalInvolvements']]}};
+function ensurePremiumState(){if(!S)return;S.premium=!!S.premium;S.proTrainYear=Number.isFinite(+S.proTrainYear)?+S.proTrainYear:null;S.proNegotiationYear=Number.isFinite(+S.proNegotiationYear)?+S.proNegotiationYear:null;S.posStats=S.posStats&&typeof S.posStats=='object'?S.posStats:{};['saves','cleanSheets','penSaves','tackles','interceptions','clearances','keyPasses','assistsCreated','shots','goals','goalInvolvements'].forEach(k=>{const v=Number(S.posStats[k]);S.posStats[k]=Number.isFinite(v)?Math.max(0,Math.floor(v)):0})}
+function grantPremium(){if(!S)return;S.premium=true;ensurePremiumState();toast('💎 Carreira FC PRO','PRO desbloqueado.');sfx('transfer');save();render(1)}
+window.grantCarreiraFCPremium=grantPremium;
+async function buyPremium(){if(!S||S.premium)return;try{if(window.CarreiraFCBilling&&typeof window.CarreiraFCBilling.purchase==='function'){const ok=await window.CarreiraFCBilling.purchase(PREMIUM_PRODUCT);if(ok===true){grantPremium();return}}}catch(e){console.warn(e)}S.nt=[];toast('💎 Carreira FC PRO · R$ 9,99','Compra real só é confirmada quando o sistema de cobrança Android responder.');render(1)}
+async function restorePremium(){if(!S)return;try{if(window.CarreiraFCBilling&&typeof window.CarreiraFCBilling.restore==='function'){const ok=await window.CarreiraFCBilling.restore(PREMIUM_PRODUCT);if(ok===true){grantPremium();return}}}catch(e){console.warn(e)}toast('💎 Restaurar compra','Nenhuma compra pôde ser confirmada neste APK.');render(1)}
+function proTrain(){if(!S||!S.premium||S.proTrainYear===S.year||S.phase!='pre'||S.ev!=null||S.dm)return;ensurePremiumState();topAt(3).forEach(k=>S.at[k]=cl(S.at[k]+R(1.2,2.4),25,99));S.proTrainYear=S.year;en(-5);co(2);mo(3);toast('⚡ Treino PRO','Os 3 atributos principais da sua posição evoluíram.');syncPlayerStats();chkF();render()}
+function proNegotiate(){if(!S||!S.premium||S.phase!='end'||S.proNegotiationYear===S.year-1)return;S.proNegotiationYear=S.year-1;S.wage=Math.round(Math.max(S.wage,S.stayW||S.wage)*1.12);toast('🤝 Agente PRO','Seu agente conseguiu +12% no salário.');render()}
+function posRoleCard(){ensurePremiumState();const p=POSROLE[S.pos];const st=p.stats.map(x=>'<div class="row"><span>'+x[0]+'</span><b>'+((S.posStats&&S.posStats[x[1]])||0)+'</b></div>').join('');return '<div class="card roleCard"><div class="roleAccent">'+p.icon+' '+p.title+'</div><h2 style="margin-top:5px">Seu jogo muda com a posição</h2><p class="mu">'+p.desc+'</p><div class="chips wr">'+p.skills.map(k=>'<span class="chip on">'+AN[k]+'</span>').join('')+'</div>'+st+(S.premium?'<span class="proBadge" style="margin-top:8px">PRO · 2 decisões quando houver lance</span>':'')+'</div>'}
+function positionMomentPool(){return S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:S.pos=='MEI'?DMM:DMA}
+function newPositionMoment(){const p=positionMomentPool();return Object.assign({},p[RI(0,p.length-1)])}
 function train(k){
  sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
  if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
@@ -538,9 +563,9 @@ function train(k){
  }
  syncPlayerStats();
  S.min=mins();
- if(S.min>0&&Math.random()<.3){
-   const P=S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:DMA;
-   S.dm=Object.assign({m:RI(Math.max(60,92-S.min),90)},P[RI(0,P.length-1)]);
+ if(S.min>0&&Math.random()<(S.premium?.55:.42)){
+   const P=positionMomentPool();
+   S.dm=Object.assign({m:RI(Math.max(60,92-S.min),90)},newPositionMoment());
    render();return;
  }
  play();
@@ -552,6 +577,11 @@ const DMA=[{pen:1,t:'Pênalti a favor do seu time e o capitão deixa a cobrança
 {t:'O time pressiona nos acréscimos e a bola é lançada nas costas da defesa.',o:[['Correr no lance',.45,'Você ganha a corrida e finaliza para o gol!','Você chega atrasado.','vel'],['Dominar no peito',.35,'Domínio perfeito e gol!','O domínio sai longo.','con'],['Cruzar para a área',.4,'Seu cruzamento encontra o companheiro, gol!','O cruzamento sai forte demais.','cru','a']]},
 {t:'Falta perigosa na entrada da área.',o:[['Bater por cima da barreira',.35,'A bola morre no ângulo. Golaço de falta!','A bola passa por cima do gol.','fin'],['Rolar para o companheiro',.35,'A jogada ensaiada funciona e sai o gol!','A barreira corta o passe.','pas','a'],['Bater forte no canto do goleiro',.3,'O goleiro não segura, gol!','O goleiro encaixa.','fis']]},
 {t:'Você recebe livre pela ponta com espaço para avançar.',o:[['Partir para o drible',.4,'Você deixa dois marcadores para trás e marca!','Você perde a bola no drible.','dri'],['Cortar para dentro e chutar',.35,'Chute colocado no ângulo, gol!','O chute sai torto.','fin'],['Esperar a ultrapassagem',.45,'A tabela sai perfeita e seu passe vira gol!','A jogada é desarmada.','pas','a']]}];
+const DMM=[
+{t:'Você recebe a bola entre as linhas e o atacante ataca o espaço.',o:[['Enfiada pela esquerda',.52,'Passe perfeito nas costas da defesa! O atacante marca!','O zagueiro corta o passe.','pas','a'],['Passe curto por dentro',.67,'Você acha o companheiro e a jogada vira gol!','A marcação fecha o corredor.','men','a'],['Chute colocado da entrada da área',.38,'Chutaço no canto! Golaço!','O goleiro defende.','fin']]},
+{t:'Você conduz pelo meio e a defesa recua.',o:[['Lançamento para a ponta',.48,'Lançamento preciso e assistência!','A bola sai forte demais.','pas','a'],['Tabela pelo centro',.56,'A tabela desmonta a defesa e você dá o passe final!','O companheiro perde a bola.','con','a'],['Chute de média distância',.34,'A bola pega no canto e entra!','O chute é bloqueado.','fin']]},
+{t:'Últimos minutos e seu time precisa de uma jogada.',o:[['Passe vertical',.55,'Passe entre linhas. Assistência!','A defesa intercepta.','pas','a'],['Virada de jogo',.66,'A inversão encontra o companheiro livre. Gol na sequência!','A bola é roubada.','men','a'],['Chutar de primeira',.32,'Você bate de primeira e marca!','A bola passa perto da trave.','fin']]
+];
 const DMD=[{t:'Contra-ataque perigoso: o atacante parte em velocidade contra você.',o:[['Dar o bote',.5,'Desarme perfeito, a torcida vibra!','Ele passa por você e marca.','def'],['Acompanhar e fechar o ângulo',.6,'O atacante chuta fraco, sem perigo.','O atacante corta para dentro e marca.','pos'],['Falta tática',.7,'Você para a jogada com inteligência.','A falta é na entrada da área e eles convertem.','men']]},
 {t:'Escanteio contra, e o adversário tem um centroavante muito alto.',o:[['Marcar homem a homem',.55,'Você ganha a disputa e afasta de cabeça!','Ele sobe mais que você e marca.','fis'],['Antecipar no primeiro pau',.5,'Antecipação perfeita, bola afastada!','A bola passa por você e eles marcam.','def'],['Ficar na zona',.55,'Você corta o cruzamento.','A bola sobra livre na área e eles marcam.','pos']]},
 {t:'Bola longa nas costas da defesa, e o atacante adversário é mais rápido.',o:[['Correr no duelo',.45,'Você recupera e toma a bola no carrinho!','Ele chega antes e marca.','vel'],['Deixar para o goleiro',.5,'O goleiro sai bem e fica com a bola.','O goleiro hesita e eles marcam.','men'],['Pedir impedimento e parar',.4,'O bandeirinha marca impedimento!','Não tinha impedimento, gol deles.','pos']]}];
@@ -559,11 +589,14 @@ const DMG=[{t:'Pênalti contra o seu time.',o:[['Pular no canto esquerdo',.35,'V
 {t:'Chute de fora da área em direção ao ângulo.',o:[['Voar no ângulo',.5,'Defesa espetacular no ângulo!','A bola passa da ponta dos dedos.','def'],['Espalmar para escanteio',.55,'Você espalma para escanteio.','Você espalma para o meio da área e eles marcam no rebote.','pos'],['Tentar encaixar',.4,'Você encaixa com segurança.','A bola escapa das luvas e entra.','con']]},
 {t:'O atacante sai cara a cara com você.',o:[['Sair abafando',.5,'Você fecha o ângulo e fica com a bola!','Ele toca por cima de você.','ace'],['Esperar o chute',.45,'Reflexo rápido, grande defesa!','Ele chuta rasteiro e marca.','pos'],['Fechar o ângulo',.55,'O chute bate em você e sai.','Ele dribla e marca.','men']]}];
 function dec(i){
- if(!S||S.phase!='pre'||!S.dm||!S.dm.o?.[i])return;
+ if(!S||S.phase!='pre'||!S.dm||!S.dm.o?.[i]||S.busy)return;S.busy=1;
  const d=S.dm,o=d.o[i],a=o[4],p=cl(o[1]+(S.at[a]-60)/150+(S.energy<25?-.08:S.energy>80?.03:0)+(S.morale-60)/500,.08,.9),ok=Math.random()<p;
  sfx(ok?'correct':'wrong');
- S.dec={ok,m:d.m,l:ok?o[2]:o[3],k:S.pos=='GOL'||S.pos=='ZAG'?'def':'atk',t:o[5]||'g',pen:d.pen};
- S.dm=null;play();render()
+ const dc={ok,m:d.m,l:ok?o[2]:o[3],k:S.pos=='GOL'||S.pos=='ZAG'?'def':'atk',t:o[5]||'g',pen:d.pen,skill:a,pos:S.pos};
+ if(S.chain)S.dec2=dc;else S.dec=dc;
+ S.dm=null;
+ if(S.premium&&!S.chain){S.chain=1;S.dm=newPositionMoment();S.busy=0;render();return}
+ S.chain=0;play();S.busy=0;render()
 }
 
 function res(){const l=S.last,hm=l.h==S.club.n,my=hm?l.gh:l.ga,og=hm?l.ga:l.gh;return{my,og,win:my>og,loss:my<og}}
@@ -872,6 +905,7 @@ function sanitizeState(){
 function mig(s){
  if(!s||typeof s!='object')return null;
  s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
+ if(!s.at||typeof s.at!='object'){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
  if(!s.club||typeof s.club!='object')s.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  const tier=cl(Number.isFinite(+s.club.tier)?Math.floor(+s.club.tier):0,0,VZ);
  s.club={n:String(s.club.n||LG[tier].c[0].split(':')[0]),tier,s:Number.isFinite(+s.club.s)?+s.club.s:52};
@@ -884,6 +918,7 @@ function mig(s){
  if(s.phase=='comp'&&!Array.isArray(s.comps))s.comps=[];
  if(s.phase=='comp'&&(!Number.isInteger(s.cmp)||!s.comps[s.cmp]))s.cmp=null;
  if(s.phase=='wc'&&(!s.wc||s.wc.v!=2)){s.wc=null;s.phase='vac';s.sum=s.sum||{pos:'-',avg:'0',g:0,a:0,j:0,ex:[]}}
+ if(!Number.isFinite(+s.stayW))s.stayW=Number.isFinite(+s.wage)?+s.wage:0;
  return s
 }
 
