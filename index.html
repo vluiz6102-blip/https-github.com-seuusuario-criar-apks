@@ -429,7 +429,7 @@ function join(c){
 let START_OFFERS=[];
 function makeStartOffers(){const pool=[];LG.forEach((l,t)=>{if(t>2)return;l.c.forEach(x=>{const[n,s]=x.split(':');pool.push({n,tier:t,s:+s})})});const of=[],used={};const pos=$('ps')?.value||'ATA';const tiers=[0,1,2].sort(()=>Math.random()-.5);pool.sort(()=>Math.random()-.5);tiers.forEach(t=>{const choices=pool.filter(c=>c.tier==t&&!used[c.n]);if(choices.length&&of.length<3){const c=choices[RI(0,choices.length-1)];used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});if(of.length<3)pool.filter(c=>!used[c.n]).slice(0,3-of.length).forEach(c=>{used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})});if(Math.random()<.28){const v=LG[VZ].c[RI(0,LG[VZ].c.length-1)].split(':');of[RI(0,of.length-1)]={n:v[0],tier:VZ,s:+v[1],w:0,varzea:true}}return of}
 function chooseStart(o){if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
-function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);chooseStart(o)}
+function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:6,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],premium:false,proTrainYear:null,proNegotiationYear:null,chain:0,dec2:null,busy:0,posStats:{saves:0,cleanSheets:0,penSaves:0,tackles:0,interceptions:0,clearances:0,keyPasses:0,assistsCreated:0,shots:0,goals:0,goalInvolvements:0}};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);chooseStart(o)}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
 function strength(i){let s=S.teams[i].s;if(i==S.me)s+=(ovr()-s)*.1+(S.energy>80?1:S.energy<25?-3:(S.energy-60)/30)+(S.morale-60)/25+(S.coach-50)/50;return s}
@@ -527,7 +527,7 @@ function posRoleCard(){ensurePremiumState();const p=POSROLE[S.pos];const st=p.st
 function positionMomentPool(){return S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:S.pos=='MEI'?DMM:DMA}
 function newPositionMoment(){const p=positionMomentPool();return Object.assign({},p[RI(0,p.length-1)])}
 function train(k){
- sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
+ sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.busy)return; S.busy=1;
  if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
  S.nt=[];
  if(S.inj>0)en(20);
@@ -545,9 +545,10 @@ function train(k){
  if(S.min>0&&Math.random()<(S.premium?.55:.42)){
    const P=positionMomentPool();
    S.dm=Object.assign({m:RI(Math.max(60,92-S.min),90)},newPositionMoment());
-   render();return;
+   S.busy=0;render();return;
  }
  play();
+ S.busy=0;
  render();
 }
 
@@ -698,7 +699,7 @@ function reset(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;STA
 const bar=(l,v,c)=>`<div class="bar"><span>${l} ${Math.round(v)}</span><div><i style="width:${v}%;background:${c}"></i></div></div>`;
 function head(){return`<div class="card"><div class="head"><div class="ovr">${ovr()}<small>geral</small></div><div><h1>${S.name}</h1><div class="mu">${POSN[S.pos]}, ${S.age} anos</div><div class="mu">${S.club.n} · ${TIERS[S.club.tier]}</div>${S.inj>0?'<span class="tag">Lesionado</span>':S.sus>0?'<span class="tag">Suspenso</span>':''}</div></div>${bar('Energia',S.energy,S.energy<35?'var(--rd)':'var(--gr)')}${bar('Moral',S.morale,'var(--am)')}${bar('Fama',S.fame,'#6fa8dc')}<div style="margin-top:8px"><span class="pill">${STY()}</span><span class="pill">${rep()}</span>${S.cap?'<span class="pill">© Capitão</span>':''}<span class="pill">Valor R$ ${fm(mv())}</span></div><div class="mu" style="margin-top:8px">Técnica ${Math.round(S.tec)} · Físico ${Math.round(S.fis)} · Mental ${Math.round(S.men)}</div><div class="row" style="margin-top:6px"><span>Saldo em conta</span><b class="mny ${S.lm==null||S.lm==S.money?'':S.money>S.lm?'gain':'loss'}">R$ ${fm(S.money)}</b></div></div>`}
 const sndB=()=>`<div class="sound"><button class="chip" onclick="toggleSound()">${audioOK?'🔊 Som ligado':'🔇 Som desligado'}</button></div>`;
-const tabs=()=>sndB()+`<div class="tabs">${[['game','🎮','Jogo'],['tbl','📊','Tabela'],['ply','🧍','Jogador'],['news','📰','Notícias'],['car','📖','Carreira']].map(([k,i,l])=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';render()"><span>${i}</span>${l}</button>`).join('')}</div>`;
+const tabs=()=>sndB()+`<div class="tabs">${[['game','🎮','Jogo'],['tbl','📊','Tabela'],['ply','🧍','Jogador'],['news','📰','Notícias'],['shop','💎','Loja'],['car','📖','Carreira']].map(([k,i,l])=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';render()"><span>${i}</span>${l}</button>`).join('')}</div>`;
 const ntV=()=>(S.nt||[]).map(t=>`<div class="card nt"><h2>${t[0]}</h2><p>${t[1]}</p></div>`).join('');
 const conf=e=>`<div class="cf">${Array.from({length:10},(_,i)=>`<span style="--x:${5+i*10}%;--d:${(i*.15).toFixed(2)}s">${e}</span>`).join('')}</div>`;
 const art=a=>`<div class="art">${a.map(x=>`<span>${x}</span>`).join('')}</div>`;
@@ -755,11 +756,11 @@ const recV=()=>`<div class="card"><h2>Recordes pessoais</h2>${rows([['Gols em um
 const objV=()=>`<div class="card"><h2>Objetivos de carreira</h2>${FEATS.map((f,i)=>f.h?'':`<div class="row"><span>${S.done[i]?'✅':'⬜'} ${f.t}</span>${S.done[i]?`<span class="mu">${S.done[i]}</span>`:''}</div>`).join('')}</div><div class="card"><h2>Conquistas secretas</h2>${FEATS.map((f,i)=>f.h?`<div class="row"><span>${S.done[i]?'🔓 '+f.t:'🔒 Conquista secreta'}</span></div>`:'').join('')}</div>`;
 const resV=()=>`<div class="card"><h2>Números da carreira</h2>${rows([['Clubes',S.clubs.length],['Temporadas',S.hist.length],['Jogos',S.tot.j],['Gols',S.tot.g],['Assistências',S.tot.a],['Títulos',S.titles],['Seleção',(S.sel||0)+' jogo(s), '+(S.sgl||0)+' gol(s)'],['Acessos',S.promos||0],['Contrato',S.yrs+' ano(s) · R$ '+fm(S.wage)+'/mês'],['Patrimônio','R$ '+fm(S.money)]])}<p class="mu" style="margin-top:8px">${S.clubs.map(c=>c.n+' ('+c.y+')').join(' → ')}</p></div><div class="card"><h2>Temporadas</h2>${S.hist.map(h=>`<div class="row"><span>${h.y} ${h.c}<br><span class="mu">${h.t} · ${h.p}º lugar</span></span><span style="text-align:right">${h.g}G ${h.a}A<br><span class="mu">nota ${h.avg}</span></span></div>`).join('')||'<p class="mu">Nenhuma temporada completa ainda.</p>'}</div>`;
 function careerV(){const T=[['res','Resumo'],['tro','Troféus'],['rec','Recordes'],['obj','Metas'],['tl','Linha do tempo']];return`<div class="chips wr">${T.map(([k,l])=>`<button class="chip ${ct==k?'on':''}" onclick="ct='${k}';render(1)">${l}</button>`).join('')}</div>`+({res:resV,tro:trV,rec:recV,obj:objV,tl:tlV}[ct])()}
-function playerV(){const l=['Muito ruim','Ruim','Normal','Boa','Ótima','Excelente'],ci=S.coach<15?0:S.coach<35?1:S.coach<55?2:S.coach<70?3:S.coach<85?4:5,top=topAt(3);
+function playerVBase(){const l=['Muito ruim','Ruim','Normal','Boa','Ótima','Excelente'],ci=S.coach<15?0:S.coach<35?1:S.coach<55?2:S.coach<70?3:S.coach<85?4:5,top=topAt(3);
  return`<div class="card"><h2>${STY()}</h2><div class="mu">Reputação: <b>${rep()}</b> · Valor de mercado: <b>R$ ${fm(mv())}</b></div><div class="mu">Relação com o técnico: <b>${l[ci]}</b>${S.cap?' · Capitão':''}</div>${bar('Relação com o técnico',S.coach,'#c58af0')}</div><div class="card"><h2>Atributos</h2><p class="mu">Os atributos com ★ pesam mais no geral de um ${POSN[S.pos].toLowerCase()}.</p>${AK.map(k=>bar(AN[k]+(top.includes(k)?' ★':''),S.at[k],S.at[k]>=80?'var(--am)':'var(--gr)')).join('')}</div><div class="card"><h2>Finanças</h2>${rows([['Saldo','R$ '+fm(S.money)],['Salário','R$ '+fm(S.wage)+'/mês'],['Ganhos da temporada','R$ '+fm(S.se||0)],['Ganhos totais','R$ '+fm(S.te||0)],['Contrato',S.yrs+' ano(s)']])}</div>`}
-function endV(){const m=S.sum;return ntV()+`<div class="card">${m.champ?conf('🎉'):''}${art([m.champ?'🏆':'📅','🎉'])}<h2>Fim da temporada ${S.year-1}</h2><p>${m.champ?'Seu time foi campeão!':'Seu time terminou em '+m.pos+'º lugar.'}</p>${m.ex.map(x=>`<p>${x}</p>`).join('')}<p class="mu">${m.j} jogos · ${m.g} gols · ${m.a} assistências · nota média ${m.avg}</p></div><div class="card">${art(['✈️','💼'])}<h2>Seu futuro</h2>${S.yrs>0?`<button class="btn" onclick="keep()"><b>Cumprir o contrato</b><span>Restam ${S.yrs} ano(s) · R$ ${fm(S.wage)}/mês</span></button>`:''}<button class="btn" onclick="stay(2)"><b>Ficar no ${S.club.n}</b><span>Renovar por 2 anos · R$ ${fm(S.stayW)}/mês</span></button><button class="btn" onclick="stay(4)"><b>Renovar por 4 anos</b><span>Salário 12% maior · R$ ${fm(Math.round(S.stayW*1.12))}/mês</span></button>${S.offers.map((o,i)=>`<button class="btn" onclick="go(${i})"><b>${o.n}</b><span>${o.pre?'Pré-contrato assinado · ':''}${TIERS[o.tier]} · 3 anos · R$ ${fm(o.w)}/mês${o.role?`<br>${o.role} · camisa ${o.num}`:''}</span></button>`).join('')}${S.age>=32?`<button class="btn" onclick="retire()"><b>Aposentar</b><span>Encerrar a carreira aos ${S.age} anos</span></button>`:''}</div>`}
+function playerV(){ensurePremiumState();const p=POSROLE[S.pos],ps=p.stats.map(x=>[x[0],S.posStats[x[1]]||0]);return playerVBase()+'<div class="card"><h2>Estatísticas específicas</h2>'+rows(ps)+'</div>'}function endVBase(){const m=S.sum;return ntV()+`<div class="card">${m.champ?conf('🎉'):''}${art([m.champ?'🏆':'📅','🎉'])}<h2>Fim da temporada ${S.year-1}</h2><p>${m.champ?'Seu time foi campeão!':'Seu time terminou em '+m.pos+'º lugar.'}</p>${m.ex.map(x=>`<p>${x}</p>`).join('')}<p class="mu">${m.j} jogos · ${m.g} gols · ${m.a} assistências · nota média ${m.avg}</p></div><div class="card">${art(['✈️','💼'])}<h2>Seu futuro</h2>${S.yrs>0?`<button class="btn" onclick="keep()"><b>Cumprir o contrato</b><span>Restam ${S.yrs} ano(s) · R$ ${fm(S.wage)}/mês</span></button>`:''}<button class="btn" onclick="stay(2)"><b>Ficar no ${S.club.n}</b><span>Renovar por 2 anos · R$ ${fm(S.stayW)}/mês</span></button><button class="btn" onclick="stay(4)"><b>Renovar por 4 anos</b><span>Salário 12% maior · R$ ${fm(Math.round(S.stayW*1.12))}/mês</span></button>${S.offers.map((o,i)=>`<button class="btn" onclick="go(${i})"><b>${o.n}</b><span>${o.pre?'Pré-contrato assinado · ':''}${TIERS[o.tier]} · 3 anos · R$ ${fm(o.w)}/mês${o.role?`<br>${o.role} · camisa ${o.num}`:''}</span></button>`).join('')}${S.age>=32?`<button class="btn" onclick="retire()"><b>Aposentar</b><span>Encerrar a carreira aos ${S.age} anos</span></button>`:''}</div>`}
 const phrase=()=>S.titles>=10?'Uma carreira marcada por títulos e grandes decisões.':S.tot.g>=250?'Uma carreira construída com gols e regularidade.':(S.sel||0)>=40?'Um atleta que brilhou também com a camisa da seleção.':S.clubs.length>=6?'Uma carreira de muitas estradas e muitos desafios.':S.clubs.length<=2?'Um jogador que virou símbolo de poucos clubes.':'Uma carreira de superação, trabalho e boas histórias.';
-function retV(){return`<div class="card">${conf('🏆')}${art(['🏅','🏆'])}<h2>Fim de carreira</h2><p>${S.name} se aposentou aos ${S.age} anos como <b>${rep()}</b>.</p><p class="mu" style="margin:6px 0">${phrase()}</p>${rows([['Jogos',S.tot.j],['Gols',S.tot.g],['Assistências',S.tot.a],['Títulos',S.titles],['Clubes',S.clubs.length],['Patrimônio','R$ '+fm(S.money)]])}<button class="btn go" onclick="reset()">Começar nova carreira</button></div>${resV()}${trV()}${tlV()}`}
+function endV(){const base=endVBase();return base+(S.premium?'<div class="card proCard"><h2>🤝 Agente PRO</h2><button class="btn go" onclick="proNegotiate()"><b>Negociar salário</b><span>'+(S.proNegotiationYear===S.year-1?'Já usado nesta temporada':'+12% no salário')+'</span></button></div>':'')}function retV(){return`<div class="card">${conf('🏆')}${art(['🏅','🏆'])}<h2>Fim de carreira</h2><p>${S.name} se aposentou aos ${S.age} anos como <b>${rep()}</b>.</p><p class="mu" style="margin:6px 0">${phrase()}</p>${rows([['Jogos',S.tot.j],['Gols',S.tot.g],['Assistências',S.tot.a],['Títulos',S.titles],['Clubes',S.clubs.length],['Patrimônio','R$ '+fm(S.money)]])}<button class="btn go" onclick="reset()">Começar nova carreira</button></div>${resV()}${trV()}${tlV()}`}
 function intro(){const o=a=>a.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');if(!START_OFFERS.length)START_OFFERS=makeStartOffers();return`<div class="card">${art(['⚽','🏆','🌍'])}<h1 style="font-size:30px">Carreira FC</h1><p class="mu">Você começa aos 17 anos. Clubes podem apostar em você antes da fama.</p><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Seu nome"></label><label>Posição<select id="ps">${o(Object.keys(POSN).map(k=>[k,POSN[k]]))}</select></label><label>Ponto forte<select id="st">${o([['tec','Técnica'],['fis','Físico'],['men','Mental']])}</select></label><h3 style="margin-top:14px">Clubes interessados em você</h3>${START_OFFERS.map((x,i)=>`<button class="btn" onclick="start(${i})"><b>${x.n}</b><span>${TIERS[x.tier]} · ${x.varzea?'Várzea · sem salário fixo':'Profissional · R$ '+fm(x.w)+'/mês'}</span></button>`).join('')}</div>`}
 function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
  if(w.q==0)return`<div class="card wc">${art(['🇧🇷','🏆'])}<span class="round">${WCR[w.r]}</span><h2>Brasil x ${w.opp[w.r]}</h2><p>Copa do Mundo ${S.year-1}. ${w.r<3?'Pontos no grupo: '+w.pts+'. ':'Jogo eliminatório: quem perder está fora. '}Como o Brasil vai jogar?</p><button class="btn" onclick="wcPlay(0)"><b>Atacar</b><span>Mais chances de gol, maior desgaste</span></button><button class="btn" onclick="wcPlay(1)"><b>Equilibrar</b><span>Controle e segurança</span></button><button class="btn" onclick="wcPlay(2)"><b>Jogar no contra-ataque</b><span>Menos gols sofridos, menos desgaste</span></button></div>`;
@@ -770,13 +771,13 @@ function render(still){
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';if(!S){A.innerHTML=intro();return}
  let h=head();
- if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
+ if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():tab=='shop'?shopV():careerV());
  A.innerHTML=h;S.lm=S.money;save();
  if(!still){window.scrollTo(0,0);if(document.querySelectorAll)document.querySelectorAll('.btn').forEach((b,i)=>b.style.animationDelay=i*.05+'s')}
 }
 function sanitizeState(){
  if(!S)return;
- S.v=5;
+ S.v=6;ensurePremiumState();
  S.name=String(S.name||'Jogador').replace(/[<>&"'\`]/g,'').slice(0,20)||'Jogador';
  S.pos=['ATA','MEI','ZAG','GOL'].includes(S.pos)?S.pos:'ATA';
  S.energy=cl(Number.isFinite(+S.energy)?+S.energy:90);
@@ -813,7 +814,7 @@ function sanitizeState(){
  S.rc=S.rc&&typeof S.rc=='object'?S.rc:{};
  S.rf=S.rf&&typeof S.rf=='object'?S.rf:{};
  S.done=S.done&&typeof S.done=='object'?S.done:{};
- S.comps=Array.isArray(S.comps)?S.comps:[];
+ S.comps=Array.isArray(S.comps)?S.comps:[];ensurePremiumState();
  S.ev=Number.isInteger(S.ev)&&typeof EV!='undefined'&&EV[S.ev]?S.ev:null;
  S.iv=typeof S.iv=='string'?S.iv:'';
  S.ih=Number.isFinite(+S.ih)?Math.max(0,+S.ih):0;
@@ -877,7 +878,7 @@ function sanitizeState(){
 
 function mig(s){
  if(!s||typeof s!='object')return null;
- s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
+ s=Object.assign({v:6,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre',premium:false,proTrainYear:null,proNegotiationYear:null,chain:0,dec2:null,busy:0,posStats:{saves:0,cleanSheets:0,penSaves:0,tackles:0,interceptions:0,clearances:0,keyPasses:0,assistsCreated:0,shots:0,goals:0,goalInvolvements:0}},s);
  if(!s.at||typeof s.at!='object'){s.at={};AK.forEach(k=>s.at[k]=cl(+(GRP.tec.includes(k)?s.tec:GRP.fis.includes(k)?s.fis:s.men)||50,25,99))}
  if(!s.club||typeof s.club!='object')s.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  const tier=cl(Number.isFinite(+s.club.tier)?Math.floor(+s.club.tier):0,0,VZ);
