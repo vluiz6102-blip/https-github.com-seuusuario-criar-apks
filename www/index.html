@@ -70,7 +70,7 @@ tr.me td{color:var(--am);font-weight:700}
 .tag{animation:shake .5s 3}
 .go{animation:pulse 2s infinite}
 .btn{animation:up .3s both}
-.still *{animation:none!important}
+.still .card,.still .btn,.still .chip,.still .ovr,.still .sc,.still .ln{animation:none!important}
 .pill{display:inline-block;background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:2px 9px;font-size:13px;margin:0 4px 4px 0;color:var(--am)}
 .tabs button{padding:7px 2px;font-size:12px}.tabs button span{display:block;font-size:18px;line-height:1.2}
 .nt{border-color:var(--am)}.nt h2{color:var(--am);font-size:17px}
@@ -236,6 +236,17 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 body.theme-lcd{background:#101922!important;color:#eef4f7}body.theme-lcd .ambientBg{background:#111a24}body.theme-lcd .ambientBg .sky{background:linear-gradient(180deg,#263d57 0%,#4a5369 42%,#bd7655 70%,#14251e 100%)}body.theme-lcd .ambientBg .sunset{opacity:1;background:radial-gradient(ellipse at 50% 74%,rgba(255,179,91,.42),rgba(218,121,78,.2) 27%,rgba(91,92,126,.11) 49%,transparent 74%)}body.theme-lcd .ambientBg .horizon{background:linear-gradient(180deg,rgba(67,107,81,.22),rgba(19,44,35,.56) 48%,rgba(7,13,12,.78))}body.theme-lcd .card{background:rgba(26,38,48,.94);border-color:#3b5362}body.theme-lcd .btn,body.theme-lcd .chip,body.theme-lcd input,body.theme-lcd select{background:rgba(18,30,39,.96);border-color:#3a5261}body.theme-lcd .tabs button{background:rgba(17,29,39,.78)}body.theme-lcd .menuBtn{background:rgba(21,35,47,.94);border-color:#466174}body.theme-lcd .menuHero{background:rgba(19,31,41,.76)}
 body.theme-amoled .ambientBg .sunset{opacity:.28}body.theme-amoled .ambientBg .horizon{opacity:.65}body.theme-amoled .ambientBg .beam{opacity:.55}
 .themePicker{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.themeOption{min-height:94px;border:1px solid var(--ln);border-radius:13px;padding:11px;text-align:left;background:var(--bg);color:var(--tx);position:relative;overflow:hidden}.themeOption.on{border-color:var(--am);box-shadow:0 0 0 1px rgba(255,202,58,.15)}.themeOption .preview{height:42px;border-radius:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,.1)}.themeOption .preview.oled{background:linear-gradient(180deg,#000 0%,#020606 65%,#07150d 100%)}.themeOption .preview.lcd{background:linear-gradient(180deg,#334b66 0%,#9c6b62 48%,#152d22 100%)}.themeOption strong{display:block;font-size:14px}.themeOption span{display:block;font-size:11px;color:var(--mu);margin-top:2px}.themeOption .check{position:absolute;right:8px;top:8px;font-size:13px;color:var(--am);opacity:0}.themeOption.on .check{opacity:1}
+@keyframes ambientCloud{0%,100%{transform:translateX(-6%);opacity:.12}50%{transform:translateX(6%);opacity:.24}}
+@keyframes ambientLamp{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes ambientSpark{0%,100%{transform:translate3d(0,0,0);opacity:0}25%{opacity:.65}70%{opacity:.1}100%{transform:translate3d(18px,-42px,0);opacity:0}}
+@keyframes ambientBird{0%{transform:translateX(-18vw) translateY(0);opacity:0}12%{opacity:.35}88%{opacity:.3}100%{transform:translateX(118vw) translateY(-3vh);opacity:0}}
+.ambientBg .clouds{position:absolute;inset:-8%;overflow:hidden}.ambientBg .clouds i{position:absolute;left:var(--x);top:var(--y);width:28vw;height:7vh;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.09),transparent 68%);filter:blur(10px);animation:ambientCloud var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.ambientBg .floodlights{position:absolute;inset:0}.ambientBg .floodlights i{position:absolute;top:var(--y);left:var(--x);width:10px;height:10px;border-radius:50%;background:rgba(255,245,210,.95);box-shadow:0 0 8px rgba(255,244,192,.9),0 0 24px rgba(255,222,139,.55),0 0 60px rgba(255,214,115,.2);animation:ambientLamp var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.ambientBg .floodlights i:after{content:"";position:absolute;left:50%;top:6px;width:120px;height:42vh;transform:translateX(-50%) rotate(var(--r));transform-origin:top center;background:linear-gradient(180deg,rgba(255,238,183,.16),transparent 75%);filter:blur(8px);pointer-events:none}
+.ambientBg .sparks{position:absolute;inset:0}.ambientBg .sparks i{position:absolute;left:var(--x);top:var(--y);width:2px;height:2px;border-radius:50%;background:rgba(255,225,157,.8);box-shadow:0 0 6px rgba(255,225,157,.5);animation:ambientSpark var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.ambientBg .birds{position:absolute;inset:0;overflow:hidden}.ambientBg .birds i{position:absolute;left:-20vw;top:var(--y);width:16px;height:5px;border-top:1px solid rgba(220,225,230,.32);border-radius:50%;animation:ambientBird var(--t) linear infinite;animation-delay:var(--d)}
+body.theme-lcd .ambientBg .clouds i{background:radial-gradient(ellipse,rgba(255,255,255,.18),transparent 68%)}body.theme-lcd .ambientBg .floodlights i{box-shadow:0 0 10px rgba(255,244,200,1),0 0 34px rgba(255,223,140,.7),0 0 80px rgba(255,211,120,.3)}
+body.theme-amoled .ambientBg .floodlights i{opacity:.78}.ambientBg .floodlights i:nth-child(2){filter:blur(.2px)}
 @media(prefers-reduced-motion:reduce){.ambientBg *{animation:none!important}}
 </style>
 </head>
@@ -245,25 +256,32 @@ body.theme-amoled .ambientBg .sunset{opacity:.28}body.theme-amoled .ambientBg .h
 const $=id=>document.getElementById(id);
 let audioOK=true,hapticOK=true,displayTheme='amoled',AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled'}catch(e){}
 function haptic(type='click'){
+ if(!hapticOK)return;
+ const p={click:12,start:[22,28,22],train:18,rest:18,whistle:28,goal:[40,45,90],correct:[16,24],wrong:[42,22,42],injury:[60,35,60],card:52,transfer:[24,30,50],trophy:[24,32,65,90]};
  try{
-  if(!navigator.vibrate||!hapticOK)return;
-  const p={click:8,start:[18,25,18],train:12,rest:16,whistle:22,goal:[35,45,80],correct:[12,25],wrong:[35,20,35],injury:[55,30,55],card:45,transfer:[20,30,45],trophy:[20,30,55,80]};
-  navigator.vibrate(p[type]??8);
+  const H=window.Capacitor?.Plugins?.Haptics;
+  const styles={click:'LIGHT',start:'MEDIUM',train:'LIGHT',rest:'LIGHT',whistle:'MEDIUM',goal:'HEAVY',correct:'MEDIUM',wrong:'MEDIUM',injury:'HEAVY',card:'MEDIUM',transfer:'MEDIUM',trophy:'HEAVY'};
+  if(H?.impact){
+   H.impact({style:styles[type]||'LIGHT'}).catch(()=>{try{navigator.vibrate?.(p[type]??12)}catch(e){}});
+   return;
+  }
  }catch(e){}
+ try{navigator.vibrate?.(p[type]??12)}catch(e){}
 }
-function unlockAudio(){
+async function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
-  if(!C)return;
+  if(!C)return null;
   AC=AC||new C();
-  if(AC.state==='suspended')AC.resume();
- }catch(e){}
+  if(AC.state==='suspended')await AC.resume();
+  return AC;
+ }catch(e){return AC}
 }
-function sfx(type){
+async function sfx(type){
  haptic(type);
  if(!audioOK)return;
  try{
-  unlockAudio(); const c=AC;
+  const c=await unlockAudio();
   if(!c)return;
   const M={
    start:[[392,.08],[523,.08],[659,.12],[784,.18]],
@@ -292,9 +310,7 @@ function sfx(type){
  }catch(e){}
 }
 document.addEventListener('pointerdown',e=>{
- if(e.target&&e.target.closest&&e.target.closest('button')){
-  unlockAudio();haptic('click');
- }
+ if(e.target&&e.target.closest&&e.target.closest('button')) unlockAudio();
 },{passive:true});
 document.addEventListener('click',e=>{
  if(e.target&&e.target.closest&&e.target.closest('button'))sfx('click');
@@ -304,7 +320,7 @@ function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setI
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
 function toggleCompact(){document.body.classList.toggle('compact');try{localStorage.setItem('j90_compact',document.body.classList.contains('compact')?'1':'0')}catch(e){}render(1)}
-function worldFx(){return '<div class="ambientBg"><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="beam a"></div><div class="beam b"></div><div class="leaves"><i style="--x:6%;--y:4%;--t:10s;--d:-2s"></i><i style="--x:19%;--y:18%;--t:12s;--d:-8s"></i><i style="--x:34%;--y:6%;--t:9s;--d:-5s"></i><i style="--x:52%;--y:14%;--t:13s;--d:-10s"></i><i style="--x:69%;--y:0%;--t:11s;--d:-3s"></i><i style="--x:84%;--y:20%;--t:14s;--d:-11s"></i><i style="--x:94%;--y:7%;--t:9.5s;--d:-6s"></i></div><div class="dust"><i style="--x:14%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:31%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:47%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:64%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:81%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="shade"></div></div>'}
+function worldFx(){return '<div class="ambientBg"><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="clouds"><i style="--x:2%;--y:14%;--t:18s;--d:-7s"></i><i style="--x:56%;--y:22%;--t:23s;--d:-13s"></i><i style="--x:28%;--y:34%;--t:20s;--d:-4s"></i></div><div class="beam a"></div><div class="beam b"></div><div class="beam c"></div><div class="floodlights"><i style="--x:7%;--y:23%;--r:-10deg;--t:4.8s;--d:-1s"></i><i style="--x:92%;--y:25%;--r:10deg;--t:5.6s;--d:-3s"></i><i style="--x:50%;--y:17%;--r:0deg;--t:6.5s;--d:-5s"></i></div><div class="leaves"><i style="--x:4%;--y:4%;--t:8s;--d:-2s"></i><i style="--x:12%;--y:28%;--t:11s;--d:-7s"></i><i style="--x:23%;--y:11%;--t:9s;--d:-5s"></i><i style="--x:34%;--y:35%;--t:12s;--d:-10s"></i><i style="--x:44%;--y:5%;--t:10s;--d:-4s"></i><i style="--x:53%;--y:24%;--t:13s;--d:-8s"></i><i style="--x:63%;--y:8%;--t:9.5s;--d:-6s"></i><i style="--x:74%;--y:31%;--t:12s;--d:-11s"></i><i style="--x:86%;--y:12%;--t:10.5s;--d:-3s"></i><i style="--x:95%;--y:28%;--t:13.5s;--d:-9s"></i></div><div class="dust"><i style="--x:10%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:26%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:43%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:61%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:79%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="sparks"><i style="--x:18%;--y:77%;--t:5.5s;--d:-2s"></i><i style="--x:39%;--y:65%;--t:6.8s;--d:-5s"></i><i style="--x:57%;--y:75%;--t:7.2s;--d:-1s"></i><i style="--x:83%;--y:70%;--t:6.3s;--d:-4s"></i></div><div class="birds"><i style="--y:18%;--t:24s;--d:-11s"></i><i style="--y:25%;--t:31s;--d:-17s"></i></div><div class="shade"></div></div>'}
 function newGame(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;introStep=1;menuScreen='home';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
@@ -977,7 +993,12 @@ function intro(){
  if(introStep===0)return menuV();
  if(introStep===2)return settingsView();
  if(!START_OFFERS.length)START_OFFERS=makeStartOffers();
- return '<div class="card create"><button class="chip" onclick="mainMenu()">← Menu</button><div class="logoMark">90</div><h1 style="font-size:34px;margin:8px 0">NOVA CARREIRA</h1><p class="mu">Defina quem você será dentro de campo.</p><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Seu nome"></label><label>Posição<select id="ps">'+o(Object.keys(POSN).map(k=>[k,POSN[k]]))+'</select></label><label>Ponto forte<select id="st">'+o([['tec','Técnica'],['fis','Físico'],['men','Mental']])+'</select></label><h3 style="margin-top:14px">Clubes interessados</h3>'+START_OFFERS.map((x,i)=>'<button class="btn" onclick="start('+i+')"><b>'+x.n+'</b><span>'+TIERS[x.tier]+' · '+(x.varzea?'Várzea · sem salário fixo':'Profissional · R$ '+fm(x.w)+'/mês')+'</span></button>').join('')+'</div>';
+ return '<div class="createScreen"><div class="createHero"><button class="backBtn" onclick="mainMenu()">← Menu</button><div class="createHeroGlow"></div><div class="createBadge">90</div><div class="createKicker">JORNADA 90 · NOVA ETAPA</div><h1>Construa sua carreira</h1><p>Seu nome, sua posição, sua primeira escolha. O resto você conquista no campo.</p><div class="createSteps"><span class="active"><b>01</b> Perfil</span><i></i><span><b>02</b> Primeiro contrato</span></div></div>'+
+ '<div class="createPanel"><div class="panelTitle"><span class="panelIcon">👤</span><div><h2>Seu perfil</h2><p class="mu">Comece do jeito que você quer jogar.</p></div></div>'+
+ '<div class="fieldGrid"><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Digite seu nome"></label><label>Posição<select id="ps">'+o(Object.keys(POSN).map(k=>[k,POSN[k]]))+'</select></label></div>'+
+ '<label>Ponto forte<select id="st">'+o([['tec','Técnica'],['fis','Físico'],['men','Mental']])+'</select></label></div>'+
+ '<div class="createPanel"><div class="panelTitle"><span class="panelIcon">📋</span><div><h2>Primeiro contrato</h2><p class="mu">Escolha o projeto que combina com sua ambição.</p></div></div><div class="offerGrid">'+START_OFFERS.map((x,i)=>'<button class="offerCard" onclick="start('+i+')"><div class="offerTop"><span class="clubMini">'+x.n.slice(0,2).toUpperCase()+'</span><span class="offerTier">'+TIERS[x.tier]+'</span></div><strong>'+x.n+'</strong><span class="offerRole">'+(x.varzea?'Projeto de base · Várzea':'Projeto profissional · Desenvolvimento')+'</span><span class="offerSalary">'+(x.varzea?'R$ 500 de início':'R$ '+fm(x.w)+'/mês')+' <b>›</b></span></button>').join('')+'</div></div>'+
+ '<div class="createFooter"><span>Você começa com 17 anos</span><span>Potencial definido pela sua jornada</span></div></div>';
 }
 function beginGame(){introStep=1;sfx('start');render(1)}
 function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
@@ -1142,3 +1163,5 @@ render();
 </script>
 </body>
 </html>
+
+<!-- Jornada 90 build verification -->
