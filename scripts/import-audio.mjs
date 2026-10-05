@@ -109,7 +109,7 @@ for (const key of Object.keys(map)) {
       continue;
     }
 
-    const tmp = dest + '.tmp';
+    const tmp = dest + '.tmp.ogg';
     const r = run(process.env.FFMPEG || 'ffmpeg', [
       '-hide_banner', '-loglevel', 'error', '-y', '-i', src,
       '-map', '0:a:0', '-c:a', 'libvorbis', '-q:a', '5', '-vn', tmp
