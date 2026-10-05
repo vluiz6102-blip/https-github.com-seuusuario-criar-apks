@@ -1,9 +1,9 @@
 import { mkdirSync, copyFileSync, readFileSync } from 'node:fs';
 
 const source = readFileSync('index.html', 'utf8');
-const scripts = [...source.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+const scripts = [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
   .map(match => match[1])
-  .join('\\n');
+  .join('\n');
 
 if (!scripts.includes('menuTime') || !scripts.includes('j90SoundscapeStart')) {
   throw new Error('Canonical index.html is missing the Jornada 90 environment core.');
