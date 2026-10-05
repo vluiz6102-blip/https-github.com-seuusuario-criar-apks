@@ -557,7 +557,12 @@ function haptic(type='click'){
  }catch(e){}
  try{navigator.vibrate?.(p[type]??12)}catch(e){}
 }
-let audioBus=null,audioCompressor=null,j90LastSfx={};
+let audioBus=null,audioCompressor=null,musicBus=null,j90LastSfx={},j90MusicTrack='',j90MusicTimer=null,j90MusicNodes=[];
+function j90MusicStop(){if(j90MusicTimer){clearInterval(j90MusicTimer);j90MusicTimer=null}j90MusicNodes.forEach(n=>{try{n.stop?.()}catch(e){}try{n.disconnect?.()}catch(e){}});j90MusicNodes=[];j90MusicTrack=''}
+function j90MusicTrackForState(){if(!S)return 'cinematic';if(S.phase==='match'||S.phase==='comp'||S.phase==='wc')return 'stadium';if(S.phase==='end'||S.phase==='retired')return 'cinematic';return 'night'}
+function j90MusicNotes(track){return{cinematic:[220,277.18,329.63,440,329.63,277.18,246.94,329.63],stadium:[196,246.94,293.66,392,293.66,246.94,329.63,392],night:[174.61,220,261.63,329.63,261.63,220,196,261.63]}[track]}
+async function j90MusicStart(track){if(!audioOK)return;const c=await unlockAudio();if(!c||!audioBus)return;if(j90MusicTrack===track&&j90MusicTimer)return;j90MusicStop();musicBus=c.createGain();musicBus.gain.setValueAtTime(.0001,c.currentTime);musicBus.gain.exponentialRampToValueAtTime(.065,c.currentTime+.8);musicBus.connect(audioBus);j90MusicTrack=track;const notes=j90MusicNotes(track),step=.42;let beat=0;const playStep=()=>{const now=c.currentTime+.03,idx=beat%notes.length,f=notes[idx],o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();o.type=idx%4===0?'triangle':'sine';o.frequency.setValueAtTime(f,now);lp.type='lowpass';lp.frequency.setValueAtTime(track==='stadium'?1900:1400,now);g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+.34);o.connect(lp);lp.connect(g);g.connect(musicBus);o.start(now);o.stop(now+.38);j90MusicNodes.push(o);if(idx%2===0){const b=c.createOscillator(),bg=c.createGain();b.frequency.setValueAtTime(f/2,now);bg.gain.setValueAtTime(.0001,now);bg.gain.exponentialRampToValueAtTime(.022,now+.02);bg.gain.exponentialRampToValueAtTime(.0001,now+.38);b.connect(bg);bg.connect(musicBus);b.start(now);b.stop(now+.4);j90MusicNodes.push(b)}beat++};playStep();j90MusicTimer=setInterval(playStep,step*1000)}
+function j90SyncMusic(){if(!audioOK){j90MusicStop();return}j90MusicStart(j90MusicTrackForState())}
 async function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
@@ -605,38 +610,23 @@ async function sfx(type){
   const seq=M[type]||M.click,now=c.currentTime;
   seq.forEach((x,i)=>{
    const seqPan={start:[-.28,.28,0,.2],click:[0],train:[-.22,.22,0],rest:[.18,-.18],whistle:[-.35,.35],goal:[-.38,.3,-.16,.3,0],correct:[-.22,.22,0],wrong:[-.28,.28,0],injury:[-.18,.18],card:[.28,-.28,0],transfer:[-.32,.24,-.12,.32],trophy:[-.36,.28,-.14,.3,0]}[type]||[0];
-   const basePan=seqPan[i%seqPan.length];
-   const voices=audioMode==='immersive'&&type!=='click'?[-1,1]:[0];
-   voices.forEach(v=>{
-    const o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
-    const voiceGain=voices.length===2?.028:(type==='click'?.026:.055);
-    const width=audioMode==='immersive'?0.12:0;
-    const target=Math.max(-1,Math.min(1,(audioMode==='mono'?0:basePan*(audioMode==='stereo'?.72:1))+v*width));
-    o.type=type==='goal'||type==='trophy'?'triangle':'sine';
-    o.frequency.setValueAtTime(x[0]*(v?1+(v*.003):1),t);
-    o.detune.setValueAtTime(type==='click'?0:v*1.5,t);
-    g.gain.setValueAtTime(.0001,t);
-    g.gain.exponentialRampToValueAtTime(voiceGain,t+.012);
-    g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
-    let out=g;
-    if(audioMode!=='mono'&&c.createStereoPanner){
-     const pan=c.createStereoPanner();
-     pan.pan.setValueAtTime(Math.max(-1,Math.min(1,target-(audioMode==='immersive'?v*.05:0))),t);
-     pan.pan.linearRampToValueAtTime(target,t+Math.min(x[1]*.7,.09));
-     out=pan;
-    }
-    o.connect(out);out.connect(audioBus);o.start(t);o.stop(t+x[1]+.025);
-   });
+   const seqDepth={start:[.15,.05,-.05,.1],click:[0],train:[.05,-.05,0],rest:[-.08,.08],whistle:[-.25,.2],goal:[.12,.04,-.08,.05,0],correct:[.08,-.06,0],wrong:[-.12,.12,0],injury:[-.18,.18],card:[.08,-.08,0],transfer:[.15,.05,-.1,.08],trophy:[.1,.02,-.08,.06,0]}[type]||[0];
+   const basePan=seqPan[i%seqPan.length],baseDepth=seqDepth[i%seqDepth.length],o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
+   const voiceGain=type==='click'?.026:.055,target=Math.max(-1,Math.min(1,audioMode==='mono'?0:basePan*(audioMode==='stereo'?.72:1)));
+   o.type=type==='goal'||type==='trophy'?'triangle':'sine';o.frequency.setValueAtTime(x[0],t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(voiceGain,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
+   let out=g;
+   if(audioMode==='immersive'&&c.createPanner){const p=c.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=1;p.maxDistance=8;p.rolloffFactor=.55;const px=target*1.8,py=baseDepth*1.8,pz=Math.max(.25,2.1-Math.abs(baseDepth)*.7);if(p.positionX){p.positionX.setValueAtTime(px,t);p.positionY.setValueAtTime(py,t);p.positionZ.setValueAtTime(pz,t)}else p.setPosition(px,py,pz);out=p}else if(audioMode!=='mono'&&c.createStereoPanner){const pan=c.createStereoPanner();pan.pan.setValueAtTime(target,t);out=pan}
+   o.connect(out);out.connect(audioBus);o.start(t);o.stop(t+x[1]+.025);
   });
  }catch(e){}
 }
 document.addEventListener('pointerdown',e=>{
- if(e.target&&e.target.closest&&e.target.closest('button'))unlockAudio();
+ if(e.target&&e.target.closest&&e.target.closest('button'))unlockAudio().then(j90SyncMusic);
 },{passive:true});
 document.addEventListener('click',e=>{
  if(e.target&&e.target.closest&&e.target.closest('button')){
   const b=e.target.closest('button');
-  if(!b.hasAttribute('onclick'))sfx('click');
+  if(!b.hasAttribute('onclick'))sfx('click');setTimeout(j90SyncMusic,0);
  }
 },{passive:true});
 function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme==='amoled');document.body.classList.toggle('theme-lcd',displayTheme==='lcd')}
@@ -716,9 +706,9 @@ function settingsView(){
  '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Efeitos, apito, gol e interface</span></button>'+
  '<div class="card audioCard"><h2>Áudio</h2><p class="mu">Escolha como os efeitos ocupam o espaço estéreo.</p><div class="audioPicker">'+
  '<button class="audioOption '+(audioMode==='stereo'?'on':'')+'" onclick="setAudioMode(\'stereo\')"><span class="audioIcon">◐</span><strong>Estéreo</strong><span>Esquerda e direita com panorama suave</span></button>'+
- '<button class="audioOption '+(audioMode==='immersive'?'on':'')+'" onclick="setAudioMode(\'immersive\')"><span class="audioIcon">◉</span><strong>Áudio imersivo</strong><span>Efeitos mais amplos e movimento entre canais</span></button>'+
+ '<button class="audioOption '+(audioMode==='immersive'?'on':'')+'" onclick="setAudioMode(\'immersive\')"><span class="audioIcon">◉</span><strong>Áudio imersivo HRTF</strong><span>Espacialização binaural 3D em fones, com frente/trás/altura</span></button>'+
  '<button class="audioOption '+(audioMode==='mono'?'on':'')+'" onclick="setAudioMode(\'mono\')"><span class="audioIcon">●</span><strong>Mono</strong><span>Mesmo sinal nos dois canais</span></button>'+
- '</div><small class="mu">O modo imersivo cria espacialização pelo áudio. O Android continua responsável pelo roteamento físico dos alto-falantes.</small></div>'+
+ '</div><small class="mu">HRTF usa o modelo 3D do Web Audio para criar pistas binaurais. Melhor resultado com fones estéreo; em alto-falantes o efeito depende do aparelho.</small></div>'+
  '<button class="btn" onclick="toggleHaptic()"><b>'+ (hapticOK?'📳 Vibração ligada':'📴 Vibração desligada') +'</b><span>Retorno tátil nos comandos e eventos</span></button>'+
  '<div class="card" style="margin-top:10px"><h2>Fluidez</h2><p class="mu">Define o limite de atualização dos efeitos e da atmosfera do jogo. O Android continua controlando a taxa física da tela.</p><div class="audioPicker">'+
  '<button class="audioOption '+(j90FrameRate===30?'on':'')+'" onclick="setFrameRate(30)"><span class="audioIcon">30</span><strong>30 Hz</strong><span>Economia máxima · movimento mais contido</span></button>'+
@@ -1447,12 +1437,12 @@ function render(still){
  applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=worldFx()+intro();return}
- if(menuScreen==='home'&&introStep===0){A.innerHTML=worldFx()+menuV();return}
+ if(!S){A.innerHTML=worldFx()+intro();j90SyncMusic();return}
+ if(menuScreen==='home'&&introStep===0){A.innerHTML=worldFx()+menuV();j90SyncMusic();return}
 
  let h=worldFx()+head();
  if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='match')h+=sndB()+matchV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
- A.innerHTML=h;startJ90Atmosphere();S.lm=S.money;save();
+ A.innerHTML=h;startJ90Atmosphere();S.lm=S.money;save();j90SyncMusic();
  if(!still)window.scrollTo(0,0)
 }
 function sanitizeState(){
