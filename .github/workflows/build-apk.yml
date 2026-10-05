@@ -38,6 +38,12 @@ jobs:
         run: |
           manifest="app/src/main/AndroidManifest.xml"
           grep -q 'android.permission.VIBRATE' "$manifest" || sed -i '/<manifest/a\    <uses-permission android:name="android.permission.VIBRATE" />' "$manifest"
+      - name: Aplicar controle nativo de taxa de atualização
+        run: |
+          mkdir -p android/app/src/main/java/com/jornada90/carreira
+          cp android-overrides/MainActivity.java android/app/src/main/java/com/jornada90/carreira/MainActivity.java
+          cp android-overrides/J90DisplayRatePlugin.java android/app/src/main/java/com/jornada90/carreira/J90DisplayRatePlugin.java
+
       - name: Instalar conversor SVG
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
       - name: Aplicar identidade e ícone Jornada 90
