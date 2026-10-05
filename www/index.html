@@ -552,7 +552,7 @@ function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme
 function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setItem('j90_tela',displayTheme)}catch(e){}render(1)}
 let j90FrameRate=60;
 try{j90FrameRate=[30,60,120,144].includes(Number(localStorage.getItem('j90_fps')))?Number(localStorage.getItem('j90_fps')):60}catch(e){j90FrameRate=60}
-function setFrameRate(v){j90FrameRate=[30,60,120,144].includes(Number(v))?Number(v):60;try{localStorage.setItem('j90_fps',String(j90FrameRate))}catch(e){}render(1)}
+async function setFrameRate(v){j90FrameRate=[30,60,120,144].includes(Number(v))?Number(v):60;try{localStorage.setItem('j90_fps',String(j90FrameRate))}catch(e){}try{await window.Capacitor?.Plugins?.J90DisplayRate?.setRate({rate:j90FrameRate})}catch(e){}render(1)}
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
 function setAudioMode(k){audioMode=['stereo','immersive','mono'].includes(k)?k:'stereo';try{localStorage.setItem('j90_audio_mode',audioMode)}catch(e){}unlockAudio();render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
