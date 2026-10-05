@@ -455,6 +455,92 @@ body.theme-amoled .ambientLite{background:#000!important}.ambientLite .atmoCanva
 body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-amoled .card{background:#050505;border-color:#191919;box-shadow:none}.theme-amoled .btn,.theme-amoled .chip,.theme-amoled input,.theme-amoled select{background:#020202;border-color:#1b1b1b}.theme-amoled .tabs{background:#010101;border-color:#141414;box-shadow:none}.theme-amoled .menuHero{background:#000;border-color:#171717;box-shadow:none}.theme-amoled .menuBtn{background:#050505;border-color:#1a1a1a}.theme-amoled .menuBtn.primary{box-shadow:none}
 @media(max-width:560px){.j90HudLine .pill{font-size:11px}.oledGlow{height:18%;filter:blur(14px)}.theme-amoled .ambientBg>*.sunset,.theme-amoled .ambientBg>*.horizon,.theme-amoled .ambientBg>*.clouds,.theme-amoled .ambientBg>*.beam,.theme-amoled .ambientBg>*.floodlights,.theme-amoled .ambientBg>*.leaves,.theme-amoled .ambientBg>*.dust,.theme-amoled .ambientBg>*.sparks,.theme-amoled .ambientBg>*.birds,.theme-amoled .ambientBg>*.shade,.theme-amoled .ambientBg>*.depthHaze{display:none!important}.theme-amoled .stadiumScene{background:#000}.theme-amoled .stadiumScene .cloudLayer,.theme-amoled .stadiumScene .stands,.theme-amoled .stadiumScene .ring,.theme-amoled .stadiumScene .fog,.theme-amoled .stadiumScene .lights,.theme-amoled .stadiumScene .beam,.theme-amoled .stadiumScene .dust,.theme-amoled .stadiumScene .leaves,.theme-amoled .stadiumScene .horizonGlow{display:none!important}.theme-amoled .stadiumScene .sunDisc{width:120px;height:120px;min-width:120px;min-height:120px;background:radial-gradient(circle,rgba(255,202,58,.82) 0 4%,rgba(255,177,89,.18) 30%,transparent 68%);filter:none}.theme-amoled .stadiumScene .atmoCanvas{opacity:.22}.theme-amoled .menuHero{min-height:320px;border-radius:20px;padding-bottom:18px}.theme-amoled .menuHero .logoMark.big{box-shadow:0 10px 30px rgba(255,202,58,.10)}}
 @media(prefers-reduced-motion:reduce){.oledGlow{animation:none!important}}
+
+/* J90 VISUAL REFRESH 2026-10-05
+   Modern football UI: cinematic stadium, soft floodlights, drifting leaves.
+   Motion is limited to transform/opacity to keep the main thread quiet. */
+@keyframes j90LeafA{0%{transform:translate3d(-8vw,-8vh,0) rotate(0deg);opacity:0}12%{opacity:.72}52%{transform:translate3d(7vw,48vh,0) rotate(190deg)}100%{transform:translate3d(-2vw,112vh,0) rotate(380deg);opacity:0}}
+@keyframes j90LeafB{0%{transform:translate3d(5vw,-12vh,0) rotate(35deg);opacity:0}15%{opacity:.58}55%{transform:translate3d(-10vw,52vh,0) rotate(220deg)}100%{transform:translate3d(8vw,110vh,0) rotate(410deg);opacity:0}}
+@keyframes j90BeamA{0%,100%{transform:rotate(-7deg);opacity:.045}50%{transform:rotate(7deg);opacity:.12}}
+@keyframes j90BeamB{0%,100%{transform:rotate(8deg);opacity:.04}50%{transform:rotate(-6deg);opacity:.11}}
+@keyframes j90HeroBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.menuHero{
+ min-height:430px!important;
+ border-radius:28px!important;
+ padding:24px 20px 26px!important;
+ background:linear-gradient(180deg,rgba(5,13,18,.08),rgba(2,6,8,.72))!important;
+ border:1px solid rgba(255,255,255,.10)!important;
+ box-shadow:0 28px 80px rgba(0,0,0,.42)!important;
+}
+.stadiumScene{background:
+ radial-gradient(ellipse at 50% 57%,rgba(83,170,112,.20),transparent 30%),
+ linear-gradient(180deg,#06131b 0%,#07131a 45%,#08150f 72%,#020504 100%)!important;
+}
+.stadiumScene .stands{
+ top:31%!important;height:28%!important;
+ background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 2px,transparent 2px 8px)!important;
+}
+.stadiumScene .ring{top:39%!important;height:45%!important;border-color:rgba(255,255,255,.045)!important}
+.stadiumScene .pitch{
+ bottom:-27%!important;height:57%!important;
+ background:radial-gradient(ellipse at 50% 0%,rgba(65,159,96,.42),rgba(16,61,38,.25) 45%,transparent 70%)!important;
+}
+.stadiumScene .beam{
+ filter:none!important;
+ background:linear-gradient(180deg,rgba(255,239,185,.15),transparent 66%)!important;
+}
+.stadiumScene .beam.a{animation:j90BeamA 8s ease-in-out infinite}
+.stadiumScene .beam.b{animation:j90BeamB 9s ease-in-out infinite}
+.stadiumScene .leaves i{
+ box-shadow:none!important;
+ background:rgba(191,169,105,.68)!important;
+}
+.stadiumScene .leaves i:nth-child(1),.stadiumScene .leaves i:nth-child(3){animation:j90LeafA 8.5s linear infinite}
+.stadiumScene .leaves i:nth-child(2),.stadiumScene .leaves i:nth-child(4){animation:j90LeafB 10s linear infinite}
+.stadiumScene .lights{
+ background:
+ linear-gradient(76deg,transparent 22%,rgba(255,244,196,.10) 36%,transparent 49%),
+ linear-gradient(104deg,transparent 51%,rgba(255,244,196,.08) 64%,transparent 78%)!important;
+}
+.menuHero .logoMark.big{
+ width:118px!important;height:118px!important;border-radius:34px!important;
+ background:linear-gradient(145deg,#ffd45a,#e58b32)!important;
+ box-shadow:0 18px 54px rgba(255,182,72,.18)!important;
+ animation:logoFloat 4s ease-in-out infinite,j90HeroBreath 6s ease-in-out infinite!important;
+}
+.menuHero .brand{font-size:44px!important;letter-spacing:4px!important}
+.menuHero .tagline{
+ color:rgba(245,248,250,.84)!important;
+ font-size:15px!important;
+ letter-spacing:.15px;
+}
+.menuActions{gap:10px!important}
+.menuBtn{
+ min-height:64px!important;
+ padding:15px 17px!important;
+ border-radius:16px!important;
+ background:rgba(9,14,17,.82)!important;
+ border:1px solid rgba(255,255,255,.10)!important;
+ backdrop-filter:none!important;
+}
+.menuBtn strong{font-size:17px!important;letter-spacing:.15px}
+.menuBtn span{color:rgba(225,232,236,.62)!important}
+.menuBtn.primary{
+ background:linear-gradient(135deg,#42d77d,#237b50)!important;
+ border-color:rgba(110,235,157,.52)!important;
+}
+.menuBtn:active{transform:translateY(1px)!important}
+.credits{margin-top:24px!important;opacity:.72}
+@media(max-width:560px){
+ .menuHero{min-height:390px!important;border-radius:22px!important}
+ .menuHero .logoMark.big{width:104px!important;height:104px!important;font-size:48px!important}
+ .menuHero .brand{font-size:38px!important}
+ .menuBtn{min-height:60px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .stadiumScene .leaves i,.stadiumScene .beam,.menuHero .logoMark.big{animation:none!important}
+}
+
 </style>
 </head>
 <body>
