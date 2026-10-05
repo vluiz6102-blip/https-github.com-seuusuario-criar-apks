@@ -466,6 +466,22 @@
       root.style.setProperty('--j90-lights', String(.025 + (night ? .25 : .08)));
       root.style.setProperty('--j90-clouds', String(.05 + rain * .2 + (ambienceState.weather === 'cloudy' ? .1 : 0)));
       root.style.setProperty('--j90-ambient', String(.72 + (1 - rain) * .28));
+      root.style.setProperty('--j90-rain', String(rain));
+
+      let rainLayer = root.querySelector('.j90RainLayer');
+      if (!rainLayer) {
+        rainLayer = document.createElement('div');
+        rainLayer.className = 'j90RainLayer';
+        rainLayer.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 16; i++) {
+          const drop = document.createElement('i');
+          drop.style.setProperty('--x', (i * 6.7 + Math.random() * 5) + '%');
+          drop.style.setProperty('--d', (-Math.random() * 2.8) + 's');
+          drop.style.setProperty('--t', (0.65 + Math.random() * .55) + 's');
+          rainLayer.appendChild(drop);
+        }
+        root.appendChild(rainLayer);
+      }
     });
   }
 
