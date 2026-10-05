@@ -147,8 +147,6 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
  .btn{min-height:54px;font-size:15px}
 }
 
-/* final stability */
-html,body{background:#000!important;overflow-x:hidden}body{overscroll-behavior-x:none}#app{width:100%;max-width:560px;overflow-x:clip}.card,.btn,.chip,.row,input,select{min-width:0;max-width:100%}.btn,.chip{touch-action:manipulation}.btn:active,.chip:active{transform:scale(.985)}
 /* mobile AMOLED stability */
 :root{--bg:#000;--pn:#090909;--ln:#202020;--tx:#f4f4f4;--mu:#8a8a8a;--gr:#42d77d;--am:#ffca3a;--rd:#ff5c5c}
 html,body{width:100%;min-width:0;max-width:100%;overflow-x:hidden;background:#000!important}
@@ -583,8 +581,7 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
 }
 @media(max-width:560px){.theme-amoled .menuSkyCycle{opacity:.24}.theme-amoled .stadiumScene .sunDisc{opacity:.62}}
 /* J90 ENVIRONMENT CORE 2026-10-05 */
-.stadiumScene .menuSkyCycle,.stadiumScene .sky,.stadiumScene .cloudLayer,.stadiumScene .sunDisc,.stadiumScene .horizonGlow,.stadiumScene .lights,.stadiumScene .reflectorGlow{will-change:opacity}
-.stadiumScene .leaves i,.stadiumScene .birds i{will-change:transform,opacity}
+.stadiumScene .leaves i,.stadiumScene .birds i{backface-visibility:hidden}
 @media(prefers-reduced-motion:reduce){
  .menuSkyCycle i{transition:none!important}.stadiumScene .leaves i,.stadiumScene .birds i{animation:none!important}
 }
