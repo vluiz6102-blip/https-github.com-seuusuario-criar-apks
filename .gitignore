@@ -6,3 +6,4 @@ android/.idea/
 android/local.properties
 *.iml
 .DS_Store
+www/
