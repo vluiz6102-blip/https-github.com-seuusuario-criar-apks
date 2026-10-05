@@ -854,10 +854,15 @@ function startJ90Atmosphere(){
    }
    j90AtmoFrame=requestAnimationFrame(frame);
   };
-  if(reduced)j90AtmoNodes.forEach(draw);
+  if(reduced){menuTime=0;updateJ90MenuEnvironment();j90AtmoNodes.forEach(draw);}
   else j90AtmoFrame=requestAnimationFrame(frame);
- }else if(reduced)j90AtmoNodes.forEach(draw);
+ }else if(reduced){menuTime=0;updateJ90MenuEnvironment();j90AtmoNodes.forEach(draw)}
 }
+function j90PerfSnapshot(){
+ const perf=performance.memory?{usedJSHeapSize:performance.memory.usedJSHeapSize,totalJSHeapSize:performance.memory.totalJSHeapSize}:null;
+ return {menuTime:+menuTime.toFixed(3),atmoParticles:j90AtmoParticles.length,atmoNodes:j90AtmoNodes.length,soundscapeNodes:j90SoundscapeNodes.length,activeAudioSources:j90SoundscapeNodes.length+(j90SoundscapeWind?1:0),fpsTarget:j90FrameRate,jsHeap:perf,animations:document.getAnimations?document.getAnimations().length:null};
+}
+window.J90Perf={snapshot:j90PerfSnapshot};
 function newGame(){if(S&&!confirm('Sua carreira atual será substituída por uma nova. O salvamento atual será apagado. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=1;menuScreen='home';render()}
 function resumeGame(){if(!S)return;menuScreen='game';introStep=1;tab='game';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
