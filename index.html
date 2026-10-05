@@ -592,10 +592,61 @@ function haptic(type='click'){
  try{navigator.vibrate?.(p[type]??12)}catch(e){}
 }
 let audioBus=null,audioCompressor=null,musicBus=null,j90LastSfx={},j90MusicTrack='',j90MusicTimer=null,j90MusicNodes=[];
-function j90MusicStop(){if(j90MusicTimer){clearInterval(j90MusicTimer);j90MusicTimer=null}j90MusicNodes.forEach(n=>{try{n.stop?.()}catch(e){}try{n.disconnect?.()}catch(e){}});j90MusicNodes=[];j90MusicTrack=''}
+function j90MusicStop(){
+ if(j90MusicTimer){clearTimeout(j90MusicTimer);j90MusicTimer=null}
+ j90MusicNodes.forEach(n=>{try{n.onended=null}catch(e){}try{n.stop?.()}catch(e){}try{n.disconnect?.()}catch(e){}});
+ j90MusicNodes=[];
+ if(musicBus){try{musicBus.gain.setValueAtTime(.0001,AC?.currentTime||0)}catch(e){}try{musicBus.disconnect()}catch(e){}musicBus=null}
+ j90MusicTrack=''
+}
 function j90MusicTrackForState(){if(!S)return 'cinematic';if(S.phase==='match'||S.phase==='comp'||S.phase==='wc')return 'stadium';if(S.phase==='end'||S.phase==='retired')return 'cinematic';return 'night'}
 function j90MusicNotes(track){return{cinematic:[220,277.18,329.63,440,329.63,277.18,246.94,329.63],stadium:[196,246.94,293.66,392,293.66,246.94,329.63,392],night:[174.61,220,261.63,329.63,261.63,220,196,261.63]}[track]}
-async function j90MusicStart(track){if(!audioOK)return;const c=await unlockAudio();if(!c||!audioBus)return;if(j90MusicTrack===track&&j90MusicTimer)return;j90MusicStop();musicBus=c.createGain();musicBus.gain.setValueAtTime(.0001,c.currentTime);musicBus.gain.exponentialRampToValueAtTime(.065,c.currentTime+.8);musicBus.connect(audioBus);j90MusicTrack=track;const notes=j90MusicNotes(track),step=.42;let beat=0;const playStep=()=>{const now=c.currentTime+.03,idx=beat%notes.length,f=notes[idx],o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();o.type=idx%4===0?'triangle':'sine';o.frequency.setValueAtTime(f,now);lp.type='lowpass';lp.frequency.setValueAtTime(track==='stadium'?1900:1400,now);g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.045,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+.34);o.connect(lp);lp.connect(g);g.connect(musicBus);o.start(now);o.stop(now+.38);j90MusicNodes.push(o);if(idx%2===0){const b=c.createOscillator(),bg=c.createGain();b.frequency.setValueAtTime(f/2,now);bg.gain.setValueAtTime(.0001,now);bg.gain.exponentialRampToValueAtTime(.022,now+.02);bg.gain.exponentialRampToValueAtTime(.0001,now+.38);b.connect(bg);bg.connect(musicBus);b.start(now);b.stop(now+.4);j90MusicNodes.push(b)}beat++};playStep();j90MusicTimer=setInterval(playStep,step*1000)}
+async function j90MusicStart(track){
+ if(!audioOK)return;
+ const c=await unlockAudio();
+ if(!c||!audioBus)return;
+ if(j90MusicTrack===track&&j90MusicTimer)return;
+ j90MusicStop();
+ musicBus=c.createGain();
+ musicBus.gain.setValueAtTime(.0001,c.currentTime);
+ musicBus.gain.exponentialRampToValueAtTime(.065,c.currentTime+.8);
+ musicBus.connect(audioBus);
+ j90MusicTrack=track;
+ const notes=j90MusicNotes(track),step=.42,phrase=notes.length*step;
+ const cleanup=o=>{
+  try{o.onended=null;o.disconnect()}catch(e){}
+  j90MusicNodes=j90MusicNodes.filter(n=>n!==o)
+ };
+ const schedulePhrase=()=>{
+  if(!musicBus||j90MusicTrack!==track)return;
+  const base=c.currentTime+.06;
+  notes.forEach((f,idx)=>{
+   const now=base+idx*step,o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
+   o.type=idx%4===0?'triangle':'sine';
+   o.frequency.setValueAtTime(f,now);
+   lp.type='lowpass';
+   lp.frequency.setValueAtTime(track==='stadium'?1900:1400,now);
+   g.gain.setValueAtTime(.0001,now);
+   g.gain.exponentialRampToValueAtTime(.045,now+.02);
+   g.gain.exponentialRampToValueAtTime(.0001,now+.34);
+   o.connect(lp);lp.connect(g);g.connect(musicBus);
+   o.onended=()=>cleanup(o);
+   o.start(now);o.stop(now+.38);j90MusicNodes.push(o);
+   if(idx%2===0){
+    const bg=c.createOscillator(),bgain=c.createGain();
+    bg.frequency.setValueAtTime(f/2,now);
+    bgain.gain.setValueAtTime(.0001,now);
+    bgain.gain.exponentialRampToValueAtTime(.022,now+.02);
+    bgain.gain.exponentialRampToValueAtTime(.0001,now+.38);
+    bg.connect(bgain);bgain.connect(musicBus);
+    bg.onended=()=>cleanup(bg);
+    bg.start(now);bg.stop(now+.4);j90MusicNodes.push(bg)
+   }
+  });
+  j90MusicTimer=setTimeout(schedulePhrase,Math.max(300,phrase*1000-80))
+ };
+ schedulePhrase()
+}
 function j90SyncMusic(){if(!audioOK){j90MusicStop();return}j90MusicStart(j90MusicTrackForState())}
 async function unlockAudio(){
  try{
