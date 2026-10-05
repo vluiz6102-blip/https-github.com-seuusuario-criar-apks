@@ -541,6 +541,40 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
  .stadiumScene .leaves i,.stadiumScene .beam,.menuHero .logoMark.big{animation:none!important}
 }
 
+
+/* J90 LAUNCH PASS: ciclo de fim de tarde do menu, 18s, apenas opacity/transform */
+@keyframes menuPhaseDusk{0%,12%{opacity:1}20%,100%{opacity:0}}
+@keyframes menuPhaseGold{0%,14%{opacity:0}24%,34%{opacity:1}44%,100%{opacity:0}}
+@keyframes menuPhaseYellow{0%,30%{opacity:0}40%,51%{opacity:1}60%,100%{opacity:0}}
+@keyframes menuPhaseOrange{0%,44%{opacity:0}54%,65%{opacity:1}74%,100%{opacity:0}}
+@keyframes menuPhaseViolet{0%,62%{opacity:0}70%,81%{opacity:1}89%,100%{opacity:0}}
+@keyframes menuPhaseNight{0%,78%{opacity:0}86%,100%{opacity:1}}
+@keyframes menuSunPath{0%{transform:translate(-50%,-50%) translate3d(-2%,0,0) scale(.96);opacity:.82}42%{transform:translate(-50%,-50%) translate3d(0,8%,0) scale(1);opacity:.92}72%{transform:translate(-50%,-50%) translate3d(3%,18%,0) scale(.78);opacity:.5}100%{transform:translate(-50%,-50%) translate3d(7%,28%,0) scale(.56);opacity:0}}
+@keyframes menuLightCycle{0%,45%{opacity:.1;transform:translateX(-10%)}68%{opacity:.18;transform:translateX(0)}82%{opacity:.32;transform:translateX(6%)}100%{opacity:.55;transform:translateX(12%)}}
+@keyframes menuReflectorCycle{0%,45%{opacity:.02}65%{opacity:.08}82%{opacity:.22}100%{opacity:.38}}
+@keyframes menuHorizonCycle{0%,22%{opacity:.14}45%{opacity:.32}62%{opacity:.5}82%{opacity:.18}100%{opacity:.08}}
+@keyframes menuFirefly{0%,100%{transform:translate3d(0,0,0);opacity:0}25%{opacity:.38}55%{transform:translate3d(16px,-12px,0);opacity:.72}80%{opacity:.18}}
+@keyframes menuBird{0%{transform:translate3d(-24vw,0,0);opacity:0}10%{opacity:.28}90%{opacity:.22}100%{transform:translate3d(125vw,-3vh,0);opacity:0}}
+.menuSkyCycle{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.menuSkyCycle i{position:absolute;inset:0;display:block;opacity:0}
+.menuSkyCycle .dusk{background:linear-gradient(180deg,#132c45 0%,#34596b 44%,#b86f55 72%,#263126 100%);animation:menuPhaseDusk 18s linear infinite}
+.menuSkyCycle .gold{background:linear-gradient(180deg,#274b68 0%,#70818b 42%,#f1b45d 69%,#4e603f 100%);animation:menuPhaseGold 18s linear infinite}
+.menuSkyCycle .yellow{background:linear-gradient(180deg,#49647a 0%,#9b8f82 40%,#ffd56f 68%,#5b673d 100%);animation:menuPhaseYellow 18s linear infinite}
+.menuSkyCycle .orange{background:linear-gradient(180deg,#384b68 0%,#976d73 40%,#ee8a4b 66%,#3f4932 100%);animation:menuPhaseOrange 18s linear infinite}
+.menuSkyCycle .violet{background:linear-gradient(180deg,#202b52 0%,#4d4a6e 42%,#a96867 67%,#1b2b2a 100%);animation:menuPhaseViolet 18s linear infinite}
+.menuSkyCycle .night{background:linear-gradient(180deg,#040b18 0%,#091224 48%,#14211c 72%,#020403 100%);animation:menuPhaseNight 18s linear infinite}
+.stadiumScene .sunDisc{animation:menuSunPath 18s ease-in-out infinite!important}
+.stadiumScene .lights{animation:menuLightCycle 18s ease-in-out infinite!important;mix-blend-mode:screen}
+.stadiumScene .reflectorGlow{position:absolute;inset:-12%;background:radial-gradient(ellipse at 8% 24%,rgba(255,243,194,.16),transparent 16%),radial-gradient(ellipse at 92% 26%,rgba(255,243,194,.15),transparent 16%),radial-gradient(ellipse at 50% 18%,rgba(255,243,194,.10),transparent 18%);opacity:0;animation:menuReflectorCycle 18s ease-in-out infinite;mix-blend-mode:screen;pointer-events:none}
+.stadiumScene .horizonGlow{animation:menuHorizonCycle 18s ease-in-out infinite!important}
+.stadiumScene .leaves.far i{width:5px;height:3px;opacity:.35;filter:none!important;animation-duration:14s!important}
+.stadiumScene .leaves.near i{width:10px;height:6px;opacity:.78;filter:drop-shadow(0 5px 5px rgba(0,0,0,.42))}
+.stadiumScene .leaves.near i:nth-child(1),.stadiumScene .leaves.near i:nth-child(3){animation:j90LeafA 8.4s linear infinite!important}
+.stadiumScene .leaves.near i:nth-child(2),.stadiumScene .leaves.near i:nth-child(4){animation:j90LeafB 10.2s linear infinite!important}
+.stadiumScene .fireflies{position:absolute;inset:0;pointer-events:none}.stadiumScene .fireflies i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:rgba(255,226,147,.9);box-shadow:0 0 8px rgba(255,217,119,.65);animation:menuFirefly var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.stadiumScene .birds{position:absolute;inset:0;overflow:hidden;pointer-events:none}.stadiumScene .birds i{position:absolute;left:-24vw;top:var(--y);width:15px;height:6px;border-top:2px solid rgba(230,235,235,.32);border-radius:50%;animation:menuBird var(--t) linear infinite;animation-delay:var(--d)}
+.infoScreen{max-width:560px;margin:0 auto;padding:20px!important}.infoScreen h1{text-align:center;font-size:32px}.infoScreen>.logoMark{animation:logoFloat 4.5s ease-in-out infinite}.infoSection,.creditsBlock{display:grid;gap:4px;padding:14px 0;border-bottom:1px solid var(--j90-line)}.infoSection strong,.creditsBlock b{font-size:14px;color:var(--j90-gold)}.infoSection span,.creditsBlock span{font-size:14px;color:var(--j90-muted)}
+@media(prefers-reduced-motion:reduce){.menuSkyCycle i,.stadiumScene .sunDisc,.stadiumScene .lights,.stadiumScene .reflectorGlow,.stadiumScene .horizonGlow,.stadiumScene .fireflies i,.stadiumScene .birds i{animation:none!important}.menuSkyCycle .dusk{opacity:1}}
 </style>
 </head>
 <body>
@@ -699,7 +733,8 @@ function startJ90Atmosphere(){
   else j90AtmoFrame=requestAnimationFrame(frame);
  }else if(reduced)j90AtmoNodes.forEach(draw);
 }
-function newGame(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;introStep=1;menuScreen='home';render()}
+function newGame(){if(S&&!confirm('Sua carreira atual será substituída por uma nova. O salvamento atual será apagado. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=1;menuScreen='home';render()}
+function resumeGame(){if(!S)return;menuScreen='game';introStep=1;tab='game';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
  return '<div class="card menu settings"><button class="chip" onclick="mainMenu()">← Voltar</button><div class="logoMark">90</div><h1>Configurações</h1><p class="mu">Ajuste sua experiência.</p>'+
@@ -724,16 +759,34 @@ function settingsView(){
 }
 function menuV(){
  if(menuScreen==='settings')return settingsView();
+ if(menuScreen==='howto')return howToView();
+ if(menuScreen==='credits')return creditsView();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves"><i style="--x:7%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:10%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:91%;--y:12%;--t:9.1s;--d:-6.2s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
+ return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="menuSkyCycle" aria-hidden="true"><i class="dusk"></i><i class="gold"></i><i class="yellow"></i><i class="orange"></i><i class="violet"></i><i class="night"></i></div><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="reflectorGlow"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves far"><i style="--x:8%;--y:6%;--t:11s;--d:-2s"></i><i style="--x:31%;--y:18%;--t:13s;--d:-8s"></i><i style="--x:68%;--y:8%;--t:12s;--d:-5s"></i><i style="--x:90%;--y:24%;--t:14s;--d:-10s"></i></div><div class="leaves near"><i style="--x:2%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:12%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:94%;--y:14%;--t:9.1s;--d:-6.2s"></i></div><div class="fireflies"><i style="--x:18%;--y:68%;--t:6.4s;--d:-2s"></i><i style="--x:56%;--y:62%;--t:7.2s;--d:-4s"></i><i style="--x:82%;--y:72%;--t:6.8s;--d:-5.5s"></i></div><div class="birds"><i style="--y:18%;--t:26s;--d:-16s"></i><i style="--y:25%;--t:34s;--d:-29s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
  '<div class="menuActions">'+
- (hasSave?'<button class="menuBtn primary" onclick="S.phase=S.phase||\'pre\';render()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>NOVO JOGO</strong><span>Comece uma nova carreira do zero</span></button>')+
- (!hasSave?'<button class="menuBtn" onclick="newGame()"><strong>INICIAR CARREIRA</strong><span>Escolha nome, posição e clube</span></button>':'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Começar outra jornada sem apagar esta</span></button>')+
- '<button class="menuBtn" onclick="menuScreen=\'settings\';render()"><strong>CONFIGURAÇÕES</strong><span>Som, vibração e interface</span></button>'+
- '<button class="menuBtn" onclick="alert(\'Jornada 90 · simulador de carreira de futebol\')"><strong>SOBRE</strong><span>Versão independente</span></button>'+
+ (hasSave?'<button class="menuBtn primary" onclick="resumeGame()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>COMEÇAR CARREIRA</strong><span>Crie seu jogador e escolha o primeiro clube</span></button>')+
+ (hasSave?'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Começar outra jornada sem perder a atual</span></button>':'')+
+ '<button class="menuBtn" onclick="menuScreen=\'settings\';introStep=0;render()"><strong>CONFIGURAÇÕES</strong><span>Som, vibração, tela e fluidez</span></button>'+
+ '<button class="menuBtn" onclick="menuScreen=\'howto\';introStep=0;render()"><strong>COMO JOGAR</strong><span>Entenda energia, treinos, partidas e carreira</span></button>'+
+ '<button class="menuBtn" onclick="menuScreen=\'credits\';introStep=0;render()"><strong>CRÉDITOS</strong><span>Equipe, tecnologia e versão</span></button>'+
  '</div><div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b><br><span>Um projeto brasileiro independente</span></div>'
 }
-const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+function howToView(){
+ return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Como jogar</h1><p class="mu">A carreira gira em torno de três decisões: evoluir, jogar bem e administrar o caminho.</p>'+
+ '<div class="infoSection"><strong>01 · Preparar</strong><span>Treine para evoluir atributos, descanse para recuperar energia e cuide da moral.</span></div>'+
+ '<div class="infoSection"><strong>02 · Jogar</strong><span>Suas escolhas durante a partida usam seus atributos, energia, moral e confiança do técnico.</span></div>'+
+ '<div class="infoSection"><strong>03 · Crescer</strong><span>Bons desempenhos aumentam experiência, fama e oportunidades de transferência.</span></div>'+
+ '<div class="infoSection"><strong>04 · Temporada</strong><span>A tabela, as competições, notícias e decisões fora do campo alteram o rumo da carreira.</span></div>'+
+ '<button class="btn go" onclick="resumeGame()">Voltar para a carreira</button></div>'
+}
+function creditsView(){
+ return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Créditos</h1><p class="mu">Jornada 90 · simulador de carreira de futebol</p>'+
+ '<div class="creditsBlock"><b>Direção e desenvolvimento</b><span>Victor Maia</span></div>'+
+ '<div class="creditsBlock"><b>Tecnologia</b><span>Capacitor · Web Audio · Android</span></div>'+
+ '<div class="creditsBlock"><b>Áudio imersivo</b><span>Espacialização HRTF e sistema de áudio adaptativo</span></div>'+
+ '<div class="creditsBlock"><b>Versão</b><span>Build independente para Android e navegador</span></div>'+
+ '<button class="btn" onclick="mainMenu()">Voltar</button></div>'
+}const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
 {n:'Série C',c:['Figueirense:52','Paysandu:55','Volta Redonda:50','Ypiranga:50','Botafogo-SP:54','Ferroviária:53','São Bernardo:55','Confiança:51','Londrina:52','Aparecidense:49']},
 {n:'Série B',c:['Coritiba:60','Goiás:61','Ceará:62','Vila Nova:59','Avaí:58','Chapecoense:58','Sport:60','Novorizontino:60','Operário-PR:57','América-MG:58']},
@@ -1306,7 +1359,7 @@ function keep(){if(!S||S.phase!='end')return;S.nt=[];join({n:S.club.n,tier:S.clu
 function retire(){if(!S||S.phase!='end')return;S.phase='retired';render()}
 
 function co(n){S.coach=cl(S.coach+n)}
-function reset(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=0;render()}
+function reset(){if(S&&!confirm('Começar uma nova carreira apagará o salvamento atual. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=0;menuScreen='home';render()}
 const bar=(l,v,c)=>`<div class="bar"><span>${l} ${Math.round(v)}</span><div><i style="width:${v}%;background:${c}"></i></div></div>`;
 function head(){
  const pp=posProfile(),sty=coachStyle();
@@ -1432,13 +1485,14 @@ function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
  if(w.q==0)return`<div class="card wc">${art(['🇧🇷','🏆'])}<span class="round">${WCR[w.r]}</span><h2>Brasil x ${w.opp[w.r]}</h2><p>Copa do Mundo ${S.year-1}. ${w.r<3?'Pontos no grupo: '+w.pts+'. ':'Jogo eliminatório: quem perder está fora. '}Como o Brasil vai jogar?</p><button class="btn" onclick="wcPlay(0)"><b>Atacar</b><span>Mais chances de gol, maior desgaste</span></button><button class="btn" onclick="wcPlay(1)"><b>Equilibrar</b><span>Controle e segurança</span></button><button class="btn" onclick="wcPlay(2)"><b>Jogar no contra-ataque</b><span>Menos gols sofridos, menos desgaste</span></button></div>`;
  if(w.q==1)return`<div class="card wc"><span class="round">${l.st}</span><h2>Brasil ${l.my} x ${l.og} ${l.opp}</h2><p><b>Acréscimos.</b> ${df?'O adversário parte em contra-ataque perigoso na sua direção.':'A bola sobra para você na entrada da área.'}</p><button class="btn go" onclick="wcDec(1)"><b>${df?'Fazer a intervenção':'Assumir a finalização'}</b><span>Depende de ${df?'defesa':'finalização'} e moral</span></button><button class="btn" onclick="wcDec(0)"><b>${df?'Deixar para a defesa':'Tocar para o companheiro'}</b><span>Menos pressão sobre você</span></button></div>`;
  return`<div class="card wc">${w.end=='champ'?conf('🏆'):l.g?conf('⚽'):''}<span class="round">${l.st}</span><div class="sc">Brasil ${l.my} x ${l.og} ${l.opp}</div><p>${l.ln.join(' ')}</p><p class="mu">${l.res} · seus gols: ${l.g}${w.r<3?' · pontos no grupo: '+w.pts:''}</p>${w.end=='champ'?'<h2>🏆 O Brasil é campeão do mundo!</h2>':w.end?'<p>O Brasil está eliminado.</p>':''}<button class="btn go" onclick="wcNext()">${w.end?'Voltar para a carreira':'Próximo jogo'}</button></div>`}
-function save(){try{localStorage.setItem('carreirafc2',JSON.stringify(S))}catch(e){}}
+function save(){if(!S)return;try{S._savedAt=Date.now();localStorage.setItem('carreirafc2',JSON.stringify(S))}catch(e){}}
+addEventListener('visibilitychange',()=>{if(document.hidden&&S)save()},{passive:true});addEventListener('pagehide',()=>{if(S)save()},{passive:true});
 function render(still){
  applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
  if(!S){A.innerHTML=worldFx()+intro();j90SyncMusic();return}
- if(menuScreen==='home'&&introStep===0){A.innerHTML=worldFx()+menuV();j90SyncMusic();return}
+ if(introStep===0){A.innerHTML=worldFx()+menuV();j90SyncMusic();return}
 
  let h=worldFx()+head();
  if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='match')h+=sndB()+matchV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
