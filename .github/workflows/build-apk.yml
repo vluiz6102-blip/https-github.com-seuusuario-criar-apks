@@ -43,7 +43,7 @@ jobs:
           mkdir -p android/app/src/main/java/com/jornada90/carreira
           cp android-overrides/MainActivity.java android/app/src/main/java/com/jornada90/carreira/MainActivity.java
           cp android-overrides/J90DisplayRatePlugin.java android/app/src/main/java/com/jornada90/carreira/J90DisplayRatePlugin.java
-      cp android-overrides/J90HapticsPlugin.java android/app/src/main/java/com/jornada90/carreira/J90HapticsPlugin.java
+          cp android-overrides/J90HapticsPlugin.java android/app/src/main/java/com/jornada90/carreira/J90HapticsPlugin.java
 
       - name: Instalar conversor SVG
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
