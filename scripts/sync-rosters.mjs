@@ -44,12 +44,14 @@ function gameTeams(source){
   if(comp){
     for(const q of comp[1].matchAll(/'([^']+)'/g))names.add(q[1]);
   }
+  const national=['Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica'];
+  national.forEach(x=>names.add(x));
   for(const x of SKIP)names.delete(x);
   return [...names].sort((a,b)=>a.localeCompare(b,'pt-BR'));
 }
 function pickTeam(results,target){
   const items=Array.isArray(results?.results)?results.results:[];
-  const teams=items.map(x=>x?.entity||x?.team||x).filter(x=>x&&(x.id||x.team?.id));
+  const teams=items.filter(x=>!x?.type||x.type==='team').map(x=>x?.entity||x?.team||x).filter(x=>x&&(x.id||x.team?.id));
   const exact=teams.find(x=>norm(x.name)===norm(target));
   if(exact)return exact;
   const alias=ALIASES[target]||target;
