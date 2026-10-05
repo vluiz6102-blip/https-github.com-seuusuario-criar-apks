@@ -19,9 +19,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
+      background: linear-gradient(180deg, #000 0%, #0a1428 100%);
       color: #f4f4f4;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
@@ -44,131 +44,355 @@
       overflow-y: auto;
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
 
+    /* HEADER */
     .header {
       text-align: center;
-      padding: 20px 12px;
-      background: #090909;
-      border-bottom: 1px solid #202020;
+      padding: 24px 12px 16px;
+      background: linear-gradient(180deg, #0a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid #ffca3a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #ffca3a, transparent);
     }
 
     .brand {
-      font-size: 32px;
+      font-size: 36px;
       font-weight: 900;
-      letter-spacing: 2px;
-      margin-bottom: 4px;
-    }
-
-    .brand b {
-      color: #ffca3a;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #ffca3a 0%, #ffd966 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .tagline {
       font-size: 12px;
-      color: #8a8a8a;
+      color: #8a9aaa;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* STATS */
+    .stats-wrapper {
+      padding: 14px;
+      background: linear-gradient(180deg, #0a1a2e 0%, #16213e 50%, #0a1a2e 100%);
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      padding: 12px;
-      background: #090909;
+      gap: 10px;
     }
 
     .stat-card {
-      background: #1a1a1a;
-      border: 1px solid #202020;
-      border-radius: 8px;
-      padding: 10px;
+      background: linear-gradient(135deg, rgba(255, 202, 58, 0.08) 0%, rgba(66, 215, 125, 0.04) 100%);
+      border: 1px solid #2a3f5f;
+      border-radius: 12px;
+      padding: 14px 10px;
       text-align: center;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
       will-change: transform;
     }
 
+    .stat-card:hover {
+      border-color: #ffca3a;
+      transform: translateY(-2px);
+    }
+
     .stat-value {
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 28px;
+      font-weight: 900;
       color: #ffca3a;
       display: block;
+      line-height: 1;
     }
 
     .stat-label {
-      font-size: 11px;
-      color: #8a8a8a;
-      margin-top: 4px;
+      font-size: 10px;
+      color: #8a9aaa;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
+    /* MAIN CONTENT */
+    .content {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* PLAYER CARD */
+    .player-card {
+      background: linear-gradient(135deg, #0f2a4a 0%, #1a3a5a 100%);
+      border: 1px solid #2a4a6a;
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .player-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f4f4f4;
+      margin-bottom: 10px;
+    }
+
+    .player-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #2a4a6a;
+      font-size: 13px;
+    }
+
+    .player-stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .player-stat-label {
+      color: #8a9aaa;
+    }
+
+    .player-stat-value {
+      font-weight: 700;
+      color: #42d77d;
+    }
+
+    .player-stat-value.warn {
+      color: #ffca3a;
+    }
+
+    .player-stat-value.critical {
+      color: #ff5c5c;
+    }
+
+    /* BUTTONS */
     .buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 12px;
-      flex: 1;
-      align-content: start;
+      gap: 10px;
+      auto-rows: max-content;
     }
 
     .btn {
-      background: #1a1a1a;
-      border: 1px solid #202020;
+      background: linear-gradient(135deg, #1a3a5a 0%, #0f2a4a 100%);
+      border: 2px solid #2a4a6a;
       color: #f4f4f4;
-      padding: 16px 12px;
-      border-radius: 8px;
+      padding: 18px 12px;
+      border-radius: 12px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       touch-action: manipulation;
       cursor: pointer;
-      transition: none;
+      transition: all 0.15s ease;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+      min-height: 100px;
+      justify-content: center;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 202, 58, 0.2) 0%, transparent 50%);
+      opacity: 0;
+      pointer-events: none;
+      will-change: opacity;
     }
 
     .btn:active {
-      background: #242424;
+      background: linear-gradient(135deg, #2a5a7a 0%, #1a3a5a 100%);
       border-color: #42d77d;
-      transform: scale(0.98);
+      transform: scale(0.95);
     }
 
-    .btn-value {
-      display: block;
+    .btn:active::before {
+      opacity: 1;
+    }
+
+    .btn-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .btn-label {
       font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-desc {
+      font-size: 9px;
+      color: #8a9aaa;
       font-weight: 400;
-      color: #8a8a8a;
-      margin-top: 6px;
+      text-transform: capitalize;
     }
 
-    .footer {
-      text-align: center;
+    /* STATUS BAR */
+    .status-bar {
+      background: linear-gradient(135deg, rgba(255, 202, 58, 0.08) 0%, rgba(66, 215, 125, 0.04) 100%);
+      border: 1px solid #2a4a6a;
+      border-radius: 12px;
       padding: 12px;
-      font-size: 11px;
-      color: #8a8a8a;
-      border-top: 1px solid #202020;
+      font-size: 12px;
     }
 
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      color: #8a9aaa;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #42d77d;
+    }
+
+    .status-indicator.warn {
+      background: #ffca3a;
+    }
+
+    .status-indicator.critical {
+      background: #ff5c5c;
+    }
+
+    /* NOTIFICATIONS */
     .notification {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #ffca3a;
+      background: linear-gradient(135deg, #ffca3a 0%, #ffd966 100%);
       color: #000;
-      padding: 16px 24px;
-      border-radius: 8px;
+      padding: 18px 32px;
+      border-radius: 12px;
       font-weight: 700;
       z-index: 1000;
       pointer-events: none;
-      animation: popIn .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 60px rgba(255, 202, 58, 0.3);
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .notification.success {
+      background: linear-gradient(135deg, #42d77d 0%, #5aed99 100%);
+      color: #000;
+    }
+
+    .notification.danger {
+      background: linear-gradient(135deg, #ff5c5c 0%, #ff7c7c 100%);
+      color: #fff;
     }
 
     @keyframes popIn {
       from {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translate(-50%, -50%) scale(0.3) rotateZ(-10deg);
       }
       to {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) scale(1) rotateZ(0deg);
       }
+    }
+
+    /* END GAME */
+    .end-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(180deg, #0a1a2e 0%, #16213e 50%, #0a1a2e 100%);
+    }
+
+    .ranking-badge {
+      font-size: 64px;
+      margin-bottom: 16px;
+      animation: bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .final-overall {
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffca3a 0%, #ffd966 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .final-text {
+      font-size: 18px;
+      color: #8a9aaa;
+      margin-bottom: 32px;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, #42d77d 0%, #5aed99 100%);
+      color: #000;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(66, 215, 125, 0.3);
+    }
+
+    .restart-btn:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-10px) scale(1.05); }
+    }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 12px;
+      font-size: 11px;
+      color: #5a6a7a;
+      border-top: 1px solid #2a4a6a;
+      background: linear-gradient(180deg, transparent 0%, rgba(10, 26, 46, 0.4) 100%);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -182,26 +406,57 @@
 <body>
   <div id="app">
     <div class="header">
-      <div class="brand">JORNADA <b>90</b></div>
-      <div class="tagline">Simulador de Carreira no Futebol</div>
+      <div class="brand">JORNADA 90</div>
+      <div class="tagline">Simulador de Carreira • Futebol</div>
     </div>
 
-    <div class="stats">
-      <div class="stat-card">
-        <span class="stat-value" id="overall">75</span>
-        <div class="stat-label">OVERALL</div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-value" id="money">100</span>
-        <div class="stat-label">MOEDAS</div>
-      </div>
-      <div class="stat-card">
-        <span class="stat-value" id="week">1</span>
-        <div class="stat-label">SEMANA</div>
+    <div class="stats-wrapper">
+      <div class="stats">
+        <div class="stat-card">
+          <span class="stat-value" id="overall">75</span>
+          <div class="stat-label">Overall</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="money">100</span>
+          <div class="stat-label">R$ Mil</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="week">1/90</span>
+          <div class="stat-label">Semana</div>
+        </div>
       </div>
     </div>
 
-    <div class="buttons" id="buttons"></div>
+    <div class="content">
+      <div class="player-card">
+        <div class="player-name" id="playerName">Jogador Promessa</div>
+        <div class="player-stat-row">
+          <span class="player-stat-label">Moral</span>
+          <span class="player-stat-value" id="moralValue">70</span>
+        </div>
+        <div class="player-stat-row">
+          <span class="player-stat-label">Energia</span>
+          <span class="player-stat-value" id="energyValue">80</span>
+        </div>
+        <div class="player-stat-row">
+          <span class="player-stat-label">Confiança Técnico</span>
+          <span class="player-stat-value" id="coachValue">60</span>
+        </div>
+        <div class="player-stat-row">
+          <span class="player-stat-label">Experiência</span>
+          <span class="player-stat-value" id="expValue">0 XP</span>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-line">
+          <span class="status-indicator" id="injuryIndicator"></span>
+          <span id="injuryStatus">Sem lesões · Pronto para jogo</span>
+        </div>
+      </div>
+
+      <div class="buttons" id="buttons"></div>
+    </div>
 
     <div class="footer">
       <div id="phase">Iniciando carreira...</div>
@@ -211,24 +466,27 @@
   <script>
     let audioContext;
 
-    const playSound = (freq = 800, duration = 120) => {
+    const playSound = (freq = 800, duration = 120, type = 'sine') => {
       try {
         if (!audioContext) {
           audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
         }
         const now = audioContext.currentTime;
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
         osc.connect(gain);
         gain.connect(audioContext.destination);
-        osc.type = 'sine';
+        osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + duration / 1000);
         osc.start(now);
         osc.stop(now + duration / 1000);
       } catch (e) {
-        console.log('Som indisponível');
+        console.log('Som indisponível:', e.message);
       }
     };
 
@@ -248,49 +506,80 @@
         this.money = 100;
         this.week = 1;
         this.maxWeeks = 90;
+        this.moral = 70;
+        this.energy = 80;
+        this.coach = 60;
+        this.exp = 0;
         this.injuryRisk = 0;
+        this.totalMatches = 0;
         this.render();
+        this.setupAudioContext();
+      }
+
+      setupAudioContext() {
+        document.addEventListener('click', () => {
+          if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+        }, { once: true });
       }
 
       treino() {
-        vibrate(20);
-        playSound(820, 90);
-        const gain = Math.random() > 0.45 ? 1 : 0;
+        vibrate([20, 15, 20]);
+        playSound(880, 100);
+        
+        const gain = Math.random() > 0.35 ? 1 : 0;
         this.overall = Math.min(99, this.overall + gain);
-        this.injuryRisk += Math.random() * 12;
-        this.showNotification(gain ? '⬆️ +1 Overall!' : '→ Sem progresso');
+        this.exp += 8 + Math.floor(Math.random() * 4);
+        this.energy = Math.max(0, this.energy - 20);
+        this.moral = Math.min(100, this.moral + 5);
+        this.injuryRisk += Math.random() * 8;
+
+        const msg = gain ? '⬆️ Progresso!' : '→ Mantendo forma';
+        this.showNotification(msg, 'success');
         this.nextWeek();
       }
 
       jogar() {
-        vibrate([28, 50, 28]);
-        playSound(980, 150);
+        vibrate([30, 40, 30, 40, 30]);
+        playSound(1020, 200);
 
-        if (Math.random() < this.injuryRisk / 100) {
+        if (Math.random() < Math.min(0.8, this.injuryRisk / 100)) {
           this.overall = Math.max(50, this.overall - 5);
-          this.money = Math.max(0, this.money - 50);
-          this.showNotification('🤕 Lesão!');
+          this.money = Math.max(0, this.money - 80);
+          this.coach = Math.max(0, this.coach - 15);
+          this.injuryRisk = 0;
+          this.showNotification('🤕 Lesionado!', 'danger');
         } else {
-          const ganho = Math.floor((this.overall / 100) * 50);
+          const baseGanho = Math.floor((this.overall / 100) * 80);
+          const ganho = baseGanho + Math.floor(Math.random() * 40);
           this.money += ganho;
-          this.showNotification(`💰 +${ganho}`);
+          this.totalMatches++;
+          this.exp += 25 + Math.floor(Math.random() * 15);
+          this.coach = Math.min(100, this.coach + 8);
+          this.moral = Math.min(100, this.moral + 12);
+          this.energy = Math.max(0, this.energy - 35);
+          
+          const stars = '⭐'.repeat(Math.min(3, Math.floor(ganho / 40)));
+          this.showNotification(`${stars} +R$ ${ganho}k`, 'success');
         }
 
-        this.injuryRisk = 0;
+        this.injuryRisk = Math.max(0, this.injuryRisk - 20);
         this.nextWeek();
       }
 
       clinica() {
-        vibrate(40);
-        playSound(620, 200);
+        vibrate(50);
+        playSound(600, 150);
 
-        if (this.money >= 100) {
-          this.money -= 100;
-          this.overall = Math.min(99, this.overall + 8);
+        if (this.money >= 150) {
+          this.money -= 150;
+          this.overall = Math.min(99, this.overall + 10);
+          this.energy = Math.min(100, this.energy + 40);
           this.injuryRisk = 0;
-          this.showNotification('💊 Recuperado!');
+          this.showNotification('💊 Recuperação!', 'success');
         } else {
-          this.showNotification('💸 Sem moedas!');
+          this.showNotification('💸 Sem fundos!', 'danger');
         }
 
         this.nextWeek();
@@ -298,10 +587,15 @@
 
       descansar() {
         vibrate(25);
-        playSound(700, 120);
-        this.injuryRisk = Math.max(0, this.injuryRisk - 30);
-        this.overall = Math.min(99, this.overall + 2);
-        this.showNotification('😴 Recuperando...');
+        playSound(720, 130);
+        
+        this.injuryRisk = Math.max(0, this.injuryRisk - 40);
+        this.energy = Math.min(100, this.energy + 50);
+        this.overall = Math.min(99, this.overall + 1);
+        this.moral = Math.min(100, this.moral + 8);
+        this.exp += 3;
+
+        this.showNotification('😴 Recuperado!', 'success');
         this.nextWeek();
       }
 
@@ -315,48 +609,86 @@
       }
 
       endGame() {
-        vibrate([50, 100, 50]);
-        playSound(1200, 280);
+        vibrate([50, 100, 50, 100, 50]);
+        playSound(1400, 300, 'triangle');
 
-        const ranking = this.overall >= 90 ? '🏆 LENDA' : this.overall >= 80 ? '⭐ ELITE' : this.overall >= 70 ? '👑 PRÓ' : '🟢 AMADOR';
+        let ranking = '🟢';
+        let title = 'AMADOR';
+        
+        if (this.overall >= 95) {
+          ranking = '👑';
+          title = 'LENDA';
+        } else if (this.overall >= 85) {
+          ranking = '⭐';
+          title = 'ELITE';
+        } else if (this.overall >= 78) {
+          ranking = '🏆';
+          title = 'PRÓ EXPERIENTE';
+        } else if (this.overall >= 70) {
+          ranking = '🥇';
+          title = 'PRÓ';
+        }
 
         document.getElementById('app').innerHTML = `
-          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:10px;">${ranking}</div>
-            <div style="font-size:28px;font-weight:900;margin-bottom:20px;color:#ffca3a;">${this.overall} OVERALL</div>
-            <div style="font-size:18px;margin-bottom:30px;color:#8a8a8a;">Carreira Finalizada!</div>
-            <button onclick="location.reload()" style="background:#42d77d;color:#000;padding:14px 28px;border:none;border-radius:8px;font-weight:700;font-size:16px;cursor:pointer;">Jogar Novamente</button>
+          <div class="end-screen">
+            <div class="ranking-badge">${ranking}</div>
+            <div class="final-overall">${this.overall}</div>
+            <div style="font-size: 20px; color: #ffca3a; margin-bottom: 6px; font-weight: 700;">${title}</div>
+            <div class="final-text">
+              Carreira finalizada!<br>
+              ${this.totalMatches} jogos · R$ ${this.money}k · ${this.exp} XP
+            </div>
+            <button class="restart-btn" onclick="location.reload()">🔄 Jogar Novamente</button>
           </div>
         `;
       }
 
-      showNotification(msg) {
+      showNotification(msg, type = 'info') {
         const notif = document.createElement('div');
-        notif.className = 'notification';
+        notif.className = `notification ${type}`;
         notif.textContent = msg;
         document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 1500);
+        setTimeout(() => notif.remove(), 1800);
       }
 
       render() {
         document.getElementById('overall').textContent = this.overall;
         document.getElementById('money').textContent = this.money;
         document.getElementById('week').textContent = `${this.week}/${this.maxWeeks}`;
+        
+        document.getElementById('moralValue').textContent = this.moral;
+        document.getElementById('energyValue').textContent = this.energy;
+        document.getElementById('coachValue').textContent = this.coach;
+        document.getElementById('expValue').textContent = `${this.exp} XP`;
 
-        const injury = this.injuryRisk > 50 ? ' 🚨' : this.injuryRisk > 20 ? ' ⚠️' : '';
-        document.getElementById('phase').textContent = `Semana ${this.week} - Risco de Lesão: ${Math.floor(this.injuryRisk)}%${injury}`;
+        const injuryIndicator = document.getElementById('injuryIndicator');
+        let injuryStatus = '✓ Sem lesões · Pronto';
+        
+        if (this.injuryRisk > 60) {
+          injuryIndicator.className = 'status-indicator critical';
+          injuryStatus = '⚠️ ALTO RISCO · ' + Math.floor(this.injuryRisk) + '%';
+        } else if (this.injuryRisk > 25) {
+          injuryIndicator.className = 'status-indicator warn';
+          injuryStatus = '⚠ Risco moderado · ' + Math.floor(this.injuryRisk) + '%';
+        } else {
+          injuryIndicator.className = 'status-indicator';
+          injuryStatus = '✓ Sem lesões · Pronto';
+        }
+        
+        document.getElementById('injuryStatus').textContent = injuryStatus;
 
         const actions = [
-          { name: 'Treinar', detail: '+1 OVR', action: 'treino' },
-          { name: 'Jogar', detail: 'Ganha moedas', action: 'jogar' },
-          { name: 'Clínica', detail: '-100 coins', action: 'clinica' },
-          { name: 'Descansar', detail: 'Menos lesão', action: 'descansar' }
+          { icon: '🏋️', name: 'Treinar', desc: '+Overall', fn: 'treino' },
+          { icon: '⚽', name: 'Jogar', desc: 'Ganhar $', fn: 'jogar' },
+          { icon: '💊', name: 'Clínica', desc: '-R$ 150k', fn: 'clinica' },
+          { icon: '😴', name: 'Descansar', desc: 'Recuperar', fn: 'descansar' }
         ];
 
         document.getElementById('buttons').innerHTML = actions.map((btn) => `
-          <button class="btn" onclick="game.${btn.action}()">
-            <div>${btn.name}</div>
-            <div class="btn-value">${btn.detail}</div>
+          <button class="btn" onclick="game.${btn.fn}()">
+            <div class="btn-icon">${btn.icon}</div>
+            <div class="btn-label">${btn.name}</div>
+            <div class="btn-desc">${btn.desc}</div>
           </button>
         `).join('');
       }
