@@ -675,7 +675,7 @@ function j90SoundscapeEvent(){
  if(kind===j90SoundscapeKind&&pool.length>1)kind=pool[RI(0,pool.length-1)];
  j90SoundscapeKind=kind;
  const pan=R(-.82,.82),v=R(.018,.045);
- if(kind==='bird'){j90SoundscapeTone('bird',v,pan);if(Math.random()<.42)setTimeout(()=>j90SoundscapeTone('bird',v*.72,Math.max(-.9,Math.min(.9,pan+R(-.25,.25)))),RI(120,420))}
+ if(kind==='bird'){j90SoundscapeTone('bird',v,pan);if(Math.random()<.42){const gen=j90SoundscapeGeneration;setTimeout(()=>{if(gen===j90SoundscapeGeneration&&j90SoundscapeBus)j90SoundscapeTone('bird',v*.72,Math.max(-.9,Math.min(.9,pan+R(-.25,.25))))},RI(120,420))}}
  else if(kind==='dog')j90SoundscapeTone('dog',v*.9,pan);
  else if(kind==='drum')j90SoundscapeTone('drum',v*.72,pan);
  else j90SoundscapeNoise(kind,v,R(.35,1.25),pan);
