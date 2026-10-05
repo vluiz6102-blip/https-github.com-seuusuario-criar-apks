@@ -10,6 +10,7 @@ on:
     paths:
       - 'index.html'
       - 'scripts/build.mjs'
+      - 'src/**'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
