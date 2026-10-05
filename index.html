@@ -365,6 +365,29 @@ input:focus,select:focus{border-color:#7a6428;box-shadow:0 0 0 3px rgba(255,202,
 @media(prefers-reduced-motion:reduce){
  .btn,.menuBtn,.chip,.tabs button,.themeOption,.audioOption,.offerCard{transition:none!important}
 }
+/* J90 Atmosphere 2.0: profundidade cinematográfica, sem sacrificar o celular */
+.ambientBg{background:linear-gradient(180deg,#02060a,#06100e 58%,#020604)}
+.ambientBg .atmoCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.9;mix-blend-mode:screen;pointer-events:none}
+.ambientBg .sky{background:
+ radial-gradient(ellipse at 50% 72%,rgba(245,153,71,.20),transparent 22%),
+ radial-gradient(ellipse at 22% 25%,rgba(91,139,168,.10),transparent 30%),
+ linear-gradient(180deg,#02070b 0%,#07131a 42%,#12251e 73%,#020604 100%)}
+.ambientBg .sunset{height:72%;top:3%;background:
+ radial-gradient(ellipse at 50% 78%,rgba(255,180,88,.34),rgba(205,92,53,.17) 20%,rgba(91,76,119,.09) 43%,transparent 72%);
+ filter:blur(11px);mix-blend-mode:screen}
+.ambientBg .horizon{bottom:5%;height:34%;background:
+ linear-gradient(180deg,rgba(44,101,71,.22),rgba(8,31,20,.42) 44%,rgba(0,0,0,.84)),
+ radial-gradient(ellipse at 50% 0%,rgba(77,143,99,.18),transparent 52%)}
+.ambientBg .clouds i{width:34vw;height:10vh;background:
+ radial-gradient(ellipse at 30% 55%,rgba(255,255,255,.11),transparent 42%),
+ radial-gradient(ellipse at 65% 45%,rgba(255,255,255,.075),transparent 46%);
+ filter:blur(12px);opacity:.16}
+.ambientBg .birds i{border-top:2px solid rgba(235,239,239,.34);width:14px;filter:drop-shadow(0 0 2px rgba(255,255,255,.08))}
+.ambientBg .leaves i{filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.ambientBg .shade{background:radial-gradient(ellipse at 50% 55%,transparent 25%,rgba(0,0,0,.12) 62%,rgba(0,0,0,.55) 100%)}
+.ambientBg .depthHaze{position:absolute;inset:25% 0 15%;background:linear-gradient(180deg,transparent,rgba(180,207,190,.025),transparent);filter:blur(18px);pointer-events:none}
+@media(max-width:560px){.ambientBg .atmoCanvas{opacity:.72}.ambientBg .sunset{filter:blur(9px)}}
+@media(prefers-reduced-motion:reduce){.ambientBg .atmoCanvas{opacity:.35}}
 </style>
 </head>
 <body>
@@ -459,7 +482,50 @@ function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audio
 function setAudioMode(k){audioMode=['stereo','immersive','mono'].includes(k)?k:'stereo';try{localStorage.setItem('j90_audio_mode',audioMode)}catch(e){}unlockAudio();render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
 function toggleCompact(){document.body.classList.toggle('compact');try{localStorage.setItem('j90_compact',document.body.classList.contains('compact')?'1':'0')}catch(e){}render(1)}
-function worldFx(){return '<div class="ambientBg"><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="clouds"><i style="--x:2%;--y:14%;--t:18s;--d:-7s"></i><i style="--x:56%;--y:22%;--t:23s;--d:-13s"></i><i style="--x:28%;--y:34%;--t:20s;--d:-4s"></i></div><div class="beam a"></div><div class="beam b"></div><div class="beam c"></div><div class="floodlights"><i style="--x:7%;--y:23%;--r:-10deg;--t:4.8s;--d:-1s"></i><i style="--x:92%;--y:25%;--r:10deg;--t:5.6s;--d:-3s"></i><i style="--x:50%;--y:17%;--r:0deg;--t:6.5s;--d:-5s"></i></div><div class="leaves"><i style="--x:4%;--y:4%;--t:8s;--d:-2s"></i><i style="--x:12%;--y:28%;--t:11s;--d:-7s"></i><i style="--x:23%;--y:11%;--t:9s;--d:-5s"></i><i style="--x:34%;--y:35%;--t:12s;--d:-10s"></i><i style="--x:44%;--y:5%;--t:10s;--d:-4s"></i><i style="--x:53%;--y:24%;--t:13s;--d:-8s"></i><i style="--x:63%;--y:8%;--t:9.5s;--d:-6s"></i><i style="--x:74%;--y:31%;--t:12s;--d:-11s"></i><i style="--x:86%;--y:12%;--t:10.5s;--d:-3s"></i><i style="--x:95%;--y:28%;--t:13.5s;--d:-9s"></i></div><div class="dust"><i style="--x:10%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:26%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:43%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:61%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:79%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="sparks"><i style="--x:18%;--y:77%;--t:5.5s;--d:-2s"></i><i style="--x:39%;--y:65%;--t:6.8s;--d:-5s"></i><i style="--x:57%;--y:75%;--t:7.2s;--d:-1s"></i><i style="--x:83%;--y:70%;--t:6.3s;--d:-4s"></i></div><div class="birds"><i style="--y:18%;--t:24s;--d:-11s"></i><i style="--y:25%;--t:31s;--d:-17s"></i></div><div class="shade"></div></div>'}
+function worldFx(){return '<div class="ambientBg"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="depthHaze"></div><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="clouds"><i style="--x:2%;--y:14%;--t:18s;--d:-7s"></i><i style="--x:56%;--y:22%;--t:23s;--d:-13s"></i><i style="--x:28%;--y:34%;--t:20s;--d:-4s"></i></div><div class="beam a"></div><div class="beam b"></div><div class="beam c"></div><div class="floodlights"><i style="--x:7%;--y:23%;--r:-10deg;--t:4.8s;--d:-1s"></i><i style="--x:92%;--y:25%;--r:10deg;--t:5.6s;--d:-3s"></i><i style="--x:50%;--y:17%;--r:0deg;--t:6.5s;--d:-5s"></i></div><div class="leaves"><i style="--x:4%;--y:4%;--t:8s;--d:-2s"></i><i style="--x:12%;--y:28%;--t:11s;--d:-7s"></i><i style="--x:23%;--y:11%;--t:9s;--d:-5s"></i><i style="--x:34%;--y:35%;--t:12s;--d:-10s"></i><i style="--x:44%;--y:5%;--t:10s;--d:-4s"></i><i style="--x:53%;--y:24%;--t:13s;--d:-8s"></i><i style="--x:63%;--y:8%;--t:9.5s;--d:-6s"></i><i style="--x:74%;--y:31%;--t:12s;--d:-11s"></i><i style="--x:86%;--y:12%;--t:10.5s;--d:-3s"></i><i style="--x:95%;--y:28%;--t:13.5s;--d:-9s"></i></div><div class="dust"><i style="--x:10%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:26%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:43%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:61%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:79%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="sparks"><i style="--x:18%;--y:77%;--t:5.5s;--d:-2s"></i><i style="--x:39%;--y:65%;--t:6.8s;--d:-5s"></i><i style="--x:57%;--y:75%;--t:7.2s;--d:-1s"></i><i style="--x:83%;--y:70%;--t:6.3s;--d:-4s"></i></div><div class="birds"><i style="--y:18%;--t:24s;--d:-11s"></i><i style="--y:25%;--t:31s;--d:-17s"></i></div><div class="shade"></div></div>'}
+
+/* Atmosfera procedural J90: céu, névoa, vento e partículas com Canvas leve. */
+let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null;
+function startJ90Atmosphere(){
+ if(j90AtmoStarted)return;
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const canvas=document.querySelector('.ambientBg .atmoCanvas');
+ if(!canvas)return;
+ j90AtmoStarted=true;
+ const ctx=canvas.getContext('2d',{alpha:true});
+ const particles=[];
+ const count=window.innerWidth<560?26:42;
+ for(let i=0;i<count;i++)particles.push({x:Math.random(),y:.52+Math.random()*.42,r:.5+Math.random()*1.7,s:.00006+Math.random()*.00012,a:.05+Math.random()*.14,p:Math.random()*6.28});
+ function resize(){
+   const d=Math.min(window.devicePixelRatio||1,1.25);
+   canvas.width=Math.floor(innerWidth*d);canvas.height=Math.floor(innerHeight*d);
+   ctx.setTransform(d,0,0,d,0,0);
+ }
+ resize();j90AtmoResize=resize;addEventListener('resize',resize,{passive:true});
+ let last=0;
+ function frame(t){
+   if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
+   if(t-last<(reduced?1000:33)){j90AtmoFrame=requestAnimationFrame(frame);return}
+   last=t;const w=innerWidth,h=innerHeight,dt=Math.min(60,t-(frame.last||t));frame.last=t;
+   ctx.clearRect(0,0,w,h);
+   const g=ctx.createLinearGradient(0,h*.42,0,h);
+   g.addColorStop(0,'rgba(190,214,205,.015)');g.addColorStop(.55,'rgba(105,150,124,.035)');g.addColorStop(1,'rgba(8,35,20,.11)');
+   ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+   for(const p of particles){
+     p.x+=p.s*dt;
+     p.y-=p.s*.18*dt;
+     p.p+=.0012*dt;
+     if(p.x>1.04||p.y<.46){p.x=-.03;p.y=.56+Math.random()*.4}
+     const x=p.x*w+Math.sin(p.p)*7,y=p.y*h;
+     ctx.globalAlpha=p.a*(.55+.45*Math.sin(p.p));
+     ctx.fillStyle='#d8e8d8';ctx.beginPath();ctx.arc(x,y,p.r,0,Math.PI*2);ctx.fill();
+   }
+   ctx.globalAlpha=1;
+   j90AtmoFrame=requestAnimationFrame(frame);
+ }
+ j90AtmoFrame=requestAnimationFrame(frame);
+}
+
 function newGame(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;introStep=1;menuScreen='home';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
