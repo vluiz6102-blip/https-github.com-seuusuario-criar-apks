@@ -9,6 +9,7 @@
   const ROOT = 'assets/audio/';
   const MAX_CONTINUOUS = 7;
   const MAX_EVENTS = 4;
+  const loopBuffers = new Map();
   const FADE = 2.8;
 
   const ambienceState = window.ambienceState || {
@@ -140,6 +141,30 @@
     return graph;
   }
 
+  function makeLoopSafe(buffer) {
+    if (!buffer || !AC || buffer.duration < 4) return buffer;
+    if (loopBuffers.has(buffer)) return loopBuffers.get(buffer);
+    const fadeSeconds = Math.min(1.6, Math.max(.45, buffer.duration * .08));
+    const frames = Math.max(1, Math.floor(fadeSeconds * buffer.sampleRate));
+    const out = AC.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+    for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+      const src = buffer.getChannelData(ch);
+      const dst = out.getChannelData(ch);
+      dst.set(src);
+      for (let i = 0; i < frames; i++) {
+        const t = i / Math.max(1, frames - 1);
+        const a = Math.cos(t * Math.PI * .5);
+        const b = Math.sin(t * Math.PI * .5);
+        const head = src[i];
+        const tail = src[src.length - frames + i];
+        dst[i] = head * a + tail * b;
+        dst[src.length - frames + i] = tail * a + head * b;
+      }
+    }
+    loopBuffers.set(buffer, out);
+    return out;
+  }
+
   async function loadBuffer(file) {
     if (!file || !AC || !hasAsset(file)) return null;
     if (buffers.has(file)) return buffers.get(file);
@@ -194,12 +219,15 @@
     if (!file) return;
 
     const buffer = await loadBuffer(file);
-    if (!buffer || !graph) return;
+    if (!buffer || !graph || continuous.size >= MAX_CONTINUOUS) return;
+    const loopBuffer = makeLoopSafe(buffer);
 
     const source = AC.createBufferSource();
     const gain = AC.createGain();
-    source.buffer = buffer;
+    source.buffer = loopBuffer;
     source.loop = true;
+    source.loopStart = 0;
+    source.loopEnd = loopBuffer.duration;
 
     const fade = opts.fade ?? FADE;
     gain.gain.setValueAtTime(.0001, AC.currentTime);
@@ -209,7 +237,7 @@
     const out = connectSpatial(gain, false, opts.pan || 0, 0);
     out.connect(graph.soundscape);
 
-    const record = { name, category, file, source, gain, out, target: gainTarget, buffer };
+    const record = { name, category, file, source, gain, out, target: gainTarget, buffer: loopBuffer };
     continuous.set(name, record);
 
     source.onended = () => {
@@ -261,12 +289,14 @@
     startOrUpdate('trees', 'trees', c.trees);
     startOrUpdate('leaves', 'leaves', c.leaves);
     startOrUpdate('neighborhood', 'neighborhood', c.neighborhood);
-    startOrUpdate('stadium', 'stadium', q === 'low' ? c.stadium * .7 : c.stadium);
-    startOrUpdate('rain', 'rain', c.rain);
-    startOrUpdate('rainLeaves', 'rainLeaves', q === 'low' ? c.rainLeaves * .65 : c.rainLeaves);
-    startOrUpdate('birdsBed', 'birdsBed', q === 'low' ? c.birds * .7 : c.birds);
-    startOrUpdate('insects', 'insects', c.insects);
-    startOrUpdate('crowd', 'crowd', c.crowd);
+    const baseLayers = ambienceState.matchDay
+      ? [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['stadium','stadium',q === 'low' ? c.stadium * .7 : c.stadium],['crowd','crowd',c.crowd]]
+      : ambienceState.weather === 'lightRain' || ambienceState.weather === 'heavyRain'
+        ? [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['rain','rain',c.rain],['rainLeaves','rainLeaves',q === 'low' ? c.rainLeaves * .65 : c.rainLeaves]]
+        : [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['stadium','stadium',q === 'low' ? c.stadium * .7 : c.stadium],['birdsBed','birdsBed',q === 'low' ? c.birds * .7 : c.birds],['insects','insects',c.insects]];
+    const wanted = new Set(baseLayers.map(x => x[0]));
+    continuous.forEach((_, name) => { if (!wanted.has(name)) stopLayer(name); });
+    baseLayers.forEach(([name, category, target]) => startOrUpdate(name, category, target));
   }
 
   function playEvent(category, level, opts = {}) {
