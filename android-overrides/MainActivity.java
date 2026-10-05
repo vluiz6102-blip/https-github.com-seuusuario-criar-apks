@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(J90DisplayRatePlugin.class);
+    registerPlugin(J90HapticsPlugin.class);
     super.onCreate(savedInstanceState);
   }
 }
