@@ -45,10 +45,35 @@ jobs:
               os.makedirs(out,exist_ok=True)
               subprocess.run(['convert',src,'-resize',f'{n}x{n}',f'{out}/ic_launcher.png'],check=True)
               subprocess.run(['cp',f'{out}/ic_launcher.png',f'{out}/ic_launcher_round.png'],check=True)
-          manifest='app/src/main/AndroidManifest.xml'
-          if os.path.exists(manifest):
-              s=open(manifest).read().replace('@mipmap/ic_launcher','@mipmap/ic_launcher')
-              open(manifest,'w').write(s)
+          # Legacy + adaptive launcher resources. Android 12+ can use mipmap-anydpi-v26 instead of PNGs.
+          mkdir -p app/src/main/res/drawable-nodpi app/src/main/res/mipmap-anydpi-v26
+          convert "$src" -resize 1024x1024 app/src/main/res/drawable-nodpi/j90_icon.png
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp "app/src/main/res/mipmap-$density/ic_launcher.png" "app/src/main/res/mipmap-$density/ic_launcher_round.png"
+          done
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@color/j90_icon_background" />
+            <foreground android:drawable="@drawable/j90_icon" />
+            <monochrome android:drawable="@drawable/j90_icon" />
+          </adaptive-icon>
+          XML
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@color/j90_icon_background" />
+            <foreground android:drawable="@drawable/j90_icon" />
+            <monochrome android:drawable="@drawable/j90_icon" />
+          </adaptive-icon>
+          XML
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/j90_icon_colors.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+            <color name="j90_icon_background">#0B1822</color>
+          </resources>
+          XML
           PY
       - name: Gerar APK debug
         working-directory: android
@@ -56,6 +81,6 @@ jobs:
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
-          name: carreira-fc-apk
+          name: jornada-90-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
