@@ -269,7 +269,7 @@ E(['📺','🎙️'],'Um programa de TV convida você para uma entrevista ao viv
 E(['🏠','🔑'],'Chegou a hora de decidir onde morar.',[['Comprar casa','-R$ 300 mil, +moral',()=>{mn(-300);mo(10)}],['Alugar apartamento','-R$ 40 mil, +moral',()=>{mn(-40);mo(4)}],['Morar no CT','+energia',()=>en(8)]]),
 E(['🇧🇷','⭐'],'A seleção principal convoca você para os próximos jogos.',[['Aceitar','+fama, -energia',()=>{fa(10);en(-10)}],['Recusar','+moral, -fama',()=>{mo(4);fa(-3)}]],()=>ovr()>=75),
 E(['🔭','🇪🇺'],'Um olheiro de um grande clube europeu vai ao seu jogo.',[['Mostrar serviço','+fama, -energia',()=>{fa(5);en(-10)}],['Jogar normal','+moral',()=>mo(2)],['Falar com o empresário','+fama leve',()=>fa(2)]],()=>S.club.tier<=3&&ovr()>=62),
-E(['🥅','⚽'],'Pênalti decisivo e o capitão oferece a cobrança para você.',[['Cobrar','55% de acerto',()=>Math.random()<.55?(fa(5),mo(8)):mo(-8)],['Deixar com o capitão','+moral leve',()=>mo(1)],['Bater de cavadinha','35% de virar herói',()=>Math.random()<.35?(fa(10),mo(10)):(fa(-3),mo(-10))]],()=>S.pos!='GOL'),
+E(['🥅','⚽'],'Pênalti decisivo e o capitão oferece a cobrança para você.',[['Cobrar','Chance baseada em finalização e moral',()=>{const p=cl(.35+(S.at.fin-50)*.005+(S.morale-50)*.002,.2,.7);Math.random()<p?(fa(5),mo(8)):mo(-8)}],['Deixar com o capitão','+moral leve',()=>mo(1)],['Bater de cavadinha','35% de virar herói',()=>Math.random()<.35?(fa(10),mo(10)):(fa(-3),mo(-10))]],()=>S.pos!='GOL'),
 E(['🎬','💵'],'Uma empresa quer você num comercial de TV.',[['Participar','+R$ 90 mil, -energia',()=>{mn(90);en(-8)}],['Recusar','+moral',()=>mo(2)],['Pedir o dobro','50% de chance de R$ 180 mil',()=>Math.random()<.5?mn(180):mo(-2)]]),
 E(['💬','🛑'],'Dois companheiros brigam no vestiário, e o clima pesa.',[['Apartar','+mental, +moral',()=>{at('men',.3);mo(1)}],['Ficar de fora','-moral leve',()=>mo(-1)],['Chamar o grupo para almoçar','+moral, -energia',()=>{mo(4);en(-3)}]]),
 E(['❤️','🏥'],'O clube organiza uma visita a um hospital infantil.',[['Ir à visita','+fama, +moral, -energia',()=>{fa(4);mo(4);en(-5)}],['Doar parte do prêmio','+fama, +moral, -R$ 50 mil',()=>{mn(-50);fa(3);mo(3)}],['Não ir','-moral',()=>mo(-1)]])
@@ -363,7 +363,10 @@ function fix(teams){const a=teams.map((_,i)=>i),n=a.length,rs=[];for(let r=0;r<n
 const COMP_NAMES={cdb:'Copa do Brasil',lib:'CONMEBOL Libertadores',sud:'CONMEBOL Sudamericana',ucl:'UEFA Champions League',uel:'UEFA Europa League',uecl:'UEFA Conference League',taca:'Taça de Portugal',afc:'AFC Champions League Elite',inter:'Copa Intercontinental da FIFA',mundial:'Super Mundial de Clubes FIFA'};
 const COMP_STARS=['Pedro','Yuri Alberto','Hulk','Calleri','Arrascaeta','Raphael Veiga','Gerson','Luciano','Paulinho','Everton'];
 function compOpp(c){const p={cdb:['Corinthians','Palmeiras','Flamengo','São Paulo','Grêmio','Cruzeiro','Atlético-MG','Internacional'],lib:['Flamengo','Palmeiras','River Plate','Boca Juniors','Peñarol','Nacional','Cruzeiro','Corinthians'],sud:['Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU'],ucl:['Real Madrid','Manchester City','Liverpool','Bayern','Barcelona','PSG','Arsenal','Inter'],uel:['Tottenham','Roma','Ajax','Sevilla','Porto','Lyon','Leverkusen'],uecl:['Fiorentina','Betis','West Ham','Villarreal','Braga'],taca:['Benfica','Sporting','Porto','Braga','Vitória SC'],afc:['Al-Hilal','Al-Ahli','Al-Nassr','Al-Ittihad','Urawa Red Diamonds'],inter:['PSG','Real Madrid','Flamengo','Palmeiras','Al-Ahli','Toluca'],mundial:['Real Madrid','Manchester City','Bayern','PSG','Flamengo','Palmeiras','River Plate','Al-Hilal']}[c.id]||['Rival FC','United FC'];return p[RI(0,p.length-1)];}
-function compSetup(){S.comps=[];const t=S.club.tier,s=S.club.s;if(t==VZ)return;if(t<=2)S.comps.push({id:'cdb',name:COMP_NAMES.cdb,kind:'cup',round:0,max:7,active:true,pts:0,sc:[],pg:0});if(t==2)S.comps.push({id:s>=66?'lib':'sud',name:s>=66?COMP_NAMES.lib:COMP_NAMES.sud,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(t>=5&&s>=78)S.comps.push({id:'ucl',name:COMP_NAMES.ucl,kind:'group',round:0,max:13,groupLen:8,active:true,pts:0,sc:[],pg:0});else if(t>=5&&s>=72)S.comps.push({id:'uel',name:COMP_NAMES.uel,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});else if(t>=5)S.comps.push({id:'uecl',name:COMP_NAMES.uecl,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(t==3)S.comps.push({id:'taca',name:COMP_NAMES.taca,kind:'cup',round:0,max:5,active:true,pts:0,sc:[],pg:0});if(t==4)S.comps.push({id:'afc',name:COMP_NAMES.afc,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(S.interPending){S.comps.push({id:'inter',name:COMP_NAMES.inter,kind:'global',round:0,max:3,active:true,pts:0,sc:[],pg:0});S.interPending=false}if(S.worldPending&&S.year>=S.worldYear&&S.club.n==S.worldClub){S.comps.push({id:'mundial',name:COMP_NAMES.mundial,kind:'world',round:0,max:7,groupLen:3,active:true,pts:0,sc:[],pg:0});S.worldPending=false}S.comps.forEach(c=>{c.sc=COMP_STARS.map(n=>({n,g:0}));c.sc.push({n:S.name,g:0,me:1})});}
+function compSetup(){
+ if(!S)return;
+ S.comps=[];
+ const t=S.club.tier,s=S.club.s;if(t==VZ)return;if(t<=2)S.comps.push({id:'cdb',name:COMP_NAMES.cdb,kind:'cup',round:0,max:7,active:true,pts:0,sc:[],pg:0});if(t==2)S.comps.push({id:s>=66?'lib':'sud',name:s>=66?COMP_NAMES.lib:COMP_NAMES.sud,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(t>=5&&s>=78)S.comps.push({id:'ucl',name:COMP_NAMES.ucl,kind:'group',round:0,max:13,groupLen:8,active:true,pts:0,sc:[],pg:0});else if(t>=5&&s>=72)S.comps.push({id:'uel',name:COMP_NAMES.uel,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});else if(t>=5)S.comps.push({id:'uecl',name:COMP_NAMES.uecl,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(t==3)S.comps.push({id:'taca',name:COMP_NAMES.taca,kind:'cup',round:0,max:5,active:true,pts:0,sc:[],pg:0});if(t==4)S.comps.push({id:'afc',name:COMP_NAMES.afc,kind:'group',round:0,max:10,groupLen:6,active:true,pts:0,sc:[],pg:0});if(S.interPending){S.comps.push({id:'inter',name:COMP_NAMES.inter,kind:'global',round:0,max:3,active:true,pts:0,sc:[],pg:0});S.interPending=false}if(S.worldPending&&S.year>=S.worldYear&&S.club.n==S.worldClub){S.comps.push({id:'mundial',name:COMP_NAMES.mundial,kind:'world',round:0,max:7,groupLen:3,active:true,pts:0,sc:[],pg:0});S.worldPending=false}S.comps.forEach(c=>{c.sc=COMP_STARS.map(n=>({n,g:0}));c.sc.push({n:S.name,g:0,me:1})});}
 function compStage(c){const r=c.round,g=c.groupLen||0;if(c.id=='cdb')return['1ª fase','2ª fase','3ª fase','Oitavas','Quartas','Semifinal','Final'][r]||'Final';if(c.id=='taca')return['3ª eliminatória','Oitavas','Quartas','Semifinal','Final'][r]||'Final';if(c.id=='inter')return['Derby das Américas','Copa Challenger','Final'][r]||'Final';if(r<g)return c.id=='ucl'?'Fase de liga':'Fase de grupos';return(c.id=='ucl'?['Playoff','Oitavas','Quartas','Semifinal','Final']:['Oitavas','Quartas','Semifinal','Final'])[r-g]||'Final'}
 function compResult(c){
  if(!S||!c)return null;
@@ -398,7 +401,12 @@ function compResult(c){
 
 function compAdvance(c){if(c.kind=='group'&&c.round==c.groupLen){const need=c.id=='ucl'?10:c.id=='lib'?8:7;if(c.pts<need){c.active=false;toast('🌍 Eliminado',S.club.n+' caiu na '+c.name+'.');return}}if(c.kind=='world'&&c.round==c.groupLen&&c.pts<4){c.active=false;return}if((c.kind=='cup'||c.kind=='global'||(c.round>(c.groupLen||999)))&&c.last&&!c.last.win){c.active=false;toast('🛑 Eliminado',S.club.n+' caiu na '+c.name+'.');return}if(c.round>=c.max){c.active=false;S.titles++;trp(c.name);fa(c.id=='mundial'?20:12);toast('🏆 CAMPEÃO',S.club.n+' conquistou '+c.name+'!');if(['lib','ucl','afc','uel'].includes(c.id)){S.interPending=true;S.worldClub=S.club.n;S.worldYear=S.year+((1-(S.year%4)+4)%4||4);S.worldPending=true}}}
 function compFind(){
- if(!S||!Array.isArray(S.comps))return null;
+ if(!S)return null;
+ if(!Array.isArray(S.comps)){
+   S.comps=[];
+   compSetup();
+   compSchedule();
+ }
  if(S.phase=='comp'&&Number.isInteger(S.cmp)&&S.comps[S.cmp]?.active)return S.comps[S.cmp];
  return S.comps.filter(c=>c&&c.active&&(!Number.isFinite(+c.nextAt)||+c.nextAt<=S.r)).sort((a,b)=>(a.nextAt??-1)-(b.nextAt??-1))[0]||null;
 }
@@ -588,18 +596,35 @@ function itv(k){
 function next(){
  if(!S)return;
  S.nt=[];
+ if(!Array.isArray(S.comps)){
+   S.comps=[];
+   compSetup();
+   compSchedule();
+ }
  if(S.phase=='comp'){
    S.phase='pre';S.cmp=null;render();return;
  }
- if(S.phase!='post')return;
- if(S.r>=18){endSeason();return}
+ if(S.phase!='post'){
+   // Recovery for a corrupted/old save that reached the end of the league.
+   if(S.r>=18&&(S.phase=='pre'||!S.phase)){
+     endSeason();
+     render();
+   }
+   return;
+ }
+ // Competitions scheduled for the final league round get priority.
  const c=compFind();
  if(c){
    c.last=null;S.cmp=S.comps.indexOf(c);S.phase='comp';render();return;
  }
+ if(S.r>=18){
+   endSeason();
+   render();
+   return;
+ }
  S.phase='pre';
  const ok=EV.map((e,i)=>i).filter(i=>!EV[i].c||EV[i].c());
- S.ev=ok.length&&Math.random()<.22?ok[RI(0,ok.length-1)]:null;
+ S.ev=ok.length&&Math.random()<.14?ok[RI(0,ok.length-1)]:null;
  render();
 }
 
