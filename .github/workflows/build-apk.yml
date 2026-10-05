@@ -33,6 +33,11 @@ jobs:
         run: |
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
+      - name: Garantir retorno tátil Android
+        working-directory: android
+        run: |
+          manifest="app/src/main/AndroidManifest.xml"
+          grep -q 'android.permission.VIBRATE' "$manifest" || sed -i '/<manifest/a\    <uses-permission android:name="android.permission.VIBRATE" />' "$manifest"
       - name: Instalar conversor SVG
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
       - name: Aplicar identidade e ícone Jornada 90
