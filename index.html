@@ -752,7 +752,11 @@ async function sfx(type){
  }catch(e){}
 }
 document.addEventListener('pointerdown',e=>{
- if(e.target&&e.target.closest&&e.target.closest('button'))unlockAudio().then(j90SyncMusic);
+ if(e.target&&e.target.closest&&e.target.closest('button'))unlockAudio().then(()=>{
+  j90SyncMusic();
+  const snap=window.J90Ambience?.snapshot?.();
+  if(snap&&snap.audioContextState==='running'&&snap.activeAudioSources===0&&window.J90Ambience?.state?.menuActive)window.J90Ambience.start();
+ });
 },{passive:true});
 document.addEventListener('click',e=>{
  if(e.target&&e.target.closest&&e.target.closest('button')){
