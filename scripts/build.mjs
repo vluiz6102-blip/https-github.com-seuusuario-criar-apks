@@ -46,7 +46,7 @@ try {
 
 mkdirSync('www', { recursive: true });
 copyFileSync('index.html', 'www/index.html');
-copyFileSync('src/j90-soundscape.js', 'www/j90-soundscape.js');
+writeFileSync('www/j90-soundscape.js', soundscape);
 
 if (existsSync(audioRoot)) {
   mkdirSync('www/assets', { recursive: true });
