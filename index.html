@@ -454,12 +454,21 @@ function compPlay(){
  if(!c||!c.active){S.phase='pre';S.cmp=null;render();return}
  if(c.last&&c.last.done)return;
  if(c.nextAt!=null&&c.nextAt>S.r&&!c.last){S.phase='pre';S.cmp=null;render();return}
+ c.opp=c.opp||compOpp(c);
+ c.live=c.live||{step:0};
+ if(c.live.step<3){
+  c.live.step++;
+  haptic(c.live.step==3?'whistle':'click');
+  render();
+  return;
+ }
  S.nt=[];
  compResult(c);
  if(!c.last)return;
  c.last.stage=c.last.stage||compStage(c);
- c.last.opp=c.opp||compOpp(c);
+ c.last.opp=c.last.opp||c.opp||compOpp(c);
  c.opp=null;
+ c.live=null;
  if(c.last.g>0){sfx('goal');first('gc','Primeiro gol em '+c.name)}
  c.last.rank=[...c.sc].sort((a,b)=>b.g-a.g).findIndex(x=>x.me)+1;
  compAdvance(c);
@@ -470,7 +479,19 @@ function compPlay(){
  chkF();render()
 }
 
-function compV(){const c=S.comps?.[S.cmp];if(!c)return '<div class="card"><h2>Competições</h2><p class="mu">Nenhum torneio pendente.</p></div>';const l=c.last&&c.last.done?c.last:null;c.sc=c.sc||[];if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name,g:0,me:1});const top=[...c.sc].filter(x=>x&&x.g>0).sort((a,b)=>b.g-a.g).slice(0,5);c.opp=c.opp||compOpp(c);return ntV()+`<div class="card wc"><span class="round">${c.name}</span><h2>${l?l.stage:compStage(c)}</h2>${l?`<div class="sc">${S.club.n} ${l.my} × ${l.og} ${l.opp}</div><p class="mu">${l.pen?(l.win?'Classificado nos pênaltis. ':'Eliminado nos pênaltis. '):''}${l.played?'Sua atuação: '+l.g+' gol(s) · '+l.as+' assistência(s) · '+l.played+' min':'Você não entrou em campo.'}</p>`:`<p class="mu">Próximo adversário: ${c.opp}</p>`}<div style="margin-top:8px"><b>Artilharia</b>${top.length?'':'<p class="mu">Nenhum gol marcado ainda.</p>'}${top.map((x,i)=>`<div class="row"><span>${i+1}. ${x.n}${x.me?' ★':''}</span><b>${x.g}</b></div>`).join('')}</div>${l?(l.ended?'<p style="margin-top:8px"><b>Torneio encerrado para o '+S.club.n+'.</b></p>':'')+'<button class="btn go" onclick="next()">Continuar</button>':'<button class="btn go" onclick="compPlay()">Jogar partida</button>'}</div>`}
+function compV(){
+ const c=S.comps?.[S.cmp];
+ if(!c)return '<div class="card"><h2>Competições</h2><p class="mu">Nenhum torneio pendente.</p></div>';
+ const l=c.last&&c.last.done?c.last:null;
+ c.sc=c.sc||[];
+ if(!c.sc.some(x=>x&&x.me))c.sc.push({n:S.name,g:0,me:1});
+ const top=[...c.sc].filter(x=>x&&x.g>0).sort((a,b)=>b.g-a.g).slice(0,5);
+ c.opp=c.opp||compOpp(c);
+ const lv=c.live;
+ const stages=[['Pré-jogo','Os times entram em campo. O treinador passa as últimas instruções.'],['1º tempo','A partida está em andamento. Você acompanha os principais momentos.'],['Intervalo','O primeiro tempo terminou. O técnico ajusta a estratégia para a etapa final.'],['2º tempo','Últimos minutos. A equipe busca o resultado antes do apito final.']];
+ const live=lv?'<div class="card" style="background:#050505"><div class="mu">PARTIDA EM ANDAMENTO</div><h2>'+stages[lv.step][0]+'</h2><p>'+stages[lv.step][1]+'</p><div class="sc">'+S.club.n+' × '+c.opp+'</div><p class="mu">'+(lv.step<2?'A bola ainda não parou.':'O placar está sendo decidido em campo.')+'</p><button class="btn go" onclick="compPlay()">'+(lv.step<3?'Continuar partida':'Apito final')+'</button></div>':'';
+ return ntV()+live+'<div class="card wc"><span class="round">'+c.name+'</span><h2>'+(l?l.stage:compStage(c))+'</h2>'+(l?'<div class="sc">'+S.club.n+' '+l.my+' × '+l.og+' '+l.opp+'</div><p class="mu">'+(l.pen?(l.win?'Classificado nos pênaltis. ':'Eliminado nos pênaltis. '):'')+(l.played?'Sua atuação: '+l.g+' gol(s) · '+l.as+' assistência(s) · '+l.played+' min':'Você não entrou em campo.')+'</p>':'<p class="mu">Próximo adversário: '+c.opp+'</p>')+'<div style="margin-top:8px"><b>Artilharia</b>'+(top.length?'':'<p class="mu">Nenhum gol marcado ainda.</p>')+top.map((x,i)=>'<div class="row"><span>'+(i+1)+'. '+x.n+(x.me?' ★':'')+'</span><b>'+x.g+'</b></div>').join('')+'</div>'+(l?(l.ended?'<p style="margin-top:8px"><b>Torneio encerrado para o '+S.club.n+'.</b></p>':'')+'<button class="btn go" onclick="next()">Continuar</button>':lv?'':'<button class="btn go" onclick="compPlay()">Entrar em campo</button>')+'</div>';
+}
 function join(c){
  if(!S||!c||!Number.isFinite(+c.tier)||+c.tier<0||+c.tier>VZ)return;
  const tm=clubs(+c.tier);let i=tm.findIndex(t=>t.n==c.n);if(i<0)i=RI(0,9);tm[i]={n:c.n,s:Number.isFinite(+c.s)?+c.s:tm[i].s};
