@@ -10,7 +10,8 @@
     "android:open": "npx cap open android",
     "audio:import": "node scripts/import-audio.mjs",
     "audio:validate": "node scripts/validate-audio.mjs",
-    "audio:report": "node scripts/audio-report.mjs"
+    "audio:report": "node scripts/audio-report.mjs",
+    "data:rosters": "node scripts/sync-rosters.mjs"
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
