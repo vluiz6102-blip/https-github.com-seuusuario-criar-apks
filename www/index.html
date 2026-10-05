@@ -1089,7 +1089,7 @@ function next(){
    compSchedule();
  }
  if(S.phase=='comp'){
-   S.phase='pre';S.cmp=null;render();return;
+   S.phase='pre';S.cmp=null;S.trained=false;S.match=null;S.matchBonus=0;render();return;
  }
  if(S.phase!='post'){
    // Recovery for a corrupted/old save that reached the end of the league.
@@ -1110,6 +1110,7 @@ function next(){
    return;
  }
  S.phase='pre';
+ S.trained=false;S.match=null;S.matchBonus=0;
  const ok=EV.map((e,i)=>i).filter(i=>!EV[i].c||EV[i].c());
  S.ev=ok.length&&Math.random()<.14?ok[RI(0,ok.length-1)]:null;
  render();
