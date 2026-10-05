@@ -1,4 +1,4 @@
-import { mkdirSync, copyFileSync, readFileSync, readdirSync, existsSync, cpSync } from 'node:fs';
+import { mkdirSync, copyFileSync, readFileSync, readdirSync, existsSync, cpSync, writeFileSync } from 'node:fs';
 import { join, relative, dirname, extname } from 'node:path';
 
 const source = readFileSync('index.html', 'utf8');
@@ -58,8 +58,6 @@ const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
-  copyFileSync('www/index.html', 'www/index.html');
-  const { writeFileSync } = await import('node:fs');
   writeFileSync('www/index.html', patched);
 }
 
