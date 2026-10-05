@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
 <title>Jornada 90</title>
 <style>
 :root{--bg:#0f1f2a;--pn:#172c3a;--ln:#27475b;--tx:#e9eef1;--mu:#8fa6b3;--gr:#3fae6a;--am:#f0b43c;--rd:#e0584f}
@@ -152,7 +154,7 @@ html,body{background:#000!important;overflow-x:hidden}body{overscroll-behavior-x
 html,body{width:100%;min-width:0;max-width:100%;overflow-x:hidden;background:#000!important}
 body{-webkit-text-size-adjust:100%;overscroll-behavior-x:none;touch-action:pan-y;background:#000}
 button,input,select{font:inherit;max-width:100%}
-button{cursor:pointer;touch-action:manipulation}
+button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--am);outline-offset:2px}
 #app{width:100%;min-width:0;max-width:560px;margin:0 auto;overflow-x:clip}
 .card{width:100%;min-width:0;overflow:hidden;background:#090909;border-color:#202020}
 .head{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;align-items:start}
@@ -552,7 +554,7 @@ function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme
 function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setItem('j90_tela',displayTheme)}catch(e){}render(1)}
 let j90FrameRate=60;
 try{j90FrameRate=[30,60,120,144].includes(Number(localStorage.getItem('j90_fps')))?Number(localStorage.getItem('j90_fps')):60}catch(e){j90FrameRate=60}
-async function setFrameRate(v){j90FrameRate=[30,60,120,144].includes(Number(v))?Number(v):60;try{localStorage.setItem('j90_fps',String(j90FrameRate))}catch(e){}try{await window.Capacitor?.Plugins?.J90DisplayRate?.setRate({rate:j90FrameRate})}catch(e){}render(1)}
+async function setFrameRate(v){j90FrameRate=[30,60,120,144].includes(Number(v))?Number(v):60;try{localStorage.setItem('j90_fps',String(j90FrameRate))}catch(e){}render(1);try{await window.Capacitor?.Plugins?.J90DisplayRate?.setRate({rate:j90FrameRate})}catch(e){}}
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
 function setAudioMode(k){audioMode=['stereo','immersive','mono'].includes(k)?k:'stereo';try{localStorage.setItem('j90_audio_mode',audioMode)}catch(e){}unlockAudio();render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
@@ -1335,7 +1337,7 @@ function intro(){
  if(introStep===0)return menuV();
  if(introStep===2)return settingsView();
  if(!START_OFFERS.length)START_OFFERS=makeStartOffers();
- return '<div class="createScreen"><div class="createHero"><button class="backBtn" onclick="mainMenu()">← Menu</button><div class="createHeroGlow"></div><div class="createBadge">90</div><div class="createKicker">JORNADA 90 · NOVA ETAPA</div><h1>Construa sua carreira</h1><p>Seu nome, sua posição, sua primeira escolha. O resto você conquista no campo.</p><div class="createSteps"><span class="active"><b>01</b> Perfil</span><i></i><span><b>02</b> Primeiro contrato</span></div></div>'+
+ return '<div class="createScreen"><div class="createHero"><button class="backBtn" aria-label="Voltar ao menu principal" onclick="mainMenu()">← Menu</button><div class="createHeroGlow"></div><div class="createBadge">90</div><div class="createKicker">JORNADA 90 · NOVA ETAPA</div><h1>Construa sua carreira</h1><p>Seu nome, sua posição, sua primeira escolha. O resto você conquista no campo.</p><div class="createSteps"><span class="active"><b>01</b> Perfil</span><i></i><span><b>02</b> Primeiro contrato</span></div></div>'+
  '<div class="createPanel"><div class="panelTitle"><span class="panelIcon">👤</span><div><h2>Seu perfil</h2><p class="mu">Comece do jeito que você quer jogar.</p></div></div>'+
  '<div class="fieldGrid"><label>Nome do jogador<input id="nm" maxlength="20" placeholder="Digite seu nome"></label><label>Posição<select id="ps">'+o(Object.keys(POSN).map(k=>[k,POSN[k]]))+'</select></label></div>'+
  '<label>Ponto forte<select id="st">'+o([['tec','Técnica'],['fis','Físico'],['men','Mental']])+'</select></label></div>'+
