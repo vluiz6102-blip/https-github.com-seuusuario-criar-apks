@@ -388,6 +388,62 @@ input:focus,select:focus{border-color:#7a6428;box-shadow:0 0 0 3px rgba(255,202,
 .ambientBg .depthHaze{position:absolute;inset:25% 0 15%;background:linear-gradient(180deg,transparent,rgba(180,207,190,.025),transparent);filter:blur(18px);pointer-events:none}
 @media(max-width:560px){.ambientBg .atmoCanvas{opacity:.72}.ambientBg .sunset{filter:blur(9px)}}
 @media(prefers-reduced-motion:reduce){.ambientBg .atmoCanvas{opacity:.35}}
+
+/* Jornada 90: tela inicial atmosférica 2.0 */
+@keyframes menuSunBreath{0%,100%{transform:scale(.96);opacity:.68}50%{transform:scale(1.045);opacity:.92}}
+@keyframes menuCloudDrift{0%{transform:translate3d(-9%,0,0);opacity:.08}50%{opacity:.16}100%{transform:translate3d(9%,1%,0);opacity:.08}}
+@keyframes menuCloudDrift2{0%{transform:translate3d(8%,0,0);opacity:.06}50%{opacity:.13}100%{transform:translate3d(-8%,-1%,0);opacity:.06}}
+@keyframes menuLightBloom{0%,100%{opacity:.16;transform:scale(.96)}50%{opacity:.30;transform:scale(1.04)}}
+@keyframes menuAtmosCamera{0%,100%{transform:translate3d(-.55%,0,0) scale(1.012)}50%{transform:translate3d(.55%,-.25%,0) scale(1.02)}}
+.stadiumScene{background:
+ radial-gradient(ellipse at 52% 62%,rgba(246,173,86,.13),transparent 24%),
+ radial-gradient(ellipse at 18% 28%,rgba(90,146,177,.10),transparent 30%),
+ linear-gradient(180deg,#031018 0%,#08161b 43%,#10231d 71%,#020605 100%);
+}
+.stadiumScene .atmoCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.78;mix-blend-mode:screen;pointer-events:none}
+.stadiumScene .sky{inset:-10%;background:
+ radial-gradient(ellipse at 52% 47%,rgba(255,208,107,.16),transparent 18%),
+ radial-gradient(ellipse at 18% 18%,rgba(104,155,185,.10),transparent 24%),
+ radial-gradient(ellipse at 84% 20%,rgba(106,158,191,.08),transparent 23%);
+ animation:menuAtmosCamera 12s ease-in-out infinite;
+}
+.stadiumScene .sunDisc{position:absolute;left:50%;top:47%;width:24vw;height:24vw;min-width:110px;min-height:110px;max-width:190px;max-height:190px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,242,196,.98) 0 5%,rgba(255,198,103,.56) 14%,rgba(232,131,62,.20) 37%,transparent 70%);filter:blur(2px);mix-blend-mode:screen;animation:menuSunBreath 7s ease-in-out infinite}
+.stadiumScene .sunDisc:after{content:"";position:absolute;inset:-38%;border-radius:50%;background:radial-gradient(circle,rgba(255,183,89,.18),transparent 64%);filter:blur(18px);animation:menuLightBloom 8s ease-in-out infinite}
+.stadiumScene .cloudLayer{position:absolute;inset:5% 0 48%;overflow:hidden;pointer-events:none}
+.stadiumScene .cloudLayer i{position:absolute;width:42%;height:25%;border-radius:50%;filter:blur(14px);background:
+ radial-gradient(ellipse at 30% 56%,rgba(245,249,248,.12),transparent 45%),
+ radial-gradient(ellipse at 66% 46%,rgba(230,238,238,.08),transparent 46%);
+}
+.stadiumScene .cloudLayer i:nth-child(1){left:-6%;top:6%;animation:menuCloudDrift 24s ease-in-out infinite}
+.stadiumScene .cloudLayer i:nth-child(2){right:-9%;top:25%;width:48%;animation:menuCloudDrift2 29s ease-in-out infinite}
+.stadiumScene .cloudLayer i:nth-child(3){left:23%;top:46%;width:36%;animation:menuCloudDrift 34s ease-in-out infinite}
+.stadiumScene .stands{top:33%;height:30%;background:
+ repeating-linear-gradient(90deg,rgba(255,255,255,.038) 0 3px,rgba(0,0,0,.12) 3px 9px),
+ linear-gradient(180deg,rgba(23,47,51,.35),rgba(0,0,0,.22));
+box-shadow:inset 0 -34px 55px rgba(0,0,0,.72),0 -8px 34px rgba(109,172,138,.05)}
+.stadiumScene .ring{top:41%;height:43%;border-color:rgba(255,255,255,.032);box-shadow:0 0 72px rgba(96,170,131,.10)}
+.stadiumScene .pitch{bottom:-29%;height:60%;background:
+ radial-gradient(ellipse at 50% 0%,rgba(72,160,102,.36),rgba(17,57,36,.30) 40%,transparent 70%),
+ linear-gradient(180deg,rgba(35,94,53,.16),transparent);
+box-shadow:0 -18px 60px rgba(55,168,101,.13)}
+.stadiumScene .fog{bottom:7%;height:34%;background:
+ radial-gradient(ellipse at 50% 40%,rgba(233,242,237,.085),transparent 58%),
+ linear-gradient(180deg,transparent,rgba(116,158,137,.06));
+filter:blur(20px)}
+.stadiumScene .horizonGlow{position:absolute;left:0;right:0;bottom:28%;height:20%;background:radial-gradient(ellipse at 50% 85%,rgba(255,180,91,.11),transparent 62%);filter:blur(14px);animation:menuLightBloom 9s ease-in-out infinite}
+.menuHero .brand,.menuHero .tagline{position:relative;text-shadow:0 2px 18px rgba(0,0,0,.76),0 0 38px rgba(255,196,108,.07)}
+.menuHero .logoMark.big{box-shadow:0 18px 54px rgba(255,182,72,.22),0 0 80px rgba(255,189,97,.08),inset 0 1px rgba(255,255,255,.28);backdrop-filter:blur(2px)}
+.menuHero:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,210,130,.025),transparent 30%,rgba(0,0,0,.16) 100%);pointer-events:none;z-index:1}
+@media(max-width:560px){
+ .stadiumScene .atmoCanvas{opacity:.64}
+ .stadiumScene .sunDisc{width:145px;height:145px;min-width:90px;min-height:90px}
+ .stadiumScene .cloudLayer i{filter:blur(11px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .stadiumScene .atmoCanvas{opacity:.28}
+ .stadiumScene .sunDisc:after{animation:none}
+}
+
 </style>
 </head>
 <body>
@@ -485,47 +541,60 @@ function toggleCompact(){document.body.classList.toggle('compact');try{localStor
 function worldFx(){return '<div class="ambientBg"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="depthHaze"></div><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="clouds"><i style="--x:2%;--y:14%;--t:18s;--d:-7s"></i><i style="--x:56%;--y:22%;--t:23s;--d:-13s"></i><i style="--x:28%;--y:34%;--t:20s;--d:-4s"></i></div><div class="beam a"></div><div class="beam b"></div><div class="beam c"></div><div class="floodlights"><i style="--x:7%;--y:23%;--r:-10deg;--t:4.8s;--d:-1s"></i><i style="--x:92%;--y:25%;--r:10deg;--t:5.6s;--d:-3s"></i><i style="--x:50%;--y:17%;--r:0deg;--t:6.5s;--d:-5s"></i></div><div class="leaves"><i style="--x:4%;--y:4%;--t:8s;--d:-2s"></i><i style="--x:12%;--y:28%;--t:11s;--d:-7s"></i><i style="--x:23%;--y:11%;--t:9s;--d:-5s"></i><i style="--x:34%;--y:35%;--t:12s;--d:-10s"></i><i style="--x:44%;--y:5%;--t:10s;--d:-4s"></i><i style="--x:53%;--y:24%;--t:13s;--d:-8s"></i><i style="--x:63%;--y:8%;--t:9.5s;--d:-6s"></i><i style="--x:74%;--y:31%;--t:12s;--d:-11s"></i><i style="--x:86%;--y:12%;--t:10.5s;--d:-3s"></i><i style="--x:95%;--y:28%;--t:13.5s;--d:-9s"></i></div><div class="dust"><i style="--x:10%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:26%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:43%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:61%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:79%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="sparks"><i style="--x:18%;--y:77%;--t:5.5s;--d:-2s"></i><i style="--x:39%;--y:65%;--t:6.8s;--d:-5s"></i><i style="--x:57%;--y:75%;--t:7.2s;--d:-1s"></i><i style="--x:83%;--y:70%;--t:6.3s;--d:-4s"></i></div><div class="birds"><i style="--y:18%;--t:24s;--d:-11s"></i><i style="--y:25%;--t:31s;--d:-17s"></i></div><div class="shade"></div></div>'}
 
 /* Atmosfera procedural J90: céu, névoa, vento e partículas com Canvas leve. */
-let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null;
+/* Atmosfera procedural J90: um motor leve para névoa, poeira e luz ambiente. */
+let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoParticles=[];
 function startJ90Atmosphere(){
- if(j90AtmoStarted)return;
- const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const canvas=document.querySelector('.ambientBg .atmoCanvas');
- if(!canvas)return;
- j90AtmoStarted=true;
- const ctx=canvas.getContext('2d',{alpha:true});
- const particles=[];
- const count=window.innerWidth<560?26:42;
- for(let i=0;i<count;i++)particles.push({x:Math.random(),y:.52+Math.random()*.42,r:.5+Math.random()*1.7,s:.00006+Math.random()*.00012,a:.05+Math.random()*.14,p:Math.random()*6.28});
- function resize(){
-   const d=Math.min(window.devicePixelRatio||1,1.25);
-   canvas.width=Math.floor(innerWidth*d);canvas.height=Math.floor(innerHeight*d);
-   ctx.setTransform(d,0,0,d,0,0);
+ const nodes=document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas');
+ if(!nodes.length)return;
+ const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+ if(!j90AtmoParticles.length){
+  const count=window.innerWidth<560?24:38;
+  for(let i=0;i<count;i++)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.5+Math.random()*1.6,s:.00005+Math.random()*.00011,a:.045+Math.random()*.13,p:Math.random()*6.28});
  }
- resize();j90AtmoResize=resize;addEventListener('resize',resize,{passive:true});
- let last=0;
- function frame(t){
-   if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   if(t-last<(reduced?1000:33)){j90AtmoFrame=requestAnimationFrame(frame);return}
-   last=t;const w=innerWidth,h=innerHeight,dt=Math.min(60,t-(frame.last||t));frame.last=t;
+ const resize=()=>{
+  nodes.forEach(canvas=>{
+   const rect=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,1.25);
+   const w=Math.max(1,rect.width),h=Math.max(1,rect.height);
+   canvas.width=Math.floor(w*d);canvas.height=Math.floor(h*d);
+   const ctx=canvas.getContext('2d',{alpha:true});
+   if(ctx)ctx.setTransform(d,0,0,d,0,0);
+  });
+ };
+ resize();
+ if(!j90AtmoStarted){
+  j90AtmoStarted=true;j90AtmoResize=resize;
+  addEventListener('resize',resize,{passive:true});
+  const draw=(canvas,dt)=>{
+   const rect=canvas.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),ctx=canvas.getContext('2d',{alpha:true});
+   if(!ctx)return;
    ctx.clearRect(0,0,w,h);
-   const g=ctx.createLinearGradient(0,h*.42,0,h);
-   g.addColorStop(0,'rgba(190,214,205,.015)');g.addColorStop(.55,'rgba(105,150,124,.035)');g.addColorStop(1,'rgba(8,35,20,.11)');
+   const g=ctx.createLinearGradient(0,h*.38,0,h);
+   g.addColorStop(0,'rgba(220,235,227,.008)');g.addColorStop(.55,'rgba(110,155,127,.028)');g.addColorStop(1,'rgba(12,42,24,.10)');
    ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-   for(const p of particles){
-     p.x+=p.s*dt;
-     p.y-=p.s*.18*dt;
-     p.p+=.0012*dt;
-     if(p.x>1.04||p.y<.46){p.x=-.03;p.y=.56+Math.random()*.4}
-     const x=p.x*w+Math.sin(p.p)*7,y=p.y*h;
-     ctx.globalAlpha=p.a*(.55+.45*Math.sin(p.p));
-     ctx.fillStyle='#d8e8d8';ctx.beginPath();ctx.arc(x,y,p.r,0,Math.PI*2);ctx.fill();
+   for(const p of j90AtmoParticles){
+    const x=p.x*w+Math.sin(p.p)*Math.min(7,w*.012),y=p.y*h;
+    ctx.globalAlpha=p.a*(.55+.45*Math.sin(p.p));
+    ctx.fillStyle='#dce9dc';ctx.beginPath();ctx.arc(x,y,p.r,0,Math.PI*2);ctx.fill();
    }
    ctx.globalAlpha=1;
+  };
+  let last=0;
+  const frame=t=>{
+   if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
+   if(!reduced&&t-last>=33){
+    const dt=Math.min(60,t-(frame.last||t));frame.last=t;last=t;
+    for(const p of j90AtmoParticles){
+     p.x+=p.s*dt;p.y-=p.s*.16*dt;p.p+=.0011*dt;
+     if(p.x>1.05||p.y<.45){p.x=-.03;p.y=.56+Math.random()*.38}
+    }
+   }
+   nodes.forEach(canvas=>draw(canvas,0));
    j90AtmoFrame=requestAnimationFrame(frame);
+  };
+  if(reduced)nodes.forEach(canvas=>draw(canvas,0));
+  else j90AtmoFrame=requestAnimationFrame(frame);
  }
- j90AtmoFrame=requestAnimationFrame(frame);
 }
-
 function newGame(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;introStep=1;menuScreen='home';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
@@ -546,7 +615,7 @@ function settingsView(){
 function menuV(){
  if(menuScreen==='settings')return settingsView();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="stadiumScene"><div class="sky"></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves"><i style="--x:7%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:10%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:91%;--y:12%;--t:9.1s;--d:-6.2s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
+ return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves"><i style="--x:7%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:10%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:91%;--y:12%;--t:9.1s;--d:-6.2s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
  '<div class="menuActions">'+
  (hasSave?'<button class="menuBtn primary" onclick="S.phase=S.phase||\'pre\';render()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>NOVO JOGO</strong><span>Comece uma nova carreira do zero</span></button>')+
  (!hasSave?'<button class="menuBtn" onclick="newGame()"><strong>INICIAR CARREIRA</strong><span>Escolha nome, posição e clube</span></button>':'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Começar outra jornada sem apagar esta</span></button>')+
@@ -1411,49 +1480,3 @@ render();
 </script>
 </body>
 </html>
-
-<!-- Jornada 90 build verification -->
-
-/* Jornada 90 UI refinement: game-first hierarchy + tactile mobile controls */
-:root{--ui-radius:14px;--ui-pad:14px;--ui-line:rgba(255,255,255,.10);--ui-elev:0 10px 28px rgba(0,0,0,.22)}
-body{padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(22px,env(safe-area-inset-bottom))}
-#app{padding-top:4px}
-.card{border-radius:var(--ui-radius);border-color:var(--ui-line);box-shadow:var(--ui-elev);background:linear-gradient(180deg,#0b0b0b,#080808);}
-.card>h2:first-child{display:flex;align-items:center;gap:9px;letter-spacing:.1px}
-.card>h2:first-child:before{content:"";width:4px;height:18px;border-radius:4px;background:var(--am);box-shadow:0 0 12px rgba(255,202,58,.18);flex:none}
-.btn,.chip,.tabs button{position:relative;isolation:isolate;transition:transform .14s ease,border-color .14s ease,background-color .14s ease,color .14s ease,box-shadow .14s ease}
-.btn:before,.menuBtn:before{content:"";position:absolute;inset:1px;border-radius:inherit;background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.045) 45%,transparent 60%);transform:translateX(-115%);opacity:0;pointer-events:none}
-.btn:hover:before,.menuBtn:hover:before{opacity:1;animation:uiSheen .65s ease both}
-@keyframes uiSheen{to{transform:translateX(115%)}}
-.btn:active,.menuBtn:active,.chip:active,.tabs button:active{transform:translateY(1px) scale(.985)}
-.btn.go{box-shadow:0 8px 24px rgba(66,215,125,.16),inset 0 1px rgba(255,255,255,.14)}
-.btn.go:active{box-shadow:0 3px 10px rgba(66,215,125,.12)}
-.btn:focus-visible,.menuBtn:focus-visible,.chip:focus-visible,.tabs button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--am);outline-offset:3px}
-.tabs{position:relative;padding:4px;border:1px solid #191919;border-radius:15px;background:#070707;box-shadow:0 8px 22px rgba(0,0,0,.2)}
-.tabs button{min-height:52px;border:1px solid transparent!important;border-radius:11px;color:#888;background:transparent}
-.tabs button.on{background:linear-gradient(180deg,#18251d,#101812);border-color:#294432!important;color:#f5f5f5;box-shadow:inset 0 -2px var(--gr),0 4px 14px rgba(0,0,0,.18)}
-.tabs button.on:after{content:"";position:absolute;left:24%;right:24%;bottom:3px;height:2px;border-radius:2px;background:var(--gr);box-shadow:0 0 8px rgba(66,215,125,.35)}
-.chip{border-color:#242424;background:#080808;color:#aaa;box-shadow:inset 0 1px rgba(255,255,255,.025)}
-.chip.on{background:#111b14;border-color:#31513a;color:#ffca3a;box-shadow:inset 0 0 0 1px rgba(255,202,58,.06)}
-.row{border-bottom-color:#171717}
-.bar div{background:#171717;border:1px solid #242424}
-.bar i{box-shadow:0 0 12px rgba(66,215,125,.13)}
-.pill{background:#0b0b0b;border-color:#252525}
-.tag{box-shadow:0 3px 12px rgba(255,92,92,.12)}
-input,select{border-color:#292929;box-shadow:inset 0 1px rgba(255,255,255,.025)}
-input:focus,select:focus{border-color:#705d22;box-shadow:0 0 0 3px rgba(255,202,58,.08)}
-.menuActions{gap:10px}
-.menuBtn{position:relative;min-height:60px;border-radius:15px;border-color:#202020;background:linear-gradient(180deg,#0d0d0d,#090909);box-shadow:0 8px 22px rgba(0,0,0,.22);overflow:hidden;touch-action:manipulation}
-.menuBtn.primary{background:linear-gradient(135deg,#2da964,#1c704b);border-color:#4bc97b;box-shadow:0 10px 28px rgba(35,180,100,.18)}
-.menuBtn strong{letter-spacing:.1px}.menuBtn span{color:#a4aaa7}
-.menuBtn.primary span{color:#d8f5e4}
-.menuHero{box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.05)}
-.createScreen,.createHero,.offerCard{border-radius:16px}
-.createScreen .card,.createHero,.offerCard{box-shadow:0 12px 34px rgba(0,0,0,.24)}
-@media(max-width:560px){
- .card{box-shadow:0 8px 24px rgba(0,0,0,.20)}
- .card>h2:first-child:before{height:16px}
- .btn,.menuBtn{min-height:56px}
- .tabs button{min-height:54px}
-}
-@media(prefers-reduced-motion:reduce){.btn,.chip,.tabs button,.menuBtn{transition:none!important}.btn:before,.menuBtn:before{display:none!important}}
