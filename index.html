@@ -673,7 +673,7 @@ function join(c){
  const tm=clubs(+c.tier);let i=tm.findIndex(t=>t.n==c.n);if(i<0)i=RI(0,9);
  tm[i]={n:c.n,s:Number.isFinite(+c.s)?+c.s:tm[i].s};
  S.club={n:tm[i].n,tier:+c.tier,s:tm[i].s};S.teams=tm;S.me=i;S.tbl=tm.map(()=>({w:0,d:0,l:0,gf:0,ga:0}));S.fx=fix(tm);
- S.r=0;S.ss={g:0,a:0,j:0,rt:0};S.cstats={};S.last=null;S.ev=null;S.dm=null;S.dec=null;S.min=null;S.iv='';S.phase='pre';S.cmp=null;S.offerSel=null;S.scoutOffers=[];S.tac='bal';compSetup();compSchedule();
+ S.r=0;S.ss={g:0,a:0,j:0,rt:0};S.cstats={};S.last=null;S.ev=null;S.dm=null;S.dec=null;S.min=null;S.iv='';S.trained=false;S.match=null;S.matchBonus=0;S.phase='pre';S.cmp=null;S.offerSel=null;S.scoutOffers=[];S.tac='bal';compSetup();compSchedule();
  S.rf=S.rf||{};S.cs=S.cs||0;S.se=S.se||0;
  if(newClub){S.coach=50;S.coachStyle=COACH_STYLES[RI(0,COACH_STYLES.length-1)].id;S.cap=0;mm('Transferência para o '+S.club.n)}
  const lc=S.clubs[S.clubs.length-1];if(!lc||lc.n!=S.club.n){if(!lc)first('f1','Primeiro clube profissional: '+S.club.n);S.clubs.push({n:S.club.n,y:S.year})}
@@ -684,7 +684,7 @@ function join(c){
 let START_OFFERS=[];
 function makeStartOffers(){const pool=[];LG.forEach((l,t)=>{if(t>2)return;l.c.forEach(x=>{const[n,s]=x.split(':');pool.push({n,tier:t,s:+s})})});const of=[],used={};const pos=$('ps')?.value||'ATA';const tiers=[0,1,2].sort(()=>Math.random()-.5);pool.sort(()=>Math.random()-.5);tiers.forEach(t=>{const choices=pool.filter(c=>c.tier==t&&!used[c.n]);if(choices.length&&of.length<3){const c=choices[RI(0,choices.length-1)];used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});if(of.length<3)pool.filter(c=>!used[c.n]).slice(0,3-of.length).forEach(c=>{used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})});if(Math.random()<.28){const v=LG[VZ].c[RI(0,LG[VZ].c.length-1)].split(':');of[RI(0,of.length-1)]={n:v[0],tier:VZ,s:+v[1],w:0,varzea:true}}return of}
 function chooseStart(o){sfx('transfer');if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
-function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,potential:78,xp:0,level:1,coachStyle:COACH_STYLES[RI(0,COACH_STYLES.length-1)].id,contract:{},cstats:{},offerSel:null,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);S.potential=cl(ovr()+RI(12,25),68,94);gainXP(12);chooseStart(o)}
+function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,potential:78,xp:0,level:1,coachStyle:COACH_STYLES[RI(0,COACH_STYLES.length-1)].id,contract:{},cstats:{},offerSel:null,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],trained:false,match:null,matchBonus:0};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);S.potential=cl(ovr()+RI(12,25),68,94);gainXP(12);chooseStart(o)}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
 function strength(i){let s=S.teams[i].s;if(i==S.me)s+=(ovr()-s)*.1+(S.energy>80?1:S.energy<25?-3:(S.energy-60)/30)+(S.morale-60)/25+(S.coach-50)/50;return s}
@@ -708,9 +708,12 @@ function play(){
  const round=S.fx[S.r];
  if(!Array.isArray(round))return;
  const o=ovr(),dc=S.dec,sus=S.sus>0;let L=null;
- const min=S.min!=null?S.min:mins();S.min=null;S.dec=null;
+ const min=S.min!=null?S.min:mins();S.min=null;S.dec=null;S.matchBonus=Number(S.matchBonus||0);
  if(S.inj>0)S.inj--;else if(sus)S.sus--;
- const xg=dc&&dc.k=='atk'&&dc.ok?1:0,xo=dc&&dc.k=='def'&&!dc.ok?1:0;
+ let xg=dc&&dc.k=='atk'&&dc.ok?1:0,xo=dc&&dc.k=='def'&&!dc.ok?1:0;
+ const mb=Number(S.matchBonus||0);S.matchBonus=0;
+ if(mb>=.7)xg++;
+ if(mb<=-.5)xo++;
  round.forEach(pair=>{
    if(!Array.isArray(pair)||pair.length<2)return;
    const h=pair[0],a=pair[1];
@@ -776,7 +779,7 @@ const TR={fin:['fin','pos'],vel:['vel','ace'],pas:['pas','men'],dri:['dri','con'
 const TRL=[['pos','Treino de posição','Reforça os atributos que mais pesam na sua função'],['fin','Finalização','Finalização e posicionamento'],['vel','Velocidade','Velocidade e aceleração'],['pas','Passe e visão','Passe e mentalidade'],['dri','Drible e controle','Drible e controle de bola'],['fis','Físico','Físico e resistência'],['def','Defesa e cruzamento','Defesa e cruzamento'],['pers','Personal trainer','R$ 30 mil · evolui 3 atributos, risco de lesão maior'],['prev','Treino preventivo','Menos risco de lesão no próximo jogo, +energia'],['rest','Descanso','Recupera energia e moral']];
 function topAt(n){return AK.map((k,i)=>[k,OW[S.pos][i]]).sort((a,b)=>b[1]-a[1]).slice(0,n).map(x=>x[0])}
 function train(k){
- sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm)return;
+ sanitizeState(); if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.trained)return;
  if(!['pos','fin','vel','pas','dri','fis','def','pers','prev','rest'].includes(k))return;
  S.nt=[];
  sfx(k=='rest'?'rest':'train');
@@ -792,6 +795,7 @@ function train(k){
   en(-c);co(.4);
  }
  syncPlayerStats();
+ S.trained=true;
  gainXP(k=='rest'?4:k=='prev'?5:8);
  S.min=mins();
  if(S.min>0&&Math.random()<.3){
@@ -967,6 +971,39 @@ const tabs=()=>sndB()+`<div class="tabs">${[['game','🎮','Jogo'],['tbl','📊'
 const ntV=()=>(S.nt||[]).map(t=>`<div class="card nt"><h2>${t[0]}</h2><p>${t[1]}</p></div>`).join('');
 const conf=e=>`<div class="cf">${Array.from({length:10},(_,i)=>`<span style="--x:${5+i*10}%;--d:${(i*.15).toFixed(2)}s">${e}</span>`).join('')}</div>`;
 const art=a=>`<div class="art">${a.map(x=>`<span>${x}</span>`).join('')}</div>`;
+const MATCH_STARS=['Vinícius Jr.','Neymar','Mbappé','Haaland','Bellingham','Salah','De Bruyne'];
+function prepareMatch(){
+ if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.r>=18)return;
+ const round=Array.isArray(S.fx?.[S.r])?S.fx[S.r].find(p=>p[0]==S.me||p[1]==S.me):null;
+ if(!round)return;
+ const home=round[0]==S.me,opp=S.teams[home?round[1]:round[0]].n;
+ S.match={step:0,home,homeName:S.teams[round[0]].n,awayName:S.teams[round[1]].n,opp,bonus:0,log:[],star:MATCH_STARS[RI(0,MATCH_STARS.length-1)]};
+ S.phase='match';sfx('whistle');render();
+}
+function matchChoice(i){
+ if(!S||S.phase!='match'||!S.match||![0,1,2].includes(i))return;
+ const m=S.match;
+ const choices=[
+  [{b:.75,e:-6,t:'Você acelera a jogada e ataca o espaço.'},{b:.2,e:-1,t:'Você procura o passe seguro e mantém a posse.'},{b:-.3,e:2,t:'Você recua e protege a equipe.'}],
+  [{b:.55,e:-5,t:'Você pede pressão alta para o segundo tempo.'},{b:.15,e:0,t:'Você mantém o equilíbrio entre ataque e defesa.'},{b:-.35,e:3,t:'Você baixa o bloco e espera o contra-ataque.'}],
+  [{b:.8,e:-7,t:'Você assume a responsabilidade e tenta decidir.'},{b:.3,e:-2,t:'Você combina com os companheiros e acelera a jogada.'},{b:-.2,e:1,t:'Você joga simples para não entregar a bola.'}]
+ ];
+ const q=choices[m.step-1][i];m.bonus+=q.b;m.log.push(q.t);en(q.e);if(i==0)mo(1);else if(i==2)mo(-1);sfx(i==0?'correct':'click');m.step++;render();
+}
+function finishMatch(){
+ if(!S||S.phase!='match'||!S.match)return;
+ S.matchBonus=Number(S.match.bonus||0);S.match=null;S.phase='pre';play();
+}
+function matchV(){
+ const m=S.match;if(!m)return '';
+ const title=m.home?m.homeName+' x '+m.awayName:m.awayName+' x '+m.homeName;
+ const star=m.star;
+ if(m.step===0)return '<div class="card wc">'+art(['🏟️','⚽'])+'<div class="round">PRÉ-JOGO · RODADA '+(S.r+1)+'</div><h2>'+title+'</h2><p class="mu">O estádio está cheio. O treinador passa as últimas instruções antes da bola rolar.</p><div class="row"><span>Nome em destaque</span><b>'+star+'</b></div><p style="margin-top:10px">Sua posição: <b>'+POSN[S.pos]+'</b> · postura: <b>'+(S.tac=='atk'?'ofensiva':S.tac=='def'?'defensiva':'equilibrada')+'</b></p><button class="btn go" onclick="S.match.step=1;sfx(\'click\');render()">Começar 1º tempo</button></div>';
+ const titles=['1º TEMPO · LANCE-CHAVE','INTERVALO · VESTIÁRIO','2º TEMPO · MOMENTO DECISIVO'];
+ const desc=['Você recebe a bola com espaço. Como lê o lance?','O primeiro tempo terminou. O treinador pede uma decisão para mudar o ritmo.','Nos minutos finais, '+star+' acelera a pressão e a torcida cresce. O que você faz?'];
+ if(m.step<=3)return '<div class="card wc">'+art([m.step==2?'🧠':'⏱️',m.step==3?'🔥':'⚽'])+'<div class="round">'+titles[m.step-1]+'</div><h2>'+title+'</h2><p>'+desc[m.step-1]+'</p><button class="btn" onclick="matchChoice(0)"><b>Assumir o risco</b><span>Mais impacto e mais desgaste</span></button><button class="btn" onclick="matchChoice(1)"><b>Jogar com inteligência</b><span>Equilíbrio entre criação e segurança</span></button><button class="btn" onclick="matchChoice(2)"><b>Controlar a situação</b><span>Menos risco e mais energia</span></button></div>';
+ return '<div class="card wc">'+art(['🏁','📊'])+'<div class="round">APITO FINAL</div><h2>'+title+'</h2><p class="mu">Suas decisões influenciaram intensidade, moral e desgaste.</p>'+m.log.map((x,i)=>'<div class="ln y">'+(i+1)+'º momento · '+x+'</div>').join('')+'<button class="btn go" onclick="finishMatch()">Ir para o resultado</button></div>';
+}
 function gameV(){return ntV()+gameV0()}
 function scoutOffers(){const pool=[],o=ovr();LG.forEach((l,t)=>{if(t<VZ)l.c.forEach(x=>{const[n,s]=x.split(':');if(+s<=o+10&&+s>=o-12)pool.push({n,tier:t,s:+s})})});pool.sort(()=>Math.random()-.5);const of=[],seen={};pool.forEach(c=>{if(of.length<3&&!seen[c.tier]){seen[c.tier]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});return of}
 function acceptScout(i){if(!S||S.phase!='post'||!Array.isArray(S.scoutOffers)||!S.scoutOffers[i])return;const o=S.scoutOffers[i];S.nt=[];S.scoutOffers=[];S.wage=o.w;S.yrs=3;join(o);fa(5);mo(5);toast('🔎 OLHEIRO','Um clube fez uma proposta depois de te observar na várzea.');render()}
@@ -1093,6 +1130,7 @@ function sanitizeState(){
  S.sel=Number.isFinite(+S.sel)?Math.max(0,Math.floor(+S.sel)):0;
  S.sgl=Number.isFinite(+S.sgl)?Math.max(0,Math.floor(+S.sgl)):0;
  S.tac=['atk','bal','def'].includes(S.tac)?S.tac:'bal';
+ S.trained=!!S.trained;S.match=S.match&&typeof S.match=='object'?S.match:null;S.matchBonus=Number.isFinite(+S.matchBonus)?+S.matchBonus:0;
  S.tot=(S.tot&&typeof S.tot=='object')?S.tot:{g:0,a:0,j:0};
  ['g','a','j'].forEach(k=>{if(!Number.isFinite(+S.tot[k]))S.tot[k]=0;S.tot[k]=Math.max(0,Math.floor(S.tot[k]))});
  S.ss=(S.ss&&typeof S.ss=='object')?S.ss:{g:0,a:0,j:0,rt:0};
