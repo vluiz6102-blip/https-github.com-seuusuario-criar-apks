@@ -545,6 +545,13 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
 .menuStatus span{border:1px solid rgba(255,255,255,.13);background:rgba(0,0,0,.28);padding:6px 9px;border-radius:999px;font-size:11px;letter-spacing:.6px;color:rgba(245,248,250,.78)}
 .theme-amoled .stadiumScene .leaves,.theme-amoled .stadiumScene .lights{display:block!important;opacity:.58!important}
 .theme-amoled .stadiumScene .beam{display:block!important;opacity:.22!important}
+@keyframes j90Rain{0%{background-position:0 0}100%{background-position:-14px 28px}}
+.weatherFx{position:absolute;inset:-8%;z-index:8;pointer-events:none;opacity:0;background-image:linear-gradient(105deg,transparent 0 47%,rgba(210,225,230,.14) 48%,rgba(210,225,230,.03) 50%,transparent 51%);background-size:14px 28px;transform:skewX(-8deg);animation:j90Rain .55s linear infinite}
+.stadiumScene[data-weather="lightRain"] .weatherFx{opacity:.48}
+.stadiumScene[data-weather="heavyRain"] .weatherFx{opacity:.78}
+.stadiumScene[data-weather="cloudy"] .cloudLayer{opacity:.9;filter:saturate(.75)}
+.stadiumScene[data-weather="heavyRain"] .sunDisc{opacity:.12}
+.stadiumScene[data-weather="heavyRain"] .reflectorGlow{opacity:.72}
 @media(max-width:560px){.rosterRow{padding:8px 1px}.menuStatus{gap:6px}.menuStatus span{font-size:10px}}
 
 
@@ -796,6 +803,8 @@ function j90MenuPhaseWeight(t,center,width){
 function updateJ90MenuEnvironment(){
  const roots=document.querySelectorAll('.stadiumScene');
  if(!roots.length)return;
+ const weather=window.J90Ambience?.snapshot?.().weather||'clear';
+ roots.forEach(root=>root.dataset.weather=weather);
  const weights=[
   j90MenuPhaseWeight(menuTime,0,.13),
   j90MenuPhaseWeight(menuTime,.20,.13),
@@ -902,7 +911,7 @@ function menuV(){
  if(menuScreen==='howto')return howToView();
  if(menuScreen==='credits')return creditsView();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="menuSkyCycle" aria-hidden="true"><i class="dusk"></i><i class="gold"></i><i class="yellow"></i><i class="orange"></i><i class="violet"></i><i class="night"></i></div><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="reflectorGlow"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves far"><i style="--x:8%;--y:6%;--t:11s;--d:-2s"></i><i style="--x:31%;--y:18%;--t:13s;--d:-8s"></i><i style="--x:68%;--y:8%;--t:12s;--d:-5s"></i><i style="--x:90%;--y:24%;--t:14s;--d:-10s"></i></div><div class="leaves near"><i style="--x:2%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:12%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:94%;--y:14%;--t:9.1s;--d:-6.2s"></i></div><div class="fireflies"><i style="--x:18%;--y:68%;--t:6.4s;--d:-2s"></i><i style="--x:56%;--y:62%;--t:7.2s;--d:-4s"></i><i style="--x:82%;--y:72%;--t:6.8s;--d:-5.5s"></i></div><div class="birds"><i style="--y:18%;--t:26s;--d:-16s"></i><i style="--y:25%;--t:34s;--d:-29s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div><div class="menuStatus"><span>ESTÁDIO DINÂMICO</span><span>FOLHAS · LUZES · CLIMA</span><span>ÁUDIO DE JOGO ADAPTATIVO</span></div></div>'+
+ return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="menuSkyCycle" aria-hidden="true"><i class="dusk"></i><i class="gold"></i><i class="yellow"></i><i class="orange"></i><i class="violet"></i><i class="night"></i></div><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="reflectorGlow"></div><div class="beam a"></div><div class="beam b"></div><div class="weatherFx" aria-hidden="true"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves far"><i style="--x:8%;--y:6%;--t:11s;--d:-2s"></i><i style="--x:31%;--y:18%;--t:13s;--d:-8s"></i><i style="--x:68%;--y:8%;--t:12s;--d:-5s"></i><i style="--x:90%;--y:24%;--t:14s;--d:-10s"></i></div><div class="leaves near"><i style="--x:2%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:12%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:94%;--y:14%;--t:9.1s;--d:-6.2s"></i></div><div class="fireflies"><i style="--x:18%;--y:68%;--t:6.4s;--d:-2s"></i><i style="--x:56%;--y:62%;--t:7.2s;--d:-4s"></i><i style="--x:82%;--y:72%;--t:6.8s;--d:-5.5s"></i></div><div class="birds"><i style="--y:18%;--t:26s;--d:-16s"></i><i style="--y:25%;--t:34s;--d:-29s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div><div class="menuStatus"><span>ESTÁDIO DINÂMICO</span><span>FOLHAS · LUZES · CLIMA</span><span>ÁUDIO DE JOGO ADAPTATIVO</span></div></div>'+
  '<div class="menuActions">'+
  (hasSave?'<button class="menuBtn primary" onclick="resumeGame()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>COMEÇAR CARREIRA</strong><span>Crie seu jogador e escolha o primeiro clube</span></button>')+
  (hasSave?'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Iniciar outra jornada com confirmação antes de substituir o save</span></button>':'')+
@@ -1526,7 +1535,7 @@ function esc(v){
 function allGameTeamNames(){
  const db=window.J90_ROSTERS||{};
  const local=LG.flatMap(l=>l.c.map(x=>x.split(':')[0]));
- const comp=['River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Manchester City','Liverpool','Bayern','Barcelona','PSG','Arsenal','Inter','Tottenham','Roma','Ajax','Sevilla','Porto','Lyon','Leverkusen','Fiorentina','Betis','West Ham','Villarreal','Braga','Vitória SC','Al-Hilal','Al-Ahli','Al-Nassr','Al-Ittihad','Urawa Red Diamonds','Toluca'];
+ const comp=['River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Manchester City','Liverpool','Bayern','Barcelona','PSG','Arsenal','Inter','Tottenham','Roma','Ajax','Sevilla','Porto','Lyon','Leverkusen','Fiorentina','Betis','West Ham','Villarreal','Braga','Vitória SC','Al-Hilal','Al-Ahli','Al-Nassr','Al-Ittihad','Urawa Red Diamonds','Toluca','Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica'];
  return [...new Set([...local,...comp,...Object.keys(db)])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
 }
 function pickMatchHighlight(homeName,awayName){
