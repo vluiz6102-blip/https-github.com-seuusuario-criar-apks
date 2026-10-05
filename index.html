@@ -455,6 +455,56 @@ body.theme-amoled .ambientLite{background:#000!important}.ambientLite .atmoCanva
 body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-amoled .card{background:#050505;border-color:#191919;box-shadow:none}.theme-amoled .btn,.theme-amoled .chip,.theme-amoled input,.theme-amoled select{background:#020202;border-color:#1b1b1b}.theme-amoled .tabs{background:#010101;border-color:#141414;box-shadow:none}.theme-amoled .menuHero{background:#000;border-color:#171717;box-shadow:none}.theme-amoled .menuBtn{background:#050505;border-color:#1a1a1a}.theme-amoled .menuBtn.primary{box-shadow:none}
 @media(max-width:560px){.j90HudLine .pill{font-size:11px}.oledGlow{height:18%;filter:blur(14px)}.theme-amoled .ambientBg>*.sunset,.theme-amoled .ambientBg>*.horizon,.theme-amoled .ambientBg>*.clouds,.theme-amoled .ambientBg>*.beam,.theme-amoled .ambientBg>*.floodlights,.theme-amoled .ambientBg>*.leaves,.theme-amoled .ambientBg>*.dust,.theme-amoled .ambientBg>*.sparks,.theme-amoled .ambientBg>*.birds,.theme-amoled .ambientBg>*.shade,.theme-amoled .ambientBg>*.depthHaze{display:none!important}.theme-amoled .stadiumScene{background:#000}.theme-amoled .stadiumScene .cloudLayer,.theme-amoled .stadiumScene .stands,.theme-amoled .stadiumScene .ring,.theme-amoled .stadiumScene .fog,.theme-amoled .stadiumScene .lights,.theme-amoled .stadiumScene .beam,.theme-amoled .stadiumScene .dust,.theme-amoled .stadiumScene .leaves,.theme-amoled .stadiumScene .horizonGlow{display:none!important}.theme-amoled .stadiumScene .sunDisc{width:120px;height:120px;min-width:120px;min-height:120px;background:radial-gradient(circle,rgba(255,202,58,.82) 0 4%,rgba(255,177,89,.18) 30%,transparent 68%);filter:none}.theme-amoled .stadiumScene .atmoCanvas{opacity:.22}.theme-amoled .menuHero{min-height:320px;border-radius:20px;padding-bottom:18px}.theme-amoled .menuHero .logoMark.big{box-shadow:0 10px 30px rgba(255,202,58,.10)}}
 @media(prefers-reduced-motion:reduce){.oledGlow{animation:none!important}}
+
+/* Menu Jornada 90: identidade aprovada, atmosfera isolada e movimentos compostos. */
+.menuHero{position:relative;isolation:isolate;contain:paint;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;border:0;border-radius:20px;margin:0 0 12px;padding:24px 18px;background:transparent;box-shadow:none;text-align:center}
+.menuHero::after{content:none!important}
+.menuHero>*:not(.stadiumScene){position:relative;z-index:2}
+.stadiumScene{position:absolute;z-index:0;inset:0;overflow:hidden;border:0;border-radius:inherit;background:linear-gradient(180deg,#0a1721 0%,#12222b 45%,#07130f 100%);pointer-events:none;contain:paint;isolation:isolate}
+.stadiumScene .sky{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 43%,rgba(248,190,109,.14),transparent 25%),radial-gradient(ellipse at 12% 18%,rgba(143,187,215,.12),transparent 27%),radial-gradient(ellipse at 88% 18%,rgba(143,187,215,.10),transparent 28%),linear-gradient(180deg,#0a1721 0%,#172832 53%,#0b1713 100%);animation:none}
+.stadiumScene .stands{position:absolute;left:-8%;right:-8%;top:29%;height:33%;border-radius:50% 50% 0 0;background:repeating-linear-gradient(90deg,rgba(231,237,229,.045) 0 4px,rgba(0,0,0,.11) 4px 10px);box-shadow:none;animation:none}
+.stadiumScene .ring{position:absolute;left:-10%;right:-10%;top:39%;height:44%;border:22px solid rgba(234,238,223,.065);border-radius:50%;box-shadow:none;transform:perspective(400px) rotateX(63deg);animation:none}
+.stadiumScene .pitch{position:absolute;left:-8%;right:-8%;bottom:-31%;height:62%;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 0%,rgba(74,158,103,.36),rgba(15,56,35,.27) 44%,transparent 70%);box-shadow:none;transform:perspective(520px) rotateX(58deg)}
+.stadiumScene .lights{position:absolute;inset:0;background:radial-gradient(ellipse at 8% 27%,rgba(255,247,220,.14),transparent 18%),radial-gradient(ellipse at 92% 27%,rgba(255,247,220,.13),transparent 18%);mix-blend-mode:normal;animation:none;opacity:.8}
+.stadiumScene .beam{position:absolute;top:5%;bottom:17%;width:22%;height:auto;filter:none;transform-origin:top center;background:linear-gradient(180deg,rgba(255,244,190,.11),transparent 88%);animation:menuLight 9s ease-in-out infinite}
+.stadiumScene .beam.a{left:13%;right:auto;transform:rotate(-12deg)}
+.stadiumScene .beam.b{right:13%;left:auto;transform:rotate(12deg);animation-delay:-4.5s}
+.stadiumScene .fog{position:absolute;left:-10%;right:-10%;bottom:8%;height:29%;filter:none;background:radial-gradient(ellipse at 50% 50%,rgba(221,235,221,.10),rgba(121,167,133,.035) 42%,transparent 72%);will-change:transform,opacity;animation:menuFog 16s ease-in-out infinite}
+.stadiumScene .dust,.stadiumScene .leaves{position:absolute;inset:0}
+.stadiumScene .dust i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:rgba(245,246,224,.62);box-shadow:none;will-change:transform,opacity;animation:menuDust var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.stadiumScene .leaves i{position:absolute;left:var(--x);top:var(--y);width:7px;height:4px;border-radius:70% 20% 70% 20%;background:rgba(205,177,110,.48);box-shadow:none;will-change:transform,opacity;animation:menuLeaf var(--t) ease-in-out infinite;animation-delay:var(--d)}
+.stadiumScene .vignette{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.13),transparent 32%,rgba(0,0,0,.47));opacity:.72}
+.menuHero .logoMark.big{width:128px;height:128px;margin:0 auto 2px;border:2px solid rgba(255,242,197,.34);border-radius:30px;background:linear-gradient(145deg,#f2c75f,#dd843c);color:#101820;font:900 65px/1 system-ui,sans-serif;box-shadow:none;transform:none;will-change:transform;animation:menuLogoFloat 5s ease-in-out infinite}
+.menuHero .brand{margin-top:10px;font:900 36px/1 "Arial Narrow",Impact,sans-serif;letter-spacing:3px;color:#f3f4ed;text-shadow:none}
+.menuHero .brand b{color:#f2c75f}
+.menuHero .tagline{max-width:360px;margin:8px auto 0;color:rgba(246,246,239,.9);font-size:14px;line-height:1.4;text-shadow:none}
+.menuActions{display:grid;gap:9px;animation:menuEnter .4s ease-out both}
+.menuActions .menuBtn{width:100%;min-height:54px;display:flex;align-items:center;justify-content:center;padding:14px 16px;border:1px solid rgba(239,242,230,.16);border-radius:14px;background:rgba(13,21,20,.92);color:#f5f5ef;text-align:center;box-shadow:none;transition:transform .16s ease,opacity .16s ease}
+.menuActions .menuBtn strong{display:block;font-size:15px;font-weight:800;letter-spacing:.7px}
+.menuActions .menuBtn.primary{border-color:transparent;background:linear-gradient(135deg,#edbd50,#d7923d);color:#111710}
+.menuActions .menuBtn:hover{transform:translateY(-1px);opacity:.96}
+.menuActions .menuBtn:active{transform:scale(.985);opacity:.9;border-color:rgba(239,242,230,.16)}
+.menuActions .menuBtn:focus-visible{outline:2px solid #f2c75f;outline-offset:3px}
+.menuActions .menuBtn:disabled,.menuActions .menuBtn.unavailable{opacity:.38;cursor:not-allowed;transform:none;background:rgba(13,21,20,.7);color:#f5f5ef;border-color:rgba(239,242,230,.12)}
+.credits{text-align:center;margin:18px 0 8px;color:rgba(241,242,232,.68);font-size:10px;letter-spacing:1.35px;animation:menuEnter .48s ease-out both}
+.credits b{color:#f2c75f}
+.aboutView{max-width:480px;margin:48px auto 0;padding:28px 18px;text-align:center;border:0;border-radius:18px;background:transparent;box-shadow:none}
+.aboutView .logoMark.big{width:96px;height:96px;margin:0 auto 12px;font-size:50px;box-shadow:none}
+.aboutView .brand{margin:0;font-size:30px}
+.aboutDescription{margin:16px 0;color:var(--mu);line-height:1.5}
+.aboutView .credits{margin:20px 0}
+.aboutView .menuBtn{width:100%;min-height:54px;border:1px solid rgba(239,242,230,.16);border-radius:14px;background:rgba(13,21,20,.92);color:#f5f5ef;box-shadow:none;transition:transform .16s ease,opacity .16s ease}
+.aboutView .menuBtn:active{transform:scale(.985);opacity:.9}
+@keyframes menuLogoFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-5px,0)}}
+@keyframes menuLight{0%,100%{opacity:.68}50%{opacity:1}}
+@keyframes menuFog{0%,100%{transform:translate3d(-2%,0,0);opacity:.7}50%{transform:translate3d(2%,-1%,0);opacity:1}}
+@keyframes menuDust{0%,100%{transform:translate3d(0,0,0);opacity:.28}50%{transform:translate3d(6px,-10px,0);opacity:.72}}
+@keyframes menuLeaf{0%,100%{transform:translate3d(0,0,0) rotate(0);opacity:.22}50%{transform:translate3d(7px,12px,0) rotate(24deg);opacity:.62}}
+@keyframes menuEnter{from{transform:translate3d(0,8px,0);opacity:0}to{transform:translate3d(0,0,0);opacity:1}}
+@media(max-width:390px){.menuHero{min-height:330px;border-radius:18px;padding:18px 12px 20px}.menuHero .logoMark.big{width:108px;height:108px;font-size:56px}.menuHero .brand{font-size:32px}.menuActions .menuBtn{min-height:50px}}
+@media(max-height:700px){.menuHero{min-height:300px}.menuHero .logoMark.big{width:100px;height:100px;font-size:52px}}
+@media(prefers-reduced-motion:reduce){.menuHero,.menuHero .stadiumScene *,.menuHero .logoMark.big,.menuActions,.credits,.aboutView .menuBtn{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -607,8 +657,10 @@ function startJ90Atmosphere(){
   j90AtmoStarted=true;
   addEventListener('resize',resize,{passive:true});
   const frame=t=>{
-   if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);
+   if(document.hidden){j90AtmoFrame=0;return}
+   const saveData=!!(navigator.connection&&navigator.connection.saveData);
+   const lowMemory=typeof navigator.deviceMemory==='number'&&navigator.deviceMemory<=2;
+   const atmoRate=Math.min(saveData||lowMemory?15:(displayTheme==='amoled'?24:30),j90FrameRate);
    if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
     const dt=Math.min(70,t-(frame.last||t));frame.last=t;
     for(const p of j90AtmoParticles){
@@ -619,6 +671,10 @@ function startJ90Atmosphere(){
    }
    j90AtmoFrame=requestAnimationFrame(frame);
   };
+  document.addEventListener('visibilitychange',()=>{
+   if(document.hidden){if(j90AtmoFrame)cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}
+   else if(!reduced&&!j90AtmoFrame)j90AtmoFrame=requestAnimationFrame(frame);
+  });
   if(reduced)j90AtmoNodes.forEach(draw);
   else j90AtmoFrame=requestAnimationFrame(frame);
  }else if(reduced)j90AtmoNodes.forEach(draw);
@@ -646,17 +702,33 @@ function settingsView(){
  '</div></div>'+
  '<button class="btn" onclick="toggleCompact()"><b>Interface '+(document.body.classList.contains('compact')?'compacta':'normal')+'</b><span>Reduz espaçamentos para telas menores</span></button></div>'
 }
+function menuStadium(){
+ return '<div class="stadiumScene" aria-hidden="true">'+
+  '<div class="sky"></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div>'+ 
+  '<div class="beam a"></div><div class="beam b"></div><div class="fog"></div>'+ 
+  '<div class="dust"><i style="--x:15%;--y:76%;--t:8s;--d:-2s"></i><i style="--x:38%;--y:68%;--t:9s;--d:-5s"></i><i style="--x:67%;--y:78%;--t:8.5s;--d:-3s"></i><i style="--x:86%;--y:70%;--t:10s;--d:-7s"></i></div>'+ 
+  '<div class="leaves"><i style="--x:12%;--y:8%;--t:12s;--d:-2s"></i><i style="--x:88%;--y:4%;--t:14s;--d:-8s"></i></div><div class="vignette"></div></div>';
+}
+function aboutV(){
+ return '<section class="aboutView"><div class="logoMark big" aria-hidden="true">90</div><p class="brand">JORNADA <b>90</b></p><p class="aboutDescription">Simulador de carreira de futebol.</p><p class="credits">PRODUZIDO POR <b>VICTOR MAIA</b></p><button class="menuBtn" type="button" onclick="mainMenu()"><strong>VOLTAR AO MENU</strong></button></section>';
+}
 function menuV(){
  if(menuScreen==='settings')return settingsView();
+ if(menuScreen==='about')return aboutV();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="stadiumScene"><canvas class="atmoCanvas" aria-hidden="true"></canvas><div class="sky"></div><div class="sunDisc"></div><div class="cloudLayer"><i></i><i></i><i></i></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="horizonGlow"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves"><i style="--x:7%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:10%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:91%;--y:12%;--t:9.1s;--d:-6.2s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
- '<div class="menuActions">'+
- (hasSave?'<button class="menuBtn primary" onclick="S.phase=S.phase||\'pre\';render()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>NOVO JOGO</strong><span>Comece uma nova carreira do zero</span></button>')+
- (!hasSave?'<button class="menuBtn" onclick="newGame()"><strong>INICIAR CARREIRA</strong><span>Escolha nome, posição e clube</span></button>':'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Começar outra jornada sem apagar esta</span></button>')+
- '<button class="menuBtn" onclick="menuScreen=\'settings\';render()"><strong>CONFIGURAÇÕES</strong><span>Som, vibração e interface</span></button>'+
- '<button class="menuBtn" onclick="alert(\'Jornada 90 · simulador de carreira de futebol\')"><strong>SOBRE</strong><span>Versão independente</span></button>'+
- '</div><div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b><br><span>Um projeto brasileiro independente</span></div>'
+ const continueButton=hasSave
+  ? "<button class='menuBtn primary' type='button' onclick=\"menuScreen='career';S.phase=S.phase||'pre';render()\"><strong>CONTINUAR</strong></button>"
+  : "<button class='menuBtn unavailable' type='button' disabled aria-label='Continuar: nenhuma carreira salva'><strong>CONTINUAR</strong></button>";
+ const careerButton=hasSave
+  ? '<button class="menuBtn" type="button" onclick="newGame()"><strong>NOVA CARREIRA</strong></button>'
+  : '<button class="menuBtn primary" type="button" onclick="newGame()"><strong>NOVO JOGO</strong></button>';
+ const settingsButton="<button class='menuBtn' type='button' onclick=\"menuScreen='settings';render()\"><strong>CONFIGURAÇÕES</strong></button>";
+ const aboutButton="<button class='menuBtn' type='button' onclick=\"menuScreen='about';render()\"><strong>SOBRE</strong></button>";
+ return '<section class="menuHero">'+menuStadium()+'<div class="logoMark big" aria-label="Logo Jornada 90">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></section>'+
+  '<nav class="menuActions" aria-label="Menu principal">'+continueButton+careerButton+settingsButton+aboutButton+'</nav>'+ 
+  '<div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b></div>';
 }
+
 const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
 {n:'Série C',c:['Figueirense:52','Paysandu:55','Volta Redonda:50','Ypiranga:50','Botafogo-SP:54','Ferroviária:53','São Bernardo:55','Confiança:51','Londrina:52','Aparecidense:49']},
@@ -1361,9 +1433,11 @@ function render(still){
  applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=worldFx()+intro();return}
- if(menuScreen==='home'&&introStep===0){A.innerHTML=worldFx()+menuV();return}
-
+ if(!S){
+  if(introStep===0){A.innerHTML=menuV();return}
+  A.innerHTML=worldFx()+intro();return
+ }
+ if(introStep===0&&(menuScreen==='home'||menuScreen==='settings'||menuScreen==='about')){A.innerHTML=menuV();return}
  let h=worldFx()+head();
  if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='match')h+=sndB()+matchV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
  A.innerHTML=h;startJ90Atmosphere();S.lm=S.money;save();
