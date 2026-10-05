@@ -9,7 +9,7 @@ const map = {
   '02-leaves': { names: ['02-leaves', 'freesound_community-leaves-rustling-14633'], folder: 'trees', file: 'leaves-soft-01.ogg' },
   '03-neighborhood': { names: ['03-neighborhood', 'freesound_community-012553_residential-neighborhood-in-summer-by-day-58378'], folder: 'neighborhood', file: 'neighborhood-bed-01.ogg' },
   '04-birds-bed': { names: ['04-birds-bed', 'distant church bells with city and bird noises sound effect mixpre 6 (mk2) and clippy em 172(MP3_160K)'], folder: 'birdsBed', file: 'birds-distant-01.ogg' },
-  '05-bird-call': { names: ['05-bird-call'], folder: 'birdEvents', file: 'bird-call-01.ogg' },
+  '05-bird-call': { names: ['05-bird-call', 'freesound_community-birds-chirping-75156'], folder: 'birdEvents', file: 'bird-call-01.ogg' },
   '06-dog': { names: ['06-dog', 'photos-dog-barking-in-the-distance-395349'], folder: 'dog', file: 'dog-distant-01.ogg' },
   '07-car': { names: ['07-car', 'soundreality-car-passing-city-364146'], folder: 'car', file: 'car-pass-01.ogg' },
   '08-light-rain': { names: ['08-light-rain', 'liecio-calming-rain-257596'], folder: 'rain', file: 'light-rain-bed-01.ogg' },
