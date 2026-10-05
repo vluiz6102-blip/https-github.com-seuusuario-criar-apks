@@ -270,6 +270,7 @@ body.theme-amoled .ambientBg .floodlights i{opacity:.78}.ambientBg .floodlights 
 .offerCard strong{display:block;margin-top:9px;font-size:18px;line-height:1.15}.offerRole{display:block;margin-top:3px;color:#92a5af;font-size:12px}.offerSalary{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:9px;border-top:1px solid #213039;color:#dbe4e8;font-size:13px}.offerSalary b{font-size:23px;line-height:1;color:#ffca3a;font-weight:400}
 .createFooter{display:flex;justify-content:space-between;gap:10px;padding:1px 4px 0;color:#6f818b;font-size:11px}.createFooter span:last-child{text-align:right}
 body.theme-lcd .createHero{background:linear-gradient(150deg,rgba(28,48,62,.96),rgba(38,55,74,.92) 54%,rgba(105,69,55,.72));border-color:#496273}body.theme-lcd .createPanel{background:rgba(22,34,43,.94);border-color:#3d5665}body.theme-lcd .offerCard{background:linear-gradient(145deg,rgba(31,48,62,.98),rgba(18,31,41,.98));border-color:#456172}
+.audioCard{margin-top:10px}.audioPicker{display:grid;gap:8px}.audioOption{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;width:100%;padding:11px 12px;border:1px solid #26343d;border-radius:14px;background:#0d161c;color:var(--tx);text-align:left}.audioOption.on{border-color:#ffca3a;background:linear-gradient(145deg,rgba(55,43,24,.55),#0d161c)}.audioIcon{grid-row:1/3;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#17232b;color:#ffca3a;font-size:17px}.audioOption strong{font-size:14px}.audioOption span:last-child{font-size:11px;color:#8497a1;margin-top:2px}.audioCard small{display:block;margin-top:9px;font-size:10px;line-height:1.35}
 @media(max-width:430px){.createHero{min-height:305px;border-radius:20px;padding:14px 14px 18px}.fieldGrid{grid-template-columns:1fr}.createFooter{flex-direction:column;gap:4px}.createFooter span:last-child{text-align:left}.createSteps{gap:7px}.createSteps{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.ambientBg *{animation:none!important}}
 </style>
@@ -278,7 +279,7 @@ body.theme-lcd .createHero{background:linear-gradient(150deg,rgba(28,48,62,.96),
 <div id="app"></div>
 <script>
 const $=id=>document.getElementById(id);
-let audioOK=true,hapticOK=true,displayTheme='amoled',AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled'}catch(e){}
+let audioOK=true,hapticOK=true,displayTheme='amoled',audioMode='stereo',AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled';audioMode=['stereo','immersive','mono'].includes(localStorage.getItem('j90_audio_mode'))?localStorage.getItem('j90_audio_mode'):'stereo'}catch(e){}
 function haptic(type='click'){
  if(!hapticOK)return;
  const p={click:12,start:[22,28,22],train:18,rest:18,whistle:28,goal:[40,45,90],correct:[16,24],wrong:[42,22,42],injury:[60,35,60],card:52,transfer:[24,30,50],trophy:[24,32,65,90]};
@@ -329,7 +330,17 @@ async function sfx(type){
    g.gain.setValueAtTime(.0001,t);
    g.gain.exponentialRampToValueAtTime(type==='click'?.065:.14,t+.008);
    g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
-   o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
+   let out=g;
+   if(audioMode!=='mono'&&c.createStereoPanner){
+    const pan=c.createStereoPanner();
+    const seqPan={start:[-.45,.45,0,.35],click:[0],train:[-.3,.3,0],rest:[.25,-.25],whistle:[-.55,.55],goal:[-.65,.5,-.2,.5,0],correct:[-.35,.35,0],wrong:[-.5,.5,0],injury:[-.3,.3],card:[.5,-.5,0],transfer:[-.55,.4,-.2,.55],trophy:[-.6,.45,-.25,.5,0]}[type]||[0];
+    let pv=seqPan[i%seqPan.length];
+    if(audioMode==='stereo')pv*=.72;
+    else pv*=1.0;
+    pan.pan.setValueAtTime(pv,t);
+    out=pan;
+   }
+   o.connect(out);out.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
   });
  }catch(e){}
 }
@@ -342,6 +353,7 @@ document.addEventListener('click',e=>{
 function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme==='amoled');document.body.classList.toggle('theme-lcd',displayTheme==='lcd')}
 function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setItem('j90_tela',displayTheme)}catch(e){}render(1)}
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
+function setAudioMode(k){audioMode=['stereo','immersive','mono'].includes(k)?k:'stereo';try{localStorage.setItem('j90_audio_mode',audioMode)}catch(e){}unlockAudio();render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
 function toggleCompact(){document.body.classList.toggle('compact');try{localStorage.setItem('j90_compact',document.body.classList.contains('compact')?'1':'0')}catch(e){}render(1)}
 function worldFx(){return '<div class="ambientBg"><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="clouds"><i style="--x:2%;--y:14%;--t:18s;--d:-7s"></i><i style="--x:56%;--y:22%;--t:23s;--d:-13s"></i><i style="--x:28%;--y:34%;--t:20s;--d:-4s"></i></div><div class="beam a"></div><div class="beam b"></div><div class="beam c"></div><div class="floodlights"><i style="--x:7%;--y:23%;--r:-10deg;--t:4.8s;--d:-1s"></i><i style="--x:92%;--y:25%;--r:10deg;--t:5.6s;--d:-3s"></i><i style="--x:50%;--y:17%;--r:0deg;--t:6.5s;--d:-5s"></i></div><div class="leaves"><i style="--x:4%;--y:4%;--t:8s;--d:-2s"></i><i style="--x:12%;--y:28%;--t:11s;--d:-7s"></i><i style="--x:23%;--y:11%;--t:9s;--d:-5s"></i><i style="--x:34%;--y:35%;--t:12s;--d:-10s"></i><i style="--x:44%;--y:5%;--t:10s;--d:-4s"></i><i style="--x:53%;--y:24%;--t:13s;--d:-8s"></i><i style="--x:63%;--y:8%;--t:9.5s;--d:-6s"></i><i style="--x:74%;--y:31%;--t:12s;--d:-11s"></i><i style="--x:86%;--y:12%;--t:10.5s;--d:-3s"></i><i style="--x:95%;--y:28%;--t:13.5s;--d:-9s"></i></div><div class="dust"><i style="--x:10%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:26%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:43%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:61%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:79%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="sparks"><i style="--x:18%;--y:77%;--t:5.5s;--d:-2s"></i><i style="--x:39%;--y:65%;--t:6.8s;--d:-5s"></i><i style="--x:57%;--y:75%;--t:7.2s;--d:-1s"></i><i style="--x:83%;--y:70%;--t:6.3s;--d:-4s"></i></div><div class="birds"><i style="--y:18%;--t:24s;--d:-11s"></i><i style="--y:25%;--t:31s;--d:-17s"></i></div><div class="shade"></div></div>'}
@@ -350,6 +362,11 @@ function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
  return '<div class="card menu settings"><button class="chip" onclick="mainMenu()">← Voltar</button><div class="logoMark">90</div><h1>Configurações</h1><p class="mu">Ajuste sua experiência.</p>'+
  '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Efeitos, apito, gol e interface</span></button>'+
+ '<div class="card audioCard"><h2>Áudio</h2><p class="mu">Escolha como os efeitos ocupam o espaço estéreo.</p><div class="audioPicker">'+
+ '<button class="audioOption '+(audioMode==='stereo'?'on':'')+'" onclick="setAudioMode(\'stereo\')"><span class="audioIcon">◐</span><strong>Estéreo</strong><span>Esquerda e direita com panorama suave</span></button>'+
+ '<button class="audioOption '+(audioMode==='immersive'?'on':'')+'" onclick="setAudioMode(\'immersive\')"><span class="audioIcon">◉</span><strong>Áudio imersivo</strong><span>Efeitos mais amplos e movimento entre canais</span></button>'+
+ '<button class="audioOption '+(audioMode==='mono'?'on':'')+'" onclick="setAudioMode(\'mono\')"><span class="audioIcon">●</span><strong>Mono</strong><span>Mesmo sinal nos dois canais</span></button>'+
+ '</div><small class="mu">O modo imersivo cria espacialização pelo áudio. O Android continua responsável pelo roteamento físico dos alto-falantes.</small></div>'+
  '<button class="btn" onclick="toggleHaptic()"><b>'+ (hapticOK?'📳 Vibração ligada':'📴 Vibração desligada') +'</b><span>Retorno tátil nos comandos e eventos</span></button>'+
  '<div class="card" style="margin-top:10px"><h2>Visual da tela</h2><p class="mu">Escolha o acabamento conforme sua tela.</p><div class="themePicker">'+
  '<button class="themeOption '+(displayTheme==='amoled'?'on':'')+'" onclick="setTheme(\'amoled\')"><div class="preview oled"></div><span class="check">✓</span><strong>AMOLED / OLED</strong><span>Preto profundo · efeitos sutis</span></button>'+
