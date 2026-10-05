@@ -206,7 +206,7 @@
       birds: ambienceState.weather === 'clear' ? (evening ? .018 : .035) : lightRain ? .006 : 0,
       insects: evening && ambienceState.weather !== 'heavyRain' ? .016 : 0,
       crowd: ambienceState.matchDay
-        ? ambienceState.minutesToMatch != null && ambienceState.minutesToMatch <= 45 ? .055 : .028
+        ? ambienceState.minutesToMatch != null && ambienceState.minutesToMatch <= 45 ? .18 : .10
         : 0,
       cloudy,
       rain
@@ -284,16 +284,32 @@
     if (!graph || !ambienceState.menuActive) return;
     const c = categoryConfig();
     const q = quality();
-
-    startOrUpdate('wind', 'wind', c.wind);
-    startOrUpdate('trees', 'trees', c.trees);
-    startOrUpdate('leaves', 'leaves', c.leaves);
-    startOrUpdate('neighborhood', 'neighborhood', c.neighborhood);
     const baseLayers = ambienceState.matchDay
-      ? [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['stadium','stadium',q === 'low' ? c.stadium * .7 : c.stadium],['crowd','crowd',c.crowd]]
+      ? [
+          ['wind','wind',c.wind * .62],
+          ['leaves','leaves',c.leaves * .5],
+          ['stadium','stadium',q === 'low' ? c.stadium * .9 : c.stadium],
+          ['crowd','crowd',c.crowd],
+          ...(c.rain > 0 ? [['rain','rain',c.rain * .65]] : [])
+        ]
       : ambienceState.weather === 'lightRain' || ambienceState.weather === 'heavyRain'
-        ? [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['rain','rain',c.rain],['rainLeaves','rainLeaves',q === 'low' ? c.rainLeaves * .65 : c.rainLeaves]]
-        : [['wind','wind',c.wind],['trees','trees',c.trees],['leaves','leaves',c.leaves],['neighborhood','neighborhood',c.neighborhood],['stadium','stadium',q === 'low' ? c.stadium * .7 : c.stadium],['birdsBed','birdsBed',q === 'low' ? c.birds * .7 : c.birds],['insects','insects',c.insects]];
+        ? [
+            ['wind','wind',c.wind],
+            ['trees','trees',c.trees],
+            ['leaves','leaves',c.leaves],
+            ['neighborhood','neighborhood',c.neighborhood],
+            ['rain','rain',c.rain],
+            ['rainLeaves','rainLeaves',q === 'low' ? c.rainLeaves * .65 : c.rainLeaves]
+          ]
+        : [
+            ['wind','wind',c.wind],
+            ['trees','trees',c.trees],
+            ['leaves','leaves',c.leaves],
+            ['neighborhood','neighborhood',c.neighborhood],
+            ['stadium','stadium',q === 'low' ? c.stadium * .7 : c.stadium],
+            ['birdsBed','birdsBed',q === 'low' ? c.birds * .7 : c.birds],
+            ['insects','insects',c.insects]
+          ];
     const wanted = new Set(baseLayers.map(x => x[0]));
     continuous.forEach((_, name) => { if (!wanted.has(name)) stopLayer(name); });
     baseLayers.forEach(([name, category, target]) => startOrUpdate(name, category, target));
@@ -431,7 +447,22 @@
     continuous.forEach((_, name) => stopLayer(name, fade));
   }
 
+  function autoWeather() {
+    const dayKey=(Number(S?.year)||2026)*37+(Number(S?.r)||0)*17+(Number(S?.club?.tier)||0)*5;
+    const slot=Math.floor(Date.now()/75000);
+    const raw=Math.abs(Math.sin((dayKey+slot*11)*12.9898)*43758.5453)%1;
+    const weather=raw<.55?'clear':raw<.78?'cloudy':raw<.94?'lightRain':'heavyRain';
+    ambienceState.weather=weather;
+    ambienceState.rainIntensity=weather==='heavyRain'?.92:weather==='lightRain'?.42:0;
+  }
+  function stateTick() {
+    if (!ambienceState.menuActive) return;
+    autoWeather();
+    syncWorldState();
+    stateTimer=setTimeout(stateTick,75000);
+  }
   function syncWorldState() {
+    autoWeather();
     const now = menuTime;
     if (now < .18) ambienceState.timeOfDay = 'afternoon';
     else if (now < .58) ambienceState.timeOfDay = 'sunset';
@@ -439,6 +470,7 @@
     else ambienceState.timeOfDay = 'night';
 
     ambienceState.matchDay = !!(S && ['match','comp','wc'].includes(S.phase));
+    ambienceState.minutesToMatch = ambienceState.matchDay ? 0 : null;
     if (S?.phase === 'post' && S.last) {
       const home = S.last.h === S.club.n;
       const my = home ? S.last.gh : S.last.ga;
@@ -510,6 +542,7 @@
     stopAll(.35);
     syncWorldState();
     if (!eventTimer) eventTimer = setTimeout(eventStep, 3500);
+    if (!stateTimer) stateTimer = setTimeout(stateTick, 75000);
   }
 
   function stop() {
