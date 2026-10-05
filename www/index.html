@@ -444,6 +444,8 @@ filter:blur(20px)}
  .stadiumScene .sunDisc:after{animation:none}
 }
 
+/* J90 frame-rate modes */
+body.j90-fps-30{--j90-fps:30}body.j90-fps-60{--j90-fps:60}body.j90-fps-120{--j90-fps:120}body.j90-fps-144{--j90-fps:144}
 </style>
 </head>
 <body>
@@ -548,6 +550,9 @@ document.addEventListener('click',e=>{
 },{passive:true});
 function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme==='amoled');document.body.classList.toggle('theme-lcd',displayTheme==='lcd')}
 function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setItem('j90_tela',displayTheme)}catch(e){}render(1)}
+let j90FrameRate=60;
+try{j90FrameRate=[30,60,120,144].includes(Number(localStorage.getItem('j90_fps')))?Number(localStorage.getItem('j90_fps')):60}catch(e){j90FrameRate=60}
+function setFrameRate(v){j90FrameRate=[30,60,120,144].includes(Number(v))?Number(v):60;try{localStorage.setItem('j90_fps',String(j90FrameRate))}catch(e){}render(1)}
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
 function setAudioMode(k){audioMode=['stereo','immersive','mono'].includes(k)?k:'stereo';try{localStorage.setItem('j90_audio_mode',audioMode)}catch(e){}unlockAudio();render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
@@ -595,7 +600,7 @@ function startJ90Atmosphere(){
   addEventListener('resize',resize,{passive:true});
   const frame=t=>{
    if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   if(!reduced&&t-(frame.last||0)>=50){
+   if(!reduced&&t-(frame.last||0)>=1000/j90FrameRate){
     const dt=Math.min(70,t-(frame.last||t));frame.last=t;
     for(const p of j90AtmoParticles){
      p.x+=p.s*dt;p.y-=p.s*.12*dt;p.p+=.0008*dt;
@@ -620,6 +625,12 @@ function settingsView(){
  '<button class="audioOption '+(audioMode==='mono'?'on':'')+'" onclick="setAudioMode(\'mono\')"><span class="audioIcon">●</span><strong>Mono</strong><span>Mesmo sinal nos dois canais</span></button>'+
  '</div><small class="mu">O modo imersivo cria espacialização pelo áudio. O Android continua responsável pelo roteamento físico dos alto-falantes.</small></div>'+
  '<button class="btn" onclick="toggleHaptic()"><b>'+ (hapticOK?'📳 Vibração ligada':'📴 Vibração desligada') +'</b><span>Retorno tátil nos comandos e eventos</span></button>'+
+ '<div class="card" style="margin-top:10px"><h2>Fluidez</h2><p class="mu">Define o limite de atualização dos efeitos e da atmosfera do jogo. O Android continua controlando a taxa física da tela.</p><div class="audioPicker">'+
+ '<button class="audioOption '+(j90FrameRate===30?'on':'')+'" onclick="setFrameRate(30)"><span class="audioIcon">30</span><strong>30 Hz</strong><span>Economia máxima · movimento mais contido</span></button>'+
+ '<button class="audioOption '+(j90FrameRate===60?'on':'')+'" onclick="setFrameRate(60)"><span class="audioIcon">60</span><strong>60 Hz</strong><span>Equilíbrio recomendado</span></button>'+
+ '<button class="audioOption '+(j90FrameRate===120?'on':'')+'" onclick="setFrameRate(120)"><span class="audioIcon">120</span><strong>120 Hz</strong><span>Alta fluidez para telas rápidas</span></button>'+
+ '<button class="audioOption '+(j90FrameRate===144?'on':'')+'" onclick="setFrameRate(144)"><span class="audioIcon">144</span><strong>144 Hz</strong><span>Máxima atualização disponível no jogo</span></button>'+
+ '</div></div>'+
  '<div class="card" style="margin-top:10px"><h2>Visual da tela</h2><p class="mu">Escolha o acabamento conforme sua tela.</p><div class="themePicker">'+
  '<button class="themeOption '+(displayTheme==='amoled'?'on':'')+'" onclick="setTheme(\'amoled\')"><div class="preview oled"></div><span class="check">✓</span><strong>AMOLED / OLED</strong><span>Preto profundo · efeitos sutis</span></button>'+
  '<button class="themeOption '+(displayTheme==='lcd'?'on':'')+'" onclick="setTheme(\'lcd\')"><div class="preview lcd"></div><span class="check">✓</span><strong>LCD / IPS</strong><span>Céu de fim de tarde · visual aberto</span></button>'+
