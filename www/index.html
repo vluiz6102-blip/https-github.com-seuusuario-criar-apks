@@ -1267,3 +1267,47 @@ render();
 </html>
 
 <!-- Jornada 90 build verification -->
+
+/* Jornada 90 UI refinement: game-first hierarchy + tactile mobile controls */
+:root{--ui-radius:14px;--ui-pad:14px;--ui-line:rgba(255,255,255,.10);--ui-elev:0 10px 28px rgba(0,0,0,.22)}
+body{padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(22px,env(safe-area-inset-bottom))}
+#app{padding-top:4px}
+.card{border-radius:var(--ui-radius);border-color:var(--ui-line);box-shadow:var(--ui-elev);background:linear-gradient(180deg,#0b0b0b,#080808);}
+.card>h2:first-child{display:flex;align-items:center;gap:9px;letter-spacing:.1px}
+.card>h2:first-child:before{content:"";width:4px;height:18px;border-radius:4px;background:var(--am);box-shadow:0 0 12px rgba(255,202,58,.18);flex:none}
+.btn,.chip,.tabs button{position:relative;isolation:isolate;transition:transform .14s ease,border-color .14s ease,background-color .14s ease,color .14s ease,box-shadow .14s ease}
+.btn:before,.menuBtn:before{content:"";position:absolute;inset:1px;border-radius:inherit;background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.045) 45%,transparent 60%);transform:translateX(-115%);opacity:0;pointer-events:none}
+.btn:hover:before,.menuBtn:hover:before{opacity:1;animation:uiSheen .65s ease both}
+@keyframes uiSheen{to{transform:translateX(115%)}}
+.btn:active,.menuBtn:active,.chip:active,.tabs button:active{transform:translateY(1px) scale(.985)}
+.btn.go{box-shadow:0 8px 24px rgba(66,215,125,.16),inset 0 1px rgba(255,255,255,.14)}
+.btn.go:active{box-shadow:0 3px 10px rgba(66,215,125,.12)}
+.btn:focus-visible,.menuBtn:focus-visible,.chip:focus-visible,.tabs button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--am);outline-offset:3px}
+.tabs{position:relative;padding:4px;border:1px solid #191919;border-radius:15px;background:#070707;box-shadow:0 8px 22px rgba(0,0,0,.2)}
+.tabs button{min-height:52px;border:1px solid transparent!important;border-radius:11px;color:#888;background:transparent}
+.tabs button.on{background:linear-gradient(180deg,#18251d,#101812);border-color:#294432!important;color:#f5f5f5;box-shadow:inset 0 -2px var(--gr),0 4px 14px rgba(0,0,0,.18)}
+.tabs button.on:after{content:"";position:absolute;left:24%;right:24%;bottom:3px;height:2px;border-radius:2px;background:var(--gr);box-shadow:0 0 8px rgba(66,215,125,.35)}
+.chip{border-color:#242424;background:#080808;color:#aaa;box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.chip.on{background:#111b14;border-color:#31513a;color:#ffca3a;box-shadow:inset 0 0 0 1px rgba(255,202,58,.06)}
+.row{border-bottom-color:#171717}
+.bar div{background:#171717;border:1px solid #242424}
+.bar i{box-shadow:0 0 12px rgba(66,215,125,.13)}
+.pill{background:#0b0b0b;border-color:#252525}
+.tag{box-shadow:0 3px 12px rgba(255,92,92,.12)}
+input,select{border-color:#292929;box-shadow:inset 0 1px rgba(255,255,255,.025)}
+input:focus,select:focus{border-color:#705d22;box-shadow:0 0 0 3px rgba(255,202,58,.08)}
+.menuActions{gap:10px}
+.menuBtn{position:relative;min-height:60px;border-radius:15px;border-color:#202020;background:linear-gradient(180deg,#0d0d0d,#090909);box-shadow:0 8px 22px rgba(0,0,0,.22);overflow:hidden;touch-action:manipulation}
+.menuBtn.primary{background:linear-gradient(135deg,#2da964,#1c704b);border-color:#4bc97b;box-shadow:0 10px 28px rgba(35,180,100,.18)}
+.menuBtn strong{letter-spacing:.1px}.menuBtn span{color:#a4aaa7}
+.menuBtn.primary span{color:#d8f5e4}
+.menuHero{box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.05)}
+.createScreen,.createHero,.offerCard{border-radius:16px}
+.createScreen .card,.createHero,.offerCard{box-shadow:0 12px 34px rgba(0,0,0,.24)}
+@media(max-width:560px){
+ .card{box-shadow:0 8px 24px rgba(0,0,0,.20)}
+ .card>h2:first-child:before{height:16px}
+ .btn,.menuBtn{min-height:56px}
+ .tabs button{min-height:54px}
+}
+@media(prefers-reduced-motion:reduce){.btn,.chip,.tabs button,.menuBtn{transition:none!important}.btn:before,.menuBtn:before{display:none!important}}
