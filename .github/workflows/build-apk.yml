@@ -33,6 +33,23 @@ jobs:
         run: |
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
+      - name: Aplicar identidade e ícone Jornada 90
+        working-directory: android
+        run: |
+          python3 - <<'PY'
+          import os, subprocess
+          src='../assets/icon.svg'
+          sizes={'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}
+          for d,n in sizes.items():
+              out=f'app/src/main/res/mipmap-{d}'
+              os.makedirs(out,exist_ok=True)
+              subprocess.run(['convert',src,'-resize',f'{n}x{n}',f'{out}/ic_launcher.png'],check=True)
+              subprocess.run(['cp',f'{out}/ic_launcher.png',f'{out}/ic_launcher_round.png'],check=True)
+          manifest='app/src/main/AndroidManifest.xml'
+          if os.path.exists(manifest):
+              s=open(manifest).read().replace('@mipmap/ic_launcher','@mipmap/ic_launcher')
+              open(manifest,'w').write(s)
+          PY
       - name: Gerar APK debug
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
