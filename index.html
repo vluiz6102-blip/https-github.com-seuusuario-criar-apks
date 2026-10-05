@@ -217,13 +217,33 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 .menuHero .tagline{max-width:360px;margin-left:auto;margin-right:auto;text-shadow:0 2px 16px #000}
 @media(max-width:390px){.menuHero{min-height:360px;border-radius:20px;padding-bottom:20px}.stadiumScene .stands{top:33%}.stadiumScene .ring{top:42%}.stadiumScene .pitch{bottom:-35%}}
 @media(prefers-reduced-motion:reduce){.stadiumScene *,.menuHero .logoMark.big{animation:none!important}}
+
+/* Jornada 90: ambiente animado dentro do jogo + temas de tela */
+@keyframes ambientSky{0%,100%{transform:scale(1) translate3d(0,0,0);filter:saturate(.9)}50%{transform:scale(1.06) translate3d(0,-1%,0);filter:saturate(1.12)}}
+@keyframes sunsetGlow{0%,100%{opacity:.42;transform:translateX(-2%)}50%{opacity:.72;transform:translateX(2%)}}
+@keyframes horizonMove{0%,100%{transform:translateX(-2%)}50%{transform:translateX(2%)}}
+@keyframes ambientLeaf{0%{transform:translate3d(0,-12vh,0) rotate(0deg);opacity:0}12%{opacity:.55}45%{transform:translate3d(30px,42vh,0) rotate(150deg)}72%{transform:translate3d(-16px,75vh,0) rotate(250deg)}100%{transform:translate3d(16px,112vh,0) rotate(360deg);opacity:0}}
+@keyframes ambientDust{0%{transform:translate3d(0,8vh,0) scale(.6);opacity:0}15%{opacity:.28}100%{transform:translate3d(55px,-12vh,0) scale(1.1);opacity:0}}
+@keyframes ambientLight{0%,100%{opacity:.04;transform:rotate(-5deg) translateX(-10%)}50%{opacity:.13;transform:rotate(5deg) translateX(10%)}}
+.ambientBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#000;transition:background .5s ease}
+.ambientBg .sky{position:absolute;inset:-8%;background:radial-gradient(circle at 50% 62%,rgba(49,112,83,.18),transparent 28%),linear-gradient(180deg,#02070a 0%,#040b0e 52%,#020403 100%);animation:ambientSky 12s ease-in-out infinite}
+.ambientBg .sunset{position:absolute;left:-12%;right:-12%;top:7%;height:64%;background:radial-gradient(ellipse at 50% 78%,rgba(246,163,71,.22),rgba(191,93,49,.12) 24%,rgba(86,78,112,.06) 48%,transparent 72%);filter:blur(7px);animation:sunsetGlow 10s ease-in-out infinite}
+.ambientBg .horizon{position:absolute;left:-8%;right:-8%;bottom:7%;height:28%;background:linear-gradient(180deg,rgba(42,96,67,.16),rgba(6,24,16,.35) 46%,rgba(0,0,0,.78));clip-path:polygon(0 54%,8% 48%,14% 55%,21% 45%,27% 52%,35% 42%,42% 50%,49% 40%,58% 53%,66% 44%,74% 51%,82% 43%,91% 50%,100% 44%,100% 100%,0 100%);animation:horizonMove 14s ease-in-out infinite}
+.ambientBg .beam{position:absolute;top:-20%;width:36%;height:115%;background:linear-gradient(180deg,rgba(255,218,151,.22),transparent 70%);filter:blur(8px);transform-origin:top center;animation:ambientLight 9s ease-in-out infinite}.ambientBg .beam.a{left:10%;animation-delay:-2s}.ambientBg .beam.b{right:10%;animation-delay:-6s}
+.ambientBg .leaves,.ambientBg .dust{position:absolute;inset:0}.ambientBg .leaves i{position:absolute;left:var(--x);top:var(--y);width:9px;height:5px;border-radius:80% 20% 80% 20%;background:rgba(206,176,101,.62);box-shadow:0 0 6px rgba(206,176,101,.12);animation:ambientLeaf var(--t) linear infinite;animation-delay:var(--d)}.ambientBg .leaves i:nth-child(2n){width:6px;height:4px;background:rgba(144,117,69,.52)}
+.ambientBg .dust i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:rgba(255,236,194,.48);animation:ambientDust var(--t) linear infinite;animation-delay:var(--d)}.ambientBg .shade{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 26%,rgba(0,0,0,.06) 55%,rgba(0,0,0,.6) 100%)}
+#app{position:relative;z-index:1}
+body.theme-lcd{background:#101922!important;color:#eef4f7}body.theme-lcd .ambientBg{background:#111a24}body.theme-lcd .ambientBg .sky{background:linear-gradient(180deg,#263d57 0%,#4a5369 42%,#bd7655 70%,#14251e 100%)}body.theme-lcd .ambientBg .sunset{opacity:1;background:radial-gradient(ellipse at 50% 74%,rgba(255,179,91,.42),rgba(218,121,78,.2) 27%,rgba(91,92,126,.11) 49%,transparent 74%)}body.theme-lcd .ambientBg .horizon{background:linear-gradient(180deg,rgba(67,107,81,.22),rgba(19,44,35,.56) 48%,rgba(7,13,12,.78))}body.theme-lcd .card{background:rgba(26,38,48,.94);border-color:#3b5362}body.theme-lcd .btn,body.theme-lcd .chip,body.theme-lcd input,body.theme-lcd select{background:rgba(18,30,39,.96);border-color:#3a5261}body.theme-lcd .tabs button{background:rgba(17,29,39,.78)}body.theme-lcd .menuBtn{background:rgba(21,35,47,.94);border-color:#466174}body.theme-lcd .menuHero{background:rgba(19,31,41,.76)}
+body.theme-amoled .ambientBg .sunset{opacity:.28}body.theme-amoled .ambientBg .horizon{opacity:.65}body.theme-amoled .ambientBg .beam{opacity:.55}
+.themePicker{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.themeOption{min-height:94px;border:1px solid var(--ln);border-radius:13px;padding:11px;text-align:left;background:var(--bg);color:var(--tx);position:relative;overflow:hidden}.themeOption.on{border-color:var(--am);box-shadow:0 0 0 1px rgba(255,202,58,.15)}.themeOption .preview{height:42px;border-radius:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,.1)}.themeOption .preview.oled{background:linear-gradient(180deg,#000 0%,#020606 65%,#07150d 100%)}.themeOption .preview.lcd{background:linear-gradient(180deg,#334b66 0%,#9c6b62 48%,#152d22 100%)}.themeOption strong{display:block;font-size:14px}.themeOption span{display:block;font-size:11px;color:var(--mu);margin-top:2px}.themeOption .check{position:absolute;right:8px;top:8px;font-size:13px;color:var(--am);opacity:0}.themeOption.on .check{opacity:1}
+@media(prefers-reduced-motion:reduce){.ambientBg *{animation:none!important}}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 const $=id=>document.getElementById(id);
-let audioOK=true,hapticOK=true,AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0'}catch(e){}
+let audioOK=true,hapticOK=true,displayTheme='amoled',AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled'}catch(e){}
 function haptic(type='click'){
  try{
   if(!navigator.vibrate||!hapticOK)return;
@@ -279,15 +299,23 @@ document.addEventListener('pointerdown',e=>{
 document.addEventListener('click',e=>{
  if(e.target&&e.target.closest&&e.target.closest('button'))sfx('click');
 },{passive:true});
+function applyTheme(){document.body.classList.toggle('theme-amoled',displayTheme==='amoled');document.body.classList.toggle('theme-lcd',displayTheme==='lcd')}
+function setTheme(k){displayTheme=k==='lcd'?'lcd':'amoled';try{localStorage.setItem('j90_tela',displayTheme)}catch(e){}render(1)}
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('j90_som',audioOK?'1':'0')}catch(e){}render(1)}
 function toggleHaptic(){hapticOK=!hapticOK;try{localStorage.setItem('j90_vib',hapticOK?'1':'0')}catch(e){}render(1)}
+function toggleCompact(){document.body.classList.toggle('compact');try{localStorage.setItem('j90_compact',document.body.classList.contains('compact')?'1':'0')}catch(e){}render(1)}
+function worldFx(){return '<div class="ambientBg"><div class="sky"></div><div class="sunset"></div><div class="horizon"></div><div class="beam a"></div><div class="beam b"></div><div class="leaves"><i style="--x:6%;--y:4%;--t:10s;--d:-2s"></i><i style="--x:19%;--y:18%;--t:12s;--d:-8s"></i><i style="--x:34%;--y:6%;--t:9s;--d:-5s"></i><i style="--x:52%;--y:14%;--t:13s;--d:-10s"></i><i style="--x:69%;--y:0%;--t:11s;--d:-3s"></i><i style="--x:84%;--y:20%;--t:14s;--d:-11s"></i><i style="--x:94%;--y:7%;--t:9.5s;--d:-6s"></i></div><div class="dust"><i style="--x:14%;--y:76%;--t:7s;--d:-1s"></i><i style="--x:31%;--y:68%;--t:8s;--d:-5s"></i><i style="--x:47%;--y:82%;--t:7.5s;--d:-3s"></i><i style="--x:64%;--y:71%;--t:9s;--d:-7s"></i><i style="--x:81%;--y:79%;--t:8.5s;--d:-4s"></i></div><div class="shade"></div></div>'}
 function newGame(){try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;introStep=1;menuScreen='home';render()}
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
  return '<div class="card menu settings"><button class="chip" onclick="mainMenu()">← Voltar</button><div class="logoMark">90</div><h1>Configurações</h1><p class="mu">Ajuste sua experiência.</p>'+
  '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Efeitos, apito, gol e interface</span></button>'+
  '<button class="btn" onclick="toggleHaptic()"><b>'+ (hapticOK?'📳 Vibração ligada':'📴 Vibração desligada') +'</b><span>Retorno tátil nos comandos e eventos</span></button>'+
- '<button class="btn" onclick="document.body.classList.toggle("compact")"><b>Interface</b><span>Visual compacto para telas menores</span></button></div>'
+ '<div class="card" style="margin-top:10px"><h2>Visual da tela</h2><p class="mu">Escolha o acabamento conforme sua tela.</p><div class="themePicker">'+
+ '<button class="themeOption '+(displayTheme==='amoled'?'on':'')+'" onclick="setTheme(\'amoled\')"><div class="preview oled"></div><span class="check">✓</span><strong>AMOLED / OLED</strong><span>Preto profundo · efeitos sutis</span></button>'+
+ '<button class="themeOption '+(displayTheme==='lcd'?'on':'')+'" onclick="setTheme(\'lcd\')"><div class="preview lcd"></div><span class="check">✓</span><strong>LCD / IPS</strong><span>Céu de fim de tarde · visual aberto</span></button>'+
+ '</div></div>'+
+ '<button class="btn" onclick="toggleCompact()"><b>Interface '+(document.body.classList.contains('compact')?'compacta':'normal')+'</b><span>Reduz espaçamentos para telas menores</span></button></div>'
 }
 function menuV(){
  if(menuScreen==='settings')return settingsView();
@@ -958,12 +986,13 @@ function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
  return`<div class="card wc">${w.end=='champ'?conf('🏆'):l.g?conf('⚽'):''}<span class="round">${l.st}</span><div class="sc">Brasil ${l.my} x ${l.og} ${l.opp}</div><p>${l.ln.join(' ')}</p><p class="mu">${l.res} · seus gols: ${l.g}${w.r<3?' · pontos no grupo: '+w.pts:''}</p>${w.end=='champ'?'<h2>🏆 O Brasil é campeão do mundo!</h2>':w.end?'<p>O Brasil está eliminado.</p>':''}<button class="btn go" onclick="wcNext()">${w.end?'Voltar para a carreira':'Próximo jogo'}</button></div>`}
 function save(){try{localStorage.setItem('carreirafc2',JSON.stringify(S))}catch(e){}}
 function render(still){
+ applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=intro();return}
- if(menuScreen==='home'&&introStep===0){A.innerHTML=menuV();return}
+ if(!S){A.innerHTML=worldFx()+intro();return}
+ if(menuScreen==='home'&&introStep===0){A.innerHTML=worldFx()+menuV();return}
 
- let h=head();
+ let h=worldFx()+head();
  if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
  A.innerHTML=h;S.lm=S.money;save();
  if(!still){window.scrollTo(0,0);if(document.querySelectorAll)document.querySelectorAll('.btn').forEach((b,i)=>b.style.animationDelay=i*.05+'s')}
@@ -1098,7 +1127,7 @@ function mig(s){
 }
 
 try{S=mig(JSON.parse(localStorage.getItem('carreirafc2')))}catch(e){S=null}
-menuScreen='home';introStep=0;
+menuScreen='home';introStep=0;try{if(localStorage.getItem('j90_compact')==='1')document.body.classList.add('compact')}catch(e){}
 if(S){
  sanitizeState();
  if(!S.comps.length){compSetup();compSchedule()}
