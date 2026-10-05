@@ -1554,7 +1554,7 @@ function render(still){
  applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=worldFx()+intro();j90SyncMusic();return}
+ if(!S){A.innerHTML=worldFx()+intro();startJ90Atmosphere();j90SyncMusic();return}
  if(introStep===0){A.innerHTML=worldFx()+menuV();j90SyncMusic();return}
 
  let h=worldFx()+head();
