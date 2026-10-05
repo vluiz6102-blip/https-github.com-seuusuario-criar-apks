@@ -608,7 +608,8 @@ function startJ90Atmosphere(){
   addEventListener('resize',resize,{passive:true});
   const frame=t=>{
    if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);\n   if(!reduced&&t-(frame.last||0)>=1000/j90FrameRate){
+   const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);
+   if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
     const dt=Math.min(70,t-(frame.last||t));frame.last=t;
     for(const p of j90AtmoParticles){
      p.x+=p.s*dt;p.y-=p.s*.12*dt;p.p+=.0008*dt;
