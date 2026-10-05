@@ -568,6 +568,14 @@
     });
   }
 
+  function installRainStyle() {
+    if (document.getElementById('j90-rain-style')) return;
+    const style = document.createElement('style');
+    style.id = 'j90-rain-style';
+    style.textContent = '.j90RainLayer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;opacity:var(--j90-rain,0);transition:opacity 2.8s ease}.j90RainLayer i{position:absolute;left:var(--x);top:-12%;width:1px;height:42px;background:linear-gradient(180deg,transparent,rgba(205,225,235,.5));transform:rotate(12deg);animation:j90RainFall var(--t) linear infinite;animation-delay:var(--d)}@keyframes j90RainFall{from{transform:translate3d(0,-12vh,0) rotate(12deg)}to{transform:translate3d(-12vw,125vh,0) rotate(12deg)}}';
+    document.head.appendChild(style);
+  }
+
   function installVisibilityHooks() {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) pause();
@@ -604,6 +612,7 @@
   };
   window.updateJ90MenuEnvironment = updateJ90MenuEnvironmentAssetAware;
 
+  installRainStyle();
   installVisibilityHooks();
 
   // Remove any legacy procedural soundscape sources created by the inline script.
