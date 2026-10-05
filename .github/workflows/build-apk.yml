@@ -49,6 +49,9 @@ jobs:
       - name: Importar e converter áudios reais
         run: npm run audio:import
 
+      - name: Sincronizar elencos reais dos times
+        run: npm run data:rosters
+
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
