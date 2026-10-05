@@ -187,6 +187,36 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
  .btn{min-height:54px;font-size:15px}
 }
 @media(min-width:561px){body{padding-left:18px;padding-right:18px}}
+
+/* Jornada 90: menu cinematográfico leve, feito só com CSS */
+@keyframes stadiumPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.9;transform:scale(1.04)}}
+@keyframes lightSweep{0%,100%{opacity:.08;transform:translateX(-16%) rotate(-8deg)}50%{opacity:.22;transform:translateX(16%) rotate(8deg)}}
+@keyframes crowdWave{0%,100%{transform:translateY(1px)}50%{transform:translateY(-3px)}}
+@keyframes fogDrift{0%{transform:translateX(-8%);opacity:.12}50%{opacity:.25}100%{transform:translateX(8%);opacity:.12}}
+@keyframes dustFloat{0%{transform:translate3d(0,12px,0) scale(.6);opacity:0}15%{opacity:.55}100%{transform:translate3d(38px,-120px,0) scale(1);opacity:0}}
+@keyframes leafFall{0%{transform:translate3d(0,-20px,0) rotate(0deg);opacity:0}12%{opacity:.7}55%{transform:translate3d(24px,88px,0) rotate(170deg)}100%{transform:translate3d(-12px,188px,0) rotate(330deg);opacity:0}}
+@keyframes beamMove{0%,100%{transform:rotate(-10deg);opacity:.05}50%{transform:rotate(10deg);opacity:.16}}
+@keyframes logoFloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-5px) rotate(-3deg)}}
+@keyframes shimmer{0%{transform:translateX(-120%)}55%,100%{transform:translateX(120%)}}
+.menuHero{position:relative;min-height:390px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;border-radius:24px;margin-bottom:12px;padding:22px 18px 24px;background:#05080b;border:1px solid #171d22;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.stadiumScene{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 50% 25%,rgba(78,126,107,.24),transparent 35%),linear-gradient(180deg,#07121a 0%,#071016 44%,#020505 100%);pointer-events:none}
+.stadiumScene .sky{position:absolute;inset:-20%;background:radial-gradient(circle at 50% 46%,rgba(255,203,79,.11),transparent 24%),radial-gradient(circle at 20% 20%,rgba(83,157,255,.08),transparent 22%),radial-gradient(circle at 80% 18%,rgba(83,157,255,.07),transparent 22%);animation:stadiumPulse 7s ease-in-out infinite}
+.stadiumScene .stands{position:absolute;left:-8%;right:-8%;top:30%;height:32%;border-radius:50% 50% 0 0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 4px,rgba(0,0,0,.1) 4px 10px);box-shadow:inset 0 -32px 50px rgba(0,0,0,.7);animation:crowdWave 3.4s ease-in-out infinite}
+.stadiumScene .ring{position:absolute;left:-10%;right:-10%;top:39%;height:44%;border-radius:50%;border:26px solid rgba(255,255,255,.035);box-shadow:0 0 70px rgba(94,169,131,.12);transform:perspective(400px) rotateX(63deg);animation:stadiumPulse 5.5s ease-in-out infinite}
+.stadiumScene .pitch{position:absolute;left:-8%;right:-8%;bottom:-31%;height:62%;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 0%,rgba(55,148,96,.33),rgba(12,43,28,.28) 42%,transparent 68%);transform:perspective(520px) rotateX(58deg);box-shadow:0 -16px 50px rgba(43,162,101,.12)}
+.stadiumScene .lights{position:absolute;inset:0;background:linear-gradient(74deg,transparent 28%,rgba(255,255,255,.08) 39%,transparent 48%),linear-gradient(106deg,transparent 52%,rgba(255,255,255,.07) 61%,transparent 72%);mix-blend-mode:screen;animation:lightSweep 5.5s ease-in-out infinite}
+.stadiumScene .beam{position:absolute;top:-30%;width:44%;height:150%;background:linear-gradient(180deg,rgba(255,244,190,.22),transparent 60%);filter:blur(6px);transform-origin:top center;animation:beamMove 6s ease-in-out infinite}.stadiumScene .beam.a{left:4%;animation-delay:-2s}.stadiumScene .beam.b{right:4%;animation-delay:-4s}
+.stadiumScene .fog{position:absolute;left:-10%;right:-10%;bottom:10%;height:30%;background:radial-gradient(ellipse,rgba(255,255,255,.09),transparent 65%);filter:blur(18px);animation:fogDrift 8s ease-in-out infinite}
+.stadiumScene .dust,.stadiumScene .leaves{position:absolute;inset:0}
+.stadiumScene .dust i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.55);animation:dustFloat var(--t) linear infinite;animation-delay:var(--d)}
+.stadiumScene .leaves i{position:absolute;left:var(--x);top:var(--y);width:7px;height:4px;border-radius:70% 20% 70% 20%;background:rgba(216,186,111,.55);animation:leafFall var(--t) linear infinite;animation-delay:var(--d)}
+.stadiumScene .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 26%,rgba(0,0,0,.16) 58%,rgba(0,0,0,.74) 100%)}
+.menuHero>*:not(.stadiumScene){position:relative;z-index:2}
+.menuHero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,202,58,.55),transparent);overflow:hidden}
+.menuHero .logoMark.big{animation:logoFloat 4s ease-in-out infinite,stadiumPulse 5s ease-in-out infinite}
+.menuHero .tagline{max-width:360px;margin-left:auto;margin-right:auto;text-shadow:0 2px 16px #000}
+@media(max-width:390px){.menuHero{min-height:360px;border-radius:20px;padding-bottom:20px}.stadiumScene .stands{top:33%}.stadiumScene .ring{top:42%}.stadiumScene .pitch{bottom:-35%}}
+@media(prefers-reduced-motion:reduce){.stadiumScene *,.menuHero .logoMark.big{animation:none!important}}
 </style>
 </head>
 <body>
@@ -262,7 +292,7 @@ function settingsView(){
 function menuV(){
  if(menuScreen==='settings')return settingsView();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
+ return '<div class="menuHero"><div class="stadiumScene"><div class="sky"></div><div class="stands"></div><div class="ring"></div><div class="pitch"></div><div class="lights"></div><div class="beam a"></div><div class="beam b"></div><div class="fog"></div><div class="dust"><i style="--x:12%;--y:74%;--t:5.6s;--d:-2.1s"></i><i style="--x:22%;--y:68%;--t:6.7s;--d:-4.5s"></i><i style="--x:36%;--y:80%;--t:5.1s;--d:-1.7s"></i><i style="--x:48%;--y:70%;--t:7.1s;--d:-5.2s"></i><i style="--x:63%;--y:76%;--t:5.8s;--d:-3.2s"></i><i style="--x:75%;--y:64%;--t:6.4s;--d:-1s"></i><i style="--x:89%;--y:78%;--t:5.5s;--d:-4s"></i></div><div class="leaves"><i style="--x:7%;--y:4%;--t:7.2s;--d:-1.5s"></i><i style="--x:28%;--y:10%;--t:8.4s;--d:-4.8s"></i><i style="--x:77%;--y:0%;--t:7.8s;--d:-2.4s"></i><i style="--x:91%;--y:12%;--t:9.1s;--d:-6.2s"></i></div><div class="vignette"></div></div><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
  '<div class="menuActions">'+
  (hasSave?'<button class="menuBtn primary" onclick="S.phase=S.phase||\'pre\';render()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>NOVO JOGO</strong><span>Comece uma nova carreira do zero</span></button>')+
  (!hasSave?'<button class="menuBtn" onclick="newGame()"><strong>INICIAR CARREIRA</strong><span>Escolha nome, posição e clube</span></button>':'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Começar outra jornada sem apagar esta</span></button>')+
