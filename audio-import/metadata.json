@@ -32,12 +32,12 @@
     "notes": "Camada de fundo com cidade e pássaros; exige atribuição."
   },
   "05-bird-call": {
-    "originalName": "",
-    "author": "",
-    "sourceUrl": "",
-    "license": "unknown",
-    "changes": "",
-    "notes": "Áudio ainda não encontrado em audio-import/."
+    "originalName": "Birds chirping",
+    "author": "Bansemer (Freesound)",
+    "sourceUrl": "https://pixabay.com/sound-effects/birds-chirping-75156/",
+    "license": "Pixabay Content License",
+    "changes": "Conversão para OGG",
+    "notes": "Evento ocasional de canto de pássaro; não substitui a camada contínua birdsBed."
   },
   "06-dog": {
     "originalName": "Dog Barking in the Distance",
