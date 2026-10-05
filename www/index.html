@@ -193,26 +193,61 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 <script>
 const $=id=>document.getElementById(id);
 let audioOK=true,AC=null,introStep=0;try{audioOK=localStorage.getItem('carreirafc_som')!='0'}catch(e){}
-function sfx(type){
- if(!audioOK)return;
+function haptic(type='click'){
+ try{
+  if(!navigator.vibrate)return;
+  const p={click:8,start:[18,25,18],train:12,rest:16,whistle:22,goal:[35,45,80],correct:[12,25],wrong:[35,20,35],injury:[55,30,55],card:45,transfer:[20,30,45],trophy:[20,30,55,80]};
+  navigator.vibrate(p[type]??8);
+ }catch(e){}
+}
+function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
-  AC=AC||new C();const c=AC;
-  if(c.state==='suspended')c.resume();
-  const M={start:[[392,.08],[523,.08],[659,.12],[784,.18]],click:[[620,.035]],train:[[330,.07],[440,.09]],rest:[[260,.08],[220,.14]],whistle:[[880,.06],[1175,.14]],goal:[[392,.07],[523,.07],[659,.09],[784,.12],[988,.18]],correct:[[659,.07],[784,.09],[988,.16]],wrong:[[260,.1],[196,.18]],injury:[[220,.12],[175,.2]],card:[[740,.06],[520,.08],[330,.18]],transfer:[[523,.08],[659,.08],[784,.08],[1047,.2]],trophy:[[523,.08],[659,.08],[784,.08],[1047,.12],[1319,.24]]};
+  if(!C)return;
+  AC=AC||new C();
+  if(AC.state==='suspended')AC.resume();
+ }catch(e){}
+}
+function sfx(type){
+ haptic(type);
+ if(!audioOK)return;
+ try{
+  unlockAudio(); const c=AC;
+  if(!c)return;
+  const M={
+   start:[[392,.08],[523,.08],[659,.12],[784,.18]],
+   click:[[620,.055]],
+   train:[[330,.07],[440,.09],[554,.12]],
+   rest:[[260,.08],[220,.14]],
+   whistle:[[880,.06],[1175,.14]],
+   goal:[[392,.07],[523,.07],[659,.09],[784,.12],[988,.22]],
+   correct:[[659,.07],[784,.09],[988,.16]],
+   wrong:[[260,.1],[196,.18]],
+   injury:[[220,.12],[175,.2]],
+   card:[[740,.06],[520,.08],[330,.18]],
+   transfer:[[523,.08],[659,.08],[784,.08],[1047,.2]],
+   trophy:[[523,.08],[659,.08],[784,.08],[1047,.12],[1319,.24]]
+  };
   const seq=M[type]||M.click,now=c.currentTime;
   seq.forEach((x,i)=>{
    const o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
    o.type=type==='whistle'?'square':(type==='goal'||type==='trophy'?'triangle':'sine');
    o.frequency.setValueAtTime(x[0],t);
    g.gain.setValueAtTime(.0001,t);
-   g.gain.exponentialRampToValueAtTime(type==='click'?.045:.10,t+.008);
+   g.gain.exponentialRampToValueAtTime(type==='click'?.065:.14,t+.008);
    g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
   });
  }catch(e){}
 }
-document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('button'))sfx('click')},{passive:true});
+document.addEventListener('pointerdown',e=>{
+ if(e.target&&e.target.closest&&e.target.closest('button')){
+  unlockAudio();haptic('click');
+ }
+},{passive:true});
+document.addEventListener('click',e=>{
+ if(e.target&&e.target.closest&&e.target.closest('button'))sfx('click');
+},{passive:true});
 function toggleSound(){audioOK=!audioOK;try{localStorage.setItem('carreirafc_som',audioOK?'1':'0')}catch(e){}render(1)}
 const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
