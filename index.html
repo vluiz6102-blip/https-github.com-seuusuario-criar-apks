@@ -1786,9 +1786,13 @@ function sanitizeState(){
    c.nextAt=Number.isFinite(+c.nextAt)?+c.nextAt:null;
    c.groupLen=Number.isFinite(+c.groupLen)?Math.max(1,Math.floor(+c.groupLen)):6;
    c.pts=Number.isFinite(+c.pts)?Math.max(0,+c.pts):0;
-   c.sc=Array.isArray(c.sc)?c.sc:[];
-   let me=c.sc.find(x=>x&&x.me);if(!me){me={n:S.name,g:0,me:1};c.sc.push(me)}
-   c.sc.forEach(x=>{if(x&&typeof x=='object')x.g=Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0});
+   const oldSc=Array.isArray(c.sc)?c.sc:[];
+   const oldGoals=new Map(oldSc.filter(x=>x&&!x.me).map(x=>[String(x.n||''),Number.isFinite(+x.g)?Math.max(0,Math.floor(+x.g)):0]));
+   c.opp=c.opp||compOpp(c);
+   const realSc=competitionScorers(c.opp).map(x=>({...x,g:oldGoals.get(x.n)||0}));
+   const me=oldSc.find(x=>x&&x.me);
+   c.sc=[...realSc,{n:S.name,g:me&&Number.isFinite(+me.g)?Math.max(0,Math.floor(+me.g)):0,me:1}];
+   if(!c.sc.length)c.sc=[{n:S.name,g:0,me:1}];
  });
  if(!S.clubs.length)S.clubs=[{n:S.club.n,y:S.year}];
  syncPlayerStats();
