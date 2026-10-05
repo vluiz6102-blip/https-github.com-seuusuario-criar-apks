@@ -225,6 +225,18 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 @keyframes ambientLeaf{0%{transform:translate3d(0,-12vh,0) rotate(0deg);opacity:0}12%{opacity:.55}45%{transform:translate3d(30px,42vh,0) rotate(150deg)}72%{transform:translate3d(-16px,75vh,0) rotate(250deg)}100%{transform:translate3d(16px,112vh,0) rotate(360deg);opacity:0}}
 @keyframes ambientDust{0%{transform:translate3d(0,8vh,0) scale(.6);opacity:0}15%{opacity:.28}100%{transform:translate3d(55px,-12vh,0) scale(1.1);opacity:0}}
 @keyframes ambientLight{0%,100%{opacity:.04;transform:rotate(-5deg) translateX(-10%)}50%{opacity:.13;transform:rotate(5deg) translateX(10%)}}
+/* Jornada 90: animação cinematográfica otimizada
+   Baseado nas recomendações de Vercel/MDN: CSS + transform/opacity, pouca carga no main thread. */
+@keyframes ambientCamera{0%,100%{transform:translate3d(-1.2%,0,0) scale(1.015)}50%{transform:translate3d(1.2%,-.5%,0) scale(1.025)}}
+@keyframes ambientSunPulse{0%,100%{transform:scale(.96);opacity:.7}50%{transform:scale(1.05);opacity:1}}
+@keyframes ambientGrassGlow{0%,100%{transform:translateX(-2%);opacity:.5}50%{transform:translateX(2%);opacity:.8}}
+.ambientBg{contain:paint;isolation:isolate}
+.ambientBg .sky{will-change:transform;animation:ambientSky 12s ease-in-out infinite,ambientCamera 18s ease-in-out infinite}
+.ambientBg .sunset{will-change:transform,opacity;animation:sunsetGlow 10s ease-in-out infinite,ambientSunPulse 8s ease-in-out infinite}
+.ambientBg .horizon{will-change:transform;animation:horizonMove 14s ease-in-out infinite,ambientGrassGlow 11s ease-in-out infinite}
+.ambientBg .beam,.ambientBg .floodlights i,.ambientBg .leaves i,.ambientBg .dust i,.ambientBg .sparks i,.ambientBg .birds i{will-change:transform,opacity}
+@media(max-width:560px){.ambientBg .clouds i{filter:blur(7px)}.ambientBg .beam{filter:blur(5px)}.ambientBg .floodlights i:after{filter:blur(6px)}}
+@media(prefers-reduced-motion:reduce){.ambientBg *{animation:none!important;transition:none!important}}
 .ambientBg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#000;transition:background .5s ease}
 .ambientBg .sky{position:absolute;inset:-8%;background:radial-gradient(circle at 50% 62%,rgba(49,112,83,.18),transparent 28%),linear-gradient(180deg,#02070a 0%,#040b0e 52%,#020403 100%);animation:ambientSky 12s ease-in-out infinite}
 .ambientBg .sunset{position:absolute;left:-12%;right:-12%;top:7%;height:64%;background:radial-gradient(ellipse at 50% 78%,rgba(246,163,71,.22),rgba(191,93,49,.12) 24%,rgba(86,78,112,.06) 48%,transparent 72%);filter:blur(7px);animation:sunsetGlow 10s ease-in-out infinite}
@@ -324,23 +336,31 @@ async function sfx(type){
   };
   const seq=M[type]||M.click,now=c.currentTime;
   seq.forEach((x,i)=>{
-   const o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
-   o.type=type==='whistle'?'square':(type==='goal'||type==='trophy'?'triangle':'sine');
-   o.frequency.setValueAtTime(x[0],t);
-   g.gain.setValueAtTime(.0001,t);
-   g.gain.exponentialRampToValueAtTime(type==='click'?.065:.14,t+.008);
-   g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
-   let out=g;
-   if(audioMode!=='mono'&&c.createStereoPanner){
-    const pan=c.createStereoPanner();
-    const seqPan={start:[-.45,.45,0,.35],click:[0],train:[-.3,.3,0],rest:[.25,-.25],whistle:[-.55,.55],goal:[-.65,.5,-.2,.5,0],correct:[-.35,.35,0],wrong:[-.5,.5,0],injury:[-.3,.3],card:[.5,-.5,0],transfer:[-.55,.4,-.2,.55],trophy:[-.6,.45,-.25,.5,0]}[type]||[0];
-    let pv=seqPan[i%seqPan.length];
-    if(audioMode==='stereo')pv*=.72;
-    else pv*=1.0;
-    pan.pan.setValueAtTime(pv,t);
-    out=pan;
-   }
-   o.connect(out);out.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
+   const seqPan={start:[-.45,.45,0,.35],click:[0],train:[-.35,.35,0],rest:[.28,-.28],whistle:[-.62,.62],goal:[-.72,.58,-.28,.58,0],correct:[-.4,.4,0],wrong:[-.55,.55,0],injury:[-.34,.34],card:[.55,-.55,0],transfer:[-.62,.48,-.24,.62],trophy:[-.68,.52,-.3,.58,0]}[type]||[0];
+   const basePan=seqPan[i%seqPan.length];
+   const voices=audioMode==='immersive'&&type!=='click'?[-1,1]:[0];
+   voices.forEach(v=>{
+    const o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
+    const voiceGain=voices.length===2?.075:(type==='click'?.065:.14);
+    const width=audioMode==='immersive'?0.22:0;
+    const target=Math.max(-1,Math.min(1,(audioMode==='mono'?0:basePan*(audioMode==='stereo'?.9:1))+v*width));
+    o.type=type==='whistle'?'square':(type==='goal'||type==='trophy'?'triangle':'sine');
+    o.frequency.setValueAtTime(x[0]*(v?1+(v*.004):1),t);
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(voiceGain,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
+    let out=g;
+    if(audioMode!=='mono'&&c.createStereoPanner){
+     const pan=c.createStereoPanner();
+     pan.channelCount=2;
+     pan.channelInterpretation='speakers';
+     const startPan=Math.max(-1,Math.min(1,target-(audioMode==='immersive'?v*.12:0)));
+     pan.pan.setValueAtTime(startPan,t);
+     pan.pan.linearRampToValueAtTime(target,t+Math.min(x[1]*.65,.12));
+     out=pan;
+    }
+    o.connect(out);out.connect(c.destination);o.start(t);o.stop(t+x[1]+.03);
+   });
   });
  }catch(e){}
 }
