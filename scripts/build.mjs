@@ -14,6 +14,10 @@ if (/j90Music(Start|Stop|Track|Notes|Timer|Nodes)/.test(scripts)) {
 }
 
 const audioRoot = 'assets/audio';
+const rosterPath = 'data/rosters.json';
+if (!existsSync(rosterPath)) throw new Error('data/rosters.json ausente. Execute npm run data:rosters antes da build.');
+let rosters;
+try { rosters = JSON.parse(readFileSync(rosterPath, 'utf8')); } catch (error) { throw new Error('data/rosters.json inválido: ' + error.message); }
 const manifest = {};
 const audioExt = new Set(['.mp3', '.ogg', '.wav', '.m4a']);
 
@@ -54,7 +58,7 @@ if (existsSync(audioRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';</script><script src="j90-soundscape.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';</script><script src="j90-soundscape.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
@@ -62,4 +66,6 @@ if (!generated.includes('src="j90-soundscape.js"')) {
 }
 
 const totalAssets = Object.values(manifest).reduce((n, list) => n + list.length, 0);
-console.log('Jornada 90 web build OK: canonical source validated, asset soundscape injected, ' + totalAssets + ' audio assets found.');
+const rosterTeams=Object.keys(rosters||{}).length;
+const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
+console.log('Jornada 90 web build OK: canonical source validated, asset soundscape injected, ' + totalAssets + ' audio assets found, ' + rosterTeams + ' team rosters / ' + rosterPlayers + ' players injected.');
