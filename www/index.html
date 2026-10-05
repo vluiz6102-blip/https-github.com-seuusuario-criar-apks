@@ -993,7 +993,7 @@ function play(){
   gainXP(6+Math.round(rt*2)+g*7+as*5);
   S.morale=cl(S.morale+(rt-6.5)*3+(my>op?3:my<op?-3:0)+(S.cap?.5:0));
   S.fame=cl(S.fame+Math.max(0,(rt-7)*1.2)+g*.8);
-  S.energy=cl(S.energy-min/90*8);co((rt-6.5)*.8);
+  S.energy=cl(S.energy-min/90*6);co((rt-6.5)*.8);
   S.strk=g>0?(S.strk||0)+1:0;S.nog=g>0?0:(S.nog||0)+1;
   if(g>0){sfx('goal');first('g1','Primeiro gol profissional')}
   if(g>=3){first('ht','Primeiro hat-trick');hl('🔥',S.name+' faz '+g+' gols e é o nome da partida','Nota '+rt.toFixed(1)+' contra o '+opn+'.')}
@@ -1002,7 +1002,7 @@ function play(){
   if(S.nog==5&&S.pos!='GOL'&&S.pos!='ZAG')hl('📉',S.name+' atravessa jejum de gols','Já são 5 jogos sem balançar a rede.');
   if(dc&&!dc.ok&&dc.pen){mo(-6);hl('😬',S.name+' desperdiça pênalti decisivo','O lance pesou no resultado e a pressão aumenta.')}
  }else if(!S.inj&&!sus)mo(-2);
- S.prot=0;en(RI(3,6));S.ih=Math.max(0,(S.ih||0)-.15);
+ S.prot=0;const recovery=S.inj>0?RI(7,11):min>=75?RI(11,17):min>0?RI(13,19):RI(16,23);en(recovery);S.ih=Math.max(0,(S.ih||0)-.15);
  mn(S.wage*12/18);
  S.last={h:S.teams[L.h].n,a:S.teams[L.a].n,gh:L.gh,ga:L.ga,lines,rt,g,as,min,inj:S.inj,sus};
  S.r++;S.iv='';
@@ -1019,12 +1019,12 @@ function train(k){
  S.nt=[];
  sfx(k=='rest'?'rest':'train');
  if(S.inj>0)en(20);
- else if(k=='rest'){en(40);mo(3)}
+ else if(k=='rest'){en(52);mo(4)}
  else if(k=='prev'){S.prot=1;en(8);co(.2)}
  else{
   const gap=Math.max(0,(S.potential||99)-ovr()),growth=S.potential?cl(.3+gap/18,.2,1):1;
   const f=(S.age<22?1.3:S.age<27?1:S.age<31?.7:.4)*(S.energy>40?1:.6)*growth;
-  let m=1,c=6,l=TR[k]||topAt(2);
+  let m=1,c=5,l=TR[k]||topAt(2);
   if(k=='pers'){l=AK.slice().sort(()=>Math.random()-.5).slice(0,3);m=1.7;c=10;mn(-30);S.ih=(S.ih||0)+.3}
   l.forEach(a=>S.at[a]=cl(S.at[a]+R(.3,1)*f*m,25,99));
   en(-c);co(.4);
