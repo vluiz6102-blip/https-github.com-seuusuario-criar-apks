@@ -453,7 +453,7 @@ body.j90-fps-30{--j90-fps:30}body.j90-fps-60{--j90-fps:60}body.j90-fps-120{--j90
 .j90Hud{contain:layout paint style}.j90Hud .head{margin-bottom:2px}.j90HudLine{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.j90HudLine .pill{margin:0;padding:5px 8px}
 body.theme-amoled .ambientLite{background:#000!important}.ambientLite .atmoCanvas{opacity:.24!important;mix-blend-mode:screen}.oledGlow{position:absolute;left:15%;right:15%;bottom:4%;height:22%;background:radial-gradient(ellipse,rgba(33,129,72,.12),transparent 72%);filter:blur(18px);animation:ambientGrassGlow 11s ease-in-out infinite}
 body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-amoled .card{background:#050505;border-color:#191919;box-shadow:none}.theme-amoled .btn,.theme-amoled .chip,.theme-amoled input,.theme-amoled select{background:#020202;border-color:#1b1b1b}.theme-amoled .tabs{background:#010101;border-color:#141414;box-shadow:none}.theme-amoled .menuHero{background:#000;border-color:#171717;box-shadow:none}.theme-amoled .menuBtn{background:#050505;border-color:#1a1a1a}.theme-amoled .menuBtn.primary{box-shadow:none}
-@media(max-width:560px){.j90HudLine .pill{font-size:11px}.oledGlow{height:18%;filter:blur(14px)}.theme-amoled .ambientBg>*.sunset,.theme-amoled .ambientBg>*.horizon,.theme-amoled .ambientBg>*.clouds,.theme-amoled .ambientBg>*.beam,.theme-amoled .ambientBg>*.floodlights,.theme-amoled .ambientBg>*.leaves,.theme-amoled .ambientBg>*.dust,.theme-amoled .ambientBg>*.sparks,.theme-amoled .ambientBg>*.birds,.theme-amoled .ambientBg>*.shade,.theme-amoled .ambientBg>*.depthHaze{display:none!important}.theme-amoled .stadiumScene{background:#000}.theme-amoled .stadiumScene .cloudLayer,.theme-amoled .stadiumScene .stands,.theme-amoled .stadiumScene .ring,.theme-amoled .stadiumScene .fog,.theme-amoled .stadiumScene .lights,.theme-amoled .stadiumScene .beam,.theme-amoled .stadiumScene .dust,.theme-amoled .stadiumScene .leaves,.theme-amoled .stadiumScene .horizonGlow{display:none!important}.theme-amoled .stadiumScene .sunDisc{width:120px;height:120px;min-width:120px;min-height:120px;background:radial-gradient(circle,rgba(255,202,58,.82) 0 4%,rgba(255,177,89,.18) 30%,transparent 68%);filter:none}.theme-amoled .stadiumScene .atmoCanvas{opacity:.22}.theme-amoled .menuHero{min-height:320px;border-radius:20px;padding-bottom:18px}.theme-amoled .menuHero .logoMark.big{box-shadow:0 10px 30px rgba(255,202,58,.10)}}
+@media(max-width:560px){.j90HudLine .pill{font-size:11px}.oledGlow{height:18%;filter:blur(14px)}.theme-amoled .ambientBg>*.sunset,.theme-amoled .ambientBg>*.horizon,.theme-amoled .ambientBg>*.clouds,.theme-amoled .ambientBg>*.beam,.theme-amoled .ambientBg>*.floodlights,.theme-amoled .ambientBg>*.leaves,.theme-amoled .ambientBg>*.dust,.theme-amoled .ambientBg>*.sparks,.theme-amoled .ambientBg>*.birds,.theme-amoled .ambientBg>*.shade,.theme-amoled .ambientBg>*.depthHaze{display:none!important}.theme-amoled .stadiumScene{background:#020202}.theme-amoled .stadiumScene .cloudLayer,.theme-amoled .stadiumScene .beam,.theme-amoled .stadiumScene .fog{display:none!important}.theme-amoled .stadiumScene .stands,.theme-amoled .stadiumScene .ring,.theme-amoled .stadiumScene .lights,.theme-amoled .stadiumScene .leaves,.theme-amoled .stadiumScene .dust,.theme-amoled .stadiumScene .horizonGlow{opacity:.28!important}.theme-amoled .stadiumScene .sunDisc{width:120px;height:120px;min-width:120px;min-height:120px;background:radial-gradient(circle,rgba(255,202,58,.82) 0 4%,rgba(255,177,89,.18) 30%,transparent 68%);filter:none}.theme-amoled .stadiumScene .atmoCanvas{opacity:.22}.theme-amoled .menuHero{min-height:320px;border-radius:20px;padding-bottom:18px}.theme-amoled .menuHero .logoMark.big{box-shadow:0 10px 30px rgba(255,202,58,.10)}}
 @media(prefers-reduced-motion:reduce){.oledGlow{animation:none!important}}
 
 /* J90 VISUAL REFRESH 2026-10-05
@@ -556,23 +556,19 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
 @keyframes menuFirefly{0%,100%{transform:translate3d(0,0,0);opacity:0}25%{opacity:.38}55%{transform:translate3d(16px,-12px,0);opacity:.72}80%{opacity:.18}}
 @keyframes menuBird{0%{transform:translate3d(-24vw,0,0);opacity:0}10%{opacity:.28}90%{opacity:.22}100%{transform:translate3d(125vw,-3vh,0);opacity:0}}
 .menuSkyCycle{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.menuSkyCycle i{position:absolute;inset:0;display:block;opacity:0}
-.menuSkyCycle .dusk{background:linear-gradient(180deg,#132c45 0%,#34596b 44%,#b86f55 72%,#263126 100%);animation:menuPhaseDusk 18s linear infinite}
-.menuSkyCycle .gold{background:linear-gradient(180deg,#274b68 0%,#70818b 42%,#f1b45d 69%,#4e603f 100%);animation:menuPhaseGold 18s linear infinite}
-.menuSkyCycle .yellow{background:linear-gradient(180deg,#49647a 0%,#9b8f82 40%,#ffd56f 68%,#5b673d 100%);animation:menuPhaseYellow 18s linear infinite}
-.menuSkyCycle .orange{background:linear-gradient(180deg,#384b68 0%,#976d73 40%,#ee8a4b 66%,#3f4932 100%);animation:menuPhaseOrange 18s linear infinite}
-.menuSkyCycle .violet{background:linear-gradient(180deg,#202b52 0%,#4d4a6e 42%,#a96867 67%,#1b2b2a 100%);animation:menuPhaseViolet 18s linear infinite}
-.menuSkyCycle .night{background:linear-gradient(180deg,#040b18 0%,#091224 48%,#14211c 72%,#020403 100%);animation:menuPhaseNight 18s linear infinite}
-.stadiumScene .sunDisc{animation:menuSunPath 18s ease-in-out infinite!important}
-.stadiumScene .lights{animation:menuLightCycle 18s ease-in-out infinite!important;mix-blend-mode:screen}
-.stadiumScene .reflectorGlow{position:absolute;inset:-12%;background:radial-gradient(ellipse at 8% 24%,rgba(255,243,194,.16),transparent 16%),radial-gradient(ellipse at 92% 26%,rgba(255,243,194,.15),transparent 16%),radial-gradient(ellipse at 50% 18%,rgba(255,243,194,.10),transparent 18%);opacity:0;animation:menuReflectorCycle 18s ease-in-out infinite;mix-blend-mode:screen;pointer-events:none}
-.stadiumScene .horizonGlow{animation:menuHorizonCycle 18s ease-in-out infinite!important}
-.stadiumScene .leaves.far i{width:5px;height:3px;opacity:.35;filter:none!important;animation-duration:14s!important}
-.stadiumScene .leaves.near i{width:10px;height:6px;opacity:.78;filter:drop-shadow(0 5px 5px rgba(0,0,0,.42))}
-.stadiumScene .leaves.near i:nth-child(1),.stadiumScene .leaves.near i:nth-child(3){animation:j90LeafA 8.4s linear infinite!important}
-.stadiumScene .leaves.near i:nth-child(2),.stadiumScene .leaves.near i:nth-child(4){animation:j90LeafB 10.2s linear infinite!important}
-.stadiumScene .fireflies{position:absolute;inset:0;pointer-events:none}.stadiumScene .fireflies i{position:absolute;left:var(--x);top:var(--y);width:3px;height:3px;border-radius:50%;background:rgba(255,226,147,.9);box-shadow:0 0 8px rgba(255,217,119,.65);animation:menuFirefly var(--t) ease-in-out infinite;animation-delay:var(--d)}
-.stadiumScene .birds{position:absolute;inset:0;overflow:hidden;pointer-events:none}.stadiumScene .birds i{position:absolute;left:-24vw;top:var(--y);width:15px;height:6px;border-top:2px solid rgba(230,235,235,.32);border-radius:50%;animation:menuBird var(--t) linear infinite;animation-delay:var(--d)}
+.menuSkyCycle i{position:absolute;inset:0;display:block;opacity:0;transition:opacity .18s linear}
+.menuSkyCycle .dusk{background:linear-gradient(180deg,#132c45 0%,#34596b 44%,#b86f55 72%,#263126 100%)}
+.menuSkyCycle .gold{background:linear-gradient(180deg,#274b68 0%,#70818b 42%,#f1b45d 69%,#4e603f 100%)}
+.menuSkyCycle .yellow{background:linear-gradient(180deg,#49647a 0%,#9b8f82 40%,#ffd56f 68%,#5b673d 100%)}
+.menuSkyCycle .orange{background:linear-gradient(180deg,#384b68 0%,#976d73 40%,#ee8a4b 66%,#3f4932 100%)}
+.menuSkyCycle .violet{background:linear-gradient(180deg,#202b52 0%,#4d4a6e 42%,#a96867 67%,#1b2b2a 100%)}
+.menuSkyCycle .night{background:linear-gradient(180deg,#040b18 0%,#091224 48%,#14211c 72%,#020403 100%)}
+.stadiumScene .sunDisc{animation:none!important;opacity:var(--j90-sun,.75)}
+.stadiumScene .lights{animation:none!important;opacity:var(--j90-lights,.08);mix-blend-mode:screen}
+.stadiumScene .reflectorGlow{animation:none!important;opacity:var(--j90-lights,.08);mix-blend-mode:screen}
+.stadiumScene .horizonGlow{animation:none!important;opacity:var(--j90-horizon,.12)}
+.stadiumScene .cloudLayer{opacity:var(--j90-clouds,.12)}
+.stadiumScene .dust,.stadiumScene .leaves,.stadiumScene .fireflies,.stadiumScene .birds{opacity:var(--j90-ambient,1)}
 .infoScreen{max-width:560px;margin:0 auto;padding:20px!important}.infoScreen h1{text-align:center;font-size:32px}.infoScreen>.logoMark{animation:logoFloat 4.5s ease-in-out infinite}.infoSection,.creditsBlock{display:grid;gap:4px;padding:14px 0;border-bottom:1px solid var(--j90-line)}.infoSection strong,.creditsBlock b{font-size:14px;color:var(--j90-gold)}.infoSection span,.creditsBlock span{font-size:14px;color:var(--j90-muted)}
 @media(prefers-reduced-motion:reduce){.menuSkyCycle i,.stadiumScene .sunDisc,.stadiumScene .lights,.stadiumScene .reflectorGlow,.stadiumScene .horizonGlow,.stadiumScene .fireflies i,.stadiumScene .birds i{animation:none!important}.menuSkyCycle .dusk{opacity:1}}
 
@@ -586,6 +582,12 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
  .stadiumScene .atmoCanvas{mix-blend-mode:normal!important}
 }
 @media(max-width:560px){.theme-amoled .menuSkyCycle{opacity:.24}.theme-amoled .stadiumScene .sunDisc{opacity:.62}}
+/* J90 ENVIRONMENT CORE 2026-10-05 */
+.stadiumScene .menuSkyCycle,.stadiumScene .sky,.stadiumScene .cloudLayer,.stadiumScene .sunDisc,.stadiumScene .horizonGlow,.stadiumScene .lights,.stadiumScene .reflectorGlow{will-change:opacity}
+.stadiumScene .leaves i,.stadiumScene .birds i{will-change:transform,opacity}
+@media(prefers-reduced-motion:reduce){
+ .menuSkyCycle i{transition:none!important}.stadiumScene .leaves i,.stadiumScene .birds i{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -602,63 +604,99 @@ function haptic(type='click'){
  }catch(e){}
  try{navigator.vibrate?.(p[type]??12)}catch(e){}
 }
-let audioBus=null,audioCompressor=null,musicBus=null,j90LastSfx={},j90MusicTrack='',j90MusicTimer=null,j90MusicNodes=[];
-function j90MusicStop(){
- if(j90MusicTimer){clearTimeout(j90MusicTimer);j90MusicTimer=null}
- j90MusicNodes.forEach(n=>{try{n.onended=null}catch(e){}try{n.stop?.()}catch(e){}try{n.disconnect?.()}catch(e){}});
- j90MusicNodes=[];
- if(musicBus){try{musicBus.gain.setValueAtTime(.0001,AC?.currentTime||0)}catch(e){}try{musicBus.disconnect()}catch(e){}musicBus=null}
- j90MusicTrack=''
+let audioBus=null,audioCompressor=null,j90LastSfx={},j90SoundscapeBus=null,j90SoundscapeWind=null,j90SoundscapeTimer=null,j90SoundscapeNodes=[],j90NoiseBuffer=null,j90SoundscapeKind='',j90SoundscapeGeneration=0;
+function j90SoundscapeStop(){
+ j90SoundscapeGeneration++;
+ if(j90SoundscapeTimer){clearTimeout(j90SoundscapeTimer);j90SoundscapeTimer=null}
+ if(j90SoundscapeWind){try{j90SoundscapeWind.stop()}catch(e){}try{j90SoundscapeWind.disconnect()}catch(e){}j90SoundscapeWind=null}
+ j90SoundscapeNodes.forEach(n=>{try{n.onended=null}catch(e){}try{n.stop?.()}catch(e){}try{n.disconnect?.()}catch(e){}});
+ j90SoundscapeNodes=[];
+ if(j90SoundscapeBus){try{j90SoundscapeBus.gain.setValueAtTime(.0001,AC?.currentTime||0)}catch(e){}try{j90SoundscapeBus.disconnect()}catch(e){}j90SoundscapeBus=null}
+ j90SoundscapeKind=''
 }
-function j90MusicTrackForState(){if(!S)return 'cinematic';if(S.phase==='match'||S.phase==='comp'||S.phase==='wc')return 'stadium';if(S.phase==='end'||S.phase==='retired')return 'cinematic';return 'night'}
-function j90MusicNotes(track){return{cinematic:[220,277.18,329.63,440,329.63,277.18,246.94,329.63],stadium:[196,246.94,293.66,392,293.66,246.94,329.63,392],night:[174.61,220,261.63,329.63,261.63,220,196,261.63]}[track]}
-async function j90MusicStart(track){
- if(!audioOK)return;
- const c=await unlockAudio();
- if(!c||!audioBus)return;
- if(j90MusicTrack===track&&j90MusicTimer)return;
- j90MusicStop();
- musicBus=c.createGain();
- musicBus.gain.setValueAtTime(.0001,c.currentTime);
- musicBus.gain.exponentialRampToValueAtTime(.065,c.currentTime+.8);
- musicBus.connect(audioBus);
- j90MusicTrack=track;
- const notes=j90MusicNotes(track),step=.42,phrase=notes.length*step;
- const cleanup=o=>{
-  try{o.onended=null;o.disconnect()}catch(e){}
-  j90MusicNodes=j90MusicNodes.filter(n=>n!==o)
- };
- const schedulePhrase=()=>{
-  if(!musicBus||j90MusicTrack!==track)return;
-  const base=c.currentTime+.06;
-  notes.forEach((f,idx)=>{
-   const now=base+idx*step,o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
-   o.type=idx%4===0?'triangle':'sine';
-   o.frequency.setValueAtTime(f,now);
-   lp.type='lowpass';
-   lp.frequency.setValueAtTime(track==='stadium'?1900:1400,now);
-   g.gain.setValueAtTime(.0001,now);
-   g.gain.exponentialRampToValueAtTime(.045,now+.02);
-   g.gain.exponentialRampToValueAtTime(.0001,now+.34);
-   o.connect(lp);lp.connect(g);g.connect(musicBus);
-   o.onended=()=>cleanup(o);
-   o.start(now);o.stop(now+.38);j90MusicNodes.push(o);
-   if(idx%2===0){
-    const bg=c.createOscillator(),bgain=c.createGain();
-    bg.frequency.setValueAtTime(f/2,now);
-    bgain.gain.setValueAtTime(.0001,now);
-    bgain.gain.exponentialRampToValueAtTime(.022,now+.02);
-    bgain.gain.exponentialRampToValueAtTime(.0001,now+.38);
-    bg.connect(bgain);bgain.connect(musicBus);
-    bg.onended=()=>cleanup(bg);
-    bg.start(now);bg.stop(now+.4);j90MusicNodes.push(bg)
-   }
-  });
-  j90MusicTimer=setTimeout(schedulePhrase,Math.max(300,phrase*1000-80))
- };
- schedulePhrase()
+function j90SoundscapeContext(){
+ const match=S&&['match','comp','wc'].includes(S.phase);
+ let result=0;
+ if(S?.phase==='post'&&S.last){const home=S.last.h===S.club.n,my=S.last.h===S.club.n?S.last.gh:S.last.ga,op=S.last.h===S.club.n?S.last.ga:S.last.gh;result=my>op?1:my<op?-1:0}
+ return {match:match?1:0,near:match?1:0,result}
 }
-function j90SyncMusic(){if(!audioOK){j90MusicStop();return}j90MusicStart(j90MusicTrackForState())}
+function j90Noise(){
+ if(j90NoiseBuffer||!AC)return j90NoiseBuffer;
+ const len=Math.floor(AC.sampleRate*1.5);
+ j90NoiseBuffer=AC.createBuffer(1,len,AC.sampleRate);
+ const d=j90NoiseBuffer.getChannelData(0);
+ for(let i=0;i<len;i++){
+  const fade=Math.min(1,i/AC.sampleRate*.08,(len-i)/AC.sampleRate*.12);
+  d[i]=(Math.random()*2-1)*fade;
+ }
+ return j90NoiseBuffer
+}
+function j90SoundscapePan(out,pan,depth=0){
+ if(audioMode==='mono'||!AC)return out;
+ if(audioMode==='immersive'&&AC.createPanner){
+  const p=AC.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=1.5;p.maxDistance=12;p.rolloffFactor=.7;
+  const x=pan*2.2,y=depth*.8,z=Math.max(.6,3-Math.abs(depth));
+  if(p.positionX){p.positionX.setValueAtTime(x,AC.currentTime);p.positionY.setValueAtTime(y,AC.currentTime);p.positionZ.setValueAtTime(z,AC.currentTime)}else p.setPosition(x,y,z);
+  out.connect(p);return p
+ }
+ if(AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.setValueAtTime(pan*.8,AC.currentTime);out.connect(p);return p}
+ return out
+}
+function j90SoundscapeNoise(kind,level,duration,pan,cutoff){
+ if(!audioBus||!AC||j90SoundscapeNodes.length>10)return;
+ const now=AC.currentTime+.025,src=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
+ src.buffer=j90Noise();
+ const cfg={
+  wind:[70,'lowpass'],leaf:[900,'bandpass'],people:[850,'bandpass'],vendor:[1250,'bandpass'],horn:[420,'bandpass'],chant:[520,'bandpass'],drum:[150,'lowpass'],dog:[480,'bandpass'],insect:[3200,'highpass'],bird:[2600,'bandpass']
+ }[kind]||[900,'bandpass'];
+ f.type=cfg[1];f.frequency.setValueAtTime(cutoff||cfg[0],now);f.Q.setValueAtTime(kind==='wind'?0.35:0.8,now);
+ const peak=level*(kind==='wind'?1:.65);
+ g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(Math.max(.0001,peak),now+.08);g.gain.exponentialRampToValueAtTime(.0001,now+duration);
+ src.connect(f);f.connect(g);const out=j90SoundscapePan(g,pan,(Math.random()-.5)*1.5);out.connect(audioBus);
+ src.onended=()=>{try{src.disconnect();f.disconnect();g.disconnect();out!==g&&out.disconnect()}catch(e){}j90SoundscapeNodes=j90SoundscapeNodes.filter(n=>n!==src)};
+ src.start(now);src.stop(now+duration+.04);j90SoundscapeNodes.push(src)
+}
+function j90SoundscapeTone(kind,level,pan){
+ if(!AC||!audioBus||j90SoundscapeNodes.length>10)return;
+ const now=AC.currentTime+.025,o=AC.createOscillator(),g=AC.createGain();
+ const base=kind==='bird'?RI(1300,2100):kind==='dog'?RI(150,240):kind==='drum'?RI(80,120):RI(350,650);
+ o.type=kind==='drum'?'triangle':'sine';o.frequency.setValueAtTime(base,now);
+ if(kind==='bird'){o.frequency.exponentialRampToValueAtTime(base*1.35,now+.08);o.frequency.exponentialRampToValueAtTime(base*.82,now+.18)}
+ else if(kind==='dog'){o.frequency.exponentialRampToValueAtTime(base*.72,now+.22)}
+ g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(level,now+.015);g.gain.exponentialRampToValueAtTime(.0001,now+(kind==='bird'?.25:.32));
+ o.connect(g);const out=j90SoundscapePan(g,pan,(Math.random()-.5)*2);out.connect(audioBus);
+ o.onended=()=>{try{o.disconnect();g.disconnect();out!==g&&out.disconnect()}catch(e){}j90SoundscapeNodes=j90SoundscapeNodes.filter(n=>n!==o)};
+ o.start(now);o.stop(now+(kind==='bird'?.28:.36));j90SoundscapeNodes.push(o)
+}
+function j90SoundscapeEvent(){
+ if(!audioOK||!j90SoundscapeBus)return;
+ const c=j90SoundscapeContext(),pool=c.match?['people','people','vendor','horn','chant','drum','bird','insect','leaf']:['wind','bird','bird','insect','dog','leaf','leaf'];
+ if(c.near)pool.push('chant','drum');
+ if(c.result>0)pool.push('chant','people','drum');
+ if(c.result<0)pool.push('wind','insect','leaf');
+ let kind=pool[RI(0,pool.length-1)];
+ if(kind===j90SoundscapeKind&&pool.length>1)kind=pool[RI(0,pool.length-1)];
+ j90SoundscapeKind=kind;
+ const pan=R(-.82,.82),v=R(.018,.045);
+ if(kind==='bird'){j90SoundscapeTone('bird',v,pan);if(Math.random()<.42)setTimeout(()=>j90SoundscapeTone('bird',v*.72,Math.max(-.9,Math.min(.9,pan+R(-.25,.25)))),RI(120,420))}
+ else if(kind==='dog')j90SoundscapeTone('dog',v*.9,pan);
+ else if(kind==='drum')j90SoundscapeTone('drum',v*.72,pan);
+ else j90SoundscapeNoise(kind,v,R(.35,1.25),pan);
+ j90SoundscapeTimer=setTimeout(j90SoundscapeEvent,RI(2400,7600))
+}
+async function j90SoundscapeStart(){
+ if(!audioOK||(!S&&introStep!==0)||S&&introStep!==0){j90SoundscapeStop();return}
+ const c=await unlockAudio();if(!c||!audioBus)return;
+ if(j90SoundscapeBus)return;
+ j90SoundscapeGeneration++;
+ const gen=j90SoundscapeGeneration;
+ j90SoundscapeBus=c.createGain();j90SoundscapeBus.gain.setValueAtTime(.0001,c.currentTime);j90SoundscapeBus.gain.exponentialRampToValueAtTime(.12,c.currentTime+1.2);j90SoundscapeBus.connect(audioBus);
+ const wind=c.createBufferSource(),wf=c.createBiquadFilter(),wg=c.createGain();
+ wind.buffer=j90Noise();wind.loop=true;wf.type='lowpass';wf.frequency.setValueAtTime(260,c.currentTime);wf.Q.setValueAtTime(.35,c.currentTime);wg.gain.setValueAtTime(.0001,c.currentTime);wg.gain.exponentialRampToValueAtTime(.025,c.currentTime+1.5);
+ wind.connect(wf);wf.connect(wg);wg.connect(j90SoundscapeBus);wind.start();j90SoundscapeWind=wind;
+ j90SoundscapeTimer=setTimeout(()=>{if(gen===j90SoundscapeGeneration)j90SoundscapeEvent()},RI(1400,3600))
+}
+function j90SyncSoundscape(){if(!audioOK||introStep!==0){j90SoundscapeStop();return}j90SoundscapeStart()}
 async function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
@@ -741,6 +779,31 @@ function worldFx(){
 
 /* Atmosfera J90: Canvas leve, referências de tela atualizadas e repintura limitada. */
 let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoParticles=[],j90AtmoNodes=[];
+let menuTime=0;
+function j90MenuPhaseWeight(t,center,width){
+ let d=Math.abs(t-center);d=Math.min(d,1-d);const x=Math.max(0,1-d/width);return x*x*(3-2*x)
+}
+function updateJ90MenuEnvironment(){
+ const roots=document.querySelectorAll('.stadiumScene');
+ if(!roots.length)return;
+ const weights=[
+  j90MenuPhaseWeight(menuTime,0,.13),
+  j90MenuPhaseWeight(menuTime,.20,.13),
+  j90MenuPhaseWeight(menuTime,.40,.13),
+  j90MenuPhaseWeight(menuTime,.60,.13),
+  j90MenuPhaseWeight(menuTime,.80,.13),
+  j90MenuPhaseWeight(menuTime,1,.16)
+ ];
+ const max=Math.max(...weights),sun=Math.max(0,1-j90MenuPhaseWeight(menuTime,.92,.18)),night=j90MenuPhaseWeight(menuTime,.90,.22);
+ roots.forEach(root=>{
+  root.querySelectorAll('.menuSkyCycle i').forEach((el,i)=>el.style.opacity=String(weights[i]/Math.max(.001,max)));
+  root.style.setProperty('--j90-sun',String(.34+.58*sun));
+  root.style.setProperty('--j90-horizon',String(.07+.22*(1-night)));
+  root.style.setProperty('--j90-lights',String(.025+.25*night));
+  root.style.setProperty('--j90-clouds',String(.05+.14*(1-night)));
+  root.style.setProperty('--j90-ambient',String(.72+.28*(1-night)));
+ });
+}
 function startJ90Atmosphere(){
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
  if(!j90AtmoNodes.length)return;
@@ -780,7 +843,7 @@ function startJ90Atmosphere(){
   addEventListener('resize',resize,{passive:true});
   const frame=t=>{
    if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);
+   menuTime=(performance.now()/18000)%1;updateJ90MenuEnvironment();const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);
    if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
     const dt=Math.min(70,t-(frame.last||t));frame.last=t;
     for(const p of j90AtmoParticles){
@@ -800,7 +863,7 @@ function resumeGame(){if(!S)return;menuScreen='game';introStep=1;tab='game';rend
 function mainMenu(){menuScreen='home';introStep=0;render()}
 function settingsView(){
  return '<div class="card menu settings"><button class="chip" onclick="mainMenu()">← Voltar</button><div class="logoMark">90</div><h1>Configurações</h1><p class="mu">Ajuste sua experiência.</p>'+
- '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Efeitos, apito, gol e interface</span></button>'+
+ '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Paisagem sonora, efeitos, apito, gol e interface</span></button>'+
  '<div class="card audioCard"><h2>Áudio</h2><p class="mu">Escolha como os efeitos ocupam o espaço estéreo.</p><div class="audioPicker">'+
  '<button class="audioOption '+(audioMode==='stereo'?'on':'')+'" onclick="setAudioMode(\'stereo\')"><span class="audioIcon">◐</span><strong>Estéreo</strong><span>Esquerda e direita com panorama suave</span></button>'+
  '<button class="audioOption '+(audioMode==='immersive'?'on':'')+'" onclick="setAudioMode(\'immersive\')"><span class="audioIcon">◉</span><strong>Áudio imersivo HRTF</strong><span>Espacialização binaural 3D em fones, com frente/trás/altura</span></button>'+
@@ -828,7 +891,7 @@ function menuV(){
  '<div class="menuActions">'+
  (hasSave?'<button class="menuBtn primary" onclick="resumeGame()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>COMEÇAR CARREIRA</strong><span>Crie seu jogador e escolha o primeiro clube</span></button>')+
  (hasSave?'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Iniciar outra jornada com confirmação antes de substituir o save</span></button>':'')+
- '<button class="menuBtn" onclick="menuScreen=\'settings\';introStep=0;render()"><strong>CONFIGURAÇÕES</strong><span>Som, vibração, tela e fluidez</span></button>'+
+ '<button class="menuBtn" onclick="menuScreen=\'settings\';introStep=0;render()"><strong>CONFIGURAÇÕES</strong><span>Som ambiente, efeitos, vibração, tela e fluidez</span></button>'+
  '<button class="menuBtn" onclick="menuScreen=\'howto\';introStep=0;render()"><strong>COMO JOGAR</strong><span>Entenda energia, treinos, partidas e carreira</span></button>'+
  '<button class="menuBtn" onclick="menuScreen=\'credits\';introStep=0;render()"><strong>CRÉDITOS</strong><span>Equipe, tecnologia e versão</span></button>'+
  '</div><div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b><br><span>Um projeto brasileiro independente</span></div>'
@@ -1554,12 +1617,12 @@ function render(still){
  applyTheme();
  if(S)sanitizeState();
  const A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=worldFx()+intro();startJ90Atmosphere();j90SyncMusic();return}
- if(introStep===0){A.innerHTML=worldFx()+menuV();j90SyncMusic();return}
+ if(!S){A.innerHTML=worldFx()+intro();startJ90Atmosphere();j90SyncSoundscape();return}
+ if(introStep===0){A.innerHTML=worldFx()+menuV();j90SyncSoundscape();return}
 
  let h=worldFx()+head();
  if(S.phase=='wc')h+=sndB()+wcV();else if(S.phase=='comp')h+=sndB()+compV();else if(S.phase=='match')h+=sndB()+matchV();else if(S.phase=='retired')h=retV();else if(S.phase=='vac')h+=vacV();else if(S.phase=='end')h+=endV();else h+=tabs()+(tab=='game'?gameV():tab=='tbl'?tblV():tab=='news'?newsV():tab=='ply'?playerV():careerV());
- A.innerHTML=h;startJ90Atmosphere();S.lm=S.money;save();j90SyncMusic();
+ A.innerHTML=h;startJ90Atmosphere();S.lm=S.money;save();j90SyncSoundscape();
  if(!still)window.scrollTo(0,0)
 }
 function sanitizeState(){
