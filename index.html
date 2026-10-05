@@ -267,6 +267,18 @@ const VZ=10,TIERS=LG.map(l=>l.n);
 const W={ATA:[.45,.3,.25],MEI:[.5,.2,.3],ZAG:[.2,.45,.35],GOL:[.3,.2,.5]};
 const PG={ATA:.4,MEI:.15,ZAG:.04,GOL:0},PA={ATA:.15,MEI:.35,ZAG:.05,GOL:.01};
 const POSN={ATA:'Atacante',MEI:'Meia',ZAG:'Zagueiro',GOL:'Goleiro'};
+const POS_PROFILE={
+ ATA:{role:'Finalizador',desc:'Ataca espaços, finaliza e decide na área.',focus:['fin','pos','dri']},
+ MEI:{role:'Criador',desc:'Organiza o jogo, cria chances e chega para finalizar.',focus:['pas','men','con']},
+ ZAG:{role:'Xerife',desc:'Protege a área, ganha duelos e inicia a saída.',focus:['def','pos','fis']},
+ GOL:{role:'Paredão',desc:'Protege o gol, sai do gol e decide nos momentos críticos.',focus:['def','pos','men']}
+};
+const COACH_STYLES=[
+ {id:'strict',n:'Exigente',desc:'cobra regularidade e pune atuações ruins'},
+ {id:'develop',n:'Formador',desc:'confia em jovens e valoriza evolução'},
+ {id:'tactical',n:'Tático',desc:'valoriza disciplina e leitura de jogo'},
+ {id:'players',n:'Gestor',desc:'prioriza moral, liderança e ambiente'}
+];
 const sa=()=>{const c=clubs(4)[RI(0,3)];c.tier=4;return c};
 const wg=c=>Math.round(8*Math.exp((c.s-52)*.105)*(.7+ovr()/100*.7)*(c.tier==4?2.4:1));
 const AK=['fin','pas','dri','vel','ace','fis','def','cru','con','men','pos','res'],AN={fin:'Finalização',pas:'Passe',dri:'Drible',vel:'Velocidade',ace:'Aceleração',fis:'Físico',def:'Defesa',cru:'Cruzamento',con:'Controle de bola',men:'Mentalidade',pos:'Posicionamento',res:'Resistência'},OW={ATA:[.22,.06,.12,.1,.08,.08,.02,.04,.1,.06,.1,.02],MEI:[.08,.2,.12,.06,.06,.06,.04,.06,.14,.08,.08,.02],ZAG:[.01,.06,.02,.08,.06,.14,.28,.01,.04,.1,.16,.04],GOL:[.01,.1,.03,.04,.06,.1,.3,.01,.05,.12,.18,0]},GRP={tec:['fin','pas','dri','con','cru'],fis:['fis','vel','ace','res'],men:['men','pos']};
@@ -391,6 +403,28 @@ function syncPlayerStats(){
  S.fis=cl(av(GRP.fis),25,99);
  S.men=cl(av(GRP.men),25,99);
 }
+function posProfile(){return POS_PROFILE[S.pos]||POS_PROFILE.ATA}
+function coachStyle(){return COACH_STYLES.find(x=>x.id==S.coachStyle)||COACH_STYLES[0]}
+function coachBand(){const v=S.coach||0;return v>=85?'Titular de confiança':v>=70?'Titular':v>=55?'Disputa vaga':v>=35?'Rotação':'Fora dos planos'}
+function levelTitle(){const l=S.level||1;return l>=20?'Craque em evolução':l>=12?'Profissional consolidado':l>=6?'Titular em ascensão':'Jovem promessa'}
+function gainXP(n){
+ if(!S||!Number.isFinite(+n))return;
+ S.xp=Math.max(0,(S.xp||0)+Math.max(0,Math.round(n)));
+ let ups=0;
+ while(S.xp>=100){S.xp-=100;S.level=Math.max(1,(S.level||1)+1);ups++}
+ if(ups){
+  const f=posProfile().focus;
+  for(let i=0;i<ups;i++){const k=f[RI(0,f.length-1)];S.at[k]=cl(S.at[k]+R(.4,1.05),25,99)}
+  toast('📈 Evolução','Nível '+S.level+' alcançado. Foco da posição: '+posProfile().role+'.');
+  sfx('correct');
+ }
+}
+function coachFeedback(){
+ if(!S.last||!S.last.min)return 'O técnico quer mais intensidade para você ganhar espaço.';
+ const r=Number(S.last.rt)||6.5;
+ return r>=8?'O técnico elogiou sua atuação e aumenta sua confiança.':r>=7?'Boa atuação. Você ganhou crédito para a próxima rodada.':r<5.8?'O técnico cobrou reação imediata.':'Atuação dentro do esperado. A vaga continua em disputa.';
+}
+function contractStatus(){return (S.yrs||0)>0?'Contrato ativo':'Mercado aberto'}
 const ovr=()=>Math.round(AK.reduce((a,k,i)=>a+(S.at?.[k]??50)*OW[S.pos][i],0));
 const clubs=t=>LG[t].c.map(x=>{const[n,s]=x.split(':');return{n,s:+s+RI(-3,3)}});
 const pts=t=>t.w*3+t.d;
@@ -422,6 +456,8 @@ function compResult(c){
      if(rr<PG[S.pos]*pk)g++;else if(rr<PG[S.pos]*pk+PA[S.pos]*pk)as++;
    }
    S.tot.j++;S.tot.g+=g;S.tot.a+=as;c.pg=(c.pg||0)+g;meSc.g=(meSc.g||0)+g;
+   S.cstats=S.cstats||{};const cs=S.cstats[c.id]||(S.cstats[c.id]={name:c.name,j:0,g:0,a:0});cs.j++;cs.g+=g;cs.a+=as;
+   gainXP(5+Math.round((played/90)*6)+g*6+as*4);
    const q=c.sc.filter(x=>x&&!x.me);
    for(let z=0;z<og;z++)if(q.length){const qi=RI(0,q.length-1);q[qi].g=(q[qi].g||0)+1};
  }
@@ -504,14 +540,22 @@ function join(c){
 let START_OFFERS=[];
 function makeStartOffers(){const pool=[];LG.forEach((l,t)=>{if(t>2)return;l.c.forEach(x=>{const[n,s]=x.split(':');pool.push({n,tier:t,s:+s})})});const of=[],used={};const pos=$('ps')?.value||'ATA';const tiers=[0,1,2].sort(()=>Math.random()-.5);pool.sort(()=>Math.random()-.5);tiers.forEach(t=>{const choices=pool.filter(c=>c.tier==t&&!used[c.n]);if(choices.length&&of.length<3){const c=choices[RI(0,choices.length-1)];used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})}});if(of.length<3)pool.filter(c=>!used[c.n]).slice(0,3-of.length).forEach(c=>{used[c.n]=1;of.push({...c,w:Math.max(1,Math.round(c.s*.08))})});if(Math.random()<.28){const v=LG[VZ].c[RI(0,LG[VZ].c.length-1)].split(':');of[RI(0,of.length-1)]={n:v[0],tier:VZ,s:+v[1],w:0,varzea:true}}return of}
 function chooseStart(o){sfx('transfer');if(o.varzea)S.fl.f1=1;S.money=o.varzea?500:o.w*4;S.wage=o.varzea?0:o.w;S.yrs=o.varzea?0:2;join({n:o.n,tier:o.tier,s:o.s});if(o.varzea)mm('Começo humilde na várzea: '+o.n);START_OFFERS=[];tab='game';render()}
-function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);chooseStart(o)}
+function start(i){const name=$('nm').value.replace(/[<>&"'`]/g,'').trim()||'Jogador',pos=$('ps').value,st=$('st').value,o=START_OFFERS[i];if(!o)return;S={v:5,name,pos,age:17,at:{},tec:50,fis:50,men:50,energy:90,morale:70,fame:0,money:0,inj:0,sus:0,year:2026,wage:4,yrs:2,potential:78,xp:0,level:1,coachStyle:COACH_STYLES[RI(0,COACH_STYLES.length-1)].id,contract:{},cstats:{},offerSel:null,titles:0,hist:[],tot:{g:0,a:0,j:0},tro:[],sel:0,sgl:0,promos:0,coach:50,cap:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[]};AK.forEach((k,i)=>S.at[k]=RI(36,50)+Math.round(OW[pos][i]*30));at(st,6);S.potential=cl(ovr()+RI(12,25),68,94);gainXP(12);chooseStart(o)}
 function upd(h,a,gh,ga){const H=S.tbl[h],A=S.tbl[a];H.gf+=gh;H.ga+=ga;A.gf+=ga;A.ga+=gh;if(gh>ga){H.w++;A.l++}else if(gh<ga){A.w++;H.l++}else{H.d++;A.d++}}
 const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random()}while(p>L);return k-1};
 function strength(i){let s=S.teams[i].s;if(i==S.me)s+=(ovr()-s)*.1+(S.energy>80?1:S.energy<25?-3:(S.energy-60)/30)+(S.morale-60)/25+(S.coach-50)/50;return s}
 const TT={atk:[1.2,1.2],bal:[1,1],def:[.8,.8]};
 function sim(h,a){const d=(strength(h)-strength(a))/70,t=TT[S.tac||'bal'];return[pois(Math.max(.2,(1.5*(1+d)+.2)*(h==S.me?t[0]:a==S.me?t[1]:1))),pois(Math.max(.2,1.4*(1-d)*(a==S.me?t[0]:h==S.me?t[1]:1)))]}
-function mins(){return S.inj>0||S.sus>0?0:(ovr()>=S.club.s-8-(S.coach-50)/8||Math.random()<.2)?90:(Math.random()<.6?RI(15,35):0)}
+function mins(){
+ if(S.inj>0||S.sus>0)return 0;
+ const trust=(S.coach-50)/22+(S.morale-50)/35+(S.energy-60)/35;
+ const threshold=S.club.s-7-trust*1.8;
+ if(ovr()>=threshold)return Math.random()<.9?90:RI(65,89);
+ const p=cl(.18+trust*.05+(S.age<=21?.08:0),.05,.58);
+ return Math.random()<p?(Math.random()<.55?RI(20,55):RI(60,89)):0;
+}
 const MX=[['Bola na trave! A bola explode no travessão.','o',0],['Gol seu anulado por impedimento milimétrico.','o',0],['Grande defesa do goleiro adversário em chute seu.','o',.1],['Cartão amarelo para você.','o',-.3],['Erro de passe seu quase vira contra-ataque.','o',-.25],['Você cria uma grande chance, mas o companheiro desperdiça.','',.2],['Contra-ataque rápido puxado por você.','',.15],['Desarme importante seu no meio-campo.','',.15]];
+const POS_MX={ATA:[['Você ganha a última linha e quase sai cara a cara.','',.25],['Você ataca o primeiro pau e obriga o goleiro a trabalhar.','',.3]],MEI:[['Você encontra um passe entre linhas e cria perigo.','',.3],['Você pisa na área e finaliza de média distância.','',.2]],ZAG:[['Você antecipa o centroavante e recupera a posse.','',.35],['Você bloqueia um chute perigoso dentro da área.','',.4]],GOL:[['Defesa difícil! Você espalma uma finalização que ia no canto.','y',.45],['Você sai do gol e corta um lançamento nas costas da defesa.','y',.35]]};
 function play(){
  if(!S||S.phase!='pre'||S.ev!=null||S.dm||S.r>=18)return;
  sanitizeState();
@@ -551,6 +595,7 @@ function play(){
  }
  if(min>0){
    for(let i=0;i<2;i++)if(Math.random()<.35){const x=MX[RI(0,MX.length-1)];ev.push({m:RI(5,88),t:'x',x:x[0],c:x[1]});adj+=x[2]}
+   if(Math.random()<.58){const pool=POS_MX[S.pos]||POS_MX.ATA,x=pool[RI(0,pool.length-1)];ev.push({m:RI(8,86),t:'x',x:x[0],c:x[1]});adj+=x[2]}
    if(Math.random()<.012){sfx('card');ev.push({m:RI(30,88),t:'x',x:'Cartão vermelho! Você é expulso e cumpre suspensão na próxima rodada.',c:'o'});adj-=1.5;mo(-8);co(-4);S.sus=1}
    if(min<90)ev.push({m:90-min,t:'x',x:'Substituição: você entra no decorrer do jogo.',c:''});
  }
@@ -563,6 +608,7 @@ function play(){
   if(Math.random()<ir){sfx('injury');const r=Math.random();S.inj=r<.6?1:r<.9?RI(2,4):RI(5,10);S.ih=(S.ih||0)+1;mo(-5);lines.push(['Lesão '+(S.inj==1?'leve':S.inj<=4?'moderada':'grave')+'! Você fica fora por '+S.inj+' rodada(s).','y'])}
   S.ss=S.ss&&typeof S.ss=='object'?S.ss:{g:0,a:0,j:0,rt:0};
   S.ss.j++;S.ss.rt+=rt;S.ss.g+=g;S.ss.a+=as;S.tot.j++;S.tot.g+=g;S.tot.a+=as;
+  gainXP(6+Math.round(rt*2)+g*7+as*5);
   S.morale=cl(S.morale+(rt-6.5)*3+(my>op?3:my<op?-3:0)+(S.cap?.5:0));
   S.fame=cl(S.fame+Math.max(0,(rt-7)*1.2)+g*.8);
   S.energy=cl(S.energy-min/90*8);co((rt-6.5)*.8);
@@ -594,13 +640,15 @@ function train(k){
  else if(k=='rest'){en(40);mo(3)}
  else if(k=='prev'){S.prot=1;en(8);co(.2)}
  else{
-  const f=(S.age<22?1.3:S.age<27?1:S.age<31?.7:.4)*(S.energy>40?1:.6);
+  const gap=Math.max(0,(S.potential||99)-ovr()),growth=S.potential?cl(.3+gap/18,.2,1):1;
+  const f=(S.age<22?1.3:S.age<27?1:S.age<31?.7:.4)*(S.energy>40?1:.6)*growth;
   let m=1,c=6,l=TR[k]||topAt(2);
   if(k=='pers'){l=AK.slice().sort(()=>Math.random()-.5).slice(0,3);m=1.7;c=10;mn(-30);S.ih=(S.ih||0)+.3}
   l.forEach(a=>S.at[a]=cl(S.at[a]+R(.3,1)*f*m,25,99));
   en(-c);co(.4);
  }
  syncPlayerStats();
+ gainXP(k=='rest'?4:k=='prev'?5:Math.max(6,Math.round(8*f)));
  S.min=mins();
  if(S.min>0&&Math.random()<.3){
    const P=S.pos=='GOL'?DMG:S.pos=='ZAG'?DMD:DMA;
@@ -862,6 +910,16 @@ function sanitizeState(){
  S.year=Number.isFinite(+S.year)?Math.max(2026,Math.floor(+S.year)):2026;
  S.wage=Number.isFinite(+S.wage)?Math.max(0,+S.wage):0;
  S.yrs=Number.isFinite(+S.yrs)?Math.max(0,Math.floor(+S.yrs)):0;
+ S.potential=Number.isFinite(+S.potential)?cl(Math.floor(+S.potential),ovr(),99):cl(ovr()+RI(10,24),68,94);
+ S.xp=Number.isFinite(+S.xp)?Math.max(0,+S.xp):0;
+ S.level=Number.isFinite(+S.level)?Math.max(1,Math.floor(+S.level)):1;
+ S.coachStyle=typeof S.coachStyle=='string'?S.coachStyle:COACH_STYLES[RI(0,COACH_STYLES.length-1)].id;
+ S.contract=S.contract&&typeof S.contract=='object'?S.contract:{};
+ S.contract.role=String(S.contract.role||coachBand());
+ S.contract.wage=Number.isFinite(+S.contract.wage)?Math.max(0,+S.contract.wage):S.wage;
+ S.contract.years=Number.isFinite(+S.contract.years)?Math.max(0,Math.floor(+S.contract.years)):S.yrs;
+ S.cstats=S.cstats&&typeof S.cstats=='object'?S.cstats:{};
+ S.offerSel=Number.isInteger(S.offerSel)?S.offerSel:null;
  S.r=Number.isFinite(+S.r)?Math.max(0,Math.min(18,Math.floor(+S.r))):0;
  S.inj=Number.isFinite(+S.inj)?Math.max(0,Math.floor(+S.inj)):0;
  S.sus=Number.isFinite(+S.sus)?Math.max(0,Math.floor(+S.sus)):0;
@@ -952,7 +1010,7 @@ function sanitizeState(){
 
 function mig(s){
  if(!s||typeof s!='object')return null;
- s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
+ s=Object.assign({v:5,name:'Jogador',pos:'ATA',age:17,year:2026,energy:90,morale:70,fame:0,money:0,wage:0,yrs:0,potential:78,xp:0,level:1,coachStyle:'develop',contract:{},cstats:{},offerSel:null,inj:0,sus:0,coach:50,cap:0,titles:0,sel:0,sgl:0,promos:0,hl:[],mom:[],fl:{},rc:{},rf:{},done:{},clubs:[],se:0,te:0,ih:0,strk:0,nog:0,tac:'bal',nt:[],scoutOffers:[],hist:[],tro:[],tot:{g:0,a:0,j:0},ss:{g:0,a:0,j:0,rt:0},comps:[],phase:'pre'},s);
  if(!s.club||typeof s.club!='object')s.club={n:LG[0].c[0].split(':')[0],tier:0,s:52};
  const tier=cl(Number.isFinite(+s.club.tier)?Math.floor(+s.club.tier):0,0,VZ);
  s.club={n:String(s.club.n||LG[tier].c[0].split(':')[0]),tier,s:Number.isFinite(+s.club.s)?+s.club.s:52};
