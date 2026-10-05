@@ -285,6 +285,86 @@ body.theme-lcd .createHero{background:linear-gradient(150deg,rgba(28,48,62,.96),
 .audioCard{margin-top:10px}.audioPicker{display:grid;gap:8px}.audioOption{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;width:100%;padding:11px 12px;border:1px solid #26343d;border-radius:14px;background:#0d161c;color:var(--tx);text-align:left}.audioOption.on{border-color:#ffca3a;background:linear-gradient(145deg,rgba(55,43,24,.55),#0d161c)}.audioIcon{grid-row:1/3;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#17232b;color:#ffca3a;font-size:17px}.audioOption strong{font-size:14px}.audioOption span:last-child{font-size:11px;color:#8497a1;margin-top:2px}.audioCard small{display:block;margin-top:9px;font-size:10px;line-height:1.35}
 @media(max-width:430px){.createHero{min-height:305px;border-radius:20px;padding:14px 14px 18px}.fieldGrid{grid-template-columns:1fr}.createFooter{flex-direction:column;gap:4px}.createFooter span:last-child{text-align:left}.createSteps{gap:7px}.createSteps{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.ambientBg *{animation:none!important}}
+/* J90 DESIGN LANGUAGE v1: linguagem visual única, orientada a jogo */
+:root{
+ --j90-bg:#000;--j90-surface:#090b0c;--j90-surface-2:#0e1214;--j90-line:#22282b;
+ --j90-text:#f4f6f5;--j90-muted:#89928f;--j90-gold:#ffca3a;--j90-green:#42d77d;
+ --j90-red:#ff5c5c;--j90-blue:#79b8ff;--j90-radius:14px;--j90-gap:10px;
+ --j90-shadow:0 12px 30px rgba(0,0,0,.28);
+}
+body{font-family:Inter,Roboto,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--j90-text)}
+h1,h2,h3,.brand,.ovr,.sc{font-family:Inter,Roboto,"Arial Narrow",system-ui,sans-serif}
+h1,h2,h3{letter-spacing:-.2px}
+.card,.createPanel,.offerCard,.audioCard,.menuBtn{border-radius:var(--j90-radius);border:1px solid var(--j90-line);box-shadow:var(--j90-shadow)}
+.card{background:linear-gradient(180deg,var(--j90-surface-2),var(--j90-surface))}
+.card:has(.btn.go){border-color:#263a2d}
+.card.nt{border-left:3px solid var(--j90-gold);border-top-color:var(--j90-line)}
+.mu,.btn span,.offerRole,.offerTier,.audioOption span:last-child{color:var(--j90-muted)}
+.btn,.menuBtn,.chip,.tabs button,.themeOption,.audioOption,.backBtn,.offerCard{
+ transition:transform .14s ease,border-color .14s ease,background-color .14s ease,box-shadow .14s ease,color .14s ease;
+}
+.btn,.menuBtn,.chip,.tabs button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn:focus-visible,.menuBtn:focus-visible,.chip:focus-visible,.tabs button:focus-visible,.themeOption:focus-visible,.audioOption:focus-visible,.backBtn:focus-visible,input:focus-visible,select:focus-visible{
+ outline:2px solid var(--j90-gold);outline-offset:2px;
+}
+.btn:active,.menuBtn:active,.chip:active,.tabs button:active,.offerCard:active,.audioOption:active{transform:translateY(1px) scale(.985)}
+.btn{background:#080a0b;border-color:#252b2e}
+.btn:hover,.menuBtn:hover,.chip:hover,.tabs button:hover{border-color:#3a4549}
+.btn.go{background:linear-gradient(135deg,#2fbd6d,#1c754d);border-color:#55d989;color:#06150d;box-shadow:0 10px 26px rgba(42,203,113,.16)}
+.btn.go span{color:#d8f5e4}
+.btn.go:focus-visible{outline-color:#fff}
+.tabs{padding:4px;background:#050606;border:1px solid #181d1f;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.24)}
+.tabs button{border-color:transparent!important;background:transparent;color:#858d8a}
+.tabs button.on{background:#121914;border-color:#31513a!important;color:#fff;box-shadow:inset 0 -2px var(--j90-green),0 4px 14px rgba(0,0,0,.2)}
+.chip{background:#070909;border-color:#242a2c;color:#9da5a2}
+.chip.on{background:#111b14;border-color:#426b4e;color:var(--j90-gold);box-shadow:inset 0 0 0 1px rgba(255,202,58,.08)}
+.row{border-bottom-color:#181d1f}
+.pill{background:#080a0b;border-color:#252b2e;color:var(--j90-gold)}
+.tag{background:var(--j90-red);border-radius:7px}
+input,select{background:#050607;border-color:#282e31}
+input:focus,select:focus{border-color:#7a6428;box-shadow:0 0 0 3px rgba(255,202,58,.09)}
+.bar div{background:#15191b;border-color:#252a2d}
+.bar i{filter:saturate(1.08);box-shadow:0 0 10px rgba(66,215,125,.12)}
+/* linguagem de navegação: ícones próprios, sem depender do desenho de emoji do Android */
+.tabs button span{font-family:Inter,Roboto,system-ui,sans-serif;font-size:0;font-weight:900}
+.tabs button span:before{font-size:19px;line-height:1;display:block;margin-bottom:3px;color:currentColor}
+.tabs button:nth-child(1) span:before{content:"◆"}
+.tabs button:nth-child(2) span:before{content:"▥"}
+.tabs button:nth-child(3) span:before{content:"◎"}
+.tabs button:nth-child(4) span:before{content:"≡"}
+.tabs button:nth-child(5) span:before{content:"◈"}
+/* HUD de partida: hierarquia de transmissão esportiva */
+.wc{background:linear-gradient(180deg,#0b1012,#070909);border-color:#293033}
+.wc .round{display:inline-flex;align-items:center;min-height:28px;padding:5px 9px;border-radius:8px;background:#11181a;border:1px solid #283235;color:var(--j90-gold);font-size:11px;font-weight:800;letter-spacing:1px}
+.wc .sc{font-size:clamp(30px,9vw,42px);letter-spacing:-1px}
+.wc .art{background:linear-gradient(180deg,#101719,#090c0d);border-color:#20282a}
+.wc .ln.y{border-left:2px solid var(--j90-gold);padding-left:8px}
+.wc .ln.o{border-left:2px solid #343a3d;padding-left:8px}
+/* Estados semânticos */
+.j90-state{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:.4px;border:1px solid}
+.j90-state.ok{color:var(--j90-green);background:#0c1711;border-color:#244d35}
+.j90-state.warn{color:var(--j90-gold);background:#171207;border-color:#4d3d17}
+.j90-state.bad{color:var(--j90-red);background:#190b0b;border-color:#512626}
+.j90-state.info{color:var(--j90-blue);background:#0b121a;border-color:#263f58}
+/* Menos aparência de SaaS, mais identidade de jogo */
+.menuBtn{background:linear-gradient(180deg,#0d1011,#080a0b);border-color:#252b2e}
+.menuBtn.primary{background:linear-gradient(135deg,#2da964,#1c704b);border-color:#4bc97b}
+.createPanel,.offerCard,.audioCard{background:linear-gradient(180deg,#0c1113,#080b0c)}
+.offerCard:hover{border-color:#53656c;box-shadow:0 12px 28px rgba(0,0,0,.28)}
+.panelIcon,.clubMini,.audioIcon{background:#101619;border-color:#29363b}
+.createKicker,.offerTier{letter-spacing:1.2px}
+.createSteps span.active b{box-shadow:0 0 0 3px rgba(255,202,58,.08)}
+/* Área de toque e leitura */
+.btn,.menuBtn,.chip,.tabs button,.themeOption,.audioOption{min-height:44px}
+@media(max-width:560px){
+ .card{box-shadow:0 8px 24px rgba(0,0,0,.22)}
+ .card>h2:first-child{font-size:20px}
+ .btn,.menuBtn{min-height:56px}
+ .chip{min-height:50px}
+}
+@media(prefers-reduced-motion:reduce){
+ .btn,.menuBtn,.chip,.tabs button,.themeOption,.audioOption,.offerCard{transition:none!important}
+}
 </style>
 </head>
 <body>
