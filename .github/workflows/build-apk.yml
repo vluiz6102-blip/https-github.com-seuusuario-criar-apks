@@ -1,5 +1,9 @@
 name: Build APK Carreira FC
 
+concurrency:
+  group: jornada90-apk-build
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
@@ -12,7 +16,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
