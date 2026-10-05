@@ -1,4 +1,4 @@
-name: Build APK Carreira FC
+name: Build APK Jornada 90
 
 concurrency:
   group: jornada90-apk-build
@@ -9,9 +9,11 @@ on:
   push:
     paths:
       - 'index.html'
-      - 'www/index.html'
+      - 'scripts/build.mjs'
       - 'package.json'
       - 'capacitor.config.ts'
+      - 'android-overrides/**'
+      - 'assets/**'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -23,26 +25,35 @@ jobs:
     steps:
       - name: Baixar projeto
         uses: actions/checkout@v5
+
       - name: Configurar Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 22
+
       - name: Configurar Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
+
       - name: Instalar dependências
         run: npm install
+
+      - name: Gerar aplicação web a partir da fonte única
+        run: npm run build
+
       - name: Preparar Android
         run: |
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
+
       - name: Garantir retorno tátil Android
         working-directory: android
         run: |
           manifest="app/src/main/AndroidManifest.xml"
           grep -q 'android.permission.VIBRATE' "$manifest" || sed -i '/<manifest/a\    <uses-permission android:name="android.permission.VIBRATE" />' "$manifest"
+
       - name: Aplicar controle nativo de taxa de atualização
         run: |
           mkdir -p android/app/src/main/java/com/jornada90/carreira
@@ -52,6 +63,7 @@ jobs:
 
       - name: Instalar conversor SVG
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+
       - name: Aplicar identidade e ícone Jornada 90
         working-directory: android
         run: |
@@ -80,12 +92,15 @@ jobs:
             <color name="j90_icon_background">#0B1822</color>
           </resources>
           XML
+
       - name: Gerar APK debug
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
+
       - name: Renomear APK
         working-directory: android
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Jornada-90.apk
+
       - name: Publicar APK
         uses: actions/upload-artifact@v4
         with:
