@@ -37,7 +37,7 @@ for(const file of files.sort()){
   if(!ffmpeg){console.warn('Pendente, FFmpeg ausente: '+file+' | forneça OGG pronto ou converta externamente.');continue;}
   const tmp=dest+'.tmp';const r=run(process.env.FFMPEG||'ffmpeg',['-hide_banner','-loglevel','error','-y','-i',src,'-map','0:a:0','-c:a','libvorbis','-q:a','5','-vn',tmp]);
   if(r.status!==0||!existsSync(tmp)||statSync(tmp).size===0){console.warn('Falha na conversão: '+file);continue;}
-  copyFileSync(tmp,dest);require('node:fs').unlinkSync(tmp);converted=true;
+  copyFileSync(tmp,dest);(await import('node:fs')).unlinkSync(tmp);converted=true;
  }
  const final=probe(dest);if(!final){console.warn('Arquivo final não decodificável: '+dest);continue;}
  licenses[key]={...m,destination:dest.replaceAll('\\','/'),durationSeconds:final.duration,format:'OGG',channels:final.channels,sampleRate:Number(final.sampleRate),conversion:converted?'FFmpeg/libvorbis q5, sem normalização':'Nenhuma'};
