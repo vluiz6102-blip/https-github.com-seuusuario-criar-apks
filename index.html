@@ -1249,6 +1249,19 @@ input,select{font-size:16px!important}
 @media(prefers-reduced-motion:reduce){
  .j90ManagerHead,.j90ManagerTabs{position:static}
 }
+</style><style id="j90-mobile-performance-v3">
+/* GPU-friendly mobile defaults: avoid expensive compositing and keep animation visually stable. */
+html.j90-gpu-lite *,html.j90-gpu-lite *::before,html.j90-gpu-lite *::after{animation-duration:calc(var(--j90-motion-scale,1) * 1s)!important}
+.j90-performance-lite .j90ManagerHead,.j90-performance-lite .j90ManagerTabs,.j90-performance-lite .j90MgrCard,.j90-performance-lite .j90MgrOverhaulHero,.j90-performance-lite .j90MgrMetrics span{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.j90-performance-lite .j90ManagerHead,.j90-performance-lite .j90ManagerTabs,.j90-performance-lite .j90MgrCard,.j90-performance-lite .j90MgrOverhaulHero,.j90-performance-lite .j90MgrMetrics span{box-shadow:none!important}
+.j90-low-quality .stadiumScene .cloudLayer,.j90-low-quality .stadiumScene .leaves,.j90-low-quality .stadiumScene .birds,.j90-low-quality .stadiumScene .dust{display:none!important}
+.j90-low-quality .stadiumScene .lights:after{display:none!important}
+.j90-low-quality .stadiumScene *{filter:none!important}
+.j90-low-quality .stadiumScene{contain:paint;content-visibility:auto}
+@media(max-width:600px){
+  .j90-performance-lite *{scroll-behavior:auto!important}
+  .j90-performance-lite .j90ManagerHead,.j90-performance-lite .j90ManagerTabs{transform:translateZ(0)}
+}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
@@ -1495,7 +1508,7 @@ function startJ90Atmosphere(){
  j90AtmoParticles.length=0;
  for(let i=0;i<particleCount;i++)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*.95,s:.000045+Math.random()*.00007,a:.028+Math.random()*.075,p:Math.random()*6.28});
  const resize=()=>{
-  const d=Math.min(1.15,Number(devicePixelRatio)||1);
+  const __gp=window.J90_GRAPHICS_PROFILE||{};const d=Math.min(1.15,Number(__gp.renderPixelRatio||1),Number(devicePixelRatio)||1);
   j90AtmoNodes.forEach(canvas=>{
    const w=Math.max(1,canvas.clientWidth||canvas.getBoundingClientRect().width),h=Math.max(1,canvas.clientHeight||canvas.getBoundingClientRect().height);
    canvas._j90W=w;canvas._j90H=h;canvas.width=Math.floor(w*d);canvas.height=Math.floor(h*d);
@@ -2492,7 +2505,7 @@ function mgrSquadFilter(v){var q=String(v||document.getElementById('mgrSquadSear
 
 function j90PerfState(){
  var vv=window.visualViewport,w=Math.max(240,Math.round(vv?.width||window.innerWidth||screen.width||360)),h=Math.max(320,Math.round(vv?.height||window.innerHeight||screen.height||640));
- var dpr=Math.min(1.20,Number(devicePixelRatio)||1),cores=Number(navigator.hardwareConcurrency)||4,mem=Number(navigator.deviceMemory)||0,small=Math.min(w,h),mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),manager=document.body.classList.contains('j90-manager-screen'),profile=window.J90_GRAPHICS_PROFILE||{};
+ var dpr=Math.min(Number((window.J90_GRAPHICS_PROFILE||{}).renderPixelRatio||1),Number(devicePixelRatio)||1),cores=Number(navigator.hardwareConcurrency)||4,mem=Number(navigator.deviceMemory)||0,small=Math.min(w,h),mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),manager=document.body.classList.contains('j90-manager-screen'),profile=window.J90_GRAPHICS_PROFILE||{};
  var webgl2=profile.webgl2!==false,hardLow=manager&&(small<=360||h<=600||(mem>0&&mem<=2)||cores<=4||!webgl2),baseLow=cores<=4||(mem>0&&mem<=2)||small<=360||!webgl2,low=hardLow||baseLow;
  var high=!mobile&&cores>=8&&(mem===0||mem>=6)&&webgl2;
  var tier=low?'low':(high?'high':'balanced'),p=window.__J90_PERF;
