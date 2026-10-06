@@ -3,12 +3,13 @@
 function detectGpu(){
   try{
     var c=document.createElement('canvas');
-    var gl=c.getContext('webgl2',{powerPreference:'high-performance'})||c.getContext('webgl',{powerPreference:'high-performance'});
+    var gl2=c.getContext('webgl2',{powerPreference:'high-performance'});
+    var gl=gl2||c.getContext('webgl',{powerPreference:'high-performance'});
     if(!gl)return {webgl:false,webgl2:false,renderer:'unknown',vendor:'unknown',maxTextureSize:0};
     var info=gl.getExtension('WEBGL_debug_renderer_info');
     return {
       webgl:true,
-      webgl2:!!c.getContext('webgl2'),
+      webgl2:!!gl2,
       renderer:String(info?gl.getParameter(info.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)||'unknown'),
       vendor:String(info?gl.getParameter(info.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR)||'unknown'),
       maxTextureSize:Number(gl.getParameter(gl.MAX_TEXTURE_SIZE)||0)
@@ -29,13 +30,18 @@ async function nativeDeviceInfo(){try{var cap=window.Capacitor;if(!cap)return nu
 function quality(g){
   var cores=Math.max(1,Number(navigator.hardwareConcurrency||4));
   var mem=Number(navigator.deviceMemory||0);
-  var s=0;
+  var mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var family=gpuFamily(g),s=0;
   if(g.webgl2)s+=2; else if(g.webgl)s++;
   if(cores>=8)s+=2; else if(cores>=6)s++;
   if(mem>=8)s+=2; else if(mem>=4)s++;
   if(g.maxTextureSize>=8192)s+=2; else if(g.maxTextureSize>=4096)s++;
-  var tier=s>=8?'ultra':s>=6?'high':s>=4?'medium':'performance';
-  return {tier:tier,score:s,cores:cores,memoryGb:mem,gpuFamily:gpuFamily(g)};
+  /* Mobile WebView is intentionally conservative: stable frame pacing beats a synthetic 'ultra' tier. */
+  if(mobile && (family==='mali'||family==='powervr'||family==='unknown')) s=Math.min(s,5);
+  var tier=s>=8?'high':s>=6?'balanced':s>=4?'balanced':'performance';
+  var renderHz=tier==='high'?90:(tier==='balanced'?60:45);
+  var pixelRatio=tier==='high'?1.15:(tier==='balanced'?1.0:.85);
+  return {tier:tier,score:s,cores:cores,memoryGb:mem,gpuFamily:family,renderHz:renderHz,pixelRatio:pixelRatio};
 }
 window.J90Graphics={
   version:'phaser4-core-1',
@@ -52,6 +58,8 @@ window.J90Graphics={
       memoryGb:q.memoryGb,
       quality:q.tier,
       qualityScore:q.score,
+      renderHz:q.renderHz,
+      renderPixelRatio:q.pixelRatio,
       mobile:/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
     };
     window.J90_GRAPHICS_PROFILE=p;
@@ -66,5 +74,5 @@ window.J90Graphics={
     return p;
   }
 };
-try{window.J90Graphics.start();}catch(e){window.J90_PHASER_READY=false;}
+try{window.J90Graphics.start().then(function(p){document.documentElement.style.setProperty('--j90-render-dpr',String(p.renderPixelRatio||1));document.documentElement.style.setProperty('--j90-render-hz',String(p.renderHz||60));}).catch(function(){window.J90_PHASER_READY=!!window.Phaser;});}catch(e){window.J90_PHASER_READY=false;}
 })();
