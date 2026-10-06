@@ -1109,6 +1109,7 @@ function refreshJ90AtmosphereNodes(){
  if(j90AtmoResize)j90AtmoResize();
 }
 function startJ90Atmosphere(){
+ if(j90AtmoResize){try{removeEventListener('resize',j90AtmoResize)}catch(e){}j90AtmoResize=null}
  if(j90AtmoStarted){
   if(j90AtmoNodes.length)return;
  }
