@@ -14,17 +14,21 @@ on:
       - 'scripts/build.mjs'
       - 'scripts/sync-rosters.mjs'
       - 'src/**'
+      - 'scripts/generate-content-pack.py'
+      - 'scripts/generate-content-pack.mjs'
+      - 'scripts/generate-content-pack.*'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
       - 'assets/**'
+      - 'data/**'
       - 'audio-import/**'
       - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
@@ -45,14 +49,17 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
-      - name: Preparar ferramentas de áudio
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Preparar ferramentas de conteúdo e áudio
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg python3-pil
 
       - name: Importar e converter áudios reais
         run: npm run audio:import
 
       - name: Sincronizar elencos reais dos times
         run: npm run data:rosters
+
+      - name: Gerar pacote offline de conteúdo
+        run: npm run content:build
 
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
@@ -114,6 +121,16 @@ jobs:
       - name: Renomear APK
         working-directory: android
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Jornada-90-Manager.apk
+
+      - name: Verificar tamanho mínimo do APK
+        working-directory: android
+        run: |
+          apk="app/build/outputs/apk/debug/Jornada-90-Manager.apk"
+          bytes=$(stat -c%s "$apk")
+          mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
+          echo "APK_SIZE_BYTES=$bytes"
+          echo "APK_SIZE_MIB=$mib"
+          test "$bytes" -ge "$((500*1024*1024))"
 
       - name: Publicar APK
         uses: actions/upload-artifact@v7
