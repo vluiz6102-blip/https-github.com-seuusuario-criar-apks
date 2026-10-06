@@ -364,14 +364,15 @@ def build_tech_pack(teams: list[str]) -> dict:
       # 500 MiB is reserved for real frame atlases. They are generated once at
     # build time and consumed lazily, keeping decoded memory near zero.
     animation_target = TECH_TARGET_BYTES
-    total = ai_path.stat().st_size
+    animation_total = 0
+    ai_bytes = ai_path.stat().st_size
     manifest = []
     index = 0
     while total < animation_target and index < 700:
         team = teams[index % max(1, len(teams))] if teams else "Jornada 90"
         path = animations / f"atlas_{index:03d}_{slug(team)}.png"
         size = generate_animation_atlas(path, stable_seed("atlas", team, str(index)), team)
-        total += size
+        animation_total += size
         manifest.append({
             "file": str(path.relative_to(ROOT)).replace("\\", "/"),
             "bytes": size,
@@ -382,8 +383,8 @@ def build_tech_pack(teams: list[str]) -> dict:
         })
         index += 1
         if index % 10 == 0:
-            print("Tecnologia:", index, "atlases |", round(total / 1024 / 1024, 1), "MiB")
-    if total < animation_target:
+            print("Tecnologia:", index, "atlases |", round(animation_total / 1024 / 1024, 1), "MiB")
+    if animation_total < animation_target:
         raise SystemExit("Não foi possível gerar o pacote de tecnologia de 500 MiB.")
     animation_manifest = tech_root / "animation-manifest.json"
     animation_manifest.write_text(json.dumps({
@@ -391,14 +392,14 @@ def build_tech_pack(teams: list[str]) -> dict:
         "frameRate": 30,
         "interpolation": "cubic",
         "atlases": manifest,
-        "totalBytes": sum(int(x["bytes"]) for x in manifest),
+        "totalBytes": animation_total,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return {
         "targetBytes": TECH_TARGET_BYTES,
-        "generatedBytes": total,
-        "animationBytes": sum(int(x["bytes"]) for x in manifest),
+        "generatedBytes": ai_bytes + animation_total,
+        "animationBytes": animation_total,
         "animationAtlases": len(manifest),
-        "aiBytes": ai_path.stat().st_size,
+        "aiBytes": ai_bytes,
         "teamIntelligence": str(ai_path.relative_to(ROOT)).replace("\\", "/"),
         "animationManifest": str(animation_manifest.relative_to(ROOT)).replace("\\", "/"),
     }
