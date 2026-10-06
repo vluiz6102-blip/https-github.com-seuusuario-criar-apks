@@ -25,7 +25,7 @@ function gpuFamily(g){
   if(/apple/.test(s))return 'apple';
   return 'unknown';
 }
-async function nativeDeviceInfo(){try{var d=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Device;if(d&&d.getInfo)return await d.getInfo();}catch(e){}return null;}
+async function nativeDeviceInfo(){try{var cap=window.Capacitor;if(!cap)return null;var d=cap.Plugins&&cap.Plugins.Device;if(!d&&cap.registerPlugin){window.J90NativeDevice=window.J90NativeDevice||cap.registerPlugin('Device');d=window.J90NativeDevice;}if(d&&d.getInfo)return await d.getInfo();}catch(e){}return null;}
 function quality(g){
   var cores=Math.max(1,Number(navigator.hardwareConcurrency||4));
   var mem=Number(navigator.deviceMemory||0);
