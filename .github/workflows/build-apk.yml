@@ -298,30 +298,9 @@ jobs:
           echo "RELEASE_ID=${release_id}"
           echo "RELEASE_TAG=${tag}"
 
-          # Upload binário bruto, sem Actions artifact e sem recompressão.
-          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            --data-binary "@${apk}" \
-            "${upload_url}?name=Jornada-90-Manager.apk"
-
-          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: text/plain; charset=utf-8" \
-            --data-binary "@${sha_file}" \
-            "${upload_url}?name=Jornada-90-Manager.apk.sha256"
-
-          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: text/plain; charset=utf-8" \
-            --data-binary "@${info_file}" \
-            "${upload_url}?name=Jornada-90-Manager-release.txt"
+          # Upload via GitHub CLI para arquivos grandes.
+          # Evita curl --data-binary, que pode carregar o APK inteiro na RAM.
+          gh release upload "${tag}" "${apk}" "${sha_file}" "${info_file}" --clobber --repo "${GITHUB_REPOSITORY}"
 
           # Conferência autoritativa do asset recebido pelo GitHub.
           assets_json=$(curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
