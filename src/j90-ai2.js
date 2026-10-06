@@ -453,6 +453,77 @@
     });
   }
 
+  function midfielderType(p){
+    var pos=String(p&&p.position||p&&p.role||'').toUpperCase();
+    var style=String(p&&p.playStyle||p&&p.style||'').toLowerCase();
+    if(/VOL|DM|CDM/.test(pos)||/anchor|destroyer|defensive/.test(style))return 'DM';
+    if(/CAM|MEI|AM/.test(pos)||/playmaker|creative|advanced/.test(style))return 'AM';
+    return 'CM';
+  }
+  function passRating(p){return ratingAny(p,['passing','pass','shortPassing','vision'],num(p&&p.ovr,68))}
+  function longPassRating(p){return ratingAny(p,['longPassing','longPass','long_pass','vision'],passRating(p))}
+  function visionRating(p){return ratingAny(p,['vision','awareness','creativity'],passRating(p))}
+  function midfieldTarget(m,side,owner,kind){
+    var pool=(getTeamPlayers(m,side)||[]).filter(function(x){return x.id!==owner.id&&playerRole(x)!=='GK'}),best=null,bs=-999,home=side==='home';
+    pool.forEach(function(t){
+      var dx=home?t.x-owner.x:owner.x-t.x,space=1-clamp(Math.abs(t.y-owner.y)*1.7,0,1),forward=clamp(dx/.65,0,1),dist=clamp(Math.abs(t.x-owner.x)*1.5,0,1);
+      var score=space*.38+forward*.30+(1-dist)*.12;
+      if(kind==='long_pass'||kind==='deep_switch')score+=dist*.42;
+      if(kind==='vertical_pass'||kind==='lofted_through')score+=forward*.45;
+      if(kind==='short_pass'||kind==='recycle')score+=(1-dist)*.35;
+      if(kind==='one_two')score+=playerRole(t)==='ATT'?.28:0;
+      if(kind==='deep_switch')score+=Math.abs(t.y-.5)*.28;
+      if(score>bs){bs=score;best=t}
+    });
+    return best;
+  }
+  function updateMidfieldAI(m,side,brain){
+    if(m.possessionTeam!==side)return;
+    var mids=midfielders(m,side),owner=getPlayer(m,side,m.possessionPlayerId),home=side==='home';
+    mids.forEach(function(mid){
+      if(!mid)return;
+      var type=midfielderType(mid),hasBall=owner&&owner.id===mid.id,phase=matchPhase(m,side,mid),pressure=clamp(num(mid.ai&&mid.ai.heat,.2),0,1);
+      if(!hasBall){
+        var targetX=home?clamp((mid.baseX||mid.x)+(.05+(type==='AM'?.07:type==='DM'?.015:0)),.10,.82):clamp((mid.baseX||mid.x)-(.05+(type==='AM'?.07:type==='DM'?.015:0)),.18,.90);
+        if(type==='DM')targetX=home?clamp((mid.baseX||mid.x)-.015,.12,.62):clamp((mid.baseX||mid.x)+.015,.38,.88);
+        if(type==='AM'&&phase==='final_third')targetX=home?clamp((mid.baseX||mid.x)+.10,.28,.78):clamp((mid.baseX||mid.x)-.10,.22,.72);
+        moveToward(mid,targetX,clamp(mid.baseY||mid.y,.12,.88),.10+brain.buildUp*.08);
+        return;
+      }
+      var p=passRating(mid),lp=longPassRating(mid),vis=visionRating(mid),choice='short_pass',score=-999;
+      ['short_pass','vertical_pass','long_pass','deep_switch','lofted_through','progressive_pass','one_two','recycle'].forEach(function(kind){
+        var t=midfieldTarget(m,side,mid,kind),s=0;
+        if(!t)return;
+        var dx=home?t.x-mid.x:mid.x-t.x,space=1-clamp(Math.abs(t.y-mid.y)*1.55,0,1),forward=clamp(dx/.65,0,1),dist=clamp(Math.abs(t.x-mid.x)*1.7,0,1);
+        if(kind==='short_pass')s=p*.006+space*.38+(1-dist)*.36-pressure*.25;
+        if(kind==='vertical_pass')s=vis*.006+forward*.52+space*.24-pressure*.12;
+        if(kind==='progressive_pass')s=p*.005+forward*.45+space*.22-pressure*.16;
+        if(kind==='long_pass')s=lp*.006+dist*.38+space*.18+brain.directness*.18-pressure*.10;
+        if(kind==='deep_switch')s=lp*.005+vis*.005+Math.abs(t.y-.5)*.65+dist*.22-pressure*.06;
+        if(kind==='lofted_through')s=vis*.006+forward*.62+space*.30+(type==='AM'?.12:0)-pressure*.18;
+        if(kind==='one_two')s=vis*.004+forward*.32+(playerRole(t)==='ATT'?.32:0)-pressure*.10;
+        if(kind==='recycle')s=(1-forward)*.28+(pressure>.62?.32:0)+(type==='DM'?.20:0);
+        if(phase==='build_up'&&kind==='short_pass')s+=.18;
+        if(phase==='progression'&&(kind==='vertical_pass'||kind==='progressive_pass'))s+=.20;
+        if(phase==='final_third'&&(kind==='lofted_through'||kind==='one_two'))s+=.20;
+        if(type==='DM'&&['long_pass','deep_switch','recycle'].includes(kind))s+=.16;
+        if(type==='AM'&&['vertical_pass','lofted_through','one_two'].includes(kind))s+=.18;
+        if(s>score){score=s;choice=kind}
+      });
+      mid.ai=mid.ai||{};mid.ai.midfieldType=type;mid.ai.lastPassChoice=choice;mid.ai.passQuality=clamp((p+vis)/200,.35,.99);
+      var target=midfieldTarget(m,side,mid,choice);
+      if(target){
+        var quality=clamp(.48+(p-65)/250+(vis-65)/330+(mid.ai.confidence-.6)*.20-pressure*.16,.18,.94);
+        if(choice==='long_pass'||choice==='deep_switch')quality=clamp(quality+(lp-65)/260,.18,.96);
+        if(rnd(m)<quality){
+          releaseBall(m,side,mid,target,choice,true);
+          if(choice==='long_pass'||choice==='deep_switch')emit(m,escLocal(mid.name||'Meia')+' muda o jogo com um passe longo.','mid_long_pass',2.2);
+          else if(choice==='vertical_pass'||choice==='lofted_through')emit(m,escLocal(mid.name||'Meia')+' encontra um passe vertical entre as linhas.','mid_vertical',2.2);
+        }else releaseBall(m,side,mid,target,choice,false);
+      }
+    });
+  }
+
   function updateAttackAI(m,side,brain){
     if(m.possessionTeam!==side)return;
     var owner=getPlayer(m,side,m.possessionPlayerId);if(!owner)return;
@@ -823,6 +894,7 @@
       updateOffBall(m,'home',hb);updateOffBall(m,'away',ab);
       updateGoalkeeperAI(m,'home',hb,stepMs/1000);updateGoalkeeperAI(m,'away',ab,stepMs/1000);
       updateDefenseAI(m,'home',hb);updateDefenseAI(m,'away',ab);
+      updateMidfieldAI(m,'home',hb);updateMidfieldAI(m,'away',ab);
       updateAttackAI(m,'home',hb);updateAttackAI(m,'away',ab);
 
       var possSide=m.possessionTeam||'home',owner=getPlayer(m,possSide,m.possessionPlayerId);
