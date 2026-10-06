@@ -15,6 +15,7 @@ on:
       - 'scripts/sync-rosters.mjs'
       - 'src/**'
       - 'scripts/generate-content-pack.py'
+      - 'scripts/browser-smoke.mjs'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
