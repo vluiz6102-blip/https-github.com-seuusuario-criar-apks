@@ -16,6 +16,7 @@ on:
       - 'src/**'
       - 'scripts/generate-content-pack.py'
       - 'scripts/browser-smoke.mjs'
+      - 'scripts/quality-scan.mjs'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
