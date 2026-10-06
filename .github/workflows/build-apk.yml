@@ -197,6 +197,7 @@ jobs:
           test "$bytes" -ge "$((1024*1024*1024))"
           unzip -t "$apk" >/dev/null
           unzip -l "$apk" | grep -q 'j90-content/content-manifest.json'
+          ! unzip -l "$apk" | grep -q 'j90-content/players/'
 
       - name: Publicar APK
         uses: actions/upload-artifact@v7
