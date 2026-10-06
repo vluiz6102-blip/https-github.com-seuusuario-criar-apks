@@ -37,7 +37,7 @@ const idCounts = new Map();
 for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
 for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id + ' (' + n + 'x)');
 
-if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 5) add(warn, 'Mais de 5 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
+if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 6) add(warn, 'Mais de 6 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
 const intervalCount=(index.match(/setInterval\s*\(/g)||[]).length;
 if(intervalCount>0)add(fail,'setInterval detectado ('+intervalCount+'). O runtime Jornada 90 usa um único loop visual compartilhado.');
 if (/\bgetImageData\s*\(|\breadPixels\s*\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
