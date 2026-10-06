@@ -474,8 +474,12 @@ def download_player_photos() -> tuple[dict[str, str], list[dict], list[dict]]:
     records.sort(key=lambda x: (x["team"].casefold(), x["player"].casefold()))
 
     by_player = {}
+    by_team_player = {}
     for rec in records:
-        by_player.setdefault(" ".join(norm_photo_text(rec["player"])), rec["file"])
+        name_key = " ".join(norm_photo_text(rec["player"]))
+        team_key = " ".join(norm_photo_text(rec["team"]))
+        by_player.setdefault(name_key, rec["file"])
+        by_team_player[f"{team_key}|{name_key}"] = rec["file"]
     missing = [
         {"player": name, "team": team}
         for team, name in pairs
@@ -599,6 +603,7 @@ def main() -> None:
         "byTeam": by_team,
         "scenes": scenes,
         "playerPhotos": player_photos,
+        "playerPhotosByTeam": by_team_player,
         "playerPhotoCount": len(player_photo_records),
         "playerPhotoBytes": sum(int(x["bytes"]) for x in player_photo_records),
         "playerPhotosMissing": len(player_photo_missing),
