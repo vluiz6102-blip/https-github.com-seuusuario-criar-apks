@@ -211,7 +211,7 @@
     m.competition=m.competition||competitionName();
     m._compProfile=m._compProfile||matchCompetitionProfile(m);
     var h1=teamPalette(m.home),h2=teamPalette(m.away);
-    m.palette={home:h1,away:h2};
+    m.palette={home:h1,away:h2};var ch=hash(m.competition||'Competição')%360;m.compAccent=m.compAccent||'hsl('+ch+' 72% 58%)';
     if(!m.stats)m.stats={
       possessionHome:0,possessionAway:0,passes:0,passSuccess:0,progressivePasses:0,
       carries:0,dribbles:0,dribbleSuccess:0,crosses:0,shots:0,shotsOnTarget:0,
@@ -464,6 +464,7 @@
     var otherNear=nearest(otherArr,owner.x,owner.y);
     var cp=m._compProfile||matchCompetitionProfile(m);
     owner.energy=cl(num(owner.energy,70)-(.18+chance*.17),18,100);
+    m.actionHistory.push({team:side,player:owner.id,action:action,success:!!good,clock:num(m._simClock,0)});if(m.actionHistory.length>MAX_ACTION_MEMORY)m.actionHistory.shift();
 
     if(action==='shot'){
       m.stats.shots++;
@@ -686,12 +687,14 @@
       mem.matches=num(mem.matches,0)+1;mem.reward=num(mem.reward,0)*.92+reward;
       mem.successes=num(mem.successes,0)+(reward>0?1:0);
       var last=(m.action&&m.action.name)||'short_pass';
+      for(var hi=0;hi<m.actionHistory.length;hi++){var h=m.actionHistory[hi];if(h.team===side)learnAction(mem,h.action,h.success?(reward>0?1:.25):(reward>0?.15:-.35))}
       learnAction(mem,last,reward);
       if(reward>0){mem.styleBias.risk=cl(num(mem.styleBias.risk,0)+.01,.0,.16);mem.mistakes=Math.max(0,num(mem.mistakes,0)-1)}
       else{mem.styleBias.risk=cl(num(mem.styleBias.risk,0)-.008,-.14,.16);mem.mistakes=num(mem.mistakes,0)+1}
     });
     LEARN.matches=num(LEARN.matches,0)+1;
     LEARN.global.lastResult={home:m.home,away:m.away,homeScore:m.homeScore,awayScore:m.awayScore,competition:m.competition};
+    LEARN.global.competitions=LEARN.global.competitions||{};var ck=String(m.competition||'Competição');LEARN.global.competitions[ck]=num(LEARN.global.competitions[ck],0)+1;
     persistLearning();
   }
 
@@ -700,7 +703,7 @@
     var s=document.createElement('style');s.id='j90-ai2-style';
     s.textContent=[
       '.j90MatchWrap{position:relative;width:100%;}',
-      '.j90CrowdStrip{display:grid;grid-template-columns:1fr auto 1fr;gap:4px;align-items:center;margin:4px 0;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:#070a0b;overflow:hidden;}',
+      '.j90CrowdStrip{display:grid;grid-template-columns:1fr auto 1fr;gap:4px;align-items:center;margin:4px 0;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:#070a0b;overflow:hidden;box-shadow:inset 0 2px 0 var(--comp,#f5b942);}',
       '.j90CrowdSide{position:relative;min-height:30px;padding:5px 7px;overflow:hidden;font-size:7px;font-weight:800;letter-spacing:.25px;}',
       '.j90CrowdSide:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--c1),var(--c2));opacity:.34;}',
       '.j90CrowdSide:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 2px,transparent 2px 7px);opacity:.17;transform:translateX(0);animation:j90CrowdWave 2.6s linear infinite;}',
@@ -727,12 +730,12 @@
       if(!html||!m)return html;
       ensureMatch(m);
       var hp=m.palette.home,ap=m.palette.away,comp=escLocal(m.competition);
-      var strip='<div class="j90MatchWrap"><div class="j90CrowdStrip">'+
+      var strip='<div class="j90MatchWrap"><div class="j90CrowdStrip" style="--comp:'+escLocal(m.compAccent||'#f5b942')+'">'+
         '<div class="j90CrowdSide" style="--c1:'+hp[0]+';--c2:'+hp[1]+'"><span>TORCIDA · '+escLocal(m.home)+'</span></div>'+
         '<div class="j90CrowdComp">'+comp+'</div>'+
         '<div class="j90CrowdSide" style="--c1:'+ap[0]+';--c2:'+ap[1]+';text-align:right"><span>'+escLocal(m.away)+' · TORCIDA</span></div>'+
       '</div><div id="j90MatchPoss" class="j90MatchPoss"><span>POSSE</span><b>Preparando…</b></div><div class="j90MatchStatLine"><span id="j90HomePossStat">50%</span><i id="j90PossBar" style="--w:50%;--c:'+hp[0]+'"></i><span id="j90AwayPossStat">50%</span></div>';
-      return html.replace('<canvas id="j90MatchCanvas"',strip+'<canvas id="j90MatchCanvas"')+'</div>';
+      return html.replace('<canvas id="j90MatchCanvas"',strip+'<canvas id="j90MatchCanvas"');
     }
     wrapped.__j90ai2=true;wrapped.__original=old;
     mgrMatchView=wrapped;
