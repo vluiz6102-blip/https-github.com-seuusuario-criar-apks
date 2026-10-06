@@ -100,6 +100,16 @@ jobs:
           test "$scene_files" -ge 1
           npm run audio:validate
 
+      - name: Teste real de inicialização e fluxo no Chromium
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.61.1
+          npx playwright install --with-deps chromium
+          nohup python3 -m http.server 4173 --directory www >/tmp/j90-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          sleep 1
+          J90_SMOKE_URL=http://127.0.0.1:4173/ node scripts/browser-smoke.mjs
+
       - name: Preparar Android
         run: |
           if [ ! -d android ]; then npx cap add android; fi
