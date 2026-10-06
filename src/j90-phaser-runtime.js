@@ -25,6 +25,7 @@ function gpuFamily(g){
   if(/apple/.test(s))return 'apple';
   return 'unknown';
 }
+async function nativeDeviceInfo(){try{var d=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Device;if(d&&d.getInfo)return await d.getInfo();}catch(e){}return null;}
 function quality(g){
   var cores=Math.max(1,Number(navigator.hardwareConcurrency||4));
   var mem=Number(navigator.deviceMemory||0);
@@ -56,8 +57,11 @@ window.J90Graphics={
     window.J90_GRAPHICS_PROFILE=p;
     return p;
   },
-  start:function(){
+  start:async function(){
     var p=this.detect();
+    var n=await nativeDeviceInfo();
+    if(n){p.model=n.model||'';p.manufacturer=n.manufacturer||'';p.osVersion=n.osVersion||'';p.webViewVersion=n.webViewVersion||'';}
+    window.J90_GRAPHICS_PROFILE=p;
     window.J90_PHASER_READY=!!window.Phaser;
     return p;
   }
