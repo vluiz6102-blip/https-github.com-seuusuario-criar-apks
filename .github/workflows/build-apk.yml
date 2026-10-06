@@ -276,15 +276,29 @@ jobs:
           local_sha=$(cut -d' ' -f1 "$sha_file")
           tag="jornada-90-build-${GITHUB_RUN_NUMBER}"
 
-          # Cria a release como rascunho. Nenhum binário é enviado pelo gh.
-          gh release create "$tag" --repo "${GITHUB_REPOSITORY}" --target "${GITHUB_SHA}" --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}" --notes "Build validada automaticamente. O APK abaixo foi auditado e terá tamanho/SHA-256 conferidos após o upload." --draft
-          release_id=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.id')
-          upload_url=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.upload_url' | sed 's/{.*//')
+          # Cria a Release diretamente pela API REST para evitar a referência
+          # 'untagged' observada com gh release create nesta execução.
+          payload=$(jq -n \
+            --arg tag "$tag" \
+            --arg target "$GITHUB_SHA" \
+            --arg name "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}" \
+            --arg body "Build validada automaticamente. O APK foi auditado e terá tamanho/SHA-256 conferidos após o upload." \
+            '{tag_name:$tag,target_commitish:$target,name:$name,body:$body,draft:true,prerelease:false}')
+          release_json=$(curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: application/json" \
+            --data "$payload" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases")
+          release_id=$(printf '%s' "$release_json" | jq -r '.id // empty')
+          upload_url=$(printf '%s' "$release_json" | jq -r '.upload_url // empty' | sed 's/{.*//')
           test -n "$release_id"
           test -n "$upload_url"
+          echo "RELEASE_ID=${release_id}"
+          echo "RELEASE_TAG=${tag}"
 
-          # Upload binário por HTTP/1.1 evita o caminho do gh release create que
-          # já produziu divergência de tamanho/digest neste APK > 1 GiB.
+          # Upload binário bruto, sem Actions artifact e sem recompressão.
           curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
@@ -297,7 +311,7 @@ jobs:
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: application/octet-stream" \
+            -H "Content-Type: text/plain; charset=utf-8" \
             --data-binary "@${sha_file}" \
             "${upload_url}?name=Jornada-90-Manager.apk.sha256"
 
@@ -309,15 +323,33 @@ jobs:
             --data-binary "@${info_file}" \
             "${upload_url}?name=Jornada-90-Manager-release.txt"
 
-          # Confere o que o servidor realmente recebeu antes de tornar a release pública.
-          remote_size=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | select(.name=="Jornada-90-Manager.apk") | .size')
-          remote_digest=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | select(.name=="Jornada-90-Manager.apk") | .digest')
+          # Conferência autoritativa do asset recebido pelo GitHub.
+          assets_json=$(curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}")
+          remote_size=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .size')
+          remote_digest=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .digest')
+          remote_state=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .state')
+          test "$remote_state" = "uploaded"
           test "$remote_size" -eq "$bytes"
           test "$remote_digest" = "sha256:${local_sha}"
+          echo "RELEASE_APK_STATE=uploaded"
           echo "RELEASE_APK_SIZE_MATCH=OK"
           echo "RELEASE_APK_SHA256_MATCH=OK"
 
-          gh release edit "$tag" --repo "${GITHUB_REPOSITORY}" --draft=false --latest
+          # Só depois da conferência a Release deixa de ser rascunho e vira a
+          # versão pública/última.
+          publish_payload='{"draft":false,"prerelease":false,"make_latest":true}'
+          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -X PATCH \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: application/json" \
+            --data "$publish_payload" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}" >/dev/null
           echo "RELEASE_PUBLISHED=OK"
 
       - name: Publicar relatório pequeno do build
