@@ -37,16 +37,22 @@ await page.locator('#nm').fill('Smoke Test');
 const offer = page.locator('.offerCard').first();
 if (await offer.count() !== 1) throw new Error('No club offer is available.');
 await offer.click();
-const confirm = page.getByRole('button', { name: /Confirmar primeiro contrato/i }).first();
-if (await confirm.count() !== 1) throw new Error('Club confirmation control did not appear after selection.');
+const confirm = page.locator('#startConfirm');
+if (await confirm.count() !== 1) throw new Error('Club confirmation control is missing.');
+if (await confirm.isDisabled()) throw new Error('Club confirmation control stayed disabled after selection.');
+const startGuard = await page.evaluate(() => ({
+  startCareerType: typeof window.startCareer
+}));
+if (startGuard.startCareerType !== 'function') throw new Error('Career start function is unavailable.');
 await confirm.click();
-await page.waitForTimeout(700);
+await page.waitForTimeout(500);
 if (await page.locator('.j90ManagerShell').count() !== 1) {
   const diagnostic = await page.evaluate(() => ({
     bodyText: (document.body.innerText || '').slice(0, 1200),
     hasApp: !!document.querySelector('#app'),
     appHtml: document.querySelector('#app')?.innerHTML?.slice(0, 1600) || '',
-    managerState: !!window.J90ManagerBridge?.getState?.()
+    managerState: !!window.J90ManagerBridge?.getState?.(),
+    startCareerType: typeof window.startCareer
   }));
   throw new Error('Manager screen did not open after club confirmation. ' + JSON.stringify({ errors, diagnostic }));
 }
