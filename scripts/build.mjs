@@ -39,6 +39,7 @@ Object.values(manifest).forEach(list => list.sort());
 const soundscapeSource = readFileSync('src/j90-soundscape.js', 'utf8');
 const expansionSource = readFileSync('src/j90-expansion.js', 'utf8');
 const aiSource = readFileSync('src/j90-ai2.js', 'utf8');
+const tacticsSource = readFileSync('src/j90-tactics.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -50,7 +51,7 @@ const soundscape = soundscapeSource.replace(
 );
 
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource);
 } catch (error) {
   throw new Error('JavaScript syntax validation failed: ' + error.message);
 }
@@ -60,6 +61,7 @@ copyFileSync('index.html', 'www/index.html');
 writeFileSync('www/j90-soundscape.js', soundscape);
 writeFileSync('www/j90-expansion.js', expansionSource);
 writeFileSync('www/j90-ai2.js', aiSource);
+writeFileSync('www/j90-tactics.js', tacticsSource);
 
 if (existsSync(audioRoot)) {
   mkdirSync('www/assets', { recursive: true });
@@ -71,7 +73,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
