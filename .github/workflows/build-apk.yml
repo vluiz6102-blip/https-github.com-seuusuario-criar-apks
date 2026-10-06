@@ -62,6 +62,29 @@ jobs:
       - name: Gerar pacote offline de conteúdo
         run: npm run content:build
 
+      - name: Validar tecnologia e garantir zero fotos de jogadores
+        run: |
+          test ! -d assets/j90-content/players
+          test -d assets/j90-content/technology/animations
+          test -s assets/j90-content/technology/animation-manifest.json
+          test -s assets/j90-content/technology/ai/team-intelligence.json
+          animation_bytes=$(du -sb assets/j90-content/technology/animations | awk '{print $1}')
+          echo "ANIMATION_BYTES=$animation_bytes"
+          test "$animation_bytes" -ge 480000000
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("assets/j90-content/content-manifest.json").read_text(encoding="utf-8"))
+          tech=m.get("technology",{})
+          assert int(tech.get("animationBytes",0)) >= 480000000
+          assert int(tech.get("generatedBytes",0)) >= 480000000
+          assert m.get("teamIntelligence")
+          assert m.get("animationManifest")
+          print("TECH_PACK_VALIDATED=OK")
+          print("TEAM_INTELLIGENCE=OK")
+          print("PLAYER_PHOTOS=DISABLED")
+          PY
+
       - name: Validar pacote e runtime final
         run: npm run quality:scan
 
