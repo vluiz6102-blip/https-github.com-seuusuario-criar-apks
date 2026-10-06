@@ -845,10 +845,10 @@ body{min-height:100dvh;overscroll-behavior-x:none;overscroll-behavior-y:auto}
 </style><style id="j90-cinematic-intro">
 #j90CinematicIntro{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;overflow:hidden;background:linear-gradient(180deg,#4c3f68,#b87859 48%,#e3ad55);color:#fff;opacity:1;transition:opacity .7s ease}
 #j90CinematicIntro.done{opacity:0;pointer-events:none}.j90IntroSky{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 70%,rgba(255,218,125,.58),transparent 42%),linear-gradient(180deg,rgba(74,62,104,.72),rgba(234,168,87,.18))}
-.j90IntroHorizon{position:absolute;left:0;right:0;bottom:18%;height:25%;background:linear-gradient(180deg,transparent,#18251f 68%,#101714);opacity:.72}.j90IntroStadium{position:absolute;left:8%;right:8%;bottom:25%;height:17%;border-radius:50% 50% 4% 4%;background:radial-gradient(ellipse at 50% 100%,#243b30 0 34%,#18251f 35% 70%,transparent 71%);opacity:.72}.j90IntroLights{position:absolute;left:15%;right:15%;bottom:31%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,226,145,.8),transparent);box-shadow:0 0 18px rgba(255,225,150,.55);opacity:.65}
-.j90IntroBirds{position:absolute;inset:0;overflow:hidden}.j90IntroBird{position:absolute;width:15px;height:6px;border-top:2px solid rgba(255,255,255,.72);border-radius:50%;animation:j90Bird 9s linear infinite}.j90IntroBird:after{content:"";position:absolute;left:10px;top:-2px;width:15px;height:6px;border-top:2px solid rgba(255,255,255,.72);border-radius:50%}.j90IntroBird:nth-child(1){top:24%;left:-4%;animation-delay:-1s;transform:scale(.7)}.j90IntroBird:nth-child(2){top:32%;left:-8%;animation-delay:-4s;transform:scale(.45)}.j90IntroBird:nth-child(3){top:19%;left:-12%;animation-delay:-7s;transform:scale(.55)}@keyframes j90Bird{to{translate:115vw 8vh}}
-.j90IntroCenter{position:relative;z-index:3;text-align:center}.j90IntroName{margin:0;font-size:clamp(34px,9vw,68px);font-weight:900;letter-spacing:.025em;text-shadow:0 0 24px rgba(255,255,255,.2);animation:j90Name 2.1s cubic-bezier(.2,.7,.2,1) both}.j90IntroSub{margin-top:10px;font-size:9px;letter-spacing:.34em;opacity:.7;animation:j90Sub 1.4s .65s ease both}.j90IntroLine{width:0;height:1px;margin:14px auto 0;background:rgba(255,255,255,.7);animation:j90Line 1.2s .9s ease forwards}.j90IntroProgress{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:min(180px,42vw);height:2px;background:rgba(255,255,255,.18);overflow:hidden;border-radius:2px}.j90IntroProgress i{display:block;width:0;height:100%;background:#fff;animation:j90Progress 5s linear forwards}
-@keyframes j90Name{from{opacity:0;transform:translateY(12px);filter:blur(5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}@keyframes j90Sub{from{opacity:0;transform:translateY(5px)}to{opacity:.7;transform:none}}@keyframes j90Line{to{width:90px}}@keyframes j90Progress{to{width:100%}}@media(prefers-reduced-motion:reduce){#j90CinematicIntro *{animation:none!important}.j90IntroLine{width:90px}.j90IntroProgress i{width:100%}}
+.j90IntroHorizon{position:absolute;left:0;right:0;bottom:18%;height:25%;background:linear-gradient(180deg,transparent,#18251f 68%,#101714);opacity:.72}.j90IntroStadium{position:absolute;left:8%;right:8%;bottom:25%;height:17%;border-radius:50% 50% 4% 4%;background:radial-gradient(ellipse at 50% 100%,#243b30 0 34%,#18251f 35% 70%,transparent 71%);opacity:.72}.j90IntroLights{position:absolute;left:15%;right:15%;bottom:31%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,226,145,.8),transparent);opacity:.6;will-change:opacity,transform}
+.j90IntroBirds{position:absolute;inset:0;overflow:hidden}.j90IntroBird{position:absolute;width:15px;height:6px;border-top:2px solid rgba(255,255,255,.72);border-radius:50%;animation:j90Bird 9s linear infinite}.j90IntroBird:after{content:"";position:absolute;left:10px;top:-2px;width:15px;height:6px;border-top:2px solid rgba(255,255,255,.72);border-radius:50%}.j90IntroBird:nth-child(1){top:24%;left:-4%;animation-delay:-1s;transform:scale(.7)}.j90IntroBird:nth-child(2){top:32%;left:-8%;animation-delay:-4s;transform:scale(.45)}.j90IntroBird:nth-child(3){top:19%;left:-12%;animation-delay:-7s;transform:scale(.55)}@keyframes j90Bird{to{transform:translate3d(115vw,8vh,0)}}
+.j90IntroCenter{position:relative;z-index:3;text-align:center}.j90IntroName{margin:0;font-size:clamp(34px,9vw,68px);font-weight:900;letter-spacing:.025em;animation:j90Name 1.5s cubic-bezier(.2,.7,.2,1) both;will-change:transform,opacity}.j90IntroSub{margin-top:10px;font-size:9px;letter-spacing:.34em;opacity:.7;animation:j90Sub 1.4s .65s ease both}.j90IntroLine{width:0;height:1px;margin:14px auto 0;background:rgba(255,255,255,.7);animation:j90Line 1.2s .9s ease forwards}.j90IntroProgress{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:min(180px,42vw);height:2px;background:rgba(255,255,255,.18);overflow:hidden;border-radius:2px}.j90IntroProgress i{display:block;width:0;height:100%;background:#fff;animation:j90Progress 5s linear forwards}
+@keyframes j90Name{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes j90Sub{from{opacity:0;transform:translateY(5px)}to{opacity:.7;transform:none}}@keyframes j90Line{to{width:90px}}@keyframes j90Progress{to{width:100%}}@media(prefers-reduced-motion:reduce){#j90CinematicIntro *{animation:none!important}.j90IntroLine{width:90px}.j90IntroProgress i{width:100%}}
 </style><style id="j90-manager-overhaul">
 body.j90-manager-screen{width:100vw!important;max-width:100vw!important;min-width:100vw!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#070b0f!important}
 body.j90-manager-screen #app{width:100vw!important;max-width:none!important;min-width:0!important;height:100dvh!important;min-height:100dvh!important;margin:0!important;padding:0!important;overflow:hidden!important}
@@ -873,7 +873,7 @@ body.j90-manager-screen #app{width:100vw!important;max-width:none!important;min-
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
 <script>
 const $=id=>document.getElementById(id);
-let audioOK=true,hapticOK=true,displayTheme='amoled',audioMode='stereo',AC=null,introStep=0,menuScreen='home';try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled';audioMode=['stereo','immersive','mono'].includes(localStorage.getItem('j90_audio_mode'))?localStorage.getItem('j90_audio_mode'):'stereo'}catch(e){}
+let audioOK=true,hapticOK=true,displayTheme='amoled',audioMode='stereo',AC=null,introStep=0,menuScreen='home',j90IntroActive=true;try{audioOK=localStorage.getItem('j90_som')!='0';hapticOK=localStorage.getItem('j90_vib')!='0';displayTheme=localStorage.getItem('j90_tela')==='lcd'?'lcd':'amoled';audioMode=['stereo','immersive','mono'].includes(localStorage.getItem('j90_audio_mode'))?localStorage.getItem('j90_audio_mode'):'stereo'}catch(e){}
 function haptic(type='click'){
  if(!hapticOK)return;
  const p={click:12,start:[22,28,22],train:18,rest:18,whistle:28,goal:[40,45,90],correct:[16,24],wrong:[42,22,42],injury:[60,35,60],card:52,transfer:[24,30,50],trophy:[24,32,65,90]};
@@ -975,7 +975,7 @@ async function j90SoundscapeStart(){
  wind.connect(wf);wf.connect(wg);wg.connect(j90SoundscapeBus);wind.start();j90SoundscapeWind=wind;
  j90SoundscapeTimer=setTimeout(()=>{if(gen===j90SoundscapeGeneration)j90SoundscapeEvent()},RI(1400,3600))
 }
-function j90SyncSoundscape(){if(!audioOK||introStep!==0){j90SoundscapeStop();return}j90SoundscapeStart()}
+function j90SyncSoundscape(){if(j90IntroActive||!audioOK||introStep!==0){j90SoundscapeStop();return}j90SoundscapeStart()}
 async function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
@@ -2148,14 +2148,14 @@ function save(){if(!S)return;try{S._savedAt=Date.now();localStorage.setItem('car
 window.J90ManagerBridge={getState:function(){return S},save:function(){save()},render:function(still){render(still)},setTab:function(k){tab=k;render(1)}};function j90PlusOpen(){if(window.J90Expansion&&typeof window.J90Expansion.open==='function')window.J90Expansion.open()}
 addEventListener('visibilitychange',()=>{if(document.hidden&&S)save()},{passive:true});addEventListener('pagehide',()=>{if(S)save()},{passive:true});
 function renderManagerPartial(still){applyTheme();sanitizeState();ensureManager();j90PerfState();var A=$('app'),H=$('j90-manager-head'),T=$('j90-manager-tabs'),C=$('j90-manager-content');document.body.classList.add('j90-manager-screen');if(!H||!T||!C){A.innerHTML='<div class="j90ManagerShell"><div id="j90-manager-head">'+head()+'</div><div id="j90-manager-tabs">'+tabs()+'</div><main id="j90-manager-content">'+managerV()+'</main></div>'}else{H.innerHTML=head();T.innerHTML=tabs();C.innerHTML=managerV()}document.body.classList.remove('j90-menu-active');save()}
-function j90CinematicIntro(){var old=document.getElementById('j90CinematicIntro');if(old)return;var el=document.createElement('div');el.id='j90CinematicIntro';el.innerHTML='<div class="j90IntroSky"></div><div class="j90IntroHorizon"></div><div class="j90IntroStadium"></div><div class="j90IntroLights"></div><div class="j90IntroBirds"><i class="j90IntroBird"></i><i class="j90IntroBird"></i><i class="j90IntroBird"></i></div><div class="j90IntroCenter"><h1 class="j90IntroName">Victor Luiz</h1><div class="j90IntroSub">JORNADA 90 MANAGER</div><div class="j90IntroLine"></div></div><div class="j90IntroProgress"><i></i></div>';document.body.appendChild(el);function finish(){el.classList.add('done');setTimeout(function(){el.remove()},750)}window.__J90_CINEMATIC_INTRO={finish:finish};setTimeout(finish,5000);el.addEventListener('click',finish,{passive:true})}
+function j90CinematicIntro(){var old=document.getElementById('j90CinematicIntro');if(old)return;var low=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory&&navigator.deviceMemory<=3);document.body.classList.toggle('j90-intro-low',!!low);var el=document.createElement('div');el.id='j90CinematicIntro';el.innerHTML='<div class="j90IntroSky"></div><div class="j90IntroHorizon"></div><div class="j90IntroStadium"></div><div class="j90IntroLights"></div><div class="j90IntroBirds"><i class="j90IntroBird"></i><i class="j90IntroBird"></i><i class="j90IntroBird"></i></div><div class="j90IntroCenter"><h1 class="j90IntroName">Victor Luiz</h1><div class="j90IntroSub">JORNADA 90 MANAGER</div><div class="j90IntroLine"></div></div><div class="j90IntroProgress"><i></i></div>';document.body.appendChild(el);function finish(){if(el.classList.contains('done'))return;j90IntroActive=false;el.classList.add('done');document.body.classList.remove('j90-intro-low');setTimeout(function(){el.remove();startJ90Atmosphere();j90SyncSoundscape()},500)}window.__J90_CINEMATIC_INTRO={finish:finish};setTimeout(finish,3200);el.addEventListener('click',finish,{passive:true})}
 function render(still){
  applyTheme();
  if(S){sanitizeState();ensureManager()}
  var W=$('j90-world');if(W&&!W.firstElementChild)W.innerHTML=worldFx();
  document.body.classList.toggle('j90-menu-active',introStep===0);document.body.classList.toggle('j90-manager-screen',!!(S&&S.manager&&introStep!==0));
  var A=$('app');A.className=still?'still':'';
- if(!S){A.innerHTML=intro();startJ90Atmosphere();j90SyncSoundscape();return}
+ if(!S){A.innerHTML=intro();if(!j90IntroActive){startJ90Atmosphere();j90SyncSoundscape()}return}
  if(introStep===0){A.innerHTML=menuV();refreshJ90AtmosphereNodes();startJ90Atmosphere();j90SyncSoundscape();return}
  if(S.manager){if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}j90AtmoStarted=false;renderManagerPartial(still);j90SyncSoundscape();return}
  var h=head()+tabs()+(tab==='game'?gameV():tab==='tbl'?tblV():tab==='news'?newsV():tab==='ply'?playerV():careerV());
@@ -2343,3 +2343,13 @@ function patchRender(){if(typeof render!=='function'||render.__j90Polished)retur
 function init(){j90CinematicIntro();patchRender();polishMenu()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();</script></body>
 </html>
+<style>
+@media (prefers-reduced-motion:reduce){
+  #j90CinematicIntro{transition:none!important}
+  #j90CinematicIntro *{animation:none!important;transition:none!important}
+}
+body.j90-intro-low .j90IntroBirds,
+body.j90-intro-low .j90IntroLights,
+body.j90-intro-low .j90IntroProgress{display:none!important}
+body.j90-intro-low .j90IntroName{animation:none!important}
+</style>
