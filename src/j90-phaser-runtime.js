@@ -1,0 +1,1 @@
+window.J90Graphics={version:'phaser4-core-1',detect:function(){return {engine:'Phaser 4.2.1'};},start:function(){window.J90_PHASER_READY=!!window.Phaser;return this.detect();}};window.J90Graphics.start();
