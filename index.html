@@ -880,6 +880,10 @@ function startJ90Atmosphere(){
    menuTime=(performance.now()/18000)%1;document.body.classList.toggle('j90-low-quality',j90FrameRate<=30);updateJ90MenuEnvironment();const atmoRate=Math.min(displayTheme==='amoled'?24:30,j90FrameRate);
    if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
     const dt=Math.min(70,t-(frame.last||t));frame.last=t;
+    j90FrameStatsState.frames++;
+    if(j90FrameStatsState.last){const fi=t-j90FrameStatsState.last;j90FrameStatsState.intervals.push(Math.min(250,fi));if(j90FrameStatsState.intervals.length>240)j90FrameStatsState.intervals.shift();if(fi>1000/Math.max(1,atmoRate)*1.5)j90FrameStatsState.slowFrames++}
+    j90FrameStatsState.last=t;
+    j90FrameStatsState.elapsed+=dt;
     for(const p of j90AtmoParticles){
      p.x+=p.s*dt;p.y-=p.s*.12*dt;p.p+=.0008*dt;
      if(p.x>1.04||p.y<.45){p.x=-.03;p.y=.56+Math.random()*.38}
@@ -892,9 +896,20 @@ function startJ90Atmosphere(){
   else j90AtmoFrame=requestAnimationFrame(frame);
  }else if(reduced){menuTime=0;updateJ90MenuEnvironment();j90AtmoNodes.forEach(draw)}
 }
+const j90FrameStatsState={frames:0,elapsed:0,last:0,intervals:[],slowFrames:0,longTasks:0};
+function J90FrameStats(reset=false){
+ if(reset){j90FrameStatsState.frames=0;j90FrameStatsState.elapsed=0;j90FrameStatsState.last=0;j90FrameStatsState.intervals.length=0;j90FrameStatsState.slowFrames=0;j90FrameStatsState.longTasks=0}
+ const intervals=j90FrameStatsState.intervals;
+ const avgInterval=intervals.length?intervals.reduce((a,b)=>a+b,0)/intervals.length:0;
+ const avgFps=avgInterval>0?1000/avgInterval:0;
+ const maxFps=intervals.length?1000/Math.max(.001,Math.min(...intervals)):0;
+ return {frames:j90FrameStatsState.frames,averageFps:+avgFps.toFixed(2),maxFps:+maxFps.toFixed(2),slowFrames:j90FrameStatsState.slowFrames,longTasks:j90FrameStatsState.longTasks,measuredMs:+j90FrameStatsState.elapsed.toFixed(1)};
+}
+window.J90FrameStats=J90FrameStats;
+if(typeof PerformanceObserver!=='undefined'){try{new PerformanceObserver(list=>{j90FrameStatsState.longTasks+=list.getEntries().length}).observe({type:'longtask',buffered:true})}catch(e){}}
 function j90PerfSnapshot(){
  const perf=performance.memory?{usedJSHeapSize:performance.memory.usedJSHeapSize,totalJSHeapSize:performance.memory.totalJSHeapSize}:null;
- return {menuTime:+menuTime.toFixed(3),atmoParticles:j90AtmoParticles.length,atmoNodes:j90AtmoNodes.length,soundscapeNodes:j90SoundscapeNodes.length,activeAudioSources:j90SoundscapeNodes.length+(j90SoundscapeWind?1:0),fpsTarget:j90FrameRate,jsHeap:perf,animations:document.getAnimations?document.getAnimations().length:null};
+ return Object.assign({menuTime:+menuTime.toFixed(3),atmoParticles:j90AtmoParticles.length,atmoNodes:j90AtmoNodes.length,soundscapeNodes:j90SoundscapeNodes.length,activeAudioSources:j90SoundscapeNodes.length+(j90SoundscapeWind?1:0),fpsTarget:j90FrameRate,jsHeap:perf,animations:document.getAnimations?document.getAnimations().length:null},J90FrameStats());
 }
 window.J90Perf={snapshot:j90PerfSnapshot};
 function newGame(){if(S&&!confirm('Sua carreira atual será substituída por uma nova. O salvamento atual será apagado. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=1;menuScreen='home';render()}
