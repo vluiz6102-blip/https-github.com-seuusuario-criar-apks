@@ -209,13 +209,15 @@ async function addEspnLeague(map,league,gameNames){
     const sourceTeams=espnTeamObjects(payload);
     for(const target of gameNames){
       const aliases=candidateNames(target).map(norm);
-      const team=sourceTeams.find(t=>{
-        const names=[t.displayName,t.name,t.shortDisplayName,t.abbreviation,t.slug].map(norm).filter(Boolean);
-        return aliases.some(a=>names.includes(a)||names.some(n=>n.includes(a)||a.includes(n)));
+      const getNames=t=>[t.displayName,t.name,t.shortDisplayName,t.abbreviation,t.slug].map(norm).filter(Boolean);
+      const exact=sourceTeams.find(t=>getNames(t).some(n=>aliases.includes(n)));
+      const team=exact||sourceTeams.find(t=>{
+        const names=getNames(t);
+        return aliases.some(a=>names.some(n=>n===a||n.startsWith(a+' ')||a.startsWith(n+' ')));
       });
-      if(!team?.id&&!team?.slug)continue;
+      if(!team?.id)continue;
       try{
-        const roster=await fetchJson(ESPN_BASE+'/sports/soccer/'+league+'/teams/'+encodeURIComponent(String(team.slug||team.id))+'/roster',20000);
+        const roster=await fetchJson(ESPN_BASE+'/sports/soccer/'+league+'/teams/'+encodeURIComponent(String(team.id))+'/roster?limit=500',20000);
         const players=espnRosterEntries(roster);
         if(players.length>=11){
           map.set(norm(target),{source:'ESPN '+league,sourceName:String(team.displayName||team.name||target),players});
@@ -226,6 +228,7 @@ async function addEspnLeague(map,league,gameNames){
   }catch(e){console.warn('ESPN league '+league+' indisponível: '+String(e?.message||e));}
 }
 function findStatic(map,name){
+  const strict=new Set(['Racing','Nacional']);
   const candidates=candidateNames(name).map(norm).filter(Boolean);
   for(const target of candidates){
     const exact=map.get(target);
@@ -241,6 +244,9 @@ function findStatic(map,name){
     }
     return false;
   };
+  if(strict.has(name)){
+    return null;
+  }
   const hits=[];
   for(const target of candidates){
     for(const [key,val] of map){
@@ -294,6 +300,8 @@ catch(e){console.warn('Cartola 2026 indisponível: '+e.message);}
 
 const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga','Botafogo-SP','Ferroviária','São Bernardo','Confiança','Londrina','Aparecidense','Coritiba','Goiás','Ceará','Vila Nova','Avaí','Chapecoense','Sport','Novorizontino','Operário-PR','América-MG','Flamengo','Palmeiras','Botafogo','Cruzeiro','Corinthians','São Paulo','Grêmio','Internacional','Atlético-MG','Bahia','River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Toluca']);
 for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,teams.filter(t=>brazilAndLatam.has(t)));
+const nationalTeams=new Set(['Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica']);
+await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t)));
 
 const next={};
 const pending=[];
