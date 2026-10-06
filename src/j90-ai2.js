@@ -384,6 +384,8 @@
     if(role==='ATT'&&['clearance','tackle','backpass'].includes(action))score-=.55;
     var mem=brain.memory&&brain.memory.action&&brain.memory.action[action];
     if(mem)score*=clamp(num(mem.bias,1),.72,1.32);
+    var rm=brain.memory&&brain.memory.roleMemory&&brain.memory.roleMemory[role];
+    if(rm&&num(rm.n,0)>=4){var rr=num(rm.success,0)/Math.max(1,num(rm.n,0));score*=clamp(1+(rr-.5)*.20,.88,1.12)}
     score*=1+(brain.adaptability-.5)*.08;
     return score;
   }
@@ -858,7 +860,7 @@
       mem.matches=num(mem.matches,0)+1;mem.reward=num(mem.reward,0)*.92+reward;
       mem.successes=num(mem.successes,0)+(reward>0?1:0);
       var last=(m.action&&m.action.name)||'short_pass';
-      for(var hi=0;hi<m.actionHistory.length;hi++){var h=m.actionHistory[hi];if(h.team===side)learnAction(mem,h.action,h.success?(reward>0?1:.25):(reward>0?.15:-.35))}
+      for(var hi=0;hi<m.actionHistory.length;hi++){var h=m.actionHistory[hi];if(h.team===side){learnAction(mem,h.action,h.success?(reward>0?1:.25):(reward>0?.15:-.35));var hp=getPlayer(m,side,h.player),hr=playerRole(hp),rm=mem.roleMemory[hr]||(mem.roleMemory[hr]={n:0,success:0,error:0});rm.n=num(rm.n,0)+1;if(h.success)rm.success=num(rm.success,0)+1;else rm.error=num(rm.error,0)+1}}
       learnAction(mem,last,reward);
       if(reward>0){mem.styleBias.risk=cl(num(mem.styleBias.risk,0)+.01,.0,.16);mem.mistakes=Math.max(0,num(mem.mistakes,0)-1)}
       else{mem.styleBias.risk=cl(num(mem.styleBias.risk,0)-.008,-.14,.16);mem.mistakes=num(mem.mistakes,0)+1}
