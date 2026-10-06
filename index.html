@@ -2548,12 +2548,13 @@ function j90MatchFixtureOpponent(){try{var row=S.fx[S.r]||[],hit=row.find(functi
 function j90MatchThink(brain,scoreDiff,minute){var chase=scoreDiff<0?1:scoreDiff>0?-1:0,late=minute>70?1:0;return{tempo:cl(brain.tempo+chase*.12+late*chase*.12,.2,1),press:cl(brain.press+chase*.16+late*.08,.2,1),risk:cl(brain.risk+chase*.2+late*chase*.18,.08,1)}}
 async function mgrStartMatch(){if(window.__J90_MATCH_STARTING)return;window.__J90_MATCH_STARTING=true;var __j90MatchPerf=window.__J90_PERF||j90PerfState();if(__j90MatchPerf.tier==='high')j90LoadTechAnimation();var v=mgrLineupValid();if(!v.ok){window.__J90_MATCH_STARTING=false;toast('Escalação inválida',v.msg);render(1);return}if(S.match2d){window.__J90_MATCH_STARTING=false;return}await j90LoadTeamIntelligence();var ids=S.lineup.slots.filter(Boolean),ps=ids.map(function(id){return S.roster.find(function(p){return p.id===id})}).filter(Boolean),opp=j90MatchFixtureOpponent(),oppRoster=(typeof teamRoster==='function'?teamRoster(opp):[]).map(function(raw,i){return mgrSeed(Object.assign({},raw,{club:opp}),i)}),homeBrain=j90TeamBrain(S.managerClub,ps,S.tactic),awayBrain=j90TeamBrain(opp,oppRoster,'equilibrada');S.match2d={half:1,elapsed:0,duration:Number(S.matchDuration)||60,home:S.managerClub,away:opp,homeScore:0,awayScore:0,ball:{x:.5,y:.5,tx:.5,ty:.5},players:ps.map(function(p,i){var z=MGR_FORMATIONS[S.lineup.formation][i];return{id:p.id,name:p.name,number:p.number,visual:p.visual,x:z.x/100,y:z.y/100,tx:z.x/100,ty:z.y/100,energy:Number(p.form)||70}}),oppPlayers:Array.from({length:11},function(_,i){var raw=oppRoster[i]||{};return{id:'o'+i,name:raw.name||'Adversário',x:.15+(i%5)*.17,y:.18+Math.floor(i/5)*.23,tx:.15+(i%5)*.17,ty:.18+Math.floor(i/5)*.23,visual:raw.visual||{skin:MGR_SKIN[(i+2)%MGR_SKIN.length],hair:MGR_HAIR[(i+3)%MGR_HAIR.length],hairStyle:i%4},energy:Number(raw.form)||70}}),events:[],currentEvent:null,startedAt:Date.now(),paused:false,tactic:S.lineup.formation,_simAcc:0,_simClock:0,_homeBrain:homeBrain,_awayBrain:awayBrain,_ai:{home:j90MatchThink(homeBrain,0,0),away:j90MatchThink(awayBrain,0,0)}};mgrNews('Dia de jogo',S.managerClub+' x '+opp+' com inteligência tática adaptativa.');window.__J90_MATCH_STARTING=false;render(1);setTimeout(mgrMatchStartTimer,60)}
 function mgrPlay(){mgrStartMatch()}
+function pstateMatch(){return window.__J90_PERF||j90PerfState()}
 function mgrMatchStartTimer(){
  if(!S||!S.match2d)return;
  var m=S.match2d,c=document.getElementById('j90MatchCanvas');
  m._dom={clock:document.getElementById('j90MatchClock'),score:document.getElementById('j90MatchScore'),half:document.getElementById('j90MatchHalf'),event:document.getElementById('j90MatchEvent'),log:document.getElementById('j90MatchLog'),canvas:c};
  m._cw=c?c.clientWidth:0;m._ch=c?c.clientHeight:0;m._ctx=c?c.getContext('2d',{alpha:false}):null;m._simAcc=0;m._perfCounter=0;m._drawAcc=0;m._lastTick=performance.now();
- if(c&&m._cw&&m._ch&&(!c.width||c.width!==Math.round(m._cw)||c.height!==Math.round(m._ch))){c.width=Math.round(m._cw);c.height=Math.round(m._ch)}
+ if(c&&m._cw&&m._ch){var __gp=window.J90_GRAPHICS_PROFILE||{},__d=Math.min(1.15,Number(__gp.renderPixelRatio||1),Number(devicePixelRatio)||1);__d=(pstateMatch().tier==='low')?Math.min(__d,.85):__d;var __bw=Math.max(1,Math.round(m._cw*__d)),__bh=Math.max(1,Math.round(m._ch*__d));if(c.width!==__bw||c.height!==__bh){c.width=__bw;c.height=__bh}m._dpr=__d;m._ctx=m._ctx||c.getContext('2d',{alpha:false});if(m._ctx)m._ctx.setTransform(__d,0,0,__d,0,0)}
  if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}j90AtmoStarted=false;startJ90Atmosphere();
 }
 
@@ -2592,15 +2593,29 @@ function mgrMatchHud(){
  if(d.score)d.score.textContent=m.homeScore+' × '+m.awayScore;
  if(d.half)d.half.textContent=m.half===1?'1º TEMPO':'2º TEMPO';
 }
+function mgrMatchSprite(v,team,low){
+ var key=(team||'h')+'|'+(low?'l':'f')+'|'+(v&&v.skin||'')+'|'+(v&&v.hair||'');
+ var cache=S.match2d._spriteCache||(S.match2d._spriteCache={});
+ if(cache[key])return cache[key];
+ var z=document.createElement('canvas'),d=1,w=18,h=20;z.width=w*d;z.height=h*d;
+ var x=z.getContext('2d');x.setTransform(d,0,0,d,0,0);
+ x.fillStyle=team==='a'?'#e8e8e8':'#e6b33f';x.beginPath();x.arc(9,10,low?6:7,0,Math.PI*2);x.fill();
+ if(!low){x.fillStyle=v&&v.skin||'#9b6a4a';x.beginPath();x.arc(9,9,4.2,0,Math.PI*2);x.fill();x.fillStyle=v&&v.hair||'#171717';x.fillRect(5.5,3.8,7,2.6)}
+ return cache[key]=z;
+}
+function mgrMatchBallSprite(low){
+ var m=S.match2d;if(!m)return null;var key=low?'l':'f';m._ballSprites=m._ballSprites||{};if(m._ballSprites[key])return m._ballSprites[key];
+ var z=document.createElement('canvas'),d=1,w=10,h=10;z.width=w;z.height=h;var x=z.getContext('2d');x.fillStyle='#fff7d6';x.beginPath();x.arc(5,5,low?2.7:3.4,0,Math.PI*2);x.fill();return m._ballSprites[key]=z;
+}
 function mgrDraw2D(){
  var m=S&&S.match2d;if(!m)return;var p=window.__J90_PERF||j90PerfState(),d=m._dom||{},c=d.canvas;if(!c)return;
- var w=m._cw||c.clientWidth,h=m._ch||c.clientHeight;if(!w||!h)return;var g=m._ctx||(m._ctx=c.getContext('2d',{alpha:false}));if(!g)return;
+ var w=m._cw||c.clientWidth,h=m._ch||c.clientHeight;if(!w||!h)return;var g=m._ctx||(m._ctx=c.getContext('2d',{alpha:false}));if(!g)return;var dpr=m._dpr||1;g.setTransform(dpr,0,0,dpr,0,0);
  if(!m._fieldCache||m._fieldCache.width!==Math.round(w)||m._fieldCache.height!==Math.round(h)){var bg=document.createElement('canvas');bg.width=Math.round(w);bg.height=Math.round(h);var b=bg.getContext('2d');b.fillStyle='#123d29';b.fillRect(0,0,w,h);b.strokeStyle='rgba(255,255,255,.24)';b.strokeRect(6,6,w-12,h-12);b.beginPath();b.moveTo(w/2,6);b.lineTo(w/2,h-6);b.stroke();if(!p.low){b.beginPath();b.arc(w/2,h/2,Math.min(w,h)*.12,0,Math.PI*2);b.stroke()}m._fieldCache=bg}
  g.drawImage(m._fieldCache,0,0,w,h);var camX=(.5-m.ball.x)*w*.12,camY=(.5-m.ball.y)*h*.08;g.save();g.translate(camX,camY);
  if(j90TechAtlas&&p.tier==='high'){var meta=j90TechAtlasMeta||{frames:32,cols:8,rows:4,frameRate:60},cols=Math.max(1,meta.cols),rows=Math.max(1,meta.rows),frames=Math.max(1,Math.min(meta.frames,cols*rows)),fw=j90TechAtlas.width/cols,fh=j90TechAtlas.height/rows,fi=Math.floor(((performance.now()-j90TechAtlasTimer)/1000)*Math.max(1,meta.frameRate))%frames,sx=(fi%cols)*fw,sy=Math.floor(fi/cols)*fh;g.save();g.globalAlpha=.026;g.drawImage(j90TechAtlas,sx,sy,fw,fh,0,0,w,h);g.restore()}
- var i,q,px,py,v;for(i=0;i<m.players.length;i++){q=m.players[i];px=q.x*w;py=q.y*h;v=q.visual||{};g.beginPath();g.fillStyle='#e6b33f';g.arc(px,py,p.low?6:7,0,Math.PI*2);g.fill();if(!p.low){g.fillStyle=v.skin||'#9b6a4a';g.beginPath();g.arc(px,py-1,4.2,0,Math.PI*2);g.fill();g.fillStyle=v.hair||'#171717';g.fillRect(px-3.5,py-6.2,7,2.6)}}
- for(i=0;i<m.oppPlayers.length;i++){q=m.oppPlayers[i];px=q.x*w;py=q.y*h;v=q.visual||{};g.beginPath();g.fillStyle='#e8e8e8';g.arc(px,py,p.low?6:7,0,Math.PI*2);g.fill();if(!p.low){g.fillStyle=v.skin||'#9b6a4a';g.beginPath();g.arc(px,py-1,4.2,0,Math.PI*2);g.fill();g.fillStyle=v.hair||'#171717';g.fillRect(px-3.5,py-6.2,7,2.6)}}
- g.beginPath();g.fillStyle='#fff7d6';g.arc(m.ball.x*w,m.ball.y*h,p.low?2.7:3.4,0,Math.PI*2);g.fill();g.restore();
+ var i,q,px,py,v,spr;for(i=0;i<m.players.length;i++){q=m.players[i];px=q.x*w;py=q.y*h;v=q.visual||{};spr=mgrMatchSprite(v,'h',p.low);g.drawImage(spr,px-9,py-10,18,20)}
+ for(i=0;i<m.oppPlayers.length;i++){q=m.oppPlayers[i];px=q.x*w;py=q.y*h;v=q.visual||{};spr=mgrMatchSprite(v,'a',p.low);g.drawImage(spr,px-9,py-10,18,20)}
+ spr=mgrMatchBallSprite(p.low);if(spr)g.drawImage(spr,m.ball.x*w-5,m.ball.y*h-5,10,10);g.restore();
 }
 function mgrMatchResume(){if(!S.match2d)return;S.match2d.paused=false;S.match2d.startedAt=Date.now();S.match2d._cw=0;S.match2d._ch=0;render(1);setTimeout(mgrMatchStartTimer,50)}
 function mgrMatchTactic(t){if(!S.match2d)return;S.tactic=t;S.match2d.tactic=t;mgrMatchEvent('Tática alterada para '+t+'.');mgrMatchResume()}
