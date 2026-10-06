@@ -170,7 +170,7 @@ function entriesFromEuroClub(club){
     const name=String(p?.name||'').trim();
     if(!name)continue;
     const key=norm(name);if(seen.has(key))continue;seen.add(key);
-    out.push({name,position:String(p?.position||''),number:p?.number??null,age:Number(p?.age?.years||p?.age)||null,nationality:String(p?.citizenship||p?.nationality||p?.birthPlace?.country||'')});
+    out.push({name,position:String(p?.position||''),number:p?.number??null,age:Number(p?.age?.years||p?.age)||null,ovr:Number(p?.ovr||p?.overall||p?.rating)||null,nationality:String(p?.citizenship||p?.nationality||p?.birthPlace?.country||'')});
   }
   return out;
 }
@@ -245,7 +245,7 @@ function espnRosterEntries(payload){
       const name=String(a?.displayName||a?.fullName||a?.shortName||'').trim();
       if(!name)continue;
       const key=norm(name);if(seen.has(key))continue;seen.add(key);
-      out.push({name,position:String(a?.position?.displayName||a?.position?.abbreviation||''),number:a?.jersey||null,age:Number(a?.age?.years||a?.age)||null,nationality:String(a?.citizenship||a?.nationality||a?.birthPlace?.country||'')});
+      out.push({name,position:String(a?.position?.displayName||a?.position?.abbreviation||''),number:a?.jersey||null,age:Number(a?.age?.years||a?.age)||null,ovr:Number(a?.overall||a?.rating||a?.ratings?.[0]?.value)||null,nationality:String(a?.citizenship||a?.nationality||a?.birthPlace?.country||'')});
     }
   }
   return out;
