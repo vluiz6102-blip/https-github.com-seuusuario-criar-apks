@@ -408,7 +408,7 @@
       '</div>'+
       '<div class="j90xCard">'+historyArchive()+'</div>'+
       '<div class="j90xCard"><div class="j90xTitle"><b>LOG DO CLUBE</b><small>Últimos acontecimentos do Centro</small></div>'+
-      (d.messages.slice(0,8).map(function(m){return '<div class="j90xLog">'+esc(m)+'</div>').join('')||'<div class="j90xEmpty">Sem registros ainda.</div>')+
+      (d.messages.slice(0,8).map(function(m){return '<div class="j90xLog">'+esc(m)+'</div>'}).join('')||'<div class="j90xEmpty">Sem registros ainda.</div>')+
       '</div>'
   }
   function panelBody(d,s){
