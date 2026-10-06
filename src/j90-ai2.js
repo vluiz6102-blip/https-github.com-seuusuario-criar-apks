@@ -6,9 +6,10 @@
 (function(){
   'use strict';
 
-  var VERSION='2.0.0';
-  var STORE='j90_ai_learning_v2';
-  var ACTIONS=['short_pass','progressive_pass','carry','dribble','through_ball','cross','switch','backpass','shot','clearance','tackle','hold'];
+  var VERSION='2.5.0';
+  var STORE='j90_ai_learning_v25';
+  var ACTIONS=['short_pass','progressive_pass','carry','dribble','through_ball','cross','switch','backpass','shot','clearance','tackle','hold','one_two','cutback','run_in_behind','hold_up','keeper_release','punch'];
+  var ROLE_ACTIONS={GK:['short_pass','backpass','clearance','hold','keeper_release','punch'],DEF:['short_pass','progressive_pass','switch','backpass','clearance','tackle','carry','cross','hold'],MID:['short_pass','progressive_pass','carry','dribble','through_ball','cross','switch','backpass','shot','tackle','hold','one_two'],ATT:['short_pass','progressive_pass','carry','dribble','through_ball','cross','switch','shot','hold','one_two','cutback','run_in_behind','hold_up']};
   var MAX_TEAMS=160, MAX_ACTION_MEMORY=24;
 
   function num(v,f){v=Number(v);return Number.isFinite(v)?v:f}
