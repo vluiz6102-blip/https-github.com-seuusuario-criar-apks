@@ -256,19 +256,6 @@ function findStatic(map,name){
   hits.sort((a,b)=>a.diff-b.diff||a.key.length-b.key.length);
   return hits[0]?.val||null;
 }
-async const LOCAL_CRITICAL_ROSTERS={
-  'Goiás':[
-    'Tadeu','Diego Caito','Messias','Lucas Ribeiro','Sander','Marcelo Cabo','Rafael Gava','Juninho','Jhonny Lucas','Reginaldo','Allano','Thiago Galhardo'
-  ],
-  'Operário-PR':[
-    'Rafael Santos','William Machado','Guilherme Pira','Joseph','Rodolfo Filemon','Marco Antônio','Jacy','Indio','Vinicius Mingotti','Maxwell','Felipe Augusto','Daniel Lima'
-  ]
-};
-function localCriticalRoster(name){
-  const list=LOCAL_CRITICAL_ROSTERS[name];
-  if(!Array.isArray(list)||list.length<11)return null;
-  return {source:'verified local critical roster',sourceName:name,players:list.map((player,i)=>({name:player,position:i<2?'Goleiro':i<6?'Defensor':i<9?'Meio-campista':'Atacante',number:null}))};
-}
 function sportsDbRoster(name){
   const queries=candidateNames(name);
   for(const q of queries){
@@ -319,10 +306,10 @@ await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t))
 const next={};
 const pending=[];
 for(const name of teams){
-  const hit=findStatic(staticMap,name)||localCriticalRoster(name);
+  const hit=findStatic(staticMap,name);
   if(hit&&hit.players.length){
     next[name]={...hit,fetchedAt:new Date().toISOString()};
-    console.log((hit.source==='verified local critical roster'?'LOCAL ':'STATIC ')+name+' | '+hit.players.length+' jogadores | '+hit.source);
+    console.log('STATIC '+name+' | '+hit.players.length+' jogadores | '+hit.source);
   }else pending.push(name);
 }
 console.log('Fallback TheSportsDB: '+pending.length+' times');
