@@ -234,7 +234,9 @@
     gain.gain.exponentialRampToValueAtTime(Math.max(.0001, gainTarget), AC.currentTime + fade);
 
     source.connect(gain);
-    const out = connectSpatial(gain, false, opts.pan || 0, 0);
+    const spatial = audioMode === 'immersive' && /^(wind|birdsBed|crowd|car)$/.test(name);
+    const pan = typeof opts.pan === 'number' ? opts.pan : ({wind:-.28,birdsBed:.55,crowd:.12,car:(Math.random()*1.4-.7)}[name] || 0);
+    const out = connectSpatial(gain, spatial || !!opts.near, pan, opts.depth || 0);
     out.connect(graph.soundscape);
 
     const record = { name, category, file, source, gain, out, target: gainTarget, buffer: loopBuffer };
@@ -371,13 +373,13 @@
     if (ambienceState.weather === 'clear') {
       if (Math.random() < .52) candidates.push(['birdEvent', .028, { near: Math.random() < .35, cooldown: 19000 }]);
       if (Math.random() < .16) candidates.push(['dog', .025, { cooldown: 32000, near: false, depth: -1 }]);
-      if (Math.random() < .34) candidates.push(['car', .024, { cooldown: 15000 }]);
+      if (Math.random() < .34) candidates.push(['car', .024, { cooldown: 15000, near: true }]);
       if (Math.random() < .09) candidates.push(['bus', .025, { cooldown: 38000 }]);
       if (Math.random() < .08) candidates.push(['horn', .016, { cooldown: 42000 }]);
       if (Math.random() < .08) candidates.push(['branch', .022, { cooldown: 26000 }]);
     } else if (ambienceState.weather === 'lightRain') {
       if (Math.random() < .07) candidates.push(['birdEvent', .012, { cooldown: 42000 }]);
-      if (Math.random() < .28) candidates.push(['car', .028, { cooldown: 13000 }]);
+      if (Math.random() < .28) candidates.push(['car', .028, { cooldown: 13000, near: true }]);
       if (Math.random() < .08) candidates.push(['drops', .02, { cooldown: 17000 }]);
       if (Math.random() < .03) candidates.push(['thunder', .025, { cooldown: 60000 }]);
     } else if (ambienceState.weather === 'heavyRain') {
@@ -386,7 +388,7 @@
       if (Math.random() < .12) candidates.push(['drops', .018, { cooldown: 24000 }]);
     } else if (ambienceState.weather === 'cloudy') {
       if (Math.random() < .22) candidates.push(['birdEvent', .016, { cooldown: 28000 }]);
-      if (Math.random() < .30) candidates.push(['car', .024, { cooldown: 16000 }]);
+      if (Math.random() < .30) candidates.push(['car', .024, { cooldown: 16000, near: true }]);
       if (Math.random() < .12) candidates.push(['dog', .02, { cooldown: 34000 }]);
       if (Math.random() < .08) candidates.push(['gust', .024, { cooldown: 25000 }]);
     }
