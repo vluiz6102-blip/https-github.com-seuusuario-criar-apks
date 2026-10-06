@@ -8,6 +8,8 @@ concurrency:
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     paths:
       - 'index.html'
