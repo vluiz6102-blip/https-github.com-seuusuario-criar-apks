@@ -4,6 +4,7 @@ const base = process.env.J90_SMOKE_URL || 'http://127.0.0.1:4173/';
 const errors = [];
 const browser = await chromium.launch({ headless: true, args: ['--disable-dev-shm-usage', '--disable-gpu-sandbox'] });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+page.setDefaultTimeout(8000);
 
 page.on('pageerror', err => errors.push('pageerror: ' + err.message));
 page.on('console', msg => {
