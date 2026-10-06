@@ -38,6 +38,7 @@ Object.values(manifest).forEach(list => list.sort());
 
 const soundscapeSource = readFileSync('src/j90-soundscape.js', 'utf8');
 const expansionSource = readFileSync('src/j90-expansion.js', 'utf8');
+const aiSource = readFileSync('src/j90-ai2.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -49,7 +50,7 @@ const soundscape = soundscapeSource.replace(
 );
 
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource);
 } catch (error) {
   throw new Error('JavaScript syntax validation failed: ' + error.message);
 }
@@ -58,6 +59,7 @@ mkdirSync('www', { recursive: true });
 copyFileSync('index.html', 'www/index.html');
 writeFileSync('www/j90-soundscape.js', soundscape);
 writeFileSync('www/j90-expansion.js', expansionSource);
+writeFileSync('www/j90-ai2.js', aiSource);
 
 if (existsSync(audioRoot)) {
   mkdirSync('www/assets', { recursive: true });
@@ -69,7 +71,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
@@ -79,4 +81,4 @@ if (!generated.includes('src="j90-soundscape.js"')) {
 const totalAssets = Object.values(manifest).reduce((n, list) => n + list.length, 0);
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: canonical source validated, soundscape + expansion injected, ' + totalAssets + ' audio assets found, ' + rosterTeams + ' team rosters / ' + rosterPlayers + ' players injected, ' + (contentManifest.sceneCount || 0) + ' stadium scenes / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB content pack.');
+console.log('Jornada 90 web build OK: canonical source validated, soundscape + expansion + AI 2.0 injected, ' + totalAssets + ' audio assets found, ' + rosterTeams + ' team rosters / ' + rosterPlayers + ' players injected, ' + (contentManifest.sceneCount || 0) + ' stadium scenes / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB content pack.');
