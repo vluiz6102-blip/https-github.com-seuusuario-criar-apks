@@ -2361,10 +2361,16 @@ render();
 </script>
 <script id="j90-polish-runtime">
 (()=>{'use strict';if(window.__J90_POLISH__)return;window.__J90_POLISH__=true;
-const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);let lastFeedback=0,busyUntil=0;
+const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);let lastFeedback=0,busyUntil=0,busyTarget=null;
 function polishMenu(){const hero=document.querySelector('.menuHero');if(hero&&!hero.dataset.j90Hero){hero.dataset.j90Hero='1';hero.classList.add('j90-menu-enter')}}
 addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;b.classList.add('j90-press');setTimeout(()=>b.classList.remove('j90-press'),120);const n=performance.now();if(n-lastFeedback<140)return;lastFeedback=n;try{if(typeof haptic==='function')haptic('click')}catch(e){}},{passive:true});
-addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=performance.now();const primary=b.matches('.menuBtn.primary,.btn.go,.offerCard');if(primary){if(n<busyUntil){e.preventDefault();e.stopImmediatePropagation();return}busyUntil=n+260;b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280);if(!reduced&&!document.body.classList.contains('j90-cinematic-pulse')){document.body.classList.add('j90-cinematic-pulse');setTimeout(()=>document.body.classList.remove('j90-cinematic-pulse'),920)}}},true);
+addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=performance.now();const primary=b.matches('.menuBtn.primary,.btn.go,.offerCard');if(primary){
+ const transition=b.id==='startConfirm';
+ if(b===busyTarget&&n<busyUntil){e.preventDefault();e.stopImmediatePropagation();return}
+ busyTarget=b;busyUntil=n+260;
+ if(!transition){b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280)}
+ if(!transition&&!reduced&&!document.body.classList.contains('j90-cinematic-pulse')){document.body.classList.add('j90-cinematic-pulse');setTimeout(()=>document.body.classList.remove('j90-cinematic-pulse'),920)}
+}},true);
 function patchRender(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const app=document.querySelector('#app');if(app&&app.firstElementChild&&!still&&!reduced()){app.classList.remove('j90-enter');app.classList.add('j90-leave')}old.apply(this,arguments);if(!still&&!reduced()){const next=document.querySelector('#app');if(next){next.classList.remove('j90-leave');void next.offsetWidth;next.classList.add('j90-enter');setTimeout(()=>next.classList.remove('j90-enter'),380)}}polishMenu()};wrap.__j90Polished=true;window.render=wrap}
 function init(){j90CinematicIntro();patchRender();polishMenu()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.warn('J90 runtime guard:',e.error)}catch(_){}});})();</script></body>
