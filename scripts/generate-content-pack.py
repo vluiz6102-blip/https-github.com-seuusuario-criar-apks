@@ -28,10 +28,10 @@ ROOT = Path("assets/j90-content")
 STADIUMS = ROOT / "stadiums"
 OPENFOOTBALL = ROOT / "openfootball"
 ROSTERS = Path("data/rosters.json")
-TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "600"))
+TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "1100"))
 TARGET_BYTES = TARGET_MB * 1024 * 1024
 WIDTH, HEIGHT = 2048, 1152
-MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "760"))
+MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "1400"))
 
 VARIANTS = [
     ("afternoon", (92, 111, 142), (222, 151, 83), (16, 34, 47)),
@@ -266,7 +266,7 @@ def main() -> None:
     # Four visual contexts per club minimum. Extra scenes are added until the
     # requested package size is reached, so smaller data sets still get a full
     # media library.
-    per_team = max(4, math.ceil(560 / max(1, len(teams))))
+    per_team = max(4, math.ceil(1040 / max(1, len(teams))))
     scenes = []
     total = 0
 
