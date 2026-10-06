@@ -47,6 +47,20 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
+      - name: Preflight de código
+        run: |
+          python3 -m py_compile scripts/generate-content-pack.py
+          node --check scripts/browser-smoke.mjs
+          node - <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html','utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n');
+          new Function(scripts);
+          if (/playerPhotos|j90PlayerPhoto|COMMONS_API|Wikimedia/i.test(scripts)) throw new Error('Player photo code still present.');
+          if ((scripts.match(/setInterval\s*\(/g)||[]).length) throw new Error('setInterval detected.');
+          console.log('PREFLIGHT_JS=OK');
+          NODE
+
       - name: Preparar ferramentas de conteúdo e áudio
         run: sudo apt-get update && sudo apt-get install -y ffmpeg python3-pil
 
