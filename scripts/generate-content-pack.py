@@ -361,13 +361,13 @@ def build_tech_pack(teams: list[str]) -> dict:
         "teams": intelligence,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
-    # 500 MiB is reserved for real frame atlases. They are generated once at
+      # 500 MiB is reserved for real frame atlases. They are generated once at
     # build time and consumed lazily, keeping decoded memory near zero.
     animation_target = TECH_TARGET_BYTES
     total = ai_path.stat().st_size
     manifest = []
     index = 0
-    while total < animation_target and index < 220:
+    while total < animation_target and index < 700:
         team = teams[index % max(1, len(teams))] if teams else "Jornada 90"
         path = animations / f"atlas_{index:03d}_{slug(team)}.png"
         size = generate_animation_atlas(path, stable_seed("atlas", team, str(index)), team)
