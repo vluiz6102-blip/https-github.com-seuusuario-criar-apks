@@ -2019,6 +2019,8 @@ function sanitizeState(){
   S.window=S.window==='open'?'open':'closed';
   S.tactic=typeof S.tactic==='string'?S.tactic:'4-2-3-1';
   S.training=typeof S.training==='string'?S.training:'tatico';
+  S.matchDuration=Number.isFinite(+S.matchDuration)?Math.max(60,Math.min(120,+S.matchDuration)):60;
+  if(!S.lineup||typeof S.lineup!=='object')S.lineup={formation:S.tactic||'4-2-3-1',slots:[],bench:[],saved:false};
   ['roster','scouting','transferOffers','transferHistory','managerNews','managerHistory','managerInbox'].forEach(function(k){if(!Array.isArray(S[k]))S[k]=[]});
   S.roster.forEach(function(p,i){p.id=String(p.id||('p'+i+'_'+i));p.ovr=cl(Number.isFinite(+p.ovr)?+p.ovr:65,45,94);p.morale=cl(Number.isFinite(+p.morale)?+p.morale:70,0,100);p.form=cl(Number.isFinite(+p.form)?+p.form:70,0,100);p.salary=Math.max(0,Number.isFinite(+p.salary)?+p.salary:7);p.years=Math.max(0,Number.isFinite(+p.years)?Math.floor(+p.years):1);p.injury=Math.max(0,Number.isFinite(+p.injury)?Math.floor(+p.injury):0);p.loaned=Math.max(0,Number.isFinite(+p.loaned)?Math.floor(+p.loaned):0);p.start=!!p.start;p.star=!!p.star||p.ovr>=84;p.position=String(p.position||'MEI');p.nationality=String(p.nationality||'Internacional');p.club=String(p.club||S.managerClub);p.style=String(p.style||mgrStyleFor(p));if(!p.visual){var q=mgrSeed(p,i);p.visual=q.visual}});
  }
