@@ -513,6 +513,15 @@ def main() -> None:
         "byTeam": by_team,
         "scenes": scenes,
         "openFootball": openfootball,
+        "technology": {
+            "targetBytes": tech["targetBytes"],
+            "generatedBytes": tech["generatedBytes"],
+            "animationBytes": tech["animationBytes"],
+            "animationAtlases": tech["animationAtlases"],
+            "aiBytes": tech["aiBytes"],
+        },
+        "teamIntelligence": tech["teamIntelligence"],
+        "animationManifest": tech["animationManifest"],
         "design": {
             "description": "Offline stadium atmosphere gallery for Jornada 90 Manager",
             "resolution": f"{WIDTH}x{HEIGHT}",
