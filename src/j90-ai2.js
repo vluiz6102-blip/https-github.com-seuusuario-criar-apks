@@ -255,7 +255,8 @@
     if(!m.stats)m.stats={
       possessionHome:0,possessionAway:0,passes:0,passSuccess:0,progressivePasses:0,
       carries:0,dribbles:0,dribbleSuccess:0,crosses:0,shots:0,shotsOnTarget:0,
-      tackles:0,interceptions:0,clearances:0,throughBalls:0,switches:0,errors:0
+      tackles:0,interceptions:0,clearances:0,throughBalls:0,switches:0,errors:0,saves:0,goalsPrevented:0,
+      bigChances:0,keyPasses:0,attacks:0
     };
     m.possessionTeam=m.possessionTeam||'home';
     m.possessionPlayerId=m.possessionPlayerId||null;
@@ -582,7 +583,7 @@
   }
 
   function resolveAction(m,side,owner,action,brain,oppBrain){
-    var receiver=(action==='shot'||action==='clearance'||action==='tackle')?null:chooseNextReceiver(m,side,owner,action);
+    var receiver=(action==='shot'||action==='clearance'||action==='tackle'||action==='run_in_behind'||action==='hold_up'||action==='punch')?null:chooseNextReceiver(m,side,owner,action);
     var chance=outcomeChance(m,side,owner,action,receiver,brain,oppBrain);
     var roll=rnd(m);
     var good=roll<chance;
@@ -598,7 +599,8 @@
       var onTarget=good||roll<chance+.10;
       if(onTarget)m.stats.shotsOnTarget++;
       var xg=cl(.10+playerRating(owner,'shoot',owner.ovr)/1400+brain.attack*.17+(side==='home'?owner.x:1-owner.x)*.26+num(m.danger[side],.2)*.12-(pressureAt(m,side,owner)*.12),.03,.72);
-      if(onTarget&&rnd(m)<xg){
+      var keeperStopped=chanceKeeperSave(m,side,owner,onTarget,xg);
+      if(onTarget&&!keeperStopped&&rnd(m)<xg){
         if(side==='home')m.homeScore++;else m.awayScore++;
         m.lastAction='goal';m.danger.home=.18;m.danger.away=.18;
         emit(m,'GOOOL! '+escLocal(owner.name||'Jogador')+' finaliza e marca!','goal',0);
@@ -607,8 +609,9 @@
         transferPossession(m,other,kickoff,'kickoff');
         return;
       }
+      if(keeperStopped)return;
       m.danger[side]=cl(num(m.danger[side],.2)+.13,.05,.95);
-      if(onTarget)emit(m,'Defesaça! '+escLocal(m.away)+' segura o chute de '+escLocal(owner.name||'atacante')+'.','save',1.7);
+      if(onTarget)emit(m,'A bola passa perto após a finalização de '+escLocal(owner.name||'atacante')+'.','save_miss',1.7);
       else emit(m,(good?'Chute perigoso de ':'Finalização ruim de ')+escLocal(owner.name||'atacante')+'.','shot',2.2);
       if(onTarget&&otherNear&&rnd(m)<.42)transferPossession(m,other,otherNear,'rebound');
       return;
@@ -663,6 +666,44 @@
     if(action==='hold'){
       owner.energy=cl(owner.energy-.06,18,100);
       if(rnd(m)<.10)emit(m,escLocal(owner.name||'Jogador')+' prende a bola e espera apoio.','hold',2.2);
+      return;
+    }
+
+    if(action==='run_in_behind'){
+      var runX=side==='home'?cl(owner.x+.16,.12,.92):cl(owner.x-.16,.08,.88);
+      moveToward(owner,runX,cl(owner.y+(rnd(m)-.5)*.10,.06,.94),.70);
+      m.chain++;owner.ai.heat=cl(owner.ai.heat+.16,0,1);
+      emit(m,escLocal(owner.name||'Atacante')+' dispara nas costas da defesa.','run_in_behind',1.8);
+      return;
+    }
+
+    if(action==='hold_up'){
+      moveToward(owner,owner.x+(side==='home'?.025:-.025),owner.y,.32);
+      owner.energy=cl(owner.energy-.08,18,100);
+      emit(m,escLocal(owner.name||'Atacante')+' faz pivô e espera o apoio.','hold_up',1.8);
+      return;
+    }
+
+    if(action==='keeper_release'){
+      if(playerRole(owner)!=='GK')return;
+      var outlet=receiver||chooseNextReceiver(m,side,owner,'switch');
+      if(outlet&&good){releaseBall(m,side,owner,outlet,'switch',true);emit(m,escLocal(owner.name||'Goleiro')+' repõe com qualidade para sair jogando.','keeper_release',2.4)}
+      else {m.stats.errors++;transferPossession(m,other,otherNear,'keeper_error');emit(m,escLocal(owner.name||'Goleiro')+' erra a reposição sob pressão.','keeper_error',2.4)}
+      return;
+    }
+
+    if(action==='punch'){
+      if(playerRole(owner)!=='GK')return;
+      m.stats.clearances++;
+      m.ball.tx=cl(owner.x+(side==='home'?.22:-.22),.05,.95);m.ball.ty=cl(owner.y+(rnd(m)-.5)*.55,.06,.94);
+      emit(m,escLocal(owner.name||'Goleiro')+' espalma para longe do perigo.','keeper_punch',2.0);
+      transferPossession(m,side,owner,'keeper_punch');
+      return;
+    }
+
+    if(action==='one_two'||action==='cutback'){
+      if(receiver&&good){releaseBall(m,side,owner,receiver,action,true);emit(m,escLocal(owner.name||'Jogador')+(action==='one_two'?' combina de primeira com o companheiro.':'recua para o meio da área e encontra um companheiro.'),action,1.8)}
+      else if(receiver){emit(m,escLocal(owner.name||'Jogador')+' tenta a combinação, mas a defesa corta.','combo_fail',1.8);releaseBall(m,side,owner,receiver,action,false)}
       return;
     }
 
@@ -750,6 +791,9 @@
       m._ai2={home:hb,away:ab};
 
       updateOffBall(m,'home',hb);updateOffBall(m,'away',ab);
+      updateGoalkeeperAI(m,'home',hb,stepMs/1000);updateGoalkeeperAI(m,'away',ab,stepMs/1000);
+      updateDefenseAI(m,'home',hb);updateDefenseAI(m,'away',ab);
+      updateAttackAI(m,'home',hb);updateAttackAI(m,'away',ab);
 
       var possSide=m.possessionTeam||'home',owner=getPlayer(m,possSide,m.possessionPlayerId);
       if(!owner){
