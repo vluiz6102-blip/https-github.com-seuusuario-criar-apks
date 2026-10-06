@@ -188,6 +188,74 @@ td:nth-child(n+3),th:nth-child(n+3){width:12.5%}
 }
 @media(min-width:561px){body{padding-left:18px;padding-right:18px}}
 
+/* Jornada 90: folhas em vento + interface viva, sem novo RAF */
+@keyframes j90LeafWindFar{
+  0%{transform:translate3d(-12vw,-18vh,0) rotate(-18deg) scale(.72);opacity:0}
+  12%{opacity:.28}
+  50%{transform:translate3d(34vw,28vh,0) rotate(150deg) scale(.86);opacity:.24}
+  100%{transform:translate3d(118vw,76vh,0) rotate(340deg) scale(.72);opacity:0}
+}
+@keyframes j90LeafWindNear{
+  0%{transform:translate3d(-18vw,-8vh,0) rotate(-35deg) scale(.9);opacity:0}
+  10%{opacity:.58}
+  45%{transform:translate3d(28vw,18vh,0) rotate(125deg) scale(1.05);opacity:.7}
+  72%{transform:translate3d(68vw,48vh,0) rotate(235deg) scale(.92);opacity:.52}
+  100%{transform:translate3d(122vw,72vh,0) rotate(390deg) scale(.76);opacity:0}
+}
+@keyframes j90LeafCross{
+  0%{transform:translate3d(112vw,-4vh,0) rotate(20deg) scale(.72);opacity:0}
+  14%{opacity:.38}
+  52%{transform:translate3d(46vw,22vh,0) rotate(190deg) scale(.9);opacity:.34}
+  100%{transform:translate3d(-22vw,62vh,0) rotate(350deg) scale(.72);opacity:0}
+}
+@keyframes j90StadiumLightPass{
+  0%,100%{transform:translateX(-24%) skewX(-8deg);opacity:.025}
+  48%{opacity:.11}
+  55%{transform:translateX(24%) skewX(8deg);opacity:.07}
+}
+@keyframes j90HeroBreath{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-2px)}
+}
+.stadiumScene .leaves i{
+  width:9px;height:5px;
+  background:linear-gradient(135deg,rgba(238,204,125,.82),rgba(160,112,62,.42));
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+  transform-origin:50% 50%;
+}
+.stadiumScene .leaves.far i{
+  animation:j90LeafWindFar var(--t) cubic-bezier(.2,.65,.3,1) infinite;
+  animation-delay:var(--d);
+}
+.stadiumScene .leaves.near i{
+  width:13px;height:7px;
+  background:linear-gradient(135deg,rgba(247,211,129,.9),rgba(170,115,58,.5));
+  filter:blur(.15px);
+  animation:j90LeafWindNear var(--t) cubic-bezier(.2,.62,.28,1) infinite;
+  animation-delay:var(--d);
+}
+.stadiumScene .leaves.near i:nth-child(2n){animation-name:j90LeafCross}
+.stadiumScene .leaves.near i:nth-child(3n){animation-duration:10.6s}
+.stadiumScene .leaves.far i:nth-child(2n){animation-name:j90LeafCross}
+.stadiumScene .lights:after{
+  content:"";position:absolute;inset:-15% -30%;
+  background:linear-gradient(104deg,transparent 42%,rgba(255,221,154,.12) 50%,transparent 58%);
+  filter:blur(10px);
+  animation:j90StadiumLightPass 8.5s ease-in-out infinite;
+}
+.j90-menu-active .menuHero .logoMark.big{
+  animation:logoFloat 4.8s ease-in-out infinite;
+}
+.j90-menu-active .menuHero .brand{
+  animation:j90HeroBreath 5.5s ease-in-out infinite;
+}
+@media(prefers-reduced-motion:reduce){
+  .stadiumScene .leaves i,
+  .stadiumScene .lights:after,
+  .j90-menu-active .menuHero .logoMark.big,
+  .j90-menu-active .menuHero .brand{animation:none!important}
+}
+
 /* Jornada 90: menu cinematográfico leve, feito só com CSS */
 @keyframes stadiumPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.9;transform:scale(1.04)}}
 @keyframes lightSweep{0%,100%{opacity:.08;transform:translateX(-16%) rotate(-8deg)}50%{opacity:.22;transform:translateX(16%) rotate(8deg)}}
