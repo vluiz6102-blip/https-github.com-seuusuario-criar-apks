@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.jornada90.carreira',
-  appName: 'Jornada 90',
+  appId: 'com.jornada90.manager',
+  appName: 'Jornada 90 Manager',
   webDir: 'www',
   android: {
     backgroundColor: '#000000'
