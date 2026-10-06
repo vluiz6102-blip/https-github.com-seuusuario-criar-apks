@@ -2549,9 +2549,109 @@ function j90TeamIntelProfile(team){var ext=j90TeamIntel&&j90TeamIntel.teams&&j90
 function j90TeamBrain(team,players,tactic){var ext=j90TeamIntelProfile(team),list=Array.isArray(players)?players:[],avg=list.length?list.reduce(function(n,p){return n+(Number(p.ovr)||70)},0)/list.length:68,form=list.length?list.reduce(function(n,p){return n+(Number(p.form)||50)},0)/list.length:50,morale=list.length?list.reduce(function(n,p){return n+(Number(p.morale)||50)},0)/list.length:50,seed=0;for(var i=0;i<String(team||'Jornada 90').length;i++)seed=(seed*31+String(team).charCodeAt(i))>>>0;function r(a,b){seed=(1664525*seed+1013904223)>>>0;return a+(seed/4294967296)*(b-a)}var t=String(tactic||'equilibrada').toLowerCase(),pos= t.includes('ofens')?1:t.includes('defens')?-1:0;return{name:team,external:ext||null,quality:cl(0.45+(avg-55)/80+(form-50)/220+(morale-50)/240,0.35,0.96),attack:cl(avg/100+(form-50)/180+pos*.07,0.35,.98),defense:cl(avg/100+(morale-50)/220-pos*.04,0.35,.98),press:cl((ext?Number(ext.pressing||50)/100:.42)+r(-.08,.18)+pos*.08,.2,.95),tempo:cl((ext?Number(ext.tempo||50)/100:.48)+r(-.1,.18)+pos*.06,.2,.95),risk:cl(.38+r(-.12,.22)+pos*.12,.12,.95),adapt:cl(.5+r(-.08,.2),.25,.95),fatigue:cl(.32+r(-.1,.2),.12,.8)}}
 function j90MatchFixtureOpponent(){try{var row=S.fx[S.r]||[],hit=row.find(function(p){return p[0]===S.me||p[1]===S.me});return hit?(hit[0]===S.me?hit[1]:hit[0]):'Adversário'}catch(e){return'Adversário'}}
 function j90MatchThink(brain,scoreDiff,minute,out){var chase=scoreDiff<0?1:scoreDiff>0?-1:0,late=minute>70?1:0,o=out||{tempo:0,press:0,risk:0};o.tempo=cl(brain.tempo+chase*.12+late*chase*.12,.2,1);o.press=cl(brain.press+chase*.16+late*.08,.2,1);o.risk=cl(brain.risk+chase*.2+late*chase*.18,.08,1);return o}
-async function mgrStartMatch(){if(window.__J90_MATCH_STARTING)return;window.__J90_MATCH_STARTING=true;var __j90MatchPerf=window.__J90_PERF||j90PerfState();if(__j90MatchPerf.tier==='high')j90LoadTechAnimation();var v=mgrLineupValid();if(!v.ok){window.__J90_MATCH_STARTING=false;toast('Escalação inválida',v.msg);render(1);return}if(S.match2d){window.__J90_MATCH_STARTING=false;return}await j90LoadTeamIntelligence();var ids=S.lineup.slots.filter(Boolean),ps=ids.map(function(id){return S.roster.find(function(p){return p.id===id})}).filter(Boolean),opp=j90MatchFixtureOpponent(),oppRoster=(typeof teamRoster==='function'?teamRoster(opp):[]).map(function(raw,i){return mgrSeed(Object.assign({},raw,{club:opp}),i)}),homeBrain=j90TeamBrain(S.managerClub,ps,S.tactic),awayBrain=j90TeamBrain(opp,oppRoster,'equilibrada');S.match2d={half:1,elapsed:0,duration:Number(S.matchDuration)||60,home:S.managerClub,away:opp,homeScore:0,awayScore:0,ball:{x:.5,y:.5,tx:.5,ty:.5},players:ps.map(function(p,i){var z=MGR_FORMATIONS[S.lineup.formation][i];return{id:p.id,name:p.name,number:p.number,visual:p.visual,x:z.x/100,y:z.y/100,tx:z.x/100,ty:z.y/100,energy:Number(p.form)||70}}),oppPlayers:Array.from({length:11},function(_,i){var raw=oppRoster[i]||{};return{id:'o'+i,name:raw.name||'Adversário',x:.15+(i%5)*.17,y:.18+Math.floor(i/5)*.23,tx:.15+(i%5)*.17,ty:.18+Math.floor(i/5)*.23,visual:raw.visual||{skin:MGR_SKIN[(i+2)%MGR_SKIN.length],hair:MGR_HAIR[(i+3)%MGR_HAIR.length],hairStyle:i%4},energy:Number(raw.form)||70}}),events:[],currentEvent:null,startedAt:Date.now(),paused:false,tactic:S.lineup.formation,_simAcc:0,_simClock:0,_homeBrain:homeBrain,_awayBrain:awayBrain,_ai:{home:j90MatchThink(homeBrain,0,0),away:j90MatchThink(awayBrain,0,0)}};mgrNews('Dia de jogo',S.managerClub+' x '+opp+' com inteligência tática adaptativa.');window.__J90_MATCH_STARTING=false;render(1);setTimeout(mgrMatchStartTimer,60)}
+async function mgrStartMatch(){if(window.__J90_MATCH_STARTING)return;window.__J90_MATCH_STARTING=true;var __j90MatchPerf=window.__J90_PERF||j90PerfState();if(__j90MatchPerf.tier==='high')j90LoadTechAnimation();var v=mgrLineupValid();if(!v.ok){window.__J90_MATCH_STARTING=false;toast('Escalação inválida',v.msg);render(1);return}if(S.match2d){window.__J90_MATCH_STARTING=false;return}await j90LoadTeamIntelligence();var ids=S.lineup.slots.filter(Boolean),ps=ids.map(function(id){return S.roster.find(function(p){return p.id===id})}).filter(Boolean),opp=j90MatchFixtureOpponent(),oppRoster=(typeof teamRoster==='function'?teamRoster(opp):[]).map(function(raw,i){return mgrSeed(Object.assign({},raw,{club:opp}),i)}),homeBrain=j90TeamBrain(S.managerClub,ps,S.tactic),awayBrain=j90TeamBrain(opp,oppRoster,'equilibrada');S.match2d={half:1,elapsed:0,duration:Number(S.matchDuration)||60,home:S.managerClub,away:opp,homeScore:0,awayScore:0,ball:{x:.5,y:.5,tx:.5,ty:.5},players:ps.map(function(p,i){var z=MGR_FORMATIONS[S.lineup.formation][i];return{id:p.id,name:p.name,number:p.number,visual:p.visual,x:z.x/100,y:z.y/100,tx:z.x/100,ty:z.y/100,energy:Number(p.form)||70}}),oppPlayers:Array.from({length:11},function(_,i){var raw=oppRoster[i]||{};return{id:'o'+i,name:raw.name||'Adversário',x:.15+(i%5)*.17,y:.18+Math.floor(i/5)*.23,tx:.15+(i%5)*.17,ty:.18+Math.floor(i/5)*.23,visual:raw.visual||{skin:MGR_SKIN[(i+2)%MGR_SKIN.length],hair:MGR_HAIR[(i+3)%MGR_HAIR.length],hairStyle:i%4},energy:Number(raw.form)||70}}),events:[],currentEvent:null,startedAt:Date.now(),paused:false,tactic:S.lineup.formation,_simAcc:0,_simClock:0,_eventClock:0,_eventCooldown:5,_dribbleBoost:0,_homeBrain:homeBrain,_awayBrain:awayBrain,_ai:{home:j90MatchThink(homeBrain,0,0),away:j90MatchThink(awayBrain,0,0)}};mgrNews('Dia de jogo',S.managerClub+' x '+opp+' com inteligência tática adaptativa.');window.__J90_MATCH_STARTING=false;render(1);setTimeout(mgrMatchStartTimer,60)}
 function mgrPlay(){mgrStartMatch()}
 function pstateMatch(){return window.__J90_PERF||j90PerfState()}
+function j90NormPlayerName(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
+const J90_DRIBBLE_STARS={
+ 'lamine yamal':.96,'vinicius junior':.93,'kylian mbappe':.88,'ousmane dembele':.9,'khvicha kvaratskhelia':.88,
+ 'desire doue':.86,'bradley barcola':.82,'raphinha':.86,'rodrygo':.82,'bukayo saka':.86,'mohamed salah':.86,
+ 'jeremy doku':.92,'jamal musiala':.9,'florian wirtz':.82,'nico williams':.88,'arda guler':.8
+};
+function j90DribbleRating(p){
+ var n=j90NormPlayerName(p&&p.name),known=J90_DRIBBLE_STARS[n];
+ if(Number.isFinite(known))return known;
+ var style=j90NormPlayerName(p&&p.style);
+ var pos=String(p&&p.position||'').toUpperCase(),o=Number(p&&p.ovr)||65;
+ var base=style.includes('driblador')?.72:(pos.includes('ATA')||pos.includes('MEI')||pos.includes('AM')?.52:.36);
+ return cl(base+(o-70)*.006, .22, .84);
+}
+function j90TacticalIdentity(team){
+ var n=j90NormPlayerName(team);
+ if(n==='psg'||n==='paris saint germain'||n==='paris saint germain fc')return {name:'PSG · saída lateral e rotações',events:[
+  'Saída de bola do PSG: a bola é isolada para o corredor lateral para escapar da pressão.',
+  'PSG atrai a pressão por dentro e libera o extremo no 1 contra 1.',
+  'PSG faz rotação de posições e cria um terceiro homem para avançar.',
+  'PSG acelera a transição após recuperar e ataca o espaço nas costas.'
+ ]};
+ if(n==='real madrid'||n==='real madrid cf')return {name:'Real Madrid · transição e ataque ao espaço',events:[
+  'Real Madrid recua um instante e dispara em transição para o espaço.',
+  'O ponta do Real Madrid recebe aberto e parte para o 1 contra 1.',
+  'Real Madrid encontra Mbappé ou Vinícius atacando a profundidade.',
+  'A equipe troca rapidamente o corredor de ataque.'
+ ]};
+ if(n==='barcelona'||n==='fc barcelona')return {name:'Barcelona · amplitude e terceiro homem',events:[
+  'Barcelona cria uma superioridade pelo lado e procura o terceiro homem.',
+  'O extremo recebe aberto e tenta o 1 contra 1.',
+  'Barcelona combina curto, atrai a marcação e acelera por dentro.',
+  'A linha ofensiva troca posições para abrir o corredor.'
+ ]};
+ if(n==='manchester city'||n==='manchester city fc')return {name:'Manchester City · ocupação e terceiro homem',events:[
+  'City fixa a amplitude, atrai a pressão e procura o terceiro homem.',
+  'City troca o corredor com uma inversão rápida.',
+  'O meia entra no espaço entre lateral e zagueiro.',
+  'City mantém a posse até encontrar o passe vertical.'
+ ]};
+ if(n==='bayern'||n==='bayern munich'||n==='fc bayern munchen')return {name:'Bayern · pressão e ataque pelos lados',events:[
+  'Bayern sobe a pressão imediatamente após perder a bola.',
+  'Bayern acelera pelo corredor e procura o cruzamento rasteiro.',
+  'O ponta recebe no espaço e conduz em velocidade.',
+  'Bayern recupera alto e tenta finalizar rapidamente.'
+ ]};
+ if(n==='liverpool'||n==='liverpool fc')return {name:'Liverpool · pressão e transição',events:[
+  'Liverpool dispara a pressão pós-perda e tenta recuperar no campo rival.',
+  'Liverpool encontra o ponta em velocidade no corredor.',
+  'A equipe rouba a bola e acelera a transição.',
+  'Liverpool busca a bola nas costas da última linha.'
+ ]};
+ if(n==='arsenal'||n==='arsenal fc')return {name:'Arsenal · triangulação e ataque do espaço',events:[
+  'Arsenal cria uma triangulação no corredor lateral.',
+  'O meia aparece entrelinhas e aciona a ultrapassagem.',
+  'Arsenal troca passes curtos para desmontar o bloco.',
+  'A equipe procura a entrada na área pelo segundo poste.'
+ ]};
+ return null;
+}
+function j90TeamSide(m,home){
+ var players=home?m.players:m.oppPlayers;
+ return {players:players,home:home,team:home?m.home:m.away};
+}
+function j90ShiftForTactic(m,home,kind){
+ var side=j90TeamSide(m,home),ps=side.players;if(!ps.length)return;
+ var right=kind%2===0,wide=right?.84:.16;
+ for(var i=0;i<Math.min(ps.length,6);i++){
+   var q=ps[i];q.tx=cl(q.tx+(wide-q.tx)*(.18+(i%3)*.04),.06,.94);
+   q.ty=cl(q.ty+(i<2?.05:-.025),.08,.92);
+ }
+ m.ball.tx=wide;m.ball.ty=cl(.46+(home?.08:-.08),.12,.88);
+}
+function j90MaybeSpecialEvent(m,minute){
+ if(!m||m._eventCooldown>0)return;
+ m._eventClock=(m._eventClock||0)+.033333;
+ m._eventCooldown=Math.max(0,(m._eventCooldown||0)-.033333);
+ if(m._eventClock<7+Math.random()*6)return;
+ m._eventClock=0;
+ var homeProfile=j90TacticalIdentity(m.home),awayProfile=j90TacticalIdentity(m.away);
+ var home=Math.random()<(homeProfile?(.56):.5),profile=home?homeProfile:awayProfile;
+ if(profile&&profile.events.length){
+   var idx=RI(0,profile.events.length-1);
+   mgrMatchEvent(profile.events[idx]);
+   if(j90NormPlayerName(profile.name).startsWith('psg'))j90ShiftForTactic(m,home,idx);
+   m._eventCooldown=4.5;
+ }
+ var pool=home?m.players:m.oppPlayers;
+ if(!pool.length)return;
+ var candidates=pool.filter(function(p){return j90DribbleRating(p)>=.64});
+ if(!candidates.length&&Math.random()>.42)return;
+ var p=candidates.length?candidates[RI(0,candidates.length-1)]:pool[RI(0,pool.length-1)];
+ var rating=j90DribbleRating(p),success=Math.random()<cl(.34+rating*.48+(Number(p.ovr||70)-70)*.004,.22,.9);
+ var label=success?'vence o marcador e mantém a bola.':'tenta o drible, mas perde a bola.';
+ mgrMatchEvent(String(p.name||'O atacante')+' '+label);
+ p.tx=cl(p.tx+(home?.10:-.10),.06,.94);p.ty=cl(p.ty+(Math.random()-.5)*.12,.08,.92);
+ m.ball.tx=cl(p.tx+(home?.07:-.07),.1,.9);m.ball.ty=p.ty;
+ m._dribbleBoost=success?.035:-.02;
+ m._eventCooldown=3.8;
+}
 function mgrMatchStartTimer(){
  if(!S||!S.match2d)return;
  var m=S.match2d,c=document.getElementById('j90MatchCanvas');
@@ -2583,7 +2683,7 @@ function mgrMatchTick(frameNow){
   var hbrain=m._homeBrain,abrain=m._awayBrain,hpress=m._ai.home.press,apress=m._ai.away.press,tempo=(m._ai.home.tempo+m._ai.away.tempo)*.5;
   for(var i=0;i<m.players.length;i++){var q=m.players[i],phase=sim*.58+i*.71,heat=1-Math.min(1,sim/Math.max(1,m.duration))*0.18;q.tx=cl(q.tx+Math.sin(phase)*(.0015+hpress*.0022)*heat+((m._ai.home.risk-.5)*.001),.06,.94);q.ty=cl(q.ty+Math.cos(phase*.83)*(.0013+tempo*.0017)*heat,.08,.92);q.energy=cl((q.energy||70)-stepMs*.00055*(1+hbrain.fatigue),20,100)}
   for(var j=0;j<m.oppPlayers.length;j++){var o=m.oppPlayers[j],ophase=sim*.53+j*.77;o.tx=cl(o.tx+Math.cos(ophase)*(.0015+apress*.0022),.06,.94);o.ty=cl(o.ty+Math.sin(ophase*.79)*(.0013+tempo*.0017),.08,.92);o.energy=cl((o.energy||70)-stepMs*.0005*(1+abrain.fatigue),20,100)}
-  var pressure=(hbrain.attack*hpress-hbrain.defense*.35)-(abrain.attack*apress-abrain.defense*.35);m.ball.tx=cl(.5+pressure*.08+Math.sin(sim*.73)*.28,.12,.88);m.ball.ty=cl(.5-pressure*.04+Math.cos(sim*.91)*.24,.12,.88);m.ball.x+=(m.ball.tx-m.ball.x)*.22;m.ball.y+=(m.ball.ty-m.ball.y)*.22;
+  var pressure=(hbrain.attack*hpress-hbrain.defense*.35)-(abrain.attack*apress-abrain.defense*.35)+(m._dribbleBoost||0);m.ball.tx=cl(.5+pressure*.08+Math.sin(sim*.73)*.28,.12,.88);m.ball.ty=cl(.5-pressure*.04+Math.cos(sim*.91)*.24,.12,.88);m.ball.x+=(m.ball.tx-m.ball.x)*.22;m.ball.y+=(m.ball.ty-m.ball.y)*.22;m._dribbleBoost=(m._dribbleBoost||0)*.94;j90MaybeSpecialEvent(m,minute);
   var chance=0.0021+(Math.abs(pressure)*.0025)+((hbrain.risk+abrain.risk)*.00045);if(Math.random()<chance){var homeChance=cl(.5+pressure*.34,.12,.88),home=Math.random()<homeChance,rr=Math.random(),name=home?(m.players[RI(0,Math.max(0,m.players.length-1))]?.name||m.home):m.away,tt=rr<.11?'GOOOL! '+name+' marca!':rr<.27?'Defesaça do goleiro.':rr<.46?'Chute perigoso passa perto.':rr<.64?'Passe entre linhas encontra espaço.':rr<.82?'Condução rápida pela lateral.':'Falta no meio-campo.';if(rr<.11){if(home)m.homeScore++;else m.awayScore++}mgrMatchEvent(tt)}
  }
  // Simulation stays at 30 Hz. Visual output follows the adaptive render budget instead of the display's raw RAF rate.
