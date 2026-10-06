@@ -985,6 +985,8 @@ async function j90SoundscapeStart(){
  j90SoundscapeTimer=setTimeout(()=>{if(gen===j90SoundscapeGeneration)j90SoundscapeEvent()},RI(1400,3600))
 }
 function j90SyncSoundscape(){if(j90IntroActive||!audioOK||introStep!==0){j90SoundscapeStop();return}j90SoundscapeStart()}
+// Compatibility bridge for legacy UI hooks. The current audio engine is the soundscape.
+function j90SyncMusic(){try{j90SyncSoundscape()}catch(e){}}
 async function unlockAudio(){
  try{
   const C=window.AudioContext||window.webkitAudioContext;
