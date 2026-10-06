@@ -93,7 +93,10 @@ def team_names() -> list[str]:
 def gradient_background(variant_index: int, seed: int) -> Image.Image:
     top, horizon, bottom = VARIANTS[variant_index % len(VARIANTS)][1:]
     img = Image.new("RGB", (WIDTH, HEIGHT))
-    px = img.load()
+    draw = ImageDraw.Draw(img)
+
+    # Fast vertical gradient: only one horizontal draw operation per row,
+    # avoiding per-pixel Python loops during a several-hundred-image build.
     for y in range(HEIGHT):
         t = y / max(1, HEIGHT - 1)
         if t < 0.55:
@@ -102,17 +105,15 @@ def gradient_background(variant_index: int, seed: int) -> Image.Image:
         else:
             u = (t - 0.55) / 0.45
             c1, c2 = horizon, bottom
-        base = tuple(int(c1[i] * (1-u) + c2[i] * u) for i in range(3))
-        for x in range(WIDTH):
-            n = int((rng_value(seed, x + y * 3) - 0.5) * 18)
-            px[x, y] = tuple(max(0, min(255, c + n)) for c in base)
-    # A light grain layer makes the scene texture richer and prevents the
-    # packaged JPEGs from collapsing into tiny flat-color files.
-    grain = Image.effect_noise((WIDTH, HEIGHT), 35).convert("L")
-    grain = grain.filter(ImageFilter.GaussianBlur(radius=0.22))
-    colored = Image.new("RGB", (WIDTH, HEIGHT), (175, 155, 120))
-    colored = Image.blend(Image.new("RGB", (WIDTH, HEIGHT), (128,128,128)), colored, 0.6)
-    img = Image.composite(colored, img, grain.point(lambda p: max(0, min(255, int(abs(p - 128) * 0.78)))))
+        color = tuple(int(c1[i] * (1-u) + c2[i] * u) for i in range(3))
+        draw.line((0, y, WIDTH, y), fill=color)
+
+    # Fine-grain photographic texture is deliberately generated but never
+    # decoded globally by the app. It makes each JPEG visually richer and keeps
+    # the packaged media as real image content instead of empty padding.
+    grain = Image.effect_noise((WIDTH, HEIGHT), 42).convert("RGB")
+    grain = ImageEnhance.Contrast(grain).enhance(1.35)
+    img = Image.blend(img, grain, 0.075)
     return img
 
 def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> Image.Image:
