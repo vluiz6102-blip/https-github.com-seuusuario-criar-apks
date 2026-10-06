@@ -3,6 +3,7 @@ package com.jornada90.manager;
 import android.os.Build;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebView;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -36,6 +37,14 @@ public class J90DisplayRatePlugin extends Plugin {
         }
         lp.preferredRefreshRate = (float) applied;
         w.setAttributes(lp);
+
+        // Android 15/16+: give the actual WebView surface a frame-rate vote too.
+        // This complements the window-level hint and lets adaptive refresh choose
+        // the requested rate when the platform/device permits it.
+        if (Build.VERSION.SDK_INT >= 35) {
+          WebView webView = getBridge().getWebView();
+          if (webView != null) webView.setRequestedFrameRate((float) applied);
+        }
       }
       JSObject ret = new JSObject();
       ret.put("requestedHz", requested);
