@@ -13,39 +13,39 @@ function checkSyntax(label, source) {
   catch (e) { add(fail, label + ': ' + e.message); }
 }
 
-const inlineScripts = [...index.matchAll(/<script(?:\\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
+const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
 const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 
-const fnNames = [...inlineScripts.matchAll(/(?:^|[;}]\\s*)(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/gm)].map(m => m[1]);
+const fnNames = [...inlineScripts.matchAll(/(?:^|[;}]\s*)(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)].map(m => m[1]);
 const seen = new Set();
 for (const n of fnNames) { if (seen.has(n)) add(fail, 'Função duplicada: ' + n); seen.add(n); }
 
-const onclicks = [...index.matchAll(/onclick\\s*=\\s*["']([^"']+)["']/gi)].map(m => m[1]);
+const onclicks = [...index.matchAll(/onclick\s*=\s*["']([^"']+)["']/gi)].map(m => m[1]);
 const calls = new Set();
-for (const code of onclicks) for (const m of code.matchAll(/\\b([A-Za-z_$][\\w$]*)\\s*\\(/g)) calls.add(m[1]);
+for (const code of onclicks) for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*)\s*\(/g)) calls.add(m[1]);
 const globals = new Set(['alert','confirm','prompt','setTimeout','clearTimeout','setInterval','clearInterval','requestAnimationFrame','cancelAnimationFrame','parseInt','parseFloat','Number','String','Boolean','Math','Date','JSON','Object','Array','console','window','document','navigator','localStorage','location','performance','fetch','URL','Audio','setProperty']);
 for (const name of calls) if (!globals.has(name) && !fnNames.includes(name) && !inlineScripts.includes('window.' + name)) add(fail, 'onclick chama função ausente: ' + name);
 
-const ids = [...index.matchAll(/\\bid\\s*=\\s*["']([^"']+)["']/gi)].map(m => m[1]);
+const ids = [...index.matchAll(/\bid\s*=\s*["']([^"']+)["']/gi)].map(m => m[1]);
 const idCounts = new Map();
 for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
 for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id + ' (' + n + 'x)');
 
-if ((index.match(/requestAnimationFrame\\s*\\(/g) || []).length > 4) add(warn, 'Mais de 4 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
-if ((index.match(/setInterval\\s*\\(/g) || []).length > 1) add(warn, 'Mais de 1 setInterval detectado. Revisar timers para evitar loops paralelos.');
-if (/\\bgetImageData\\s*\\(|\\breadPixels\\s*\\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
-if (/\\binnerHTML\\s*=\\s*[^;]*(?:setInterval|requestAnimationFrame)/.test(index)) add(warn, 'Possível reconstrução de DOM dentro de loop/timer.');
+if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 4) add(warn, 'Mais de 4 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
+if ((index.match(/setInterval\s*\(/g) || []).length > 1) add(warn, 'Mais de 1 setInterval detectado. Revisar timers para evitar loops paralelos.');
+if (/\bgetImageData\s*\(|\breadPixels\s*\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
+if (/\binnerHTML\s*=\s*[^;]*(?:setInterval|requestAnimationFrame)/.test(index)) add(warn, 'Possível reconstrução de DOM dentro de loop/timer.');
 if (/j90Music(Start|Stop|Track|Notes|Timer|Nodes)/.test(index)) add(fail, 'Motor de música legado detectado no index.html.');
 
 const refs = [];
-for (const m of index.matchAll(/(?:src|href)\\s*=\\s*["']([^"'#?]+)["']/gi)) {
+for (const m of index.matchAll(/(?:src|href)\s*=\s*["']([^"'#?]+)["']/gi)) {
   const p = m[1];
   if (/^(https?:|data:|javascript:|mailto:|tel:|#)/i.test(p)) continue;
-  refs.push(p.replace(/^\\.\\//, ''));
+  refs.push(p.replace(/^\.\//, ''));
 }
 for (const p of refs) if (!existsSync(p) && !existsSync(join('www', p))) add(warn, 'Referência de asset não encontrada no repositório: ' + p);
 
