@@ -1,5 +1,6 @@
 name: Build APK Jornada 90
 # Continuous asset-based soundscape build
+# Roster and soundscape validation build
 
 concurrency:
   group: jornada90-apk-build
