@@ -1005,6 +1005,9 @@ function updateJ90MenuEnvironment(force=false){
  });
 }
 function startJ90Atmosphere(){
+ if(j90AtmoStarted){
+  if(j90AtmoNodes.length)return;
+ }
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
  j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
  j90AtmoSkyNodes=Array.from(document.querySelectorAll('.menuSkyCycle i'));
@@ -1017,7 +1020,6 @@ function startJ90Atmosphere(){
   for(let i=0;i<count;i++)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*1.25,s:.000045+Math.random()*.00008,a:.035+Math.random()*.09,p:Math.random()*6.28});
  }
  const resize=()=>{
-  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
   const d=Math.min(window.devicePixelRatio||1,1.15);
   j90AtmoNodes.forEach(canvas=>{
    const w=Math.max(1,canvas.clientWidth||canvas.getBoundingClientRect().width),h=Math.max(1,canvas.clientHeight||canvas.getBoundingClientRect().height);
