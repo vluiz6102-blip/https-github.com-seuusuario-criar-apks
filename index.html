@@ -796,6 +796,23 @@ body.j90-low-quality .stadiumScene .beam{display:none!important}
 body.j90-low-quality .stadiumScene .pitch{animation:none!important}
 body.j90-low-quality .j90-menu-active .menuHero .logoMark.big,
 body.j90-low-quality .j90-menu-active .menuHero .brand{animation:none!important}
+</style><style id="j90-home-detail-polish">
+.j90Crowd{position:absolute;left:13%;right:13%;bottom:30%;height:5%;opacity:.16;background:repeating-linear-gradient(90deg,rgba(255,230,180,.9) 0 2px,transparent 2px 7px);transform-origin:center bottom;animation:j90CrowdBreath 6s ease-in-out infinite}
+.j90Lights{filter:drop-shadow(0 0 4px rgba(255,221,154,.18))}
+.j90Lights:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 8% 50%,#ffe9b1 0 2px,transparent 4px),radial-gradient(circle at 22% 50%,#ffe9b1 0 2px,transparent 4px),radial-gradient(circle at 50% 50%,#ffe9b1 0 2px,transparent 4px),radial-gradient(circle at 78% 50%,#ffe9b1 0 2px,transparent 4px),radial-gradient(circle at 92% 50%,#ffe9b1 0 2px,transparent 4px);opacity:.72;animation:j90LightsPulse 7s ease-in-out infinite}
+@keyframes j90CrowdBreath{0%,100%{opacity:.13;transform:scaleY(1)}50%{opacity:.2;transform:scaleY(1.025)}}
+@keyframes j90LightsPulse{0%,100%{opacity:.55}50%{opacity:.82}}
+.j90BrandBlock{position:relative;text-shadow:0 2px 18px rgba(0,0,0,.28)}
+.j90BrandBlock:after{content:"";position:absolute;left:20%;right:20%;bottom:-4px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,196,90,.35),transparent)}
+.j90ClubCard{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(8,13,20,.34);backdrop-filter:blur(7px);box-shadow:0 8px 25px rgba(0,0,0,.12)}
+.j90ClubMark{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#101820;background:var(--club);font-weight:900;font-size:12px;box-shadow:0 5px 16px rgba(255,196,90,.18)}
+.j90ClubMeta{min-width:0;display:grid;gap:1px;flex:1}.j90ClubMeta b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.j90ClubMeta span,.j90ClubMeta small{font-size:10px;color:rgba(248,245,239,.66)}.j90ClubNext{text-align:right;border-left:1px solid rgba(255,255,255,.1);padding-left:10px}.j90ClubNext small{display:block;font-size:8px;color:rgba(248,245,239,.55);letter-spacing:.7px}.j90ClubNext b{font-size:12px}
+@media(max-width:560px){.j90ClubCard{backdrop-filter:none}.j90Crowd{left:16%;right:16%}}
+@media(prefers-reduced-motion:reduce){.j90Crowd,.j90Lights:before{animation:none!important}}
+body.j90-low-quality .j90Crowd,body.j90-low-quality .j90ClubCard{backdrop-filter:none}
+body.j90-low-quality .j90Crowd{display:none}
+body.j90-low-quality .j90Lights:before{animation:none;opacity:.55}
+body.j90-low-quality .j90Cloud{animation-duration:55s;filter:blur(8px)}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
@@ -1131,6 +1148,14 @@ function settingsView(){
  '</div></div>'+
  '<button class="btn" onclick="toggleCompact()"><b>Interface '+(document.body.classList.contains('compact')?'compacta':'normal')+'</b><span>Reduz espaçamentos para telas menores</span></button></div>'
 }
+function j90ClubIdentity(){
+ if(!S||!S.manager)return '';
+ var c=S.managerClub||S.club?.n||'Clube';
+ var conf=Number(S.board?.confidence||0),round=Number(S.managerRound||0);
+ var pos='--';
+ try{var rows=allGameTeamNames().map(function(n){return {n:n,pts:Number(teamRoster(n).reduce(function(a,p){return a+(Number(p.ovr)||60)},0))}}).sort(function(a,b){return b.pts-a.pts});var ix=rows.findIndex(function(x){return x.n===c});pos=ix>=0?String(ix+1)+'º lugar':'--'}catch(e){}
+ var colors=['#ffc45a','#5ed59a'];return '<section class="j90ClubCard" aria-label="Resumo da carreira"><div class="j90ClubMark" style="--club:'+colors[0]+'">'+esc(c.slice(0,3).toUpperCase())+'</div><div class="j90ClubMeta"><b>'+esc(c)+'</b><span>Manager · '+esc(String(S.name||'Jogador'))+'</span><small>'+esc(String(S.window||'open'))+' · '+pos+' · Diretoria '+conf+'%</small></div><div class="j90ClubNext"><small>'+((round%3===0)?'PRÓXIMO JOGO':'CARREIRA')+'</small><b>'+((round%3===0)?'Dia de jogo':'R'+round)+'</b></div></section>';
+}
 function menuV(){
  if(menuScreen==='settings')return settingsView();
  if(menuScreen==='howto')return howToView();
@@ -1138,10 +1163,10 @@ function menuV(){
  const hasSave=!!S;
  const leaves=Array.from({length:10},(_,i)=>'<i style="--x:'+((i*11)%104)+'%;--d:'+((i%5)*.9)+'s;--t:'+(8+(i%4)*1.7)+'s"></i>').join('');
  return '<main class="j90Home" aria-label="Tela inicial Jornada 90 Manager">'+
-   '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
+   '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Crowd"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
    '<div class="j90HomeContent">'+
      '<div class="j90Topline"><span>CARREIRA DE FUTEBOL</span><span class="j90LiveDot">JORNADA 90</span></div>'+
-     '<section class="j90BrandBlock"><div class="j90Badge">90</div><div class="j90Brand">JORNADA <b>90</b></div><p>A carreira é sua. A história também.</p></section>'+
+     '<section class="j90BrandBlock"><div class="j90Badge">90</div><div class="j90Brand">JORNADA <b>90</b></div><p>A carreira é sua. A história também.</p></section>'+\n     j90ClubIdentity()+
      '<section class="j90Actions">'+
        (hasSave?
          '<button class="j90Action j90Primary" onclick="resumeGame()"><span class="j90ActionIcon">▶</span><span><b>Continuar carreira</b><small>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</small></span><em>›</em></button>'+
