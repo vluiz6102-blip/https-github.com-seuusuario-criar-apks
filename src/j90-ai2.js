@@ -320,6 +320,25 @@
     return clamp(1-min*3.6,0,1);
   }
 
+  function matchPhase(m,side,p){
+    var x=side==='home'?num(p&&p.x,.5):1-num(p&&p.x,.5);
+    if(x<.35)return 'build_up';
+    if(x<.68)return 'progression';
+    return 'final_third';
+  }
+  function recentTendency(m,side){
+    var out={dribble:0,cross:0,through:0,oneTwo:0,shot:0,n:0},h=m.actionHistory||[];
+    for(var i=Math.max(0,h.length-14);i<h.length;i++){
+      var x=h[i];if(x.team!==side)continue;out.n++;
+      if(x.action==='dribble')out.dribble++;
+      if(x.action==='cross')out.cross++;
+      if(x.action==='through_ball'||x.action==='run_in_behind')out.through++;
+      if(x.action==='one_two')out.oneTwo++;
+      if(x.action==='shot')out.shot++;
+    }
+    if(out.n){out.dribble/=out.n;out.cross/=out.n;out.through/=out.n;out.oneTwo/=out.n;out.shot/=out.n}
+    return out;
+  }
   function teamBrainEnhanced(m,side){
     var base=side==='home'?m._homeBrain:m._awayBrain;
     var mem=side==='home'?m.learning.home:m.learning.away;
@@ -328,7 +347,7 @@
     var energy=players.length?players.reduce(function(n,p){return n+num(p.energy,70)},0)/players.length:70;
     var diff=(side==='home'?m.homeScore-m.awayScore:m.awayScore-m.homeScore);
     var minute=((m.half===2?45:0)+m.elapsed/Math.max(1,m.duration)*45);
-    var cp=m._compProfile||matchCompetitionProfile(m);
+    var cp=m._compProfile||matchCompetitionProfile(m),otherSide=side==='home'?'away':'home',oppTrend=recentTendency(m,otherSide);
     var quality=clamp(num(base&&base.quality,.6)+mem.reward/(Math.max(4,mem.matches)*120),.3,1);
     var chase=diff<0?1:diff>0?-1:0;
     var late=minute>=72?1:0;
@@ -338,7 +357,7 @@
     return {
       quality:quality,attack:clamp(num(base&&base.attack,.6)+cp.goal*(quality-.6)*.16+homeBoost,.3,.99),
       defense:clamp(num(base&&base.defense,.6)+((energy-70)/500),.3,.99),
-      press:clamp(num(base&&base.press,.55)*cp.press+chase*.14+late*chase*.08,.2,.98),
+      press:clamp(num(base&&base.press,.55)*cp.press+chase*.14+late*chase*.08+oppTrend.dribble*.10+oppTrend.through*.07,.2,.99),
       tempo:clamp(num(base&&base.tempo,.55)*cp.tempo+chase*.13+late*chase*.08,.2,.99),
       risk:clamp(risk*num(cp.risk,1),.08,.98),
       width:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.width,58)/100,.25,.95),
@@ -347,7 +366,8 @@
       transition:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.transition,58)/100,.2,.98),
       adaptability:clamp(adaptation,.2,.98),
       fatigue:clamp((100-energy)/100,.05,.8),
-      memory:mem
+      memory:mem,opponentTendency:oppTrend,
+      phase:diff<0?'chase':diff>0?'protect':'balanced'
     };
   }
 
@@ -360,7 +380,7 @@
     var under=pressure>.44;
     var fatigue=1-clamp(num(p.energy,75)/100,0,1);
     var role=playerRole(p),score=(brain.attack*.18+brain.quality*.16);
-    var ctx={nearGoal:nearGoal,underPressure:under};
+    var phase=matchPhase(m,side,p),ctx={nearGoal:nearGoal,underPressure:under};
     score*=roleWeight(p,action,ctx);
     if(action==='short_pass')score+=brain.buildUp*.38+central*.08+pressure*.04;
     if(action==='progressive_pass')score+=brain.buildUp*.29+brain.tempo*.16+(nearGoal?.10:0)-pressure*.10;
@@ -383,6 +403,13 @@
     if(role==='GK'&&!['short_pass','backpass','clearance','hold','keeper_release','punch'].includes(action))score-=1.20;
     if(role==='DEF'&&['shot','dribble','run_in_behind'].includes(action))score-=.35;
     if(role==='ATT'&&['clearance','tackle','backpass'].includes(action))score-=.55;
+    if(phase==='build_up'){if(action==='short_pass')score+=.18;if(action==='switch')score+=.08;if(action==='shot'||action==='cutback')score-=.20}
+    if(phase==='progression'){if(action==='progressive_pass'||action==='carry'||action==='one_two')score+=.12;if(action==='hold')score-=.04}
+    if(phase==='final_third'){if(action==='shot'||action==='cross'||action==='cutback'||action==='through_ball')score+=.18;if(action==='backpass')score-=.08}
+    if(brain.opponentTendency&&role==='ATT'&&brain.opponentTendency.dribble>.24&&action==='one_two')score+=.06;
+    if(brain.opponentTendency&&role==='DEF'&&brain.opponentTendency.cross>.20&&action==='clearance')score+=.08;
+    var confidence=clamp(num(p.ai&&p.ai.confidence,.62),.35,.98),form=clamp(num(p.form,70)/100,.25,1),morale=clamp(num(p.morale,70)/100,.25,1);
+    score*=.88+confidence*.10+form*.05+morale*.04;
     var mem=brain.memory&&brain.memory.action&&brain.memory.action[action];
     if(mem)score*=clamp(num(mem.bias,1),.72,1.32);
     var rm=brain.memory&&brain.memory.roleMemory&&brain.memory.roleMemory[role];
