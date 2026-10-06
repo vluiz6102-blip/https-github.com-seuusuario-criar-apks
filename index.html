@@ -2663,7 +2663,141 @@ if(S){
 if(!history.state||!history.state.j90)history.replaceState({j90:true,menuScreen:'home',introStep:0,tab:'game'},'');
 render();
 </script>
-<script id="j90-polish-runtime">
+<style id="j90-transfer-fifa19-fc27">
+/* Transferências e escalação: mobile-first, inspiradas em fluxos modernos de carreira e no squad management clássico */
+.j90RosterHub,.j90Negotiation{display:grid;gap:12px}
+.j90RosterTabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none;touch-action:pan-x}
+.j90RosterTabs::-webkit-scrollbar{display:none}
+.j90RosterTabs button{flex:0 0 auto;border:1px solid #292929;background:#0b0b0b;color:#aaa;border-radius:10px;padding:10px 13px;font-weight:700}
+.j90RosterTabs button.on{background:#f5b942;color:#111;border-color:#f5b942}
+.j90PitchBoard{position:relative;min-height:390px;border:1px solid #254a35;border-radius:18px;overflow:hidden;background:linear-gradient(#164d35,#0c3827);background-image:linear-gradient(90deg,transparent 49.6%,rgba(255,255,255,.22) 50%,transparent 50.4%),linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(#164d35,#0c3827);background-size:100% 100%,100% 48px,100% 100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.j90PitchBoard:before{content:"";position:absolute;inset:10% 24%;border:1px solid rgba(255,255,255,.2);border-radius:50%}
+.j90XIGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.j90XIPlayer,.j90RosterRow{width:100%;border:1px solid #242424;background:#0c0c0c;color:#eee;border-radius:12px;padding:11px;text-align:left}
+.j90XIPlayer{min-height:58px}
+.j90XIPlayer.on,.j90RosterRow.on{border-color:#f5b942;background:#17130a}
+.j90XIPlayer b,.j90RosterRow b{display:block;overflow-wrap:anywhere}
+.j90XIPlayer small,.j90RosterRow small{display:block;color:#999;margin-top:3px;overflow-wrap:anywhere}
+.j90RosterList{display:grid;gap:7px;max-height:460px;overflow:auto}
+.j90RosterRow{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:9px;align-items:center}
+.j90RosterOVR{font-size:21px;font-weight:900;color:#f5b942;text-align:center}
+.j90RosterActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.j90RosterActions button,.j90ContractActions button,.j90Negotiation button{min-height:48px;border:1px solid #292929;background:#111;color:#eee;border-radius:10px;padding:10px;font-weight:700}
+.j90RosterActions button.primary,.j90ContractActions button.primary,.j90Negotiation button.primary{background:#f5b942;color:#111;border-color:#f5b942}
+.j90EditorGrid,.j90OfferGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.j90EditorGrid label,.j90OfferGrid label{font-size:11px;color:#999}
+.j90EditorGrid input,.j90EditorGrid select,.j90OfferGrid input,.j90OfferGrid select{margin:4px 0 0;min-height:48px}
+.j90NegotiationHero{display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:12px;align-items:center}
+.j90NegOVR{font-size:38px;font-weight:900;color:#f5b942;text-align:center}
+.j90Interest{font-size:12px;color:#999}.j90Interest b{color:#f5b942}
+.j90Stage{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.j90Stage span{flex:1;min-width:90px;text-align:center;padding:8px;border-radius:9px;background:#111;color:#777;font-size:11px;font-weight:800}.j90Stage span.on{background:#183c28;color:#6ee09a}
+.j90Tension{height:9px;background:#242424;border-radius:99px;overflow:hidden}.j90Tension i{display:block;height:100%;background:#f5b942}
+.j90DealSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.j90DealSummary span{padding:9px;background:#0d0d0d;border:1px solid #202020;border-radius:9px;text-align:center}.j90DealSummary b,.j90DealSummary small{display:block}.j90DealSummary small{color:#888;font-size:10px;margin-top:2px}
+.j90ContractActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.j90ContractActions button:last-child{grid-column:1/-1}
+@media(max-width:390px){.j90PitchBoard{min-height:340px}.j90EditorGrid,.j90OfferGrid,.j90ContractActions{grid-template-columns:1fr}.j90ContractActions button:last-child{grid-column:auto}.j90NegotiationHero{grid-template-columns:58px minmax(0,1fr)}.j90NegOVR{font-size:32px}}
+</style><script id="j90-transfer-fifa19-fc27">
+(function(){
+"use strict";
+function j90ContractSeed(p,price){
+  var interest=cl(Number.isFinite(+p.interest)?+p.interest:48,5,95);
+  return {playerId:p.id,player:p.name,club:p.club||"Clube",stage:"club",interest:interest,tension:18,
+    fee:Math.round(price||p.transferValue||p.ovr*3.1),installments:1,bonus:0,release:0,
+    salary:Math.max(1,Math.round((p.salary||p.ovr*.11)*1.15)),years:4,role:p.ovr>=84?"Titular importante":p.ovr>=78?"Rotação":"Reserva",
+    signing:0,performance:0};
+}
+function j90ContractPlayer(n){return n&&S&&S.roster?S.roster.find(function(p){return p.id===n.playerId}):null}
+function j90OpenContract(p,price){
+  if(!p)return;
+  S.negotiation=j90ContractSeed(p,price);
+  S.negotiation.playerId=p.id;
+  mgrNews("Negociação iniciada","Sondagem por "+p.name+" aberta com "+(p.club||"o clube vendedor")+".");
+  render(1);
+}
+function j90NegotiateStage(action){
+  var n=S.negotiation;if(!n)return;
+  if(action==="probe"){
+    n.stage="club";n.tension=cl(n.tension+4,0,100);
+    toast("Interesse consultado","O clube sinalizou abertura para negociar.");
+  } else if(action==="club"){
+    if(n.interest<25){toast("Negociação difícil","O jogador ainda não demonstra interesse suficiente.");return}
+    n.stage="player";n.tension=cl(n.tension+12,0,100);
+    toast("Clubes alinhados","Agora é hora de negociar com o jogador e o agente.");
+  } else if(action==="final"){
+    var wage=Math.max(1,+n.salary||1), total=n.fee+Math.max(0,+n.signing||0)+Math.max(0,+n.bonus||0);
+    var budget=Number(S.finance.budget)||0;
+    var fit=(n.role==="Titular importante"?8:n.role==="Rotação"?4:0);
+    var score=n.interest+n.tension*.12+fit+(wage>=1?6:0);
+    if(total>budget){toast("Orçamento insuficiente","Reduza a taxa, as luvas ou use mais parcelas.");return}
+    if(score<48){n.stage="failed";n.tension=cl(n.tension+18,0,100);toast("Contrato recusado","O jogador não aceitou os termos.");render(1);return}
+    var q=mgrMarketPool().find(function(x){return x.id===n.playerId||x.name===n.player});
+    if(!q){toast("Jogador indisponível","O alvo não está mais disponível.");return}
+    var p=mgrSeed(q,S.roster.length);p.ovr=q.ovr;p.age=q.age;p.salary=wage;p.years=Math.max(1,Math.floor(+n.years||1));p.star=p.ovr>=84;p.transferValue=n.fee;p.contract={role:n.role,wage:wage,years:p.years,signing:+n.signing||0,bonus:+n.bonus||0,release:+n.release||0,installments:+n.installments||1};
+    S.finance.budget-=n.fee;S.finance.budget-=Math.max(0,+n.signing||0);S.finance.expenses+=wage;
+    S.transferHistory.unshift({y:S.year,type:"IN",player:p.name,ovr:p.ovr,value:n.fee,contract:"Assinado"});
+    S.roster.push(p);S.negotiation=null;mgrNews("Reforço apresentado",p.name+" assinou por "+p.years+" temporada(s).");toast("Contrato assinado",p.name+" é novo jogador do "+S.managerClub+".");render(1);
+  }
+}
+function j90NegInput(k,v){if(!S.negotiation)return;var n=S.negotiation;v=Number(v);if(!Number.isFinite(v))v=0;n[k]=Math.max(0,Math.round(v));render(1)}
+function j90NegRole(v){if(S.negotiation){S.negotiation.role=v;render(1)}}
+function j90EditPlayer(id){
+  var p=S.roster.find(function(x){return x.id===id});if(!p)return;
+  window.__J90_EDIT_PLAYER=id;render(1);
+}
+function j90SavePlayer(){
+  var id=window.__J90_EDIT_PLAYER,p=S.roster.find(function(x){return x.id===id});if(!p)return;
+  var num=document.getElementById("j90EditNum"),pos=document.getElementById("j90EditPos"),role=document.getElementById("j90EditRole");
+  if(num)p.number=Math.max(1,Math.min(99,parseInt(num.value)||p.number||1));
+  if(pos)p.position=pos.value;
+  if(role)p.role=role.value;
+  p.style=mgrStyleFor(p);window.__J90_EDIT_PLAYER=null;mgrLineupRepair();toast("Elenco atualizado",p.name+" foi atualizado.");save();render(1);
+}
+function j90SetSquadMode(m){S.squadMode=m;render(1)}
+function j90AssignSelected(slot){
+  var id=window.__J90_SELECTED_PLAYER;if(!id){toast("Selecione um jogador","Toque em um jogador antes de escolher a posição.");return}
+  mgrAssignPlayer(id,slot);window.__J90_SELECTED_PLAYER=null;
+}
+function j90SquadView(){
+  mgrLineupRepair();
+  var mode=S.squadMode||"titulares",players=S.roster.slice().sort(function(a,b){return b.ovr-a.ovr});
+  var starters=S.lineup.slots.filter(Boolean),bench=S.lineup.bench||[];
+  var list=mode==="titulares"?players.filter(function(p){return starters.includes(p.id)}):mode==="banco"?players.filter(function(p){return bench.includes(p.id)}):mode==="reservas"?players.filter(function(p){return !starters.includes(p.id)&&!bench.includes(p.id)&&!p.loaned}):players.filter(function(p){return p.loaned||p.injury});
+  var selected=window.__J90_SELECTED_PLAYER?S.roster.find(function(p){return p.id===window.__J90_SELECTED_PLAYER}):null;
+  var edit=window.__J90_EDIT_PLAYER?S.roster.find(function(p){return p.id===window.__J90_EDIT_PLAYER}):null;
+  var modes=[["titulares","Titulares"],["banco","Banco"],["reservas","Reservas"],["fora","Fora"]];
+  var rows=list.map(function(p){return '<button class="j90RosterRow '+(selected&&selected.id===p.id?'on':'')+'" onclick="window.__J90_SELECTED_PLAYER=&quot;'+esc(p.id)+'&quot;;render(1)"><span class="j90RosterOVR">'+p.ovr+'</span><span><b>'+esc(p.name)+'</b><small>'+esc(p.position)+' · '+p.form+' forma · '+(p.years||1)+' ano(s)</small></span><small>R$ '+fm(p.salary)+'</small></button>'}).join('');
+  var editor=edit?'<div class="j90MgrCard"><div class="j90MgrTitle"><b>EDITAR ELENCO</b><small>'+esc(edit.name)+'</small></div><div class="j90EditorGrid"><label>Número<input id="j90EditNum" type="number" min="1" max="99" value="'+(edit.number||1)+'"></label><label>Posição<select id="j90EditPos">'+["GOL","ZAG","LAT","MEI","ATA"].map(function(x){return '<option '+(x===edit.position?'selected':'')+'>'+x+'</option>'}).join("")+'</select></label><label>Papel<select id="j90EditRole">'+["Capitão","Titular","Rotação","Reserva"].map(function(x){return '<option '+(x===(edit.role||"Titular")?'selected':'')+'>'+x+'</option>'}).join("")+'</select></label></div><div class="j90RosterActions"><button class="primary" onclick="j90SavePlayer()">Salvar edição</button><button onclick="window.__J90_EDIT_PLAYER=null;render(1)">Cancelar</button></div></div>':'';
+  var selectedCard=selected?'<div class="j90MgrCard"><div class="j90MgrTitle"><b>JOGADOR SELECIONADO</b><small>'+esc(selected.name)+'</small></div><div class="j90RosterActions"><button class="primary" onclick="j90EditPlayer(&quot;'+esc(selected.id)+'&quot;)">Editar jogador</button><button onclick="mgrRenew(&quot;'+esc(selected.id)+'&quot;)">Renovar contrato</button></div><div class="j90RosterActions"><button onclick="mgrLoan(&quot;'+esc(selected.id)+'&quot;)">Enviar por empréstimo</button><button onclick="mgrSell(&quot;'+esc(selected.id)+'&quot;)">Colocar à venda</button></div></div>':'';
+  return '<section class="j90RosterHub"><div class="j90MgrCard"><div class="j90MgrTitle"><div><b>GESTÃO DO ELENCO</b><small>'+S.lineup.formation+' · '+starters.length+'/11 titulares · '+bench.length+' no banco</small></div><button onclick="mgrLineupAuto()">AUTO</button></div><div class="j90RosterTabs">'+modes.map(function(x){return '<button class="'+(mode===x[0]?'on':'')+'" onclick="j90SetSquadMode(&quot;'+x[0]+'&quot;)">'+x[1]+'</button>'}).join("")+'</div><div class="j90RosterList">'+(rows||'<p class="mu">Nenhum jogador nesta categoria.</p>')+'</div></div><div class="j90MgrCard"><div class="j90MgrTitle"><b>ESCALAÇÃO RÁPIDA</b><small>Selecione um atleta e use a tela Tática para posicioná-lo</small></div><div class="j90XIGrid">'+players.slice(0,8).map(function(p){return '<button class="j90XIPlayer '+(selected&&selected.id===p.id?'on':'')+'" onclick="window.__J90_SELECTED_PLAYER=&quot;'+esc(p.id)+'&quot;;tab=\'lineup\';render(1)"><b>'+esc(p.name)+'</b><small>'+esc(p.position)+' · OVR '+p.ovr+' · '+(p.start?"Titular":"Banco")+'</small></button>'}).join("")+'</div></div>'+selectedCard+editor+'</section>';
+}
+function j90NegotiationView(){
+  var n=S.negotiation;if(!n)return "";
+  var interest=cl(+n.interest||0,0,100), tension=cl(+n.tension||0,0,100), total=(+n.fee||0)+(+n.signing||0)+(+n.bonus||0), failed=n.stage==="failed";
+  return '<section class="j90Negotiation"><div class="j90MgrCard"><div class="j90NegotiationHero"><div class="j90NegOVR">'+(j90ContractPlayer(n)?.ovr||"•")+'</div><div><h2>'+esc(n.player)+'</h2><p class="mu">'+esc(n.club)+' · proposta '+(n.fee?'R$ '+fm(n.fee):"em aberto")+'</p><p class="j90Interest">Interesse do atleta <b>'+interest+'%</b></p></div></div><div class="j90Stage"><span class="on">1 · Sondagem</span><span class="'+(n.stage!=="club"?'on':'')+'">2 · Clube</span><span class="'+(n.stage==="player"||n.stage==="failed"?'on':'')+'">3 · Atleta</span><span class="'+(failed?'on':'')+'">4 · Fechamento</span></div><div class="j90Tension"><i style="width:'+tension+'%"></i></div><p class="mu">Tensão da negociação: '+tension+'%</p></div><div class="j90MgrCard"><div class="j90MgrTitle"><b>TERMOS DA PROPOSTA</b><small>Compra + contrato do atleta</small></div><div class="j90OfferGrid"><label>Taxa de transferência<input type="number" value="'+n.fee+'" onchange="j90NegInput(\'fee\',this.value)"></label><label>Parcelas<input type="number" min="1" max="6" value="'+n.installments+'" onchange="j90NegInput(\'installments\',this.value)"></label><label>Salário mensal<input type="number" value="'+n.salary+'" onchange="j90NegInput(\'salary\',this.value)"></label><label>Duração (anos)<input type="number" min="1" max="6" value="'+n.years+'" onchange="j90NegInput(\'years\',this.value)"></label><label>Luvas<input type="number" value="'+n.signing+'" onchange="j90NegInput(\'signing\',this.value)"></label><label>Bônus por desempenho<input type="number" value="'+n.bonus+'" onchange="j90NegInput(\'bonus\',this.value)"></label><label>Cláusula de saída<input type="number" value="'+n.release+'" onchange="j90NegInput(\'release\',this.value)"></label><label>Papel no elenco<select onchange="j90NegRole(this.value)">'+["Titular importante","Rotação","Reserva"].map(function(x){return '<option '+(x===n.role?'selected':'')+'>'+x+'</option>'}).join("")+'</select></label></div><div class="j90DealSummary"><span><b>R$ '+fm(total)+'</b><small>CUSTO INICIAL</small></span><span><b>'+n.years+' anos</b><small>CONTRATO</small></span><span><b>'+n.interest+'%</b><small>INTERESSE</small></span></div><div class="j90ContractActions"><button onclick="j90NegotiateStage(\'probe\')">Sondar</button><button onclick="j90NegotiateStage(\'club\')">Avançar negociação</button><button class="primary" onclick="j90NegotiateStage(\'final\')" '+(failed?'disabled':'')+'>Enviar proposta final</button></div></div><button class="btn" onclick="S.negotiation=null;render(1)">Voltar ao mercado</button></section>';
+}
+function mgrRenew(id){
+  var p=S.roster.find(function(x){return x.id===id});if(!p)return;
+  var base=Math.max(1,Math.round((p.salary||1)*1.08)),interest=cl(55+(p.morale||0)*.18+(p.ovr||0)-70,20,95);
+  var q={id:p.id,name:p.name,club:S.managerClub,ovr:p.ovr,salary:base,interest:interest};
+  S.negotiation={playerId:p.id,player:p.name,club:S.managerClub,stage:"player",interest:interest,tension:12,fee:0,installments:1,bonus:0,release:0,salary:base,years:Math.max(2,p.years||1),role:p.role||"Titular",signing:0,performance:0,renewal:true};
+  render(1);
+}
+function mgrBuy(i){
+  if(S.window!=="open"){toast("Janela fechada","Abra a janela para contratar.");return}
+  var q=mgrMarketFiltered()[i];if(!q)return;
+  var base=Math.round(q.ovr*3.1),offer=Math.round(base*(.94+Math.random()*.12));
+  if(S.finance.budget<offer){toast("Orçamento insuficiente","A diretoria não aprovou o investimento.");return}
+  q.transferValue=offer;q.interest=cl(42+(S.board.confidence||60)*.25+(q.age<23?10:0),15,94);
+  j90OpenContract(q,offer);
+}
+function mgrMarket(){
+  var f=S.marketFilter||{q:"",pos:"",nat:"",min:0,maxAge:99},all=mgrMarketFiltered(),list=all.slice(0,8);
+  return '<section class="j90MgrPage j90MgrMarket"><div class="j90MgrCard"><div class="j90MgrTitle"><div><b>MERCADO DE TRANSFERÊNCIAS</b><small>'+all.length+' alvo(s) · orçamento R$ '+fm(S.finance.budget)+'</small></div><div class="j90MgrWindow"><button onclick="mgrOpen()">Abrir</button><button onclick="mgrClose()">Fechar</button></div></div><div class="j90MgrFilters"><input id="mgrMarketQ" value="'+esc(f.q)+'" placeholder="Pesquisar atleta"><select onchange="S.marketFilter=S.marketFilter||{};S.marketFilter.pos=this.value;render(1)"><option value="">Posição</option><option value="GOL">GOL</option><option value="ZAG">ZAG</option><option value="LAT">LAT</option><option value="MEI">MEI</option><option value="ATA">ATA</option></select><select onchange="S.marketFilter=S.marketFilter||{};S.marketFilter.min=+this.value;render(1)"><option value="0">OVR</option><option value="70">70+</option><option value="75">75+</option><option value="80">80+</option><option value="85">85+</option></select><button class="j90MgrSearch" onclick="mgrMarketSearch()">Buscar</button></div><div class="j90MgrMarketList">'+list.map(function(p,i){var price=Math.round(p.ovr*3.1);return '<div class="j90MgrMarketRow"><div><b>'+esc(p.name)+'</b><small>'+esc(p.position)+' · OVR '+p.ovr+' · '+p.age+'a</small><small>'+esc(p.club||"Clube")+' · valor R$ '+fm(price)+' · interesse '+cl(42+(p.age<23?10:0),15,94)+'%</small></div><button onclick="mgrBuy('+i+')">Negociar</button></div>'}).join("")+'</div></div><div class="j90MgrCard"><div class="j90MgrTitle"><b>COMO FUNCIONA</b><small>Mercado em etapas</small></div><p class="mu">Sondagem → acordo entre clubes → contrato do atleta → apresentação. Você pode ajustar taxa, parcelas, luvas, bônus, duração, papel e cláusula.</p></div></section>';
+}
+function managerV(){ensureManager();if(S.negotiation)return j90NegotiationView();if(S.match2d)return mgrMatchView();if(tab==="game")return mgrDashboardPro();if(tab==="squad")return j90SquadView();if(tab==="lineup")return mgrTacticsHub()+mgrLineupView();if(tab==="market")return mgrMarket();if(tab==="scout")return mgrScoutView();if(tab==="finance")return mgrFinance();if(tab==="tbl")return mgrTable();if(tab==="club")return mgrClubHub();if(tab==="news")return mgrInboxHub();return mgrDashboardPro()}
+window.j90TransferSquadV2={version:"fc27-fifa19-inspired"};
+})();
+</script><script id="j90-polish-runtime">
 (()=>{'use strict';if(window.__J90_POLISH__)return;window.__J90_POLISH__=true;
 const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);let lastFeedback=0,busyUntil=0,busyTarget=null;
 function screenKey(){return [typeof menuScreen==='string'?menuScreen:'',typeof introStep==='number'?introStep:'',typeof tab==='string'?tab:'',!!(typeof S!=='undefined'&&S&&S.manager),!!(typeof S!=='undefined'&&S&&S.match2d)].join('|')}
