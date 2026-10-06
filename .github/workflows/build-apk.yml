@@ -255,6 +255,8 @@ jobs:
             echo "COMMIT=${GITHUB_SHA}"
           } | tee Jornada-90-Manager-release.txt
 
+          test "$bytes" -lt "$((2*1024*1024*1024))"
+          echo "APK_UNDER_2_GIB=OK"
           echo "APK_FORENSICS=OK"
           echo "ZIP_INTEGRITY=OK"
           echo "ZIPALIGN=OK"
@@ -267,15 +269,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          test -s android/app/build/outputs/apk/debug/Jornada-90-Manager.apk
+          test -s android/Jornada-90-Manager.apk.sha256
+          test -s android/Jornada-90-Manager-release.txt
           tag="jornada-90-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag"             --repo "${GITHUB_REPOSITORY}"             --target "${GITHUB_SHA}"             --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}"             --notes "Build validada automaticamente. O APK abaixo é o arquivo bruto, sem o ZIP de artifact. SHA-256 e metadados acompanham a release."             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk.sha256             android/app/build/outputs/apk/debug/Jornada-90-Manager-release.txt
+          gh release create "$tag"             --repo "${GITHUB_REPOSITORY}"             --target "${GITHUB_SHA}"             --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}"             --notes "Build validada automaticamente. O APK abaixo é o arquivo bruto, sem o ZIP de artifact. SHA-256 e metadados acompanham a release."             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk             android/Jornada-90-Manager.apk.sha256             android/Jornada-90-Manager-release.txt
 
       - name: Publicar relatório pequeno do build
         uses: actions/upload-artifact@v7
         with:
           name: jornada-90-manager-release-info
           path: |
-            android/app/build/outputs/apk/debug/Jornada-90-Manager.apk.sha256
-            android/app/build/outputs/apk/debug/Jornada-90-Manager-release.txt
+            android/Jornada-90-Manager.apk.sha256
+            android/Jornada-90-Manager-release.txt
           if-no-files-found: error
           compression-level: 9
