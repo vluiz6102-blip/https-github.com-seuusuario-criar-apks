@@ -331,7 +331,16 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}" >/dev/null
           echo "RELEASE_PUBLISHED=OK"
 
-      - name: Publicar relatório pequeno do build
+      - name: Publicar APK completo como artefato baixável
+        uses: actions/upload-artifact@v7
+        with:
+          name: jornada-90-manager-APK-COMPLETO
+          path: android/Jornada-90-Manager.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Publicar relatório do build
         uses: actions/upload-artifact@v7
         with:
           name: jornada-90-manager-release-info
