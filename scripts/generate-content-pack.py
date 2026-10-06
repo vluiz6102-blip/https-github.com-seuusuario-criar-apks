@@ -235,15 +235,21 @@ def download_openfootball() -> list[dict]:
         try:
             with urllib.request.urlopen(url, timeout=18) as response:
                 raw = response.read()
-            if raw.startswith(b"{") and len(raw) > 120:
-                out.write_bytes(raw)
-                sources.append({
-                    "name": name,
-                    "file": out.name,
-                    "url": url,
-                    "license": "Public Domain (openfootball football.json)",
-                })
-                print("OpenFootball:", name, len(raw), "bytes")
+            # Validate actual JSON instead of relying on the first byte. This
+            # tolerates leading whitespace/BOM and prevents bad downloads from
+            # entering the offline archive.
+            decoded = raw.decode("utf-8-sig")
+            json.loads(decoded)
+            if len(raw) <= 120:
+                raise ValueError("dataset JSON demasiado pequeno")
+            out.write_bytes(raw)
+            sources.append({
+                "name": name,
+                "file": out.name,
+                "url": url,
+                "license": "Public Domain (openfootball football.json)",
+            })
+            print("OpenFootball:", name, len(raw), "bytes")
         except Exception as exc:
             print("Aviso: OpenFootball indisponível para", name, "|", exc)
     return sources
