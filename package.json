@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
-    "@capacitor/haptics": "7.0.5"
+    "@capacitor/haptics": "7.0.5",
+    "phaser": "4.2.1"
   },
   "devDependencies": {
     "@capacitor/cli": "7.4.3",
