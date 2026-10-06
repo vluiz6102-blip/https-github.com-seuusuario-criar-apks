@@ -269,11 +269,56 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test -s android/app/build/outputs/apk/debug/Jornada-90-Manager.apk
-          test -s android/Jornada-90-Manager.apk.sha256
-          test -s android/Jornada-90-Manager-release.txt
+          apk="android/app/build/outputs/apk/debug/Jornada-90-Manager.apk"
+          sha_file="android/Jornada-90-Manager.apk.sha256"
+          info_file="android/Jornada-90-Manager-release.txt"
+          bytes=$(stat -c%s "$apk")
+          local_sha=$(cut -d' ' -f1 "$sha_file")
           tag="jornada-90-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag"             --repo "${GITHUB_REPOSITORY}"             --target "${GITHUB_SHA}"             --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}"             --notes "Build validada automaticamente. O APK abaixo é o arquivo bruto, sem o ZIP de artifact. SHA-256 e metadados acompanham a release."             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk             android/Jornada-90-Manager.apk.sha256             android/Jornada-90-Manager-release.txt
+
+          # Cria a release como rascunho. Nenhum binário é enviado pelo gh.
+          gh release create "$tag" --repo "${GITHUB_REPOSITORY}" --target "${GITHUB_SHA}" --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}" --notes "Build validada automaticamente. O APK abaixo foi auditado e terá tamanho/SHA-256 conferidos após o upload." --draft
+          release_id=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.id')
+          upload_url=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.upload_url' | sed 's/{.*//')
+          test -n "$release_id"
+          test -n "$upload_url"
+
+          # Upload binário por HTTP/1.1 evita o caminho do gh release create que
+          # já produziu divergência de tamanho/digest neste APK > 1 GiB.
+          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@${apk}" \
+            "${upload_url}?name=Jornada-90-Manager.apk"
+
+          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary "@${sha_file}" \
+            "${upload_url}?name=Jornada-90-Manager.apk.sha256"
+
+          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            -H "Content-Type: text/plain; charset=utf-8" \
+            --data-binary "@${info_file}" \
+            "${upload_url}?name=Jornada-90-Manager-release.txt"
+
+          # Confere o que o servidor realmente recebeu antes de tornar a release pública.
+          remote_size=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | select(.name=="Jornada-90-Manager.apk") | .size')
+          remote_digest=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | select(.name=="Jornada-90-Manager.apk") | .digest')
+          test "$remote_size" -eq "$bytes"
+          test "$remote_digest" = "sha256:${local_sha}"
+          echo "RELEASE_APK_SIZE_MATCH=OK"
+          echo "RELEASE_APK_SHA256_MATCH=OK"
+
+          gh release edit "$tag" --repo "${GITHUB_REPOSITORY}" --draft=false --latest
+          echo "RELEASE_PUBLISHED=OK"
 
       - name: Publicar relatório pequeno do build
         uses: actions/upload-artifact@v7
