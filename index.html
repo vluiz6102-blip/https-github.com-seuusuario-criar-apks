@@ -2730,6 +2730,13 @@ function j90NegotiateStage(action){
     var score=n.interest+n.tension*.12+fit+(wage>=1?6:0);
     if(total>budget){toast("Orçamento insuficiente","Reduza a taxa, as luvas ou use mais parcelas.");return}
     if(score<48){n.stage="failed";n.tension=cl(n.tension+18,0,100);toast("Contrato recusado","O jogador não aceitou os termos.");render(1);return}
+    if(n.renewal){
+      var rp=S.roster.find(function(x){return x.id===n.playerId});
+      if(!rp){S.negotiation=null;toast("Jogador indisponível","O atleta não está mais no elenco.");render(1);return}
+      rp.salary=wage;rp.years=Math.max(1,Math.floor(+n.years||1));rp.role=n.role;
+      rp.contract={role:n.role,wage:wage,years:rp.years,signing:+n.signing||0,bonus:+n.bonus||0,release:+n.release||0,installments:1};
+      S.finance.expenses+=wage;S.negotiation=null;mgrNews("Contrato renovado",rp.name+" renovou por "+rp.years+" temporada(s).");toast("Renovação concluída",rp.name+" permanece no clube.");save();render(1);return
+    }
     var q=mgrMarketPool().find(function(x){return x.id===n.playerId||x.name===n.player});
     if(!q){toast("Jogador indisponível","O alvo não está mais disponível.");return}
     var p=mgrSeed(q,S.roster.length);p.ovr=q.ovr;p.age=q.age;p.salary=wage;p.years=Math.max(1,Math.floor(+n.years||1));p.star=p.ovr>=84;p.transferValue=n.fee;p.contract={role:n.role,wage:wage,years:p.years,signing:+n.signing||0,bonus:+n.bonus||0,release:+n.release||0,installments:+n.installments||1};
