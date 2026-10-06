@@ -2563,7 +2563,7 @@ function j90DribbleRating(p){
  if(Number.isFinite(known))return known;
  var style=j90NormPlayerName(p&&p.style);
  var pos=String(p&&p.position||'').toUpperCase(),o=Number(p&&p.ovr)||65;
- var base=style.includes('driblador')?.72:(pos.includes('ATA')||pos.includes('MEI')||pos.includes('AM')?.52:.36);
+ var base=style.includes('driblador')?.72:((pos.includes('ATA')||pos.includes('MEI')||pos.includes('AM'))?.52:.36);
  return cl(base+(o-70)*.006, .22, .84);
 }
 function j90TacticalIdentity(team){
@@ -2626,9 +2626,10 @@ function j90ShiftForTactic(m,home,kind){
  m.ball.tx=wide;m.ball.ty=cl(.46+(home?.08:-.08),.12,.88);
 }
 function j90MaybeSpecialEvent(m,minute){
- if(!m||m._eventCooldown>0)return;
+ if(!m)return;
  m._eventClock=(m._eventClock||0)+.033333;
  m._eventCooldown=Math.max(0,(m._eventCooldown||0)-.033333);
+ if(m._eventCooldown>0)return;
  if(m._eventClock<7+Math.random()*6)return;
  m._eventClock=0;
  var homeProfile=j90TacticalIdentity(m.home),awayProfile=j90TacticalIdentity(m.away);
