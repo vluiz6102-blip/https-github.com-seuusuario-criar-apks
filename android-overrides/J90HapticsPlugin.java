@@ -1,4 +1,4 @@
-package com.jornada90.carreira;
+package com.jornada90.manager;
 
 import android.os.Build;
 import android.view.HapticFeedbackConstants;
