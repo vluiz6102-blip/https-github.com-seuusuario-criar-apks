@@ -41,7 +41,8 @@ const idCounts = new Map();
 for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
 for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id + ' (' + n + 'x)');
 
-if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 6) add(warn, 'Mais de 6 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
+if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 5) add(warn, 'Muitas referências a requestAnimationFrame. Manter um único loop visual compartilhado por cena.');
+if (/startJ90MatchLoop\s*=|function\s+startJ90MatchLoop|\bj90MatchFrame\b/.test(index)) add(fail, 'Loop de partida legado/duplicado detectado. A partida deve usar somente o RAF compartilhado.');
 const intervalCount=(index.match(/setInterval\s*\(/g)||[]).length;
 if(intervalCount>0)add(fail,'setInterval detectado ('+intervalCount+'). O runtime Jornada 90 usa um único loop visual compartilhado.');
 if (/\bgetImageData\s*\(|\breadPixels\s*\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
@@ -63,7 +64,7 @@ const audioExpected = [
 ];
 for (const p of audioExpected) if (!existsSync(p) || statSync(p).size === 0) add(fail, 'Áudio obrigatório ausente/vazio: ' + p);
 
-if (existsSync('assets/j90-content/content-manifest.json')) {
+if (existsSync('assets/j90-content/technology/animation-manifest.json')) {\n  try { const am=JSON.parse(readFileSync('assets/j90-content/technology/animation-manifest.json','utf8')); if(Number(am?.frameRate||0)<60) add(fail,'Pacote de animação abaixo de 60 fps.'); if(Number(am?.framesPerAtlas||0)<32) add(fail,'Atlas de animação abaixo de 32 frames.'); } catch(e){ add(fail,'animation-manifest.json inválido: '+e.message); }\n}\n\nif (existsSync('assets/j90-content/content-manifest.json')) {
   try {
     const content = JSON.parse(readFileSync('assets/j90-content/content-manifest.json','utf8'));
     const sceneCount = Number(content?.sceneCount)||0;
