@@ -17,6 +17,8 @@ const inlineScripts = [...index.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/s
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
+const expansion = read('src/j90-expansion.js');
+checkSyntax('Jornada 90 Plus', expansion);
 
 const fnNames = [...inlineScripts.matchAll(/(?:^|[;}]\\s*)(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)\\s*\\(/gm)].map(m => m[1]);
 const seen = new Set();
@@ -53,6 +55,17 @@ const audioExpected = [
   'assets/audio/car/car-pass-01.ogg','assets/audio/rain/light-rain-bed-01.ogg','assets/audio/rain/heavy-rain-bed-01.ogg','assets/audio/crowd/crowd-distant-01.ogg'
 ];
 for (const p of audioExpected) if (!existsSync(p) || statSync(p).size === 0) add(fail, 'Áudio obrigatório ausente/vazio: ' + p);
+
+if (existsSync('assets/j90-content/content-manifest.json')) {
+  try {
+    const content = JSON.parse(readFileSync('assets/j90-content/content-manifest.json','utf8'));
+    const sceneCount = Number(content?.sceneCount)||0;
+    const generatedBytes = Number(content?.generatedBytes)||0;
+    if (sceneCount < 1) add(fail, 'Pacote de conteúdo sem cenas.');
+    if (generatedBytes < 500 * 1024 * 1024) add(fail, 'Pacote de conteúdo abaixo de 500 MiB.');
+    console.log('Pacote de conteúdo: ' + sceneCount + ' cenas / ' + Math.round(generatedBytes / 1048576) + ' MiB');
+  } catch (e) { add(fail, 'content-manifest.json inválido: ' + e.message); }
+}
 
 if (existsSync('data/rosters.json')) {
   try {
