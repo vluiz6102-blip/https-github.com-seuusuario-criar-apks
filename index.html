@@ -973,8 +973,8 @@ function worldFx(){
 }
 
 /* Atmosfera J90: Canvas leve, referências de tela atualizadas e repintura limitada. */
-let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoParticles=[],j90AtmoNodes=[];
-let menuTime=0;
+let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoParticles=[],j90AtmoNodes=[],j90AtmoSceneNodes=[],j90AtmoSkyNodes=[],j90AtmoLastDraw=0;
+let menuTime=0,j90AtmoLowPower=false;
 function j90MenuPhaseWeight(t,center,width){
  let d=Math.abs(t-center);d=Math.min(d,1-d);const x=Math.max(0,1-d/width);return x*x*(3-2*x)
 }
@@ -983,10 +983,9 @@ function updateJ90MenuEnvironment(force=false){
  const now=performance.now();
  if(!force&&now-j90EnvLastUpdate<33)return;
  j90EnvLastUpdate=now;
- const roots=document.querySelectorAll('.stadiumScene');
+ const roots=j90AtmoSceneNodes;
  if(!roots.length)return;
  const weather=window.ambienceState?.weather||'clear';
- roots.forEach(root=>root.dataset.weather=weather);
  const weights=[
   j90MenuPhaseWeight(menuTime,0,.13),
   j90MenuPhaseWeight(menuTime,.20,.13),
@@ -997,7 +996,7 @@ function updateJ90MenuEnvironment(force=false){
  ];
  const max=Math.max(...weights),sun=Math.max(0,1-j90MenuPhaseWeight(menuTime,.92,.18)),night=j90MenuPhaseWeight(menuTime,.90,.22);
  roots.forEach(root=>{
-  root.querySelectorAll('.menuSkyCycle i').forEach((el,i)=>el.style.opacity=String(weights[i]/Math.max(.001,max)));
+  root.dataset.weather=weather;
   root.style.setProperty('--j90-sun',String(.34+.58*sun));
   root.style.setProperty('--j90-horizon',String(.07+.22*(1-night)));
   root.style.setProperty('--j90-lights',String(.025+.25*night));
@@ -1007,8 +1006,12 @@ function updateJ90MenuEnvironment(force=false){
 }
 function startJ90Atmosphere(){
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
+ j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
+ j90AtmoSkyNodes=Array.from(document.querySelectorAll('.menuSkyCycle i'));
  if(!j90AtmoNodes.length)return;
  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+ const hz=Math.max(30,Math.min(120,Number(window.screen&&window.screen.refreshRate)||60));
+ j90AtmoLowPower=reduced||hz<=60||window.innerWidth<390||((navigator.hardwareConcurrency||8)<=4);
  if(!j90AtmoParticles.length){
   const count=window.innerWidth<560?14:22;
   for(let i=0;i<count;i++)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*1.25,s:.000045+Math.random()*.00008,a:.035+Math.random()*.09,p:Math.random()*6.28});
