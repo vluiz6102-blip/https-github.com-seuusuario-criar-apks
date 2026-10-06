@@ -527,15 +527,26 @@ def main() -> None:
     licenses = (
         "JORNADA 90 MANAGER CONTENT PACK\n"
         "===============================\n\n"
-        "Stadium atmosphere plates in this package are generated at build time by "
-        "scripts/generate-content-pack.py and are original procedural artwork for "
-        "Jornada 90 Manager. They are decorative 2D scenes, not photographic claims.\n\n"
-        "    print(
+        "Stadium atmosphere plates are original procedural artwork generated at build time.\n"
+        "Technology/animations are generated frame atlases used lazily by the runtime.\n"
+        "Team intelligence is deterministic offline data derived from the real roster set.\n"
+        "No player photographs are downloaded, embedded, or referenced by this build.\n"
+    )
+    (ROOT / "CONTENT-LICENSES.txt").write_text(licenses, encoding="utf-8")
+
+    total_generated = total + tech["generatedBytes"]
+    if total_generated < TARGET_BYTES:
+        raise SystemExit(
+            f"Conteúdo total abaixo da meta: {total_generated / 1024 / 1024:.1f} MiB < {TARGET_MB} MiB"
+        )
+
+    print(
         "Conteúdo Jornada 90 OK:",
         len(scenes), "cenas |",
-        round(total / 1024 / 1024, 2), "MiB |",
-        len(player_photo_records), "fotos de jogadores |",
-        round(sum(int(x["bytes"]) for x in player_photo_records) / 1024 / 1024, 2), "MiB em fotos |",
+        round(total / 1024 / 1024, 2), "MiB estádios |",
+        round(tech["generatedBytes"] / 1024 / 1024, 2), "MiB tecnologia |",
+        tech["animationAtlases"], "atlases de animação |",
+        tech["aiBytes"], "bytes inteligência |",
         len(openfootball), "datasets OpenFootball."
     )
 
