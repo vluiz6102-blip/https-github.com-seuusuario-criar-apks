@@ -213,22 +213,68 @@ jobs:
         working-directory: android
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Jornada-90-Manager.apk
 
-      - name: Verificar tamanho mínimo do APK
+      - name: Auditoria pesada do APK e integridade da instalação
         working-directory: android
         run: |
+          set -euo pipefail
           apk="app/build/outputs/apk/debug/Jornada-90-Manager.apk"
           bytes=$(stat -c%s "$apk")
           mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
           echo "APK_SIZE_BYTES=$bytes"
           echo "APK_SIZE_MIB=$mib"
           test "$bytes" -ge "$((1024*1024*1024))"
-          unzip -t "$apk" >/dev/null
+
+          # 1) O APK é um ZIP íntegro e todos os CRCs precisam bater.
+          unzip -t "$apk" >/tmp/j90-unzip-test.txt
+
+          # 2) Estrutura mínima obrigatória de um APK.
+          unzip -l "$apk" | grep -q 'AndroidManifest.xml'
+          unzip -l "$apk" | grep -q 'resources.arsc'
+          unzip -l "$apk" | grep -q 'classes.dex'
           unzip -l "$apk" | grep -q 'j90-content/content-manifest.json'
           ! unzip -l "$apk" | grep -q 'j90-content/players/'
 
-      - name: Publicar APK
+          # 3) Alinhamento, assinatura e manifesto são validados com o SDK Android.
+          build_tools=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
+          test -n "$build_tools"
+          "$build_tools/zipalign" -c -v 4 "$apk" >/tmp/j90-zipalign.txt
+          "$build_tools/apksigner" verify --verbose --print-certs "$apk" >/tmp/j90-apksigner.txt
+          "$build_tools/aapt2" dump badging "$apk" >/tmp/j90-badging.txt
+          grep -q "package: name='com.jornada90.manager'" /tmp/j90-badging.txt
+          grep -q "application-label:'Jornada 90 Manager'" /tmp/j90-badging.txt
+
+          # 4) Digesto da build, usado para detectar truncamento/corrupção após o download.
+          sha256sum "$apk" | tee Jornada-90-Manager.apk.sha256
+          {
+            echo "APK=Jornada-90-Manager.apk"
+            echo "SIZE_BYTES=$bytes"
+            echo "SIZE_MIB=$mib"
+            echo "SHA256=$(cut -d' ' -f1 Jornada-90-Manager.apk.sha256)"
+            echo "RUN=${GITHUB_RUN_NUMBER}"
+            echo "COMMIT=${GITHUB_SHA}"
+          } | tee Jornada-90-Manager-release.txt
+
+          echo "APK_FORENSICS=OK"
+          echo "ZIP_INTEGRITY=OK"
+          echo "ZIPALIGN=OK"
+          echo "SIGNATURE=OK"
+          echo "MANIFEST=OK"
+          echo "SHA256_READY=OK"
+
+      - name: Publicar APK bruto em Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="jornada-90-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag"             --repo "${GITHUB_REPOSITORY}"             --target "${GITHUB_SHA}"             --title "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}"             --notes "Build validada automaticamente. O APK abaixo é o arquivo bruto, sem o ZIP de artifact. SHA-256 e metadados acompanham a release."             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk             android/app/build/outputs/apk/debug/Jornada-90-Manager.apk.sha256             android/app/build/outputs/apk/debug/Jornada-90-Manager-release.txt
+
+      - name: Publicar relatório pequeno do build
         uses: actions/upload-artifact@v7
         with:
-          name: jornada-90-manager-apk
-          path: android/app/build/outputs/apk/debug/Jornada-90-Manager.apk
+          name: jornada-90-manager-release-info
+          path: |
+            android/app/build/outputs/apk/debug/Jornada-90-Manager.apk.sha256
+            android/app/build/outputs/apk/debug/Jornada-90-Manager-release.txt
           if-no-files-found: error
+          compression-level: 9
