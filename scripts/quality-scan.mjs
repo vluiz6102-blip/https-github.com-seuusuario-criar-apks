@@ -36,7 +36,8 @@ for (const id of ids) idCounts.set(id, (idCounts.get(id) || 0) + 1);
 for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id + ' (' + n + 'x)');
 
 if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 4) add(warn, 'Mais de 4 referências a requestAnimationFrame detectadas. Revisar loops antes de adicionar novas animações.');
-if ((index.match(/setInterval\s*\(/g) || []).length > 1) add(warn, 'Mais de 1 setInterval detectado. Revisar timers para evitar loops paralelos.');
+const intervalCount=(index.match(/setInterval\s*\(/g)||[]).length;
+if(intervalCount>0)add(fail,'setInterval detectado ('+intervalCount+'). O runtime Jornada 90 usa um único loop visual compartilhado.');
 if (/\bgetImageData\s*\(|\breadPixels\s*\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
 if (/\binnerHTML\s*=\s*[^;]*(?:setInterval|requestAnimationFrame)/.test(index)) add(warn, 'Possível reconstrução de DOM dentro de loop/timer.');
 if (/j90Music(Start|Stop|Track|Notes|Timer|Nodes)/.test(index)) add(fail, 'Motor de música legado detectado no index.html.');
@@ -62,7 +63,7 @@ if (existsSync('assets/j90-content/content-manifest.json')) {
     const sceneCount = Number(content?.sceneCount)||0;
     const generatedBytes = Number(content?.generatedBytes)||0;
     if (sceneCount < 1) add(fail, 'Pacote de conteúdo sem cenas.');
-    if (generatedBytes < 600 * 1024 * 1024) add(fail, 'Pacote de conteúdo abaixo de 600 MiB.');
+    if (generatedBytes < 1000 * 1024 * 1024) add(fail, 'Pacote de conteúdo abaixo de 1000 MiB.');
     console.log('Pacote de conteúdo: ' + sceneCount + ' cenas / ' + Math.round(generatedBytes / 1048576) + ' MiB');
   } catch (e) { add(fail, 'content-manifest.json inválido: ' + e.message); }
 }

@@ -28,10 +28,10 @@ ROOT = Path("assets/j90-content")
 STADIUMS = ROOT / "stadiums"
 OPENFOOTBALL = ROOT / "openfootball"
 ROSTERS = Path("data/rosters.json")
-TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "650"))
+TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "1150"))
 TARGET_BYTES = TARGET_MB * 1024 * 1024
 WIDTH, HEIGHT = 2048, 1152
-MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "1400"))
+MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "2400"))
 
 VARIANTS = [
     ("afternoon", (92, 111, 142), (222, 151, 83), (16, 34, 47)),
@@ -42,6 +42,10 @@ VARIANTS = [
     ("cloudy", (71, 82, 91), (141, 149, 153), (17, 25, 31)),
     ("rain", (47, 67, 87), (86, 101, 121), (10, 17, 24)),
     ("storm", (29, 39, 58), (61, 58, 82), (7, 11, 19)),
+    ("matchday", (76, 92, 123), (238, 160, 74), (12, 28, 32)),
+    ("training", (71, 106, 126), (202, 181, 101), (14, 39, 34)),
+    ("academy", (49, 91, 108), (174, 180, 103), (12, 36, 29)),
+    ("press", (54, 59, 92), (215, 126, 78), (13, 18, 29)),
 ]
 
 OPENFOOTBALL_SOURCES = [
@@ -207,6 +211,30 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
         draw.ellipse((int(WIDTH*.38), -40, int(WIDTH*.66), 210),
                      fill=(158, 189, 232, 28))
 
+    if variant == "training":
+        for i in range(8):
+            x = 250 + i * 195
+            y = pitch_top + 80 + (i % 2) * 65
+            draw.rectangle((x, y, x + 26, y + 26), outline=(245, 216, 127, 115), width=4)
+    elif variant == "academy":
+        for i in range(5):
+            x = 360 + i * 250
+            y = pitch_top + 40
+            draw.line((x, y, x, y + 115), fill=(235, 235, 226, 100), width=3)
+            draw.line((x, y, x + 100, y + 60), fill=(235, 235, 226, 100), width=3)
+    elif variant == "press":
+        for i in range(9):
+            x = 480 + i * 125
+            y = horizon_y + 78
+            draw.ellipse((x, y, x + 18, y + 18), fill=(11, 16, 21, 190))
+            draw.line((x + 9, y + 18, x + 9, y + 58), fill=(11, 16, 21, 190), width=6)
+    elif variant == "matchday":
+        for i in range(12):
+            x = 180 + i * 140
+            y = horizon_y - 30 + (i % 3) * 18
+            draw.polygon([(x, y), (x + 14, y + 5), (x + 8, y + 45), (x - 5, y + 38)],
+                         fill=(220, 229, 235, 52))
+
     # Team identity panel, generated from the real roster/team name but without
     # claiming to be a photograph of a real stadium.
     label = team.upper()
@@ -266,7 +294,7 @@ def main() -> None:
     # Four visual contexts per club minimum. Extra scenes are added until the
     # requested package size is reached, so smaller data sets still get a full
     # media library.
-    per_team = max(4, math.ceil(620 / max(1, len(teams))))
+    per_team = max(4, math.ceil(1040 / max(1, len(teams))))
     scenes = []
     total = 0
 

@@ -161,7 +161,7 @@ jobs:
           mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
           echo "APK_SIZE_BYTES=$bytes"
           echo "APK_SIZE_MIB=$mib"
-          test "$bytes" -ge "$((500*1024*1024))"
+          test "$bytes" -ge "$((1024*1024*1024))"
           unzip -t "$apk" >/dev/null
           unzip -l "$apk" | grep -q 'j90-content/content-manifest.json'
 
