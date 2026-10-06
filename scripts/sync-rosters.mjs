@@ -175,13 +175,29 @@ function addSaudi(map,payload){
 }
 function candidateNames(name){return [...new Set([name,...(ALIASES[name]||[])])];}
 function findStatic(map,name){
-  for(const cand of candidateNames(name)){
-    const target=norm(cand);
+  const candidates=candidateNames(name).map(norm).filter(Boolean);
+  for(const target of candidates){
+    const exact=map.get(target);
+    if(exact)return exact;
+  }
+  const containsWords=(key,target)=>{
+    const kw=String(key).split(' '),tw=String(target).split(' ');
+    if(!tw.length||tw.length>kw.length)return false;
+    for(let i=0;i<=kw.length-tw.length;i++){
+      let ok=true;
+      for(let j=0;j<tw.length;j++)if(kw[i+j]!==tw[j]){ok=false;break;}
+      if(ok)return true;
+    }
+    return false;
+  };
+  const hits=[];
+  for(const target of candidates){
     for(const [key,val] of map){
-      if(key===target||key.includes(target)||target.includes(key))return val;
+      if(containsWords(key,target))hits.push({target,key,val,diff:Math.abs(key.length-target.length)});
     }
   }
-  return null;
+  hits.sort((a,b)=>a.diff-b.diff||a.key.length-b.key.length);
+  return hits[0]?.val||null;
 }
 async function sportsDbRoster(name){
   const queries=candidateNames(name);
