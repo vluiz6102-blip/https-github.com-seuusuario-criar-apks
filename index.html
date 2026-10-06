@@ -1052,6 +1052,86 @@ body.j90-manager-screen td,body.j90-manager-screen th{white-space:nowrap}
 @media(prefers-reduced-motion:reduce){
   body.j90-manager-screen .j90ManagerTabs{scroll-behavior:auto}
 }
+</style><style id="j90-ui-overhaul-v2">
+/* J90 mobile UI overhaul: full-bleed scene, bounded readable content, touch-first navigation */
+html,body{width:100%;max-width:none;min-width:0;overflow-x:hidden}
+#j90-world{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:100dvh!important;z-index:0!important}
+.j90-menu-active #j90-world{display:block!important}
+.j90-menu-active #app{position:relative!important;z-index:2!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
+.j90-menu-active .menuHero{width:100%!important;min-height:100dvh!important;height:100dvh!important;margin:0!important;padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))!important;border-radius:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:stretch!important}
+.j90-menu-active .menuHero>*{width:min(100%,620px)!important;margin-left:auto!important;margin-right:auto!important}
+.j90-menu-active .menuHero .menuActions,.j90-menu-active .menuHero .menuGrid,.j90-menu-active .menuHero .menuButtons{width:min(100%,620px)!important}
+.j90-menu-active .menuHero h1,.j90-menu-active .menuHero h2,.j90-menu-active .menuHero p{max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
+.j90-menu-active .menuBtn{min-height:58px!important;font-size:16px!important;line-height:1.2!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.j90-menu-active .menuBtn span{font-size:12px!important;line-height:1.35!important}
+
+/* Manager shell: true edge-to-edge mobile canvas */
+body.j90-manager-screen{width:100vw!important;height:100dvh!important;padding:0!important;overflow:hidden!important}
+body.j90-manager-screen #j90-world{display:block!important;opacity:.95!important}
+body.j90-manager-screen #app{position:relative!important;z-index:2!important;width:100vw!important;max-width:none!important;height:100dvh!important;margin:0!important;padding:0!important}
+.j90ManagerShell{width:100vw!important;max-width:none!important;height:100dvh!important;margin:0!important;padding:0!important;gap:0!important;background:linear-gradient(180deg,rgba(5,10,15,.78),rgba(5,9,13,.9))!important}
+.j90ManagerHead{width:100%!important;border-left:0!important;border-right:0!important;border-top:0!important;border-radius:0!important;padding:max(9px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 9px max(12px,env(safe-area-inset-left))!important;background:rgba(8,13,18,.88)!important;backdrop-filter:blur(14px)!important}
+.j90ManagerTabs{width:100%!important;display:flex!important;flex:0 0 auto!important;overflow-x:auto!important;overflow-y:hidden!important;gap:7px!important;padding:7px max(12px,env(safe-area-inset-right)) 7px max(12px,env(safe-area-inset-left))!important;background:rgba(7,12,17,.88)!important;scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x!important;overscroll-behavior-x:contain!important}
+.j90ManagerTabs::-webkit-scrollbar{display:none!important}
+.j90ManagerTabs button{flex:0 0 92px!important;width:92px!important;min-width:92px!important;min-height:48px!important;padding:7px 9px!important;border-radius:11px!important;display:grid!important;grid-template-columns:auto 1fr!important;grid-template-rows:1fr auto!important;column-gap:8px!important;place-items:initial!important}
+.j90ManagerTabs button span{grid-row:1 / span 2!important;align-self:center!important;font-size:18px!important}
+.j90ManagerTabs button small{align-self:end!important;font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#j90-manager-content{width:100%!important;min-width:0!important;height:auto!important;overflow-y:auto!important;overflow-x:hidden!important;padding:12px max(12px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;touch-action:pan-y!important}
+.j90MgrPage{width:100%!important;max-width:1120px!important;margin:0 auto!important;overflow:visible!important}
+.j90MgrCard{width:100%!important;min-width:0!important;overflow:visible!important;background:rgba(12,20,27,.86)!important;backdrop-filter:blur(10px)!important;border-color:rgba(255,255,255,.1)!important}
+.j90MgrTitle>b,.j90MgrEyebrow{font-size:13px!important;line-height:1.2!important;max-width:100%!important;overflow-wrap:anywhere!important}
+.j90MgrTitle>small{font-size:10px!important;max-width:45%!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.j90MgrCard b,.j90MgrCard span,.j90MgrCard small,.j90MgrCard p{max-width:100%;overflow-wrap:anywhere;word-break:normal}
+.j90MgrPlayer b,.j90MgrMarketRow b,.j90MgrNewsList b{white-space:normal!important;overflow-wrap:anywhere!important;text-overflow:clip!important}
+.j90MgrPlayer small,.j90MgrMarketRow small{white-space:normal!important;overflow-wrap:anywhere!important;text-overflow:clip!important}
+
+/* Match controls and option rails are intentionally horizontally draggable */
+.j90MatchControls,.j90MatchBench,.j90MgrChipGrid,.j90MgrMiniGrid,.j90MgrActionGrid,.j90MgrQuickGrid{
+  display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;
+  width:100%!important;gap:8px!important;padding:3px 2px 8px!important;
+  scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important;
+  touch-action:pan-x!important;overscroll-behavior-x:contain!important;
+}
+.j90MatchControls::-webkit-scrollbar,.j90MatchBench::-webkit-scrollbar,.j90MgrChipGrid::-webkit-scrollbar,.j90MgrMiniGrid::-webkit-scrollbar,.j90MgrActionGrid::-webkit-scrollbar,.j90MgrQuickGrid::-webkit-scrollbar{display:none!important}
+.j90MatchControls .chip,.j90MatchBench .chip,.j90MgrChip,.j90MgrMiniChip,.j90MgrActionGrid button,.j90MgrQuickGrid button{
+  flex:0 0 auto!important;min-width:118px!important;width:auto!important;max-width:190px!important;min-height:48px!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important;
+}
+.j90MatchControls .chip{font-size:11px!important}
+.j90MatchBench .chip{min-width:128px!important;font-size:10px!important}
+.j90MgrActionGrid button{min-width:104px!important;font-size:10px!important}
+.j90MgrQuickGrid button{min-width:150px!important;text-align:left!important}
+.j90MgrChip{min-width:145px!important;text-align:left!important}
+.j90MgrMiniChip{min-width:92px!important}
+.j90MgrPlayerGrid{min-width:0!important}
+.j90MgrPlayer{min-width:0!important}
+.j90MgrPlayer b{font-size:12px!important}
+.j90MgrPlayer small{font-size:9px!important}
+
+/* Tables and long labels never escape the viewport */
+.j90MgrCard table{display:block!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x!important}
+.j90MgrCard table tbody,.j90MgrCard table thead{width:max-content!important;min-width:100%!important}
+.j90MgrCard td,.j90MgrCard th{overflow:visible!important;text-overflow:clip!important;white-space:normal!important;overflow-wrap:anywhere!important}
+
+/* Accessibility and readable mobile type */
+@media(max-width:720px){
+  .j90MgrCard{padding:13px!important}
+  .j90MgrTitle>b{font-size:14px!important}
+  .j90MgrStats b,.j90MgrMoneyGrid b{font-size:13px!important}
+  .j90MgrStats small,.j90MgrMoneyGrid small{font-size:9px!important}
+  .j90MgrMatch b{font-size:16px!important;max-width:42%!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  .j90MgrMatch strong{font-size:21px!important}
+  .j90MatchEvent{font-size:11px!important;line-height:1.35!important;min-height:46px!important}
+}
+@media(max-width:390px){
+  .j90ManagerTabs button{flex-basis:88px!important;width:88px!important;min-width:88px!important}
+  .j90ManagerTabs button small{font-size:8px!important}
+  .j90-menu-active .menuHero{padding-left:12px!important;padding-right:12px!important}
+  .j90-menu-active .menuBtn{font-size:15px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .j90-menu-active .menuHero *,.j90ManagerShell *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
