@@ -134,7 +134,7 @@ jobs:
           mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
           echo "APK_SIZE_BYTES=$bytes"
           echo "APK_SIZE_MIB=$mib"
-          test "$bytes" -ge "$((500*1024*1024))"
+          test "$bytes" -ge "$((1000*1024*1024))"
 
       - name: Publicar APK
         uses: actions/upload-artifact@v7
