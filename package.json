@@ -1,8 +1,8 @@
 {
-  "name": "carreira-fc",
+  "name": "jornada-90-manager",
   "version": "1.0.0",
   "private": true,
-  "description": "Jornada 90 - simulador de carreira de futebol",
+  "description": "Jornada 90 Manager - simulador de carreira de técnico e diretor técnico",
   "scripts": {
     "build": "node scripts/build.mjs",
     "cap": "npx cap sync",
