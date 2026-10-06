@@ -33,6 +33,7 @@
   const buffers = new Map();
   const failed = new Set();
   const continuous = new Map();
+  let startPromise = null;
   const events = new Set();
   const cooldown = new Map();
   const lastEventAsset = new Map();
@@ -176,6 +177,33 @@
         return r.arrayBuffer();
       })
       .then(data => AC.decodeAudioData(data))
+      .then(buffer => {
+        // Keep the real source asset, but do not retain multi-minute decoded PCM.
+        // Long ambience beds are reduced to a crossfaded runtime loop, which avoids
+        // hundreds of MB of resident audio memory on mobile WebView.
+        if (!buffer || buffer.duration <= 55) return buffer;
+        const seconds = Math.min(45, buffer.duration - 0.5);
+        const frames = Math.max(1, Math.floor(seconds * buffer.sampleRate));
+        const maxStart = Math.max(0, buffer.length - frames);
+        const start = Math.min(maxStart, Math.floor(buffer.length * 0.18));
+        const out = AC.createBuffer(buffer.numberOfChannels, frames, buffer.sampleRate);
+        const fadeFrames = Math.min(Math.floor(buffer.sampleRate * 1.5), Math.floor(frames / 8));
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+          const src = buffer.getChannelData(ch);
+          const dst = out.getChannelData(ch);
+          for (let i = 0; i < frames; i++) dst[i] = src[start + i];
+          for (let i = 0; i < fadeFrames; i++) {
+            const t = i / Math.max(1, fadeFrames - 1);
+            const a = Math.cos(t * Math.PI * 0.5);
+            const b = Math.sin(t * Math.PI * 0.5);
+            const head = dst[i];
+            const tail = dst[frames - fadeFrames + i];
+            dst[i] = head * a + tail * b;
+            dst[frames - fadeFrames + i] = tail * a + head * b;
+          }
+        }
+        return out;
+      })
       .catch(err => {
         rememberFailure(file);
         return null;
@@ -535,16 +563,31 @@
   async function start() {
     ambienceState.menuActive = true;
     if (!audioOK) return;
-    const c = await unlockAudio();
-    if (!c) return;
-    buildGraph();
-    if (!graph) return;
 
-    generation++;
-    stopAll(.35);
-    syncWorldState();
-    if (!eventTimer) eventTimer = setTimeout(eventStep, 3500);
-    if (!stateTimer) stateTimer = setTimeout(stateTick, 75000);
+    // render() can run repeatedly while the menu is open. Never tear down and
+    // rebuild the audio graph for every UI render, and never launch overlapping
+    // buffer/decode/start operations.
+    if (graph && (eventTimer || stateTimer || continuous.size)) return;
+    if (startPromise) return startPromise;
+
+    startPromise = (async () => {
+      const c = await unlockAudio();
+      if (!c) return;
+      buildGraph();
+      if (!graph) return;
+
+      generation++;
+      stopAll(.35);
+      syncWorldState();
+      if (!eventTimer) eventTimer = setTimeout(eventStep, 3500);
+      if (!stateTimer) stateTimer = setTimeout(stateTick, 75000);
+    })();
+
+    try {
+      await startPromise;
+    } finally {
+      startPromise = null;
+    }
   }
 
   function stop() {
