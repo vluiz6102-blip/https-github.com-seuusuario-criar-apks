@@ -64,7 +64,15 @@ const audioExpected = [
 ];
 for (const p of audioExpected) if (!existsSync(p) || statSync(p).size === 0) add(fail, 'Áudio obrigatório ausente/vazio: ' + p);
 
-if (existsSync('assets/j90-content/technology/animation-manifest.json')) {\n  try { const am=JSON.parse(readFileSync('assets/j90-content/technology/animation-manifest.json','utf8')); if(Number(am?.frameRate||0)<60) add(fail,'Pacote de animação abaixo de 60 fps.'); if(Number(am?.framesPerAtlas||0)<32) add(fail,'Atlas de animação abaixo de 32 frames.'); } catch(e){ add(fail,'animation-manifest.json inválido: '+e.message); }\n}\n\nif (existsSync('assets/j90-content/content-manifest.json')) {
+if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
+  try {
+    const am=JSON.parse(readFileSync('assets/j90-content/technology/animation-manifest.json','utf8'));
+    if(Number(am?.frameRate||0)<60) add(fail,'Pacote de animação abaixo de 60 fps.');
+    if(Number(am?.framesPerAtlas||0)<32) add(fail,'Atlas de animação abaixo de 32 frames.');
+  } catch(e) { add(fail,'animation-manifest.json inválido: '+e.message); }
+}
+
+if (existsSync('assets/j90-content/content-manifest.json')) {
   try {
     const content = JSON.parse(readFileSync('assets/j90-content/content-manifest.json','utf8'));
     const sceneCount = Number(content?.sceneCount)||0;
