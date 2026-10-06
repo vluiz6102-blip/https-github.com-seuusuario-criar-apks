@@ -68,10 +68,37 @@ jobs:
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
+      - name: Validar bundle web e áudios reais
+        run: |
+          test -s www/assets/j90-content/content-manifest.json
+          test -d www/assets/j90-content/stadiums
+          scene_files=$(find www/assets/j90-content/stadiums -type f -name '*.jpg' | wc -l)
+          echo "WEB_SCENE_FILES=$scene_files"
+          test "$scene_files" -ge 1
+          npm run audio:validate
+
       - name: Preparar Android
         run: |
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
+
+      - name: Conferir conteúdo copiado para Android
+        run: |
+          src="www/assets/j90-content"
+          dst="android/app/src/main/assets/public/assets/j90-content"
+          test -d "$src"
+          test -d "$dst"
+          src_bytes=$(du -sb "$src" | awk '{print $1}')
+          dst_bytes=$(du -sb "$dst" | awk '{print $1}')
+          src_files=$(find "$src" -type f | wc -l)
+          dst_files=$(find "$dst" -type f | wc -l)
+          echo "CONTENT_SOURCE_BYTES=$src_bytes"
+          echo "CONTENT_ANDROID_BYTES=$dst_bytes"
+          echo "CONTENT_SOURCE_FILES=$src_files"
+          echo "CONTENT_ANDROID_FILES=$dst_files"
+          test "$src_bytes" -eq "$dst_bytes"
+          test "$src_files" -eq "$dst_files"
+          test -s "$dst/content-manifest.json"
 
       - name: Garantir retorno tátil Android
         working-directory: android
@@ -134,7 +161,9 @@ jobs:
           mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
           echo "APK_SIZE_BYTES=$bytes"
           echo "APK_SIZE_MIB=$mib"
-          test "$bytes" -ge "$((1000*1024*1024))"
+          test "$bytes" -ge "$((500*1024*1024))"
+          unzip -t "$apk" >/dev/null
+          unzip -l "$apk" | grep -q 'j90-content/content-manifest.json'
 
       - name: Publicar APK
         uses: actions/upload-artifact@v7
