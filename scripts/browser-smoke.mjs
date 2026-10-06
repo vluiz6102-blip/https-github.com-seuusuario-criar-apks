@@ -47,6 +47,11 @@ if (await play.count() === 1) {
   await play.click();
   await page.waitForTimeout(1200);
   if (await page.locator('#j90MatchCanvas').count() !== 1) throw new Error('Match canvas did not open.');
+  const before = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', frames: window.J90FrameStats?.().frames || 0 }));
+  await page.waitForTimeout(1000);
+  const after = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', frames: window.J90FrameStats?.().frames || 0, perf: window.J90Perf?.snapshot?.() || null }));
+  if (before.clock === after.clock) throw new Error('Match clock did not advance.');
+  if (after.frames < before.frames) throw new Error('Frame counter regressed.');
 }
 
 if (errors.length) {
