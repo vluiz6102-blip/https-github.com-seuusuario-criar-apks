@@ -955,6 +955,25 @@ html,body,#app{width:100%;max-width:none;min-width:0}
   .j90MgrActions,.j90MgrLineActions{grid-template-columns:1fr 1fr}
   .j90MgrPlayerGrid{grid-template-columns:1fr}
 }
+</style><style id="j90-final-mobile-polish">
+@keyframes j90BadgeFloat{0%,100%{transform:translate3d(0,0,0) rotate(-5deg)}50%{transform:translate3d(0,-5px,0) rotate(-3deg)}}
+@keyframes j90HomeEnterFast{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.j90Badge{animation:j90BadgeFloat 5.2s ease-in-out infinite}
+.j90-enter .j90BrandBlock{animation:j90HomeEnterFast .42s cubic-bezier(.2,.8,.2,1) both!important}
+.j90-enter .j90Actions{animation:j90HomeEnterFast .48s .04s cubic-bezier(.2,.8,.2,1) both!important}
+.j90-enter .j90UtilityGrid{animation:j90HomeEnterFast .44s .09s cubic-bezier(.2,.8,.2,1) both}
+body.j90-low-quality .j90Badge{animation:none}
+@media(prefers-reduced-motion:reduce){.j90Badge,.j90-enter .j90BrandBlock,.j90-enter .j90Actions,.j90-enter .j90UtilityGrid{animation:none!important}}
+@media(max-width:720px){
+  .j90xNav button{min-height:50px;font-size:12px;padding:6px 4px}
+  .j90xBody{padding:10px 12px 20px}
+  .j90xStat small{font-size:9px}.j90xTitle b{font-size:12px}.j90xTitle small{font-size:10px}
+  .j90xGrid3 button,.j90xGrid4 button,.j90xTopAction button,.j90xFacility button,.j90xStaff button,.j90xMission button,.j90xMissionGrid button{min-height:46px;font-size:11px}
+  .j90xGrid3 button small,.j90xMissionGrid button small{font-size:9px}
+  .j90xFacility>div b,.j90xStaff>div b,.j90xMission>div b,.j90xPerson>div b{font-size:11px}
+  .j90xFacility>div span,.j90xStaff>div small,.j90xMission>div small,.j90xPerson>div small{font-size:9px}
+  .j90xFacility>small,.j90xNote,.j90xEmpty{font-size:10px}
+}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
@@ -1226,8 +1245,12 @@ function startJ90Atmosphere(){
     menuTime=(t/18000)%1;updateJ90MenuEnvironment();
     if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
      const dt=Math.min(70,t-(frame.last||t));frame.last=t;j90FrameStatsState.frames++;
-     if(j90FrameStatsState.last){const fi=t-j90FrameStatsState.last;j90FrameStatsState.intervals.push(Math.min(250,fi));if(j90FrameStatsState.intervals.length>240)j90FrameStatsState.intervals.shift();if(fi>25)j90FrameStatsState.slowFrames++}
+     let fi=dt;
+     if(j90FrameStatsState.last){fi=t-j90FrameStatsState.last;j90FrameStatsState.intervals.push(Math.min(250,fi));if(j90FrameStatsState.intervals.length>240)j90FrameStatsState.intervals.shift();if(fi>25)j90FrameStatsState.slowFrames++}
      j90FrameStatsState.last=t;j90FrameStatsState.elapsed+=dt;
+     const live=typeof j90PerfSample==='function'?j90PerfSample(fi):null;
+     const targetParticles=live?.low?8:(live?.tier==='high'?14:11);
+     if(frame.particleTarget!==targetParticles){frame.particleTarget=targetParticles;while(j90AtmoParticles.length>targetParticles)j90AtmoParticles.pop();while(j90AtmoParticles.length<targetParticles)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*.95,s:.000045+Math.random()*.00007,a:.028+Math.random()*.075,p:Math.random()*6.28})}
      for(const q of j90AtmoParticles){q.x+=q.s*dt;q.y-=q.s*.12*dt;q.p+=.0008*dt;if(q.x>1.04||q.y<.45){q.x=-.03;q.y=.56+Math.random()*.38}}
      j90AtmoNodes.forEach(draw);
     }
@@ -2444,12 +2467,11 @@ render();
 </script>
 <script id="j90-polish-runtime">
 (()=>{'use strict';if(window.__J90_POLISH__)return;window.__J90_POLISH__=true;
-const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);let lastFeedback=0,busyUntil=0,busyTarget=null,lastScreenKey='';
+const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);let lastFeedback=0,busyUntil=0,busyTarget=null;
 function screenKey(){return [typeof menuScreen==='string'?menuScreen:'',typeof introStep==='number'?introStep:'',typeof tab==='string'?tab:'',!!(typeof S!=='undefined'&&S&&S.manager),!!(typeof S!=='undefined'&&S&&S.match2d)].join('|')}
-function polishMenu(){const hero=document.querySelector('.menuHero');if(hero&&!hero.dataset.j90Hero){hero.dataset.j90Hero='1'}}
 addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;b.classList.add('j90-press');setTimeout(()=>b.classList.remove('j90-press'),120);const n=performance.now();if(n-lastFeedback<140)return;lastFeedback=n;try{if(typeof haptic==='function')haptic('click')}catch(e){}},{passive:true});
 addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=performance.now();const primary=b.matches('.menuBtn.primary,.btn.go,.offerCard');if(primary){if(b===busyTarget&&n<busyUntil){e.preventDefault();e.stopImmediatePropagation();return}busyTarget=b;busyUntil=n+260;if(b.id!=='startConfirm'){b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280)} }},true);
-function patchRender(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const before=screenKey();old.apply(this,arguments);const after=screenKey();if(!still&&!reduced()&&before!==after){const next=document.querySelector('#app');if(next){next.classList.remove('j90-enter');void next.offsetWidth;next.classList.add('j90-enter');setTimeout(()=>next.classList.remove('j90-enter'),280)}}lastScreenKey=after;polishMenu()};wrap.__j90Polished=true;window.render=wrap}
-function init(){lastScreenKey=screenKey();patchRender();polishMenu()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+function patchRender(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const before=screenKey();old.apply(this,arguments);const after=screenKey();if(!still&&!reduced()&&before!==after){const next=document.querySelector('#app');if(next){next.classList.remove('j90-enter');void next.offsetWidth;next.classList.add('j90-enter');setTimeout(()=>next.classList.remove('j90-enter'),280)}}};wrap.__j90Polished=true;window.render=wrap}
+function init(){patchRender()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.warn('J90 runtime guard:',e.error)}catch(_){}});})();</script></body>
 </html>
