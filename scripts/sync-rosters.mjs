@@ -139,7 +139,7 @@ function addBrazilBr1(map,text,label='Brazil 2026 / Série A-B'){
     if(!name)continue;
     if(!map.has(norm(current)))map.set(norm(current),{source:label,sourceName:current,players:[]});
     const rec=map.get(norm(current));
-    if(!rec.players.some(p=>norm(p.name)===norm(name)))rec.players.push({name,position,number:null});
+    if(!rec.players.some(p=>norm(p.name)===norm(name)))rec.players.push({name,position,number:null,nationality:'Brasil'});
   }
 }
 function addBrazilOvr(map,text,label='Brazil 2026 / Série C'){
@@ -191,7 +191,7 @@ function addCartola(map,payload){
     const key=String(c?.slug||c?.abreviacao||c?.nome||c?.nome_fantasia||a?.clube_id);
     if(!bucket.has(key))bucket.set(key,{source:'Cartola 2026',sourceName:String(c?.nome_fantasia||c?.nome||key),players:[]});
     const name=String(a?.apelido||a?.nome||'').trim();if(!name)continue;
-    bucket.get(key).players.push({name,position:cartolaPosition(a?.posicao_id),number:null});
+    bucket.get(key).players.push({name,position:cartolaPosition(a?.posicao_id),number:null,age:null,nationality:'Brasil'});
   }
   for(const [,v] of bucket){
     const uniq=[...new Map(v.players.map(p=>[norm(p.name),p])).values()];
