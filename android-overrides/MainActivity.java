@@ -1,6 +1,7 @@
 package com.jornada90.manager;
 
 import android.os.Bundle;
+import android.os.Build;
 import android.graphics.Color;
 import android.view.View;
 import android.view.WindowInsets;
@@ -29,4 +30,42 @@ public class MainActivity extends BridgeActivity {
     lp.preferredRefreshRate = hz;
     return lp;
   }
+
+  private float chooseStartupRefreshRate() {
+    int cores = Math.max(1, Runtime.getRuntime().availableProcessors());
+    if (cores < 6) return 60f;
+    if (Build.VERSION.SDK_INT >= 23) {
+      android.view.Display display = getWindow().getWindowManager().getDefaultDisplay();
+      if (display != null) {
+        float best = 60f;
+        for (android.view.Display.Mode mode : display.getSupportedModes()) {
+          float hz = mode.getRefreshRate();
+          if (hz >= 90f && hz <= 120f && hz > best) best = hz;
+        }
+        return best;
+      }
+    }
+    return 60f;
+  }
+
+  private void applyImmersiveMode() {
+    View decor = getWindow().getDecorView();
+    if (Build.VERSION.SDK_INT >= 30) {
+      WindowInsetsController controller = decor.getWindowInsetsController();
+      if (controller != null) {
+        controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+      }
+    } else {
+      decor.setSystemUiVisibility(
+        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+        View.SYSTEM_UI_FLAG_FULLSCREEN |
+        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+      );
+    }
+  }
+
 }
