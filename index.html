@@ -602,7 +602,23 @@ body.theme-amoled .ambientBg{background:#000!important;transition:none}.theme-am
  .menuSkyCycle i{transition:none!important}.stadiumScene .leaves i,.stadiumScene .birds i{animation:none!important}
 }
 </style>
-</head>
+<style id="j90-polish-visuals">
+:root{--j90-ease:cubic-bezier(.22,.8,.22,1);--j90-fast:160ms;--j90-base:360ms}
+body.j90-low-quality .stadiumScene .leaves.near,body.j90-low-quality .stadiumScene .fireflies,body.j90-low-quality .stadiumScene .birds,body.j90-low-quality .stadiumScene .beam,body.j90-low-quality .stadiumScene .lights{opacity:.28}
+body.j90-low-quality .stadiumScene .dust{opacity:.45}body.j90-low-quality .stadiumScene .cloudLayer{opacity:.62}body.j90-low-quality .ambientBg .atmoCanvas{opacity:.58}
+#app.j90-enter{animation:j90Enter 360ms var(--j90-ease) both}#app.j90-leave{animation:j90Leave 150ms ease both}
+@keyframes j90Enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}@keyframes j90Leave{to{opacity:.82;transform:translate3d(0,-3px,0)}}
+.menuHero.j90-menu-enter{animation:j90Hero 620ms var(--j90-ease) both}.menuActions.j90-menu-enter .menuBtn{animation:j90Item 380ms var(--j90-ease) both}
+.menuActions.j90-menu-enter .menuBtn:nth-child(1){animation-delay:100ms}.menuActions.j90-menu-enter .menuBtn:nth-child(2){animation-delay:155ms}.menuActions.j90-menu-enter .menuBtn:nth-child(3){animation-delay:210ms}.menuActions.j90-menu-enter .menuBtn:nth-child(4){animation-delay:265ms}.menuActions.j90-menu-enter .menuBtn:nth-child(5){animation-delay:320ms}
+@keyframes j90Hero{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}@keyframes j90Item{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+.menuHero .stadiumScene:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,10,13,.02),transparent 48%,rgba(0,0,0,.24)),radial-gradient(ellipse at 50% 72%,transparent 34%,rgba(0,0,0,.22) 100%);z-index:8}
+.menuHero .brand{text-shadow:0 3px 22px rgba(0,0,0,.35)}.menuStatus{position:relative;z-index:10;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:12px auto 0;max-width:430px}.menuStatus span{font-size:9px;letter-spacing:1.05px;color:rgba(245,245,245,.68);border:1px solid rgba(255,255,255,.11);background:rgba(0,0,0,.18);border-radius:999px;padding:5px 8px}
+.menuActions,.menuHero,.credits{position:relative;z-index:12}.menuBtn,.btn,.chip,.tabs button,.offerCard,.audioOption,.backBtn{transition:transform var(--j90-fast) var(--j90-ease),opacity var(--j90-fast) ease,border-color var(--j90-fast) ease,box-shadow var(--j90-fast) ease}.menuBtn:active,.btn:active,.chip:active,.tabs button:active,.offerCard:active,.audioOption:active,.backBtn:active,.j90-press{transform:scale(.985)!important}.menuBtn.primary:active,.btn.go:active{transform:scale(.99)!important}.j90-disabled{pointer-events:none!important;opacity:.72}
+.offerCard.j90-selected{border-color:var(--am);box-shadow:0 10px 30px rgba(255,202,58,.11);transform:translate3d(0,-1px,0)}
+.card.j90-stagger,.infoSection.j90-stagger,.audioOption.j90-stagger,.offerCard.j90-stagger{animation:j90Item 360ms var(--j90-ease) both}
+@media(prefers-reduced-motion:reduce){#app.j90-enter,#app.j90-leave,.menuHero.j90-menu-enter,.menuActions.j90-menu-enter .menuBtn,.card.j90-stagger,.infoSection.j90-stagger,.audioOption.j90-stagger,.offerCard.j90-stagger{animation:none!important}.menuStatus span{transition:none!important}}
+@media(max-width:390px){.menuStatus{gap:4px}.menuStatus span{font-size:8px;padding:4px 6px}}
+</style></head>
 <body>
 <div id="app"></div>
 <script>
@@ -1840,5 +1856,18 @@ if(S){
 }
 render();
 </script>
-</body>
+<script id="j90-polish-runtime">
+(()=>{'use strict';if(window.__J90_POLISH__)return;window.__J90_POLISH__=true;
+const reduced=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const quality=()=>{try{return localStorage.getItem('j90_quality')==='low'?'low':'high'}catch(e){return'high'}};
+function applyQuality(){document.body.classList.toggle('j90-low-quality',quality()==='low');document.documentElement.dataset.j90Quality=quality()}
+function stagger(){document.querySelectorAll('.menuActions,.createPanel,.infoScreen,.settings').forEach(root=>{if(root.dataset.j90Staggered)return;root.dataset.j90Staggered='1';const es=root.matches('.menuActions')?[...root.querySelectorAll('.menuBtn')]:[...root.querySelectorAll('.card,.infoSection,.audioOption,.offerCard')];es.slice(0,12).forEach((el,i)=>{el.classList.add('j90-stagger');el.style.animationDelay=Math.min(i*42,300)+'ms'})});const h=document.querySelector('.menuHero');if(h&&!h.dataset.j90Hero){h.dataset.j90Hero='1';h.classList.add('j90-menu-enter')}}
+function qualityControl(){const st=document.querySelector('.settings');if(!st||st.querySelector('.j90-quality-card'))return;const c=document.createElement('div');c.className='card j90-quality-card';c.innerHTML='<h2>Qualidade visual</h2><p class="mu">Preserva a cena do fim de tarde e reduz apenas efeitos caros em celulares de entrada.</p><div class="audioPicker"><button class="audioOption '+(quality()==='high'?'on':'')+'" data-j90q="high"><span class="audioIcon">H</span><strong>Alta</strong><span>Ciclo completo e atmosfera ambiental</span></button><button class="audioOption '+(quality()==='low'?'on':'')+'" data-j90q="low"><span class="audioIcon">L</span><strong>Baixa</strong><span>Céu, estádio e clima preservados com efeitos reduzidos</span></button></div>';st.appendChild(c);c.querySelectorAll('[data-j90q]').forEach(b=>b.addEventListener('click',()=>{try{localStorage.setItem('j90_quality',b.dataset.j90q)}catch(e){}applyQuality();qualityControl()}))}
+let last=0;addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;b.classList.add('j90-press');setTimeout(()=>b.classList.remove('j90-press'),120);const n=performance.now();if(n-last<140)return;last=n;try{if(typeof haptic==='function')haptic('click')}catch(e){}},{passive:true});
+let busy=0;addEventListener('click',e=>{const b=e.target.closest('button.menuBtn.primary,button.btn.go');if(!b)return;const n=performance.now();if(n<busy){e.preventDefault();e.stopImmediatePropagation();return}busy=n+260;b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280)},true);
+function patch(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const app=document.querySelector('#app');if(app&&app.firstElementChild&&!still&&!reduced()){app.classList.remove('j90-enter');app.classList.add('j90-leave')}old.apply(this,arguments);applyQuality();if(!still&&!reduced()){const a=document.querySelector('#app');if(a){a.classList.remove('j90-leave');void a.offsetWidth;a.classList.add('j90-enter');setTimeout(()=>a.classList.remove('j90-enter'),380)}}stagger();qualityControl()};wrap.__j90Polished=true;window.render=wrap}
+function observe(){applyQuality();patch();stagger();qualityControl();const app=document.querySelector('#app');if(app&&!app.__j90Obs){const mo=new MutationObserver(()=>{applyQuality();stagger();qualityControl()});mo.observe(app,{childList:true,subtree:true});app.__j90Obs=mo}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observe,{once:true});else observe();
+})();
+</script></body>
 </html>
