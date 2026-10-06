@@ -51,6 +51,7 @@
     if(!t.action)t.action={};
     if(!t.styleBias)t.styleBias={};
     if(!t.opponent)t.opponent={};
+    if(!t.roleMemory)t.roleMemory={GK:{n:0,save:0,error:0},DEF:{n:0,success:0,error:0},MID:{n:0,success:0,error:0},ATT:{n:0,success:0,error:0}};
     t.lastSeen=Date.now();
     return t;
   }
@@ -267,6 +268,12 @@
     m.learning=m.learning||{};
     m.learning.home=teamMemory(m.home);
     m.learning.away=teamMemory(m.away);
+    m.players.forEach(function(p){hydratePlayer(m,'home',p)});
+    m.oppPlayers.forEach(function(p){hydratePlayer(m,'away',p)});
+    if(!m.stats.saves)m.stats.saves=0;
+    if(!m.stats.goalsPrevented)m.stats.goalsPrevented=0;
+    if(!m.stats.bigChances)m.stats.bigChances=0;
+    m.roleBrain=m.roleBrain||{home:{},away:{}};
     if(!m._rngState)m._rngState=hash(m.home+'|'+m.away+'|'+num(S&&S.managerRound,0)+'|'+m.competition);
     if(!m._ai2Ready){
       m._ai2Ready=true;
