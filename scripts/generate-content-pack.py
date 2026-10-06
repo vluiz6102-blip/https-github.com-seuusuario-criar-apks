@@ -23,7 +23,6 @@ import re
 import shutil
 import urllib.request
 import urllib.parse
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -282,219 +281,6 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
 
     return ImageEnhance.Contrast(image).enhance(1.04)
 
-def norm_photo_text(value: str) -> str:
-    value = html.unescape(str(value or ""))
-    value = re.sub(r"<[^>]+>", " ", value)
-    value = value.casefold()
-    value = value.replace("&", " and ")
-    return "".join(
-        ch if ch.isalnum() else " "
-        for ch in value
-    ).split()
-
-
-def compact_photo_name(value: str) -> str:
-    return "_".join(norm_photo_text(value))[:44] or "player"
-
-
-def commons_request(params: dict) -> dict:
-    query = dict(params)
-    query.update({"format": "json", "formatversion": "2"})
-    url = COMMONS_API + "?" + urllib.parse.urlencode(query)
-    req = urllib.request.Request(url, headers={
-        "User-Agent": COMMONS_UA,
-        "Accept": "application/json",
-    })
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
-def commons_license(meta: dict) -> str:
-    value = meta.get("LicenseShortName", {})
-    if isinstance(value, dict):
-        value = value.get("value", "")
-    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", str(value or "")))).strip()
-
-
-def commons_text(meta: dict, key: str) -> str:
-    value = meta.get(key, {})
-    if isinstance(value, dict):
-        value = value.get("value", "")
-    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", str(value or "")))).strip()
-
-
-def commons_license_allowed(license_name: str) -> bool:
-    low = license_name.casefold()
-    if not low or "nc" in low or "non-commercial" in low or "nd" in low or "no derivatives" in low:
-        return False
-    return any(marker in low for marker in ALLOWED_LICENSE_MARKERS)
-
-
-def score_commons_candidate(title: str, description: str, name: str, team: str) -> int:
-    title_tokens = set(norm_photo_text(title))
-    body_tokens = set(norm_photo_text(description))
-    wanted = [t for t in norm_photo_text(name) if len(t) >= 3]
-    if not wanted:
-        return -999
-    matched = sum(1 for token in wanted if token in title_tokens or token in body_tokens)
-    score = matched * 20
-    if len(wanted) >= 2 and matched < 2:
-        return -999
-    team_tokens = [t for t in norm_photo_text(team) if len(t) >= 3]
-    if team_tokens:
-        score += 5 * sum(1 for token in team_tokens if token in title_tokens or token in body_tokens)
-    body = " ".join((*title_tokens, *body_tokens))
-    if "football" in body or "soccer" in body:
-        score += 3
-    banned = ("logo", "badge", "crest", "stadium", "flag", "shirt", "jersey", "crowd", "team photo")
-    if any(token in body for token in banned):
-        score -= 15
-    return score
-
-
-def commons_find_player(name: str, team: str) -> dict | None:
-    queries = [
-        f'"{name}" football {team}',
-        f'"{name}" football',
-        f'"{name}"',
-    ]
-    best = None
-    for query in queries:
-        try:
-            data = commons_request({
-                "action": "query",
-                "generator": "search",
-                "gsrsearch": query,
-                "gsrnamespace": "6",
-                "gsrlimit": "4",
-                "prop": "imageinfo",
-                "iiprop": "url|mime|mediatype|extmetadata",
-                "iiurlwidth": str(PLAYER_THUMB_WIDTH),
-            })
-        except Exception as exc:
-            print(f"Commons search failed | {name} | {exc}")
-            continue
-        pages = data.get("query", {}).get("pages", [])
-        for page in pages:
-            info = (page.get("imageinfo") or [{}])[0]
-            meta = info.get("extmetadata") or {}
-            mime = str(info.get("mime") or "").lower()
-            mediatype = str(info.get("mediatype") or "").lower()
-            license_name = commons_license(meta)
-            if not mime.startswith("image/") or mediatype not in ("bitmap", "drawing"):
-                continue
-            if not commons_license_allowed(license_name):
-                continue
-            title = str(page.get("title") or "").replace("File:", "", 1)
-            description = commons_text(meta, "ImageDescription")
-            score = score_commons_candidate(title, description, name, team)
-            if score < 40:
-                continue
-            candidate = {
-                "title": title,
-                "source_url": "https://commons.wikimedia.org/wiki/" + urllib.parse.quote(str(page.get("title") or ""), safe=":_()"),
-                "image_url": str(info.get("thumburl") or info.get("url") or ""),
-                "license": license_name,
-                "author": commons_text(meta, "Artist") or "Autor não informado",
-                "description": description,
-                "score": score,
-            }
-            if not best or candidate["score"] > best["score"]:
-                best = candidate
-        if best and best["score"] >= 60:
-            break
-    return best
-
-
-def fetch_bytes(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={
-        "User-Agent": COMMONS_UA,
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    })
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return response.read()
-
-
-def build_player_photo(item: tuple[int, str, str]) -> dict | None:
-    index, team, name = item
-    try:
-        hit = commons_find_player(name, team)
-        if not hit or not hit.get("image_url"):
-            return None
-        raw = fetch_bytes(hit["image_url"])
-        from io import BytesIO
-        image = Image.open(BytesIO(raw)).convert("RGB")
-        image.thumbnail((PLAYER_THUMB_WIDTH, PLAYER_THUMB_WIDTH), Image.Resampling.LANCZOS)
-        filename = f"{index:05d}_{compact_photo_name(name)}_{hashlib.sha256((team + '|' + name).encode()).hexdigest()[:8]}.jpg"
-        path = PLAYERS / filename
-        image.save(path, "JPEG", quality=88, optimize=True, progressive=True)
-        return {
-            "player": name,
-            "team": team,
-            "file": str(Path("players") / filename).replace("\\", "/"),
-            "bytes": path.stat().st_size,
-            "source": hit["source_url"],
-            "title": hit["title"],
-            "author": hit["author"],
-            "license": hit["license"],
-            "description": hit.get("description", ""),
-        }
-    except Exception as exc:
-        print(f"Player photo failed | {team} | {name} | {exc}")
-        return None
-
-
-def download_player_photos() -> tuple[dict[str, str], list[dict], list[dict]]:
-    if not ROSTERS.exists():
-        return {}, [], []
-    data = json.loads(ROSTERS.read_text(encoding="utf-8"))
-    pairs = []
-    seen = set()
-    for team, roster in data.items():
-        for player in roster.get("players", []) if isinstance(roster, dict) else []:
-            name = str(player.get("name") or "").strip()
-            if not name:
-                continue
-            key = (" ".join(norm_photo_text(name)), str(team).casefold())
-            if key in seen:
-                continue
-            seen.add(key)
-            pairs.append((str(team), name))
-    pairs.sort(key=lambda x: (x[0].casefold(), x[1].casefold()))
-    pairs = pairs[:PLAYER_PHOTO_MAX]
-    PLAYERS.mkdir(parents=True, exist_ok=True)
-
-    work = [(i, team, name) for i, (team, name) in enumerate(pairs)]
-    records = []
-    with ThreadPoolExecutor(max_workers=max(1, PLAYER_PHOTO_WORKERS)) as pool:
-        futures = {pool.submit(build_player_photo, item): item for item in work}
-        for future in as_completed(futures):
-            result = future.result()
-            if result:
-                records.append(result)
-    records.sort(key=lambda x: (x["team"].casefold(), x["player"].casefold()))
-
-    by_player = {}
-    by_team_player = {}
-    for rec in records:
-        name_key = " ".join(norm_photo_text(rec["player"]))
-        team_key = " ".join(norm_photo_text(rec["team"]))
-        by_player.setdefault(name_key, rec["file"])
-        by_team_player[f"{team_key}|{name_key}"] = rec["file"]
-    missing = [
-        {"player": name, "team": team}
-        for team, name in pairs
-        if " ".join(norm_photo_text(name)) not in by_player
-    ]
-    print(
-        "Fotos de jogadores abertas:",
-        len(records), "/", len(pairs),
-        "|", round(sum(int(x["bytes"]) for x in records) / 1024 / 1024, 2), "MiB",
-        "| sem foto:", len(missing),
-    )
-    return by_player, by_team_player, records, missing
-
-
 def download_openfootball() -> list[dict]:
     OPENFOOTBALL.mkdir(parents=True, exist_ok=True)
     sources = []
@@ -529,10 +315,8 @@ def main() -> None:
     if ROOT.exists():
         shutil.rmtree(ROOT)
     STADIUMS.mkdir(parents=True, exist_ok=True)
-    PLAYERS.mkdir(parents=True, exist_ok=True)
 
     teams = team_names()
-    player_photos, player_photos_by_team, player_photo_records, player_photo_missing = download_player_photos()
     # Four visual contexts per club minimum. Extra scenes are added until the
     # requested package size is reached, so smaller data sets still get a full
     # media library.
@@ -603,12 +387,6 @@ def main() -> None:
         "teamsCovered": len(by_team),
         "byTeam": by_team,
         "scenes": scenes,
-        "playerPhotos": player_photos,
-        "playerPhotosByTeam": player_photos_by_team,
-        "playerPhotoCount": len(player_photo_records),
-        "playerPhotoBytes": sum(int(x["bytes"]) for x in player_photo_records),
-        "playerPhotosMissing": len(player_photo_missing),
-        "playerPhotoMeta": player_photo_records,
         "openFootball": openfootball,
         "design": {
             "description": "Offline stadium atmosphere gallery for Jornada 90 Manager",
@@ -628,18 +406,7 @@ def main() -> None:
         "Stadium atmosphere plates in this package are generated at build time by "
         "scripts/generate-content-pack.py and are original procedural artwork for "
         "Jornada 90 Manager. They are decorative 2D scenes, not photographic claims.\n\n"
-        "Player photos are downloaded at build time only from Wikimedia Commons files "
-        "whose API metadata identifies a reusable CC BY, CC BY-SA, CC0, or public-domain "
-        "license. The exact source file, author, and license are recorded in "
-        "content-manifest.json under playerPhotoMeta. Attribution is required where the "
-        "license requires it. Wikimedia Commons notes that other legal restrictions, "
-        "including personality/publicity rights, can still apply independently of copyright.\n\n"
-        "OpenFootball datasets, when successfully downloaded during the build, "
-        "are public-domain football data and are listed in content-manifest.json.\n"
-    )
-    (ROOT / "LICENSES.txt").write_text(licenses, encoding="utf-8")
-
-    print(
+        "    print(
         "Conteúdo Jornada 90 OK:",
         len(scenes), "cenas |",
         round(total / 1024 / 1024, 2), "MiB |",
