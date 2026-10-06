@@ -2634,11 +2634,12 @@ function j90MaybeSpecialEvent(m,minute){
  m._eventClock=0;
  var homeProfile=j90TacticalIdentity(m.home),awayProfile=j90TacticalIdentity(m.away);
  var home=Math.random()<(homeProfile?(.56):.5),profile=home?homeProfile:awayProfile;
- if(profile&&profile.events.length){
+ if(profile&&profile.events.length&&Math.random()<.62){
    var idx=RI(0,profile.events.length-1);
    mgrMatchEvent(profile.events[idx]);
    if(j90NormPlayerName(profile.name).startsWith('psg'))j90ShiftForTactic(m,home,idx);
    m._eventCooldown=4.5;
+   return;
  }
  var pool=home?m.players:m.oppPlayers;
  if(!pool.length)return;
