@@ -357,7 +357,7 @@
     var pressure=pressureAt(m,side,p);
     var under=pressure>.44;
     var fatigue=1-clamp(num(p.energy,75)/100,0,1);
-    var score=(brain.attack*.18+brain.quality*.16);
+    var role=playerRole(p),score=(brain.attack*.18+brain.quality*.16);
     var ctx={nearGoal:nearGoal,underPressure:under};
     score*=roleWeight(p,action,ctx);
     if(action==='short_pass')score+=brain.buildUp*.38+central*.08+pressure*.04;
@@ -372,6 +372,15 @@
     if(action==='clearance')score+=brain.defense*.39+pressure*.24+(p.x<(side==='home'?.28:.72)?0:.1);
     if(action==='tackle')score+=brain.defense*.28+pressure*.22+(1-fatigue)*.08;
     if(action==='hold')score+=brain.quality*.25+(1-brain.risk)*.20+(nearGoal?.08:0);
+    if(action==='one_two')score+=brain.tempo*.18+brain.attack*.18+(role==='MID'||role==='ATT'?.20:0)-pressure*.06;
+    if(action==='cutback')score+=brain.width*.16+brain.attack*.25+(nearGoal?.24:0)+(role==='ATT'?.16:0)-fatigue*.06;
+    if(action==='run_in_behind')score+=brain.directness*.24+brain.tempo*.20+brain.attack*.18+(role==='ATT'?.30:0)+(1-pressure)*.14;
+    if(action==='hold_up')score+=brain.quality*.20+(role==='ATT'?.26:0)+pressure*.10;
+    if(action==='keeper_release')score+=(role==='GK'?brain.buildUp*.55:-.80)+(brain.quality*.10);
+    if(action==='punch')score+=(role==='GK'?brain.defense*.50:-.80)+pressure*.12;
+    if(role==='GK'&&!['short_pass','backpass','clearance','hold','keeper_release','punch'].includes(action))score-=1.20;
+    if(role==='DEF'&&['shot','dribble','run_in_behind'].includes(action))score-=.35;
+    if(role==='ATT'&&['clearance','tackle','backpass'].includes(action))score-=.55;
     var mem=brain.memory&&brain.memory.action&&brain.memory.action[action];
     if(mem)score*=clamp(num(mem.bias,1),.72,1.32);
     score*=1+(brain.adaptability-.5)*.08;
@@ -449,13 +458,15 @@
     return false;
   }
   function chooseAction(m,side,p,brain){
-    var best=[],top=-Infinity;
-    for(var i=0;i<ACTIONS.length;i++){
-      var a=ACTIONS[i],s=actionScore(m,side,p,a,brain);
+    var role=playerRole(p),pool=ROLE_ACTIONS[role]||ACTIONS,best=[],top=-Infinity;
+    for(var i=0;i<pool.length;i++){
+      var a=pool[i],s=actionScore(m,side,p,a,brain);
       if(s>top+0.03){top=s;best=[a]}else if(Math.abs(s-top)<=0.12)best.push(a)
     }
     var idx=best.length?Math.floor(rnd(m)*best.length):0;
-    return best[idx]||'short_pass';
+    var picked=best[idx]||pool[0]||'short_pass';
+    if(p.ai){p.ai.lastAction=picked;p.ai.decisionAt=num(m._simClock,0);p.ai.confidence=clamp(p.ai.confidence+(top>0?.004:-.003),.35,.98)}
+    return picked;
   }
 
   function setPossession(m,side,p,emit){
