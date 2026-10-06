@@ -42,7 +42,13 @@ if (await confirm.count() !== 1) throw new Error('Club confirmation control did 
 await confirm.click();
 await page.waitForTimeout(700);
 if (await page.locator('.j90ManagerShell').count() !== 1) {
-  throw new Error('Manager screen did not open after club confirmation.');
+  const diagnostic = await page.evaluate(() => ({
+    bodyText: (document.body.innerText || '').slice(0, 1200),
+    hasApp: !!document.querySelector('#app'),
+    appHtml: document.querySelector('#app')?.innerHTML?.slice(0, 1600) || '',
+    managerState: !!window.J90ManagerBridge?.getState?.()
+  }));
+  throw new Error('Manager screen did not open after club confirmation. ' + JSON.stringify({ errors, diagnostic }));
 }
 
 // Exercise the 2D match renderer for several frames.
