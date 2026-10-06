@@ -303,7 +303,7 @@ function findStatic(map,name){
   hits.sort((a,b)=>a.diff-b.diff||a.key.length-b.key.length);
   return hits[0]?.val||null;
 }
-function sportsDbRoster(name){
+async function sportsDbRoster(name){
   const queries=candidateNames(name);
   for(const q of queries){
     try{
