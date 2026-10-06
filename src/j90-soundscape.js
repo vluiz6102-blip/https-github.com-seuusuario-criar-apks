@@ -24,7 +24,7 @@
   };
   window.ambienceState = ambienceState;
 
-  const quality = () => j90FrameRate <= 30 ? 'low' : 'high';
+  const quality = () => (j90FrameRate <= 30 || document.body.classList.contains('j90-low-quality') || window.__J90_PERF?.hardLow) ? 'low' : 'high';
 
   let graph = null;
   let generation = 0;
@@ -340,9 +340,10 @@
             ['birdsBed','birdsBed',q === 'low' ? c.birds * .7 : c.birds],
             ['insects','insects',c.insects]
           ];
-    const wanted = new Set(baseLayers.map(x => x[0]));
+    const activeLayers = q === 'low' ? baseLayers.filter(x => !['insects','birdsBed','rainLeaves'].includes(x[0])).slice(0, 5) : baseLayers;
+    const wanted = new Set(activeLayers.map(x => x[0]));
     continuous.forEach((_, name) => { if (!wanted.has(name)) stopLayer(name); });
-    baseLayers.forEach(([name, category, target]) => startOrUpdate(name, category, target));
+    activeLayers.forEach(([name, category, target]) => startOrUpdate(name, category, target));
   }
 
   function playEvent(category, level, opts = {}) {
