@@ -912,9 +912,9 @@ function j90PerfSnapshot(){
  return Object.assign({menuTime:+menuTime.toFixed(3),atmoParticles:j90AtmoParticles.length,atmoNodes:j90AtmoNodes.length,soundscapeNodes:j90SoundscapeNodes.length,activeAudioSources:j90SoundscapeNodes.length+(j90SoundscapeWind?1:0),fpsTarget:j90FrameRate,jsHeap:perf,animations:document.getAnimations?document.getAnimations().length:null},J90FrameStats());
 }
 window.J90Perf={snapshot:j90PerfSnapshot};
-function newGame(){if(S&&!confirm('Sua carreira atual será substituída por uma nova. O salvamento atual será apagado. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];introStep=1;menuScreen='home';render()}
-function resumeGame(){if(!S)return;menuScreen='game';introStep=1;tab='game';render()}
-function j90MenuNavigate(screen){history.pushState({j90:true,menuScreen,introStep,tab},'');menuScreen=screen;introStep=0;render()} function mainMenu(){if(history.state&&history.state.j90){history.back();return}menuScreen='home';introStep=0;render()} addEventListener('popstate',e=>{if(e.state&&e.state.j90){menuScreen=e.state.menuScreen||'home';introStep=Number.isInteger(e.state.introStep)?e.state.introStep:0;tab=e.state.tab||'game';render(1)}});
+function newGame(){if(S&&!confirm('Sua carreira atual será substituída por uma nova. O salvamento atual será apagado. Continuar?'))return;try{localStorage.removeItem('carreirafc2')}catch(e){}S=null;START_OFFERS=[];history.pushState({j90:true,menuScreen:'create',introStep:1,tab:'game'},'');menuScreen='home';introStep=1;render()}
+function resumeGame(replace=false){if(!S)return;const state={j90:true,menuScreen:'game',introStep:1,tab:'game'};if(replace)history.replaceState(state,'');else history.pushState(state,'');menuScreen='game';introStep=1;tab='game';render()}
+function j90MenuNavigate(screen){history.pushState({j90:true,menuScreen:screen,introStep:0,tab},'');menuScreen=screen;introStep=0;render()} function mainMenu(){if(history.state&&history.state.j90){history.back();return}menuScreen='home';introStep=0;render()} addEventListener('popstate',e=>{if(e.state&&e.state.j90){menuScreen=e.state.menuScreen||'home';introStep=Number.isInteger(e.state.introStep)?e.state.introStep:0;tab=e.state.tab||'game';render(1)}});
 function settingsView(){
  return '<div class="card menu settings"><button class="chip" onclick="mainMenu()">← Voltar</button><div class="logoMark">90</div><h1>Configurações</h1><p class="mu">Ajuste sua experiência.</p>'+
  '<button class="btn" onclick="toggleSound()"><b>'+ (audioOK?'🔊 Som ligado':'🔇 Som desligado') +'</b><span>Paisagem sonora, efeitos, apito, gol e interface</span></button>'+
@@ -951,7 +951,7 @@ function menuV(){
  '</div><div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b><br><span>Um projeto brasileiro independente</span></div>'
 }
 function howToView(){
- const back=S?'resumeGame()':'mainMenu()',label=S?'Voltar para a carreira':'Voltar ao menu';
+ const back=S?'resumeGame(true)':'mainMenu()',label=S?'Voltar para a carreira':'Voltar ao menu';
  return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Como jogar</h1><p class="mu">A carreira gira em torno de três decisões: evoluir, jogar bem e administrar o caminho.</p>'+
  '<div class="infoSection"><strong>01 · Preparar</strong><span>Treine para evoluir atributos, descanse para recuperar energia e cuide da moral.</span></div>'+
  '<div class="infoSection"><strong>02 · Jogar</strong><span>Suas escolhas durante a partida usam seus atributos, energia, moral e confiança do técnico.</span></div>'+
