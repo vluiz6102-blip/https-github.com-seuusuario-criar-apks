@@ -1,0 +1,10 @@
+{
+  "version": "2026.10.06.1",
+  "generatedAt": "2026-10-06T00:00:00Z",
+  "schema": 1,
+  "notes": "Pacote remoto de dados do Jornada 90. O APK usa estes dados como atualização e mantém fallback offline.",
+  "players": [],
+  "transfers": [],
+  "clubs": [],
+  "competitions": []
+}
