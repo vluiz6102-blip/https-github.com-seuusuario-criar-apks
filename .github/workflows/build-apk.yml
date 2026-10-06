@@ -154,6 +154,13 @@ jobs:
           manifest="app/src/main/AndroidManifest.xml"
           grep -q 'android.permission.VIBRATE' "$manifest" || sed -i '/<manifest/a\    <uses-permission android:name="android.permission.VIBRATE" />' "$manifest"
 
+      - name: Corrigir compatibilidade dos plugins Capacitor 7
+        run: |
+          sed -i 's/com\\.getcapacitor\\.annotation\\.PluginMethod/com.getcapacitor.PluginMethod/g' android-overrides/J90HapticsPlugin.java
+          sed -i 's/com\\.getcapacitor\\.annotation\\.PluginMethod/com.getcapacitor.PluginMethod/g' android-overrides/J90DisplayRatePlugin.java
+          grep -q 'import com.getcapacitor.PluginMethod;' android-overrides/J90HapticsPlugin.java
+          grep -q 'import com.getcapacitor.PluginMethod;' android-overrides/J90DisplayRatePlugin.java
+
       - name: Aplicar controle nativo de taxa de atualização
         run: |
           mkdir -p android/app/src/main/java/com/jornada90/manager
