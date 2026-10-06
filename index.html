@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
-<title>Jornada 90</title>
+<title>Jornada 90 Manager</title>
 <style>
 :root{--bg:#0f1f2a;--pn:#172c3a;--ln:#27475b;--tx:#e9eef1;--mu:#8fa6b3;--gr:#3fae6a;--am:#f0b43c;--rd:#e0584f}
 *{box-sizing:border-box;margin:0}
@@ -1109,7 +1109,7 @@ function menuV(){
  if(menuScreen==='credits')return creditsView();
  const hasSave=!!S;
  const leaves=Array.from({length:10},(_,i)=>'<i style="--x:'+((i*11)%104)+'%;--d:'+((i%5)*.9)+'s;--t:'+(8+(i%4)*1.7)+'s"></i>').join('');
- return '<main class="j90Home" aria-label="Tela inicial Jornada 90">'+
+ return '<main class="j90Home" aria-label="Tela inicial Jornada 90 Manager">'+
    '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
    '<div class="j90HomeContent">'+
      '<div class="j90Topline"><span>CARREIRA DE FUTEBOL</span><span class="j90LiveDot">JORNADA 90</span></div>'+
@@ -1135,7 +1135,7 @@ function howToView(){
  '<button class="btn go" onclick="'+back+'">'+label+'</button></div>'
 }
 function creditsView(){
- return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Créditos</h1><p class="mu">Jornada 90 · simulador de carreira de futebol</p>'+
+ return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Créditos</h1><p class="mu">Jornada 90 Manager · simulador de carreira de técnico e diretor técnico</p>'+
  '<div class="creditsBlock"><b>Direção e desenvolvimento</b><span>Victor Maia</span></div>'+
  '<div class="creditsBlock"><b>Tecnologia</b><span>Capacitor · Web Audio · Android</span></div>'+
  '<div class="creditsBlock"><b>Áudio imersivo</b><span>Espacialização HRTF e sistema de áudio adaptativo</span></div>'+
