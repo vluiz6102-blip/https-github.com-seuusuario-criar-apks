@@ -18,13 +18,28 @@ public class J90DisplayRatePlugin extends Plugin {
     final double requested = rate;
     getActivity().runOnUiThread(() -> {
       Window w = getActivity().getWindow();
+      double applied = requested;
       if (Build.VERSION.SDK_INT >= 21) {
         WindowManager.LayoutParams lp = w.getAttributes();
-        lp.preferredRefreshRate = (float) requested;
+        if (Build.VERSION.SDK_INT >= 23 && getActivity().getDisplay() != null) {
+          android.view.Display.Mode[] modes = getActivity().getDisplay().getSupportedModes();
+          if (modes != null && modes.length > 0) {
+            double best = modes[0].getRefreshRate();
+            double distance = Math.abs(best - requested);
+            for (android.view.Display.Mode mode : modes) {
+              double hz = mode.getRefreshRate();
+              double d = Math.abs(hz - requested);
+              if (d < distance) { best = hz; distance = d; }
+            }
+            applied = best;
+          }
+        }
+        lp.preferredRefreshRate = (float) applied;
         w.setAttributes(lp);
       }
       JSObject ret = new JSObject();
       ret.put("requestedHz", requested);
+      ret.put("appliedHz", applied);
       ret.put("supportedBySystemHint", Build.VERSION.SDK_INT >= 21);
       call.resolve(ret);
     });
