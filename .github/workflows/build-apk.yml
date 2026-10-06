@@ -116,8 +116,8 @@ jobs:
         run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Jornada-90-Manager.apk
 
       - name: Publicar APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jornada-90-manager-apk
-          path: android/app/build/outputs/apk/debug/Jornada-90.apk
+          path: android/app/build/outputs/apk/debug/Jornada-90-Manager.apk
           if-no-files-found: error
