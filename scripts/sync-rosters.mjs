@@ -157,7 +157,7 @@ function addBrazilOvr(map,text,label='Brazil 2026 / Série C'){
     while((m=re.exec(body))){
       const name=String(m[2]||'').trim();
       if(name&&positions.includes(m[1])&&!players.some(p=>norm(p.name)===norm(name))){
-        players.push({name,position:m[1],number:null});
+        players.push({name,position:m[1],number:null,age:Number(m[3]),ovr:Number(m[4]),nationality:'Brasil'});
       }
     }
     if(players.length)map.set(norm(club),{source:label,sourceName:club,players});
@@ -170,7 +170,7 @@ function entriesFromEuroClub(club){
     const name=String(p?.name||'').trim();
     if(!name)continue;
     const key=norm(name);if(seen.has(key))continue;seen.add(key);
-    out.push({name,position:String(p?.position||''),number:p?.number??null});
+    out.push({name,position:String(p?.position||''),number:p?.number??null,age:Number(p?.age?.years||p?.age)||null,nationality:String(p?.citizenship||p?.nationality||p?.birthPlace?.country||'')});
   }
   return out;
 }
@@ -214,7 +214,7 @@ function addSaudi(map,payload){
     if(!buckets.has(String(t.id)))buckets.set(String(t.id),{source:'Saudi Fantasy 2026',sourceName:String(t.name),players:[]});
     const display=String(p?.web_name||p?.known_name||[p?.first_name,p?.second_name].filter(Boolean).join(' ')||'').trim();
     if(!display)continue;
-    buckets.get(String(t.id)).players.push({name:display,position:String(p?.position||'Jogador'),number:null});
+    buckets.get(String(t.id)).players.push({name:display,position:String(p?.position||'Jogador'),number:null,age:Number(p?.age)||null,nationality:String(p?.nationality||'')});
   }
   for(const [,v] of buckets){
     const uniq=[...new Map(v.players.map(p=>[norm(p.name),p])).values()];
@@ -245,7 +245,7 @@ function espnRosterEntries(payload){
       const name=String(a?.displayName||a?.fullName||a?.shortName||'').trim();
       if(!name)continue;
       const key=norm(name);if(seen.has(key))continue;seen.add(key);
-      out.push({name,position:String(a?.position?.displayName||a?.position?.abbreviation||''),number:a?.jersey||null});
+      out.push({name,position:String(a?.position?.displayName||a?.position?.abbreviation||''),number:a?.jersey||null,age:Number(a?.age?.years||a?.age)||null,nationality:String(a?.citizenship||a?.nationality||a?.birthPlace?.country||'')});
     }
   }
   return out;
@@ -319,7 +319,7 @@ async function sportsDbRoster(name){
         if(String(p?.strStatus||'').toLowerCase()==='retired')continue;
         const display=String(p?.strPlayer||'').trim();if(!display)continue;
         const key=norm(display);if(seen.has(key))continue;seen.add(key);
-        out.push({name:display,position:String(p?.strPosition||'Jogador'),number:p?.strNumber?String(p.strNumber):null});
+        out.push({name:display,position:String(p?.strPosition||'Jogador'),number:p?.strNumber?String(p.strNumber):null,age:null,nationality:String(p?.strNationality||p?.strCountry||'')});
       }
       if(out.length>=8)return {source:'TheSportsDB',sourceName:String(team.strTeam||name),players:out};
     }catch(error){console.warn('fallback '+name+' | '+String(error?.message||error));}
