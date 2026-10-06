@@ -178,9 +178,9 @@
     if(role==='runner')x+=action==='through_ball'?.14:action==='carry'?.13:action==='shot'?.06:0;
     if(role==='creator')x+=action==='progressive_pass'?.17:action==='through_ball'?.18:action==='switch'?.12:0;
     if(role==='finisher')x+=action==='shot'?.28:action==='hold'?.08:action==='cross'?-0.04:0;
-    if(role==='defender')x+=action==='clearance'?.26:action==='backpass'?.13:action==='tackle'?.15:action==='dribble'?.-0.08:0;
+    if(role==='defender')x+=action==='clearance'?.26:action==='backpass'?.13:action==='tackle'?.15:action==='dribble'?-.08:0;
     if(ctx&&ctx.nearGoal)x+=action==='shot'?.18:action==='through_ball'?.08:0;
-    if(ctx&&ctx.underPressure)x+=action==='backpass'?.18:action==='short_pass'?.06:action==='dribble'?.-.08:0;
+    if(ctx&&ctx.underPressure)x+=action==='backpass'?.18:action==='short_pass'?.06:action==='dribble'?-.08:0;
     return x;
   }
 
