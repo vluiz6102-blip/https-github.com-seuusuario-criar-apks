@@ -975,82 +975,97 @@ body.j90-low-quality .j90Badge{animation:none}
   .j90xFacility>small,.j90xNote,.j90xEmpty{font-size:10px}
 }
 </style><style id="j90-critical-mobile-ui-fix">
-/* CRITICAL MOBILE UI: full-bleed canvas, readable text, swipeable navigation */
+/* Jornada 90: mobile-first UI foundation. Full-bleed canvas, touch carousel and overflow-safe type. */
 html,body{width:100%;min-width:0;max-width:100%;overflow-x:hidden}
 body{padding-left:0!important;padding-right:0!important}
 body:has(.j90Home),body.j90-manager-screen{padding-top:0!important;padding-bottom:0!important}
 body:has(.j90Home) #app,body.j90-manager-screen #app{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
-body:has(.j90Home) .j90Home{width:100vw;min-width:100vw;max-width:none!important;min-height:100dvh;height:100dvh;overflow:hidden}
-body:has(.j90Home) .j90Sky{position:fixed;inset:0;width:100vw;height:100dvh}
-body:has(.j90Home) .j90HomeContent{width:100%;max-width:none;padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
-body:has(.j90Home) .j90Actions,.j90UtilityGrid{min-width:0}
-body:has(.j90Home) .j90Action,.j90Action *{min-width:0;max-width:100%}
-body:has(.j90Home) .j90Action b,body:has(.j90Home) .j90Action small{overflow-wrap:anywhere;word-break:normal}
 
-/* Manager: true edge-to-edge and a single vertical scroll surface */
+/* HOME: background really reaches every physical edge. */
+body:has(.j90Home) .j90Home{width:100vw!important;min-width:100vw!important;max-width:none!important;min-height:100dvh!important;height:100dvh!important;margin:0!important;padding:0!important;overflow:hidden!important}
+body:has(.j90Home) .j90Sky{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important}
+body:has(.j90Home) .j90HomeContent{width:100%!important;max-width:720px!important;margin:0 auto!important;min-height:100dvh!important;box-sizing:border-box!important;padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))!important}
+body:has(.j90Home) .j90Action,body:has(.j90Home) .j90Action *{min-width:0;max-width:100%}
+body:has(.j90Home) .j90Action b,body:has(.j90Home) .j90Action small{overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+
+/* MANAGER: edge-to-edge shell. Content is the only vertical scroll surface. */
 body.j90-manager-screen #app{overflow:hidden!important}
-body.j90-manager-screen .j90ManagerShell{width:100vw;max-width:none;margin:0;padding:max(5px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left));}
-body.j90-manager-screen .j90ManagerHead{width:100%;min-width:0}
-body.j90-manager-screen #j90-manager-content{width:100%;min-width:0;overflow-x:hidden!important;overflow-y:auto!important}
-body.j90-manager-screen .j90MgrPage,body.j90-manager-screen .j90MgrCard,body.j90-manager-screen .j90MgrLineup,body.j90-manager-screen .j90MgrRoster,body.j90-manager-screen .j90MgrSelected{min-width:0;max-width:100%;overflow-x:hidden!important}
+body.j90-manager-screen .j90ManagerShell{width:100vw!important;max-width:none!important;margin:0!important;padding:0!important}
+body.j90-manager-screen .j90ManagerHead{width:100%!important;min-width:0!important;box-sizing:border-box!important}
+body.j90-manager-screen #j90-manager-content{width:100%!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important}
+body.j90-manager-screen .j90MgrPage,body.j90-manager-screen .j90MgrCard{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
 body.j90-manager-screen .j90MgrPage *{min-width:0;max-width:100%}
-body.j90-manager-screen .j90MgrTitle,.j90MgrTitle>*,body.j90-manager-screen .j90MgrMatch,body.j90-manager-screen .j90MgrActions,body.j90-manager-screen .j90MgrLineActions{min-width:0}
-body.j90-manager-screen .j90MgrTitle>b,body.j90-manager-screen .j90MgrTitle>small,
-body.j90-manager-screen .j90MgrCard h1,body.j90-manager-screen .j90MgrCard h2,body.j90-manager-screen .j90MgrCard h3,
-body.j90-manager-screen .j90MgrCard p,body.j90-manager-screen .j90MgrCard b,body.j90-manager-screen .j90MgrCard span,
-body.j90-manager-screen .j90MgrCard small,body.j90-manager-screen .j90MgrCard label{
-  overflow-wrap:anywhere;word-break:break-word;white-space:normal;
-}
-body.j90-manager-screen .j90MgrMatch b{white-space:normal;overflow-wrap:anywhere;max-width:100%}
 
-/* Top navigation becomes a real touch carousel. No squeezed 7-button wall. */
+/* Horizontal navigation: actual swipe area, not seven squeezed buttons. */
 body.j90-manager-screen .j90ManagerTabs{
-  display:flex!important;overflow-x:auto!important;overflow-y:hidden!important;gap:7px!important;
-  width:100%;min-width:0;padding:1px 1px 5px;scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scroll-snap-type:x proximity;
-  touch-action:pan-x;
+display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;
+width:100vw!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+gap:8px!important;padding:8px 12px!important;margin:0!important;
+-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain!important;
+scroll-snap-type:x proximity!important;scrollbar-width:none!important;touch-action:pan-x!important;
 }
-body.j90-manager-screen .j90ManagerTabs::-webkit-scrollbar{display:none}
+body.j90-manager-screen .j90ManagerTabs::-webkit-scrollbar{display:none!important}
 body.j90-manager-screen .j90ManagerTabs button{
-  flex:0 0 clamp(76px,22vw,108px)!important;width:auto!important;min-width:76px!important;
-  min-height:54px!important;padding:7px 8px!important;scroll-snap-align:start;
-  white-space:normal!important;overflow:hidden!important;
+flex:0 0 96px!important;width:96px!important;min-width:96px!important;min-height:50px!important;
+padding:7px 9px!important;scroll-snap-align:start!important;white-space:normal!important;
+overflow:hidden!important;text-align:left!important;
 }
+body.j90-manager-screen .j90ManagerTabs button span{font-size:18px!important}
 body.j90-manager-screen .j90ManagerTabs button small{
-  display:block!important;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;line-height:1.1;
+display:block!important;max-width:100%!important;font-size:9px!important;line-height:1.1!important;
+white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important;
 }
 
-/* Data grids collapse before text becomes microscopic. */
-body.j90-manager-screen .j90MgrStats,body.j90-manager-screen .j90MgrMoneyGrid{min-width:0}
-body.j90-manager-screen .j90MgrStats span,body.j90-manager-screen .j90MgrMoneyGrid span{min-width:0;overflow:hidden}
-body.j90-manager-screen .j90MgrStats b,body.j90-manager-screen .j90MgrMoneyGrid b{white-space:normal!important;overflow-wrap:anywhere}
-body.j90-manager-screen table{display:block;width:100%;max-width:100%;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
-body.j90-manager-screen td,body.j90-manager-screen th{white-space:nowrap}
+/* Readability: no microscopic 5-7px manager labels and no text escaping the viewport. */
+body.j90-manager-screen .j90MgrTitle,
+body.j90-manager-screen .j90MgrMatch,
+body.j90-manager-screen .j90MgrActions,
+body.j90-manager-screen .j90MgrLineActions{min-width:0!important;max-width:100%!important}
+body.j90-manager-screen .j90MgrTitle>b,
+body.j90-manager-screen .j90MgrTitle>small,
+body.j90-manager-screen .j90MgrCard h1,
+body.j90-manager-screen .j90MgrCard h2,
+body.j90-manager-screen .j90MgrCard h3,
+body.j90-manager-screen .j90MgrCard p,
+body.j90-manager-screen .j90MgrCard b,
+body.j90-manager-screen .j90MgrCard span,
+body.j90-manager-screen .j90MgrCard small,
+body.j90-manager-screen .j90MgrCard label{
+white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important;
+}
+body.j90-manager-screen .j90MgrMatch b{max-width:46%!important;white-space:normal!important;overflow-wrap:anywhere!important}
+body.j90-manager-screen .j90MgrStats b,
+body.j90-manager-screen .j90MgrMoneyGrid b{white-space:normal!important;overflow-wrap:anywhere!important}
+body.j90-manager-screen table{width:100%!important;max-width:100%!important;table-layout:fixed!important}
+body.j90-manager-screen td,body.j90-manager-screen th{white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important;line-height:1.25!important}
 
-/* Touch targets and typography */
+/* Touch targets + readable type on phones. */
 @media(max-width:720px){
-  body.j90-manager-screen .j90ManagerShell{grid-template-rows:auto auto minmax(0,1fr);gap:7px}
-  body.j90-manager-screen .j90ManagerHead{min-height:58px}
-  body.j90-manager-screen .j90MgrCard{padding:13px;border-radius:14px}
-  body.j90-manager-screen .j90MgrEyebrow,body.j90-manager-screen .j90MgrSubLabel{font-size:10px}
-  body.j90-manager-screen .j90MgrTitle>b{font-size:15px}
-  body.j90-manager-screen .j90MgrTitle>small{font-size:11px}
-  body.j90-manager-screen .j90MgrActions .btn,body.j90-manager-screen .j90MgrLineActions .btn{font-size:14px!important;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
-  body.j90-manager-screen .j90MgrQuickGrid b,body.j90-manager-screen .j90MgrActionGrid button{font-size:12px}
-  body.j90-manager-screen .j90MgrQuickGrid span{font-size:10px}
-  body.j90-manager-screen .j90MgrPlayer b,body.j90-manager-screen .j90MgrMarketRow b{font-size:12px;white-space:normal;overflow-wrap:anywhere}
-  body.j90-manager-screen .j90MgrPlayer small,body.j90-manager-screen .j90MgrMarketRow small{font-size:10px}
-  body.j90-manager-screen .j90MgrNewsList b{font-size:13px;white-space:normal}
-  body.j90-manager-screen .j90MgrNewsList p{font-size:10px;white-space:normal}
-  body.j90-manager-screen .j90MatchControls .chip,body.j90-manager-screen .j90MatchBench .chip{font-size:10px;white-space:normal;overflow-wrap:anywhere}
+ body.j90-manager-screen .j90ManagerHead{min-height:58px!important}
+ body.j90-manager-screen .j90MgrCard{padding:14px!important;border-radius:15px!important;overflow:visible!important}
+ body.j90-manager-screen .j90MgrEyebrow,body.j90-manager-screen .j90MgrSubLabel{font-size:11px!important;line-height:1.25!important}
+ body.j90-manager-screen .j90MgrTitle>b{font-size:15px!important;line-height:1.25!important}
+ body.j90-manager-screen .j90MgrTitle>small{font-size:11px!important}
+ body.j90-manager-screen .j90MgrMatch b{font-size:16px!important;line-height:1.2!important}
+ body.j90-manager-screen .j90MgrMatch strong{font-size:21px!important}
+ body.j90-manager-screen .j90MgrStats b,body.j90-manager-screen .j90MgrMoneyGrid b{font-size:13px!important}
+ body.j90-manager-screen .j90MgrStats small,body.j90-manager-screen .j90MgrMoneyGrid small{font-size:10px!important}
+ body.j90-manager-screen .j90MgrChip b,body.j90-manager-screen .j90MgrQuickGrid b,body.j90-manager-screen .j90MgrSlot b,body.j90-manager-screen .j90MgrPlayer b,body.j90-manager-screen .j90MgrMarketRow b,body.j90-manager-screen .j90MgrNewsList b{font-size:12px!important;line-height:1.2!important}
+ body.j90-manager-screen .j90MgrChip small,body.j90-manager-screen .j90MgrQuickGrid span,body.j90-manager-screen .j90MgrSlot small,body.j90-manager-screen .j90MgrPlayer small,body.j90-manager-screen .j90MgrMarketRow small,body.j90-manager-screen .j90MgrNewsList span,body.j90-manager-screen .j90MgrNewsList p{font-size:10px!important;line-height:1.3!important}
+ body.j90-manager-screen .j90MgrPage .btn{min-height:50px!important;font-size:14px!important;line-height:1.25!important;white-space:normal!important;overflow-wrap:anywhere!important}
+ body.j90-manager-screen .j90MgrChip,body.j90-manager-screen .j90MgrMiniChip,body.j90-manager-screen .j90MgrQuickGrid button,body.j90-manager-screen .j90MgrActionGrid button,body.j90-manager-screen .j90MgrMarketRow button,body.j90-manager-screen .j90MgrWindow button{min-height:48px!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+ body.j90-manager-screen .j90MgrCompactList>div{font-size:11px!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere!important}
+ body.j90-manager-screen .j90MgrCompactList small{font-size:10px!important}
+ body.j90-manager-screen .j90MgrSelectedData span{font-size:11px!important}
+ body.j90-manager-screen .j90MatchScore{font-size:26px!important}
+ body.j90-manager-screen .j90MatchClock{font-size:11px!important}
+ body.j90-manager-screen .j90MatchEvent{font-size:11px!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere!important}
+ body.j90-manager-screen .j90MatchStats .row{font-size:11px!important;line-height:1.3!important;white-space:normal!important}
+ body.j90-manager-screen .j90MatchControls .chip,body.j90-manager-screen .j90MatchBench .chip{font-size:10px!important;white-space:normal!important;overflow-wrap:anywhere!important}
 }
 @media(max-width:390px){
-  body.j90-manager-screen .j90ManagerTabs button{flex-basis:82px!important;min-width:82px!important}
-  body.j90-manager-screen .j90MgrCard{padding:12px}
-  body.j90-manager-screen .j90MgrTitle>b{font-size:14px}
-}
-@media(prefers-reduced-motion:reduce){
-  body.j90-manager-screen .j90ManagerTabs{scroll-behavior:auto}
+ body.j90-manager-screen .j90ManagerTabs button{flex-basis:90px!important;width:90px!important;min-width:90px!important}
+ body.j90-manager-screen .j90MgrCard{padding:13px!important}
 }
 </style><style id="j90-ui-overhaul-v2">
 /* J90 mobile UI overhaul: full-bleed scene, bounded readable content, touch-first navigation */
