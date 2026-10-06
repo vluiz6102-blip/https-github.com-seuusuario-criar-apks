@@ -48,6 +48,9 @@ for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id +
 if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 5) add(warn, 'Muitas referências a requestAnimationFrame. Manter um único loop visual compartilhado por cena.');
 if (/startJ90MatchLoop\s*=|function\s+startJ90MatchLoop|\bj90MatchFrame\b/.test(index)) add(fail, 'Loop de partida legado/duplicado detectado. A partida deve usar somente o RAF compartilhado.');
 if (!/j90-ai2\.js/.test(read('scripts/build.mjs'))) add(fail, 'scripts/build.mjs não empacota j90-ai2.js.');
+if (!/j90-tactics-pro-runtime/.test(index)) add(fail, 'Tactical Studio não foi integrado ao index.html.');
+if (!/TACTIC_PROFILES/.test(index)||!/BASE_FORM/.test(index)) add(fail, 'Biblioteca de estilos/formações táticas incompleta.');
+if (!/J90TacticBoard/.test(index)||!/J90TacticPro\.drag/.test(index)) add(fail, 'Prancheta tática drag-and-drop incompleta.');
 const intervalCount=(index.match(/setInterval\s*\(/g)||[]).length;
 if(intervalCount>0)add(fail,'setInterval detectado ('+intervalCount+'). O runtime Jornada 90 usa um único loop visual compartilhado.');
 if (/\bgetImageData\s*\(|\breadPixels\s*\(/.test(index)) add(warn, 'Leitura de pixels detectada, revisar custo de CPU/GPU.');
