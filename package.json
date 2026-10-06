@@ -12,7 +12,8 @@
     "audio:validate": "node scripts/validate-audio.mjs",
     "audio:report": "node scripts/audio-report.mjs",
     "data:rosters": "node scripts/sync-rosters.mjs",
-    "quality:scan": "node scripts/quality-scan.mjs"
+    "quality:scan": "node scripts/quality-scan.mjs",
+    "content:build": "python3 scripts/generate-content-pack.py"
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
