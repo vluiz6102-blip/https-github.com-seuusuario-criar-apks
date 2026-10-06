@@ -263,6 +263,7 @@
     m.possessionName=m.possessionName||m.home;
     m.possessionSince=num(m.possessionSince,0);
     m.action=m.action||{name:'build_up',until:0};
+    m.actionHistory=m.actionHistory||[];
     m.cooldowns=m.cooldowns||{};
     m.chain=num(m.chain,0);
     m.danger={home:num(m.danger&&m.danger.home,.2),away:num(m.danger&&m.danger.away,.2)};
