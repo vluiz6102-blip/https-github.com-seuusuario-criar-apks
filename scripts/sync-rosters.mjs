@@ -16,6 +16,7 @@ const STATIC_EURO={
 };
 const SAUDI='https://raw.githubusercontent.com/TopMarx/spl/main/latest/spl-bootstrap.json';
 const CARTOLA='https://api.cartola.globo.com/atletas/mercado';
+const ESPN_BASE='https://site.api.espn.com/apis/site/v2';
 
 const SKIP=new Set(['Rival FC','United FC']);
 const ALIASES={
@@ -174,6 +175,56 @@ function addSaudi(map,payload){
   }
 }
 function candidateNames(name){return [...new Set([name,...(ALIASES[name]||[])])];}
+function espnTeamObjects(payload){
+  const out=[];
+  const walk=v=>{
+    if(!v||typeof v!=='object')return;
+    if(v.team&&typeof v.team==='object'&&v.team.id)out.push(v.team);
+    if(Array.isArray(v.teams))for(const x of v.teams)walk(x);
+    if(Array.isArray(v.leagues))for(const x of v.leagues)walk(x);
+    if(Array.isArray(v.sports))for(const x of v.sports)walk(x);
+  };
+  walk(payload);
+  const seen=new Set();
+  return out.filter(t=>{const k=String(t.id);if(seen.has(k))return false;seen.add(k);return true;});
+}
+function espnRosterEntries(payload){
+  const out=[],seen=new Set();
+  const groups=Array.isArray(payload?.athletes)?payload.athletes:[];
+  for(const g of groups){
+    const candidates=Array.isArray(g?.items)?g.items:[g];
+    for(const p of candidates){
+      const a=p?.athlete||p;
+      const name=String(a?.displayName||a?.fullName||a?.shortName||'').trim();
+      if(!name)continue;
+      const key=norm(name);if(seen.has(key))continue;seen.add(key);
+      out.push({name,position:String(a?.position?.displayName||a?.position?.abbreviation||''),number:a?.jersey||null});
+    }
+  }
+  return out;
+}
+async function addEspnLeague(map,league,gameNames){
+  try{
+    const payload=await fetchJson(ESPN_BASE+'/sports/soccer/'+league+'/teams?limit=100',20000);
+    const sourceTeams=espnTeamObjects(payload);
+    for(const target of gameNames){
+      const aliases=candidateNames(target).map(norm);
+      const team=sourceTeams.find(t=>{
+        const names=[t.displayName,t.name,t.shortDisplayName,t.abbreviation,t.slug].map(norm).filter(Boolean);
+        return aliases.some(a=>names.includes(a)||names.some(n=>n.includes(a)||a.includes(n)));
+      });
+      if(!team?.id&&!team?.slug)continue;
+      try{
+        const roster=await fetchJson(ESPN_BASE+'/sports/soccer/'+league+'/teams/'+encodeURIComponent(String(team.slug||team.id))+'/roster',20000);
+        const players=espnRosterEntries(roster);
+        if(players.length>=11){
+          map.set(norm(target),{source:'ESPN '+league,sourceName:String(team.displayName||team.name||target),players});
+          console.log('ESPN '+target+' | '+players.length+' jogadores | '+league);
+        }
+      }catch(e){console.warn('ESPN roster '+target+' | '+String(e?.message||e));}
+    }
+  }catch(e){console.warn('ESPN league '+league+' indisponível: '+String(e?.message||e));}
+}
 function findStatic(map,name){
   const candidates=candidateNames(name).map(norm).filter(Boolean);
   for(const target of candidates){
@@ -240,6 +291,9 @@ catch(e){console.warn('fonte Saudi indisponível: '+e.message);}
 
 try{addCartola(staticMap,await fetchJson(CARTOLA,30000));}
 catch(e){console.warn('Cartola 2026 indisponível: '+e.message);}
+
+const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga','Botafogo-SP','Ferroviária','São Bernardo','Confiança','Londrina','Aparecidense','Coritiba','Goiás','Ceará','Vila Nova','Avaí','Chapecoense','Sport','Novorizontino','Operário-PR','América-MG','Flamengo','Palmeiras','Botafogo','Cruzeiro','Corinthians','São Paulo','Grêmio','Internacional','Atlético-MG','Bahia','River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Toluca']);
+for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,teams.filter(t=>brazilAndLatam.has(t)));
 
 const next={};
 const pending=[];
