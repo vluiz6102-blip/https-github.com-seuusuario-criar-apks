@@ -36,9 +36,12 @@ await page.locator('#nm').fill('Smoke Test');
 const offer = page.locator('.offerCard').first();
 if (await offer.count() !== 1) throw new Error('No club offer is available.');
 await offer.click();
+const confirm = page.getByRole('button', { name: /Confirmar primeiro contrato/i }).first();
+if (await confirm.count() !== 1) throw new Error('Club confirmation control did not appear after selection.');
+await confirm.click();
 await page.waitForTimeout(700);
 if (await page.locator('.j90ManagerShell').count() !== 1) {
-  throw new Error('Manager screen did not open after club selection.');
+  throw new Error('Manager screen did not open after club confirmation.');
 }
 
 // Exercise the 2D match renderer for several frames.
