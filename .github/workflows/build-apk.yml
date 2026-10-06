@@ -62,6 +62,9 @@ jobs:
       - name: Gerar pacote offline de conteúdo
         run: npm run content:build
 
+      - name: Validar pacote e runtime final
+        run: npm run quality:scan
+
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
