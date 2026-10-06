@@ -309,42 +309,63 @@ def build_team_intelligence(teams: list[str]) -> dict:
 
 
 def generate_animation_atlas(path: Path, seed: int, label: str) -> int:
-    # 4x4 real frame atlas. Each tile is a lightweight football motion frame:
-    # moving ball, player silhouettes, field markings and atmosphere layers.
+    # 8x4 / 32 frames, 256x256 por frame. O pack oferece mais movimento
+    # enquanto o runtime reproduz as imagens a 60 fps e carrega somente um atlas.
     from PIL import ImageChops
-    size = 1024
-    grid = 4
-    tile = size // grid
-    base = Image.new("RGB", (size, size), (14, 34, 27))
+    tile = 256
+    cols, rows, frames = 8, 4, 32
+    size = (tile * cols, tile * rows)
+    base = Image.new("RGB", size, (12, 30, 24))
     draw = ImageDraw.Draw(base)
-    for frame in range(16):
-        ox = (frame % grid) * tile
-        oy = (frame // grid) * tile
-        phase = frame / 15.0
-        sky = (52 + int(18 * phase), 78 + int(22 * phase), 104 + int(18 * phase))
+    for frame in range(frames):
+        ox = (frame % cols) * tile
+        oy = (frame // cols) * tile
+        phase = frame / max(1, frames - 1)
+        wave = math.sin(phase * math.tau)
+        sky = (46 + int(22 * phase), 68 + int(24 * phase), 95 + int(24 * phase))
         draw.rectangle((ox, oy, ox + tile, oy + tile), fill=sky)
-        draw.rectangle((ox, oy + tile * .47, ox + tile, oy + tile), fill=(18, 76, 43))
-        # Animated pitch bands and center line.
-        for band in range(6):
-            yy = oy + int(tile * .49) + band * 34
-            draw.line((ox + 6, yy, ox + tile - 6, yy), fill=(24, 95, 52), width=3)
-        draw.line((ox + tile/2, oy + tile*.49, ox + tile/2, oy + tile - 8), fill=(222, 232, 213), width=2)
-        px = ox + 70 + int((tile - 140) * phase)
-        py = oy + int(tile * .70) + int(math.sin(phase * math.pi * 2 + seed) * 24)
-        draw.ellipse((px-10, py-26, px+10, py-6), fill=(225, 180, 82))
-        draw.ellipse((px-7, py-9, px+7, py+5), fill=(120, 83, 58))
-        bx = ox + tile*.50 + int(math.sin(phase * math.pi * 2) * tile*.24)
-        by = oy + tile*.66 + int(math.cos(phase * math.pi * 2) * tile*.08)
-        draw.ellipse((bx-7, by-7, bx+7, by+7), fill=(247, 244, 222))
-        # Motion trails make the sheet genuinely useful for motion interpolation.
-        for trail in range(4):
-            tx = bx - (trail + 1) * 15
-            draw.ellipse((tx-3, by-3, tx+3, by+3), fill=(247, 244, 222))
-    noise = Image.effect_noise((size, size), 10).convert("RGB")
-    base = ImageChops.blend(base, noise, 0.05)
+        draw.rectangle((ox, oy + 122, ox + tile, oy + tile), fill=(16, 71, 40))
+        draw.polygon([(ox+18, oy+135), (ox+64, oy+100), (ox+192, oy+100), (ox+238, oy+135),
+                      (ox+224, oy+170), (ox+32, oy+170)], fill=(18, 27, 34))
+        for band in range(4):
+            yy = oy + 110 + band * 16
+            shift = int(wave * (2 + band))
+            for seat in range(10):
+                xx = ox + 30 + seat * 20 + shift
+                light = 80 + ((seat + frame + band) % 4) * 28
+                draw.rectangle((xx, yy, xx + 9, yy + 3), fill=(230, 204, 145, min(170, light)))
+        for band in range(7):
+            yy = oy + 130 + band * 18
+            draw.line((ox+4, yy, ox+tile-4, yy + int(wave*4)), fill=(26, 94, 51), width=5)
+        draw.line((ox + tile//2, oy + 130, ox + tile//2, oy + tile - 4), fill=(224, 232, 214), width=2)
+        draw.arc((ox+78, oy+153, ox+178, oy+253), 180, 360, fill=(224,232,214), width=2)
+        px1 = ox + 54 + int((tile - 108) * phase)
+        py1 = oy + 188 + int(math.sin(phase * math.tau + seed * .00001) * 18)
+        px2 = ox + 198 - int((tile - 108) * phase)
+        py2 = oy + 205 + int(math.cos(phase * math.tau + seed * .000013) * 14)
+        for px, py, jersey in ((px1, py1, (226, 179, 78)), (px2, py2, (235, 235, 235))):
+            draw.ellipse((px-10, py-26, px+10, py-6), fill=jersey)
+            draw.ellipse((px-7, py-10, px+7, py+5), fill=(120, 83, 58))
+            leg = int(math.sin(phase * math.tau + px*.02) * 7)
+            draw.line((px-5, py+4, px-10+leg, py+18), fill=jersey, width=4)
+            draw.line((px+5, py+4, px+10-leg, py+18), fill=jersey, width=4)
+        bx = ox + 128 + int(math.sin(phase * math.tau) * 82)
+        by = oy + 182 + int(math.cos(phase * math.tau) * 30)
+        draw.ellipse((bx-6, by-6, bx+6, by+6), fill=(247, 244, 222))
+        for trail in range(3):
+            tx = bx - int((trail + 1) * 12 * (1 + .2 * math.sin(phase * math.tau)))
+            draw.ellipse((tx-2, by-2, tx+2, by+2), fill=(247, 244, 222))
+        flag_x = ox + 24
+        flag_y = oy + 54 + int(wave * 5)
+        draw.line((flag_x, oy+18, flag_x, flag_y), fill=(12, 17, 21), width=3)
+        draw.polygon([(flag_x, oy+20), (flag_x+36+int(wave*8), oy+30+int(wave*4)),
+                      (flag_x, oy+42)], fill=(218, 169, 78))
+        glow_x = ox + 156 + int(wave * 34)
+        draw.ellipse((glow_x-9, oy+42, glow_x+9, oy+60), fill=(255, 236, 184, 150))
+    noise = Image.effect_noise(size, 10).convert("RGB")
+    base = ImageChops.blend(base, noise, 0.04)
     base.save(path, "PNG", optimize=False, compress_level=1)
     return path.stat().st_size
-
 
 def build_tech_pack(teams: list[str]) -> dict:
     tech_root = ROOT / "technology"
@@ -377,8 +398,11 @@ def build_tech_pack(teams: list[str]) -> dict:
             "file": str(path.relative_to(ROOT)).replace("\\", "/"),
             "bytes": size,
             "team": team,
-            "frames": 16,
-            "grid": "4x4",
+            "frames": 32,
+            "grid": "8x4",
+            "cols": 8,
+            "rows": 4,
+            "frameRate": 60,
             "lazy": True,
         })
         index += 1
@@ -389,8 +413,10 @@ def build_tech_pack(teams: list[str]) -> dict:
     animation_manifest = tech_root / "animation-manifest.json"
     animation_manifest.write_text(json.dumps({
         "version": 1,
-        "frameRate": 30,
-        "interpolation": "cubic",
+        "frameRate": 60,
+        "framesPerAtlas": 32,
+        "grid": "8x4",
+        "interpolation": "linear",
         "atlases": manifest,
         "totalBytes": animation_total,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
