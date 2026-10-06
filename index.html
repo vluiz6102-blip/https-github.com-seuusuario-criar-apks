@@ -1004,6 +1004,12 @@ function updateJ90MenuEnvironment(force=false){
   root.style.setProperty('--j90-ambient',String(.72+.28*(1-night)));
  });
 }
+function refreshJ90AtmosphereNodes(){
+ j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
+ j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
+ j90AtmoSkyNodes=Array.from(document.querySelectorAll('.menuSkyCycle i'));
+ if(j90AtmoResize)j90AtmoResize();
+}
 function startJ90Atmosphere(){
  if(j90AtmoStarted){
   if(j90AtmoNodes.length)return;
@@ -1941,7 +1947,7 @@ function render(still){
  document.body.classList.toggle('j90-menu-active',introStep===0);
  var A=$('app');A.className=still?'still':'';
  if(!S){A.innerHTML=intro();startJ90Atmosphere();j90SyncSoundscape();return}
- if(introStep===0){A.innerHTML=menuV();startJ90Atmosphere();j90SyncSoundscape();return}
+ if(introStep===0){A.innerHTML=menuV();refreshJ90AtmosphereNodes();startJ90Atmosphere();j90SyncSoundscape();return}
  if(S.manager){renderManagerPartial(still);startJ90Atmosphere();j90SyncSoundscape();return}
  var h=head()+tabs()+(tab==='game'?gameV():tab==='tbl'?tblV():tab==='news'?newsV():tab==='ply'?playerV():careerV());
  A.innerHTML=h;startJ90Atmosphere();save();j90SyncSoundscape();if(!still)window.scrollTo(0,0)
