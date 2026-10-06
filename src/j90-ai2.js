@@ -183,6 +183,44 @@
     return x;
   }
 
+  function playerRole(p){
+    var pos=String(p&&p.position||p&&p.role||'').toUpperCase();
+    if(/GOL|GK|GOAL/.test(pos))return 'GK';
+    if(/ZAG|CB|LAT|LD|LE|RB|LB|DEF/.test(pos))return 'DEF';
+    if(/MEI|MC|VOL|MD|ME|MID|CAM|CM|DM/.test(pos))return 'MID';
+    if(/ATA|CF|ST|CA|PE|PD|PON|EXT|FW/.test(pos))return 'ATT';
+    return 'MID';
+  }
+  function hydratePlayer(m,side,p){
+    if(!p)return p;
+    try{
+      var src=side==='home'&&S&&Array.isArray(S.roster)?S.roster.find(function(x){return x.id===p.id}):null;
+      if(src){
+        var keep={x:p.x,y:p.y,tx:p.tx,ty:p.ty};
+        Object.keys(src).forEach(function(k){if(p[k]==null)p[k]=src[k]});
+        p.x=keep.x;p.y=keep.y;p.tx=keep.tx;p.ty=keep.ty;
+      }
+    }catch(e){}
+    p.roleAI=playerRole(p);
+    p.ai=p.ai||{};
+    p.ai.role=p.roleAI;p.ai.lastAction=p.ai.lastAction||null;
+    p.ai.confidence=clamp(num(p.ai.confidence,.62),.35,.98);
+    p.ai.heat=clamp(num(p.ai.heat,0),0,1);
+    p.energy=clamp(num(p.energy,num(p.form,70)),16,100);
+    return p;
+  }
+  function ratingAny(p,keys,fallback){
+    for(var i=0;i<keys.length;i++){var v=Number(p&&p[keys[i]]);if(Number.isFinite(v)&&v>0)return v}
+    return fallback;
+  }
+  function keeperRating(p,key){
+    var map={reflex:['reflex','handling','gkReflex','goalkeeping'],handling:['handling','catching','gkHandling'],positioning:['positioning','gkPositioning'],oneOnOne:['oneOnOne','oneonone','duel'],aerial:['aerial','heading'],command:['command','leadership']};
+    return ratingAny(p,map[key]||[key],num(p&&p.ovr,65));
+  }
+  function defenders(m,side){return (getTeamPlayers(m,side)||[]).filter(function(p){return playerRole(p)==='DEF'})}
+  function midfielders(m,side){return (getTeamPlayers(m,side)||[]).filter(function(p){return playerRole(p)==='MID'})}
+  function attackers(m,side){return (getTeamPlayers(m,side)||[]).filter(function(p){return playerRole(p)==='ATT'})}
+  function goalkeeper(m,side){var a=getTeamPlayers(m,side)||[];for(var i=0;i<a.length;i++)if(playerRole(a[i])==='GK')return a[i];return a[0]||null}
   function playerRating(p,key,fallback){
     if(!p)return fallback;
     var candidates={
