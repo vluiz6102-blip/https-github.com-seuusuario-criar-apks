@@ -378,6 +378,76 @@
     return score;
   }
 
+  function updateGoalkeeperAI(m,side,brain){
+    var gk=goalkeeper(m,side);if(!gk)return;
+    var other=side==='home'?'away':'home',enemy=m.possessionTeam===other?getPlayer(m,other,m.possessionPlayerId):null,home=side==='home';
+    var bx=num(m.ball.x,.5),by=num(m.ball.y,.5),danger=home?cl((bx-.50)/.50,0,1):cl((.50-bx)/.50,0,1);
+    var style=String(gk.style||gk.playStyle||'').toLowerCase(),sweeper=/sweeper|l[ií]bero|av[aá]n[çc]ado|advanced|aggressive/.test(style)||keeperRating(gk,'positioning')>=82;
+    var line=home?.075:.925,deep=home?.055:.945,targetX=lerp(line,deep,danger*.35);
+    if(enemy&&danger>.52&&sweeper)targetX=lerp(targetX,home?.15:.85,danger*.55);
+    if(enemy&&danger>.72)targetX=home?cl(targetX,.06,.20):cl(targetX,.80,.94);
+    var targetY=cl(lerp(.5,by,danger*.58),.20,.80);
+    moveToward(gk,targetX,targetY,.20+brain.adaptability*.10);
+    gk.ai.heat=cl(gk.ai.heat+.02,0,1);
+    gk.energy=cl(num(gk.energy,72)-.010-(sweeper&&enemy?.010:0),18,100);
+    if(enemy&&danger>.70&&dist(gk,enemy)<.13)emit(m,escLocal(gk.name||'Goleiro')+' sai do gol e reduz o ângulo.','gk_rush',6);
+  }
+
+  function updateDefenseAI(m,side,brain){
+    var defs=defenders(m,side),other=side==='home'?'away':'home',enemy=m.possessionTeam===other?getPlayer(m,other,m.possessionPlayerId):null,gk=goalkeeper(m,side),home=side==='home';
+    defs.forEach(function(d,i){
+      var tx=d.baseX||d.x,ty=d.baseY||d.y;
+      if(enemy){
+        var danger=home?cl((enemy.x-.42)/.58,0,1):cl((.58-enemy.x)/.58,0,1),primary=nearest(defs,enemy.x,enemy.y)===d;
+        if(primary){tx=lerp(d.x,enemy.x+(home?-.035:.035),.42+brain.press*.34);ty=lerp(d.y,enemy.y,.30+brain.press*.22)}
+        else{tx=lerp(tx,enemy.x+(home?-.11:.11),.10+danger*.10);ty=lerp(ty,enemy.y+(d.baseY-.5)*.20,.12)}
+        if(danger>.76)tx=home?Math.min(tx,.43):Math.max(tx,.57);
+      }else{
+        tx=home?Math.min(.48,(d.baseX||tx)+.045):Math.max(.52,(d.baseX||tx)-.045);
+        ty=lerp(ty,d.baseY||ty,.12);
+      }
+      if(gk&&Math.abs(ty-gk.y)<.06)ty+=i%2?.05:-.05;
+      moveToward(d,tx,ty,.15+brain.press*.10);
+      d.ai.heat=cl(d.ai.heat+.015,0,1);
+      d.energy=cl(num(d.energy,70)-.016-brain.press*.006,16,100);
+    });
+  }
+
+  function updateAttackAI(m,side,brain){
+    if(m.possessionTeam!==side)return;
+    var owner=getPlayer(m,side,m.possessionPlayerId);if(!owner)return;
+    var ats=attackers(m,side),mids=midfielders(m,side),home=side==='home',finalThird=home?owner.x>.65:owner.x<.35,fast=finalThird||m.chain>=2;
+    ats.forEach(function(a,i){
+      if(a.id===owner.id)return;
+      var wide=i%2===0?.16:-.16,tx=home?(fast?.76:.58):(fast?.24:.42),ty=cl((a.baseY||a.y)+wide*(Math.abs(a.baseY-.5)<.14?1:.35),.06,.94);
+      if(finalThird)tx=home?.84:.16;
+      moveToward(a,tx,ty,.15+brain.tempo*.11);
+      a.ai.heat=cl(a.ai.heat+.028,0,1);
+      a.energy=cl(num(a.energy,70)-.018,16,100);
+    });
+    mids.forEach(function(mid,i){
+      if(mid.id===owner.id)return;
+      var tx=home?cl(owner.x-.13+(i%2)*.09,.16,.72):cl(owner.x+.13-(i%2)*.09,.28,.84);
+      moveToward(mid,tx,cl(mid.y+(mid.baseY-.5)*.08,.09,.91),.11+brain.buildUp*.09);
+    });
+  }
+
+  function chanceKeeperSave(m,side,owner,onTarget,xg){
+    if(!onTarget)return false;
+    var other=side==='home'?'away':'home',gk=goalkeeper(m,other);if(!gk)return false;
+    var goalX=other==='home'?.075:.925,distGoal=Math.abs(owner.x-goalX),pos=cl(1-Math.abs(gk.x-goalX)*3.5,.40,1),angle=cl(1-Math.abs(gk.y-owner.y)*1.8,.42,1);
+    var reflex=keeperRating(gk,'reflex'),handling=keeperRating(gk,'handling'),positioning=keeperRating(gk,'positioning'),one=keeperRating(gk,'oneOnOne');
+    var save=cl(.28+(reflex-65)/250+(handling-65)/420+(positioning-65)/400+(one-65)/480,.10,.82);
+    if(distGoal<.18)save-=.13; else if(distGoal>.50)save+=.08;
+    save=cl(save*pos*angle+xg*.10,.08,.82);
+    if(rnd(m)<save){m.stats.saves=(m.stats.saves||0)+1;m.stats.goalsPrevented=(m.stats.goalsPrevented||0)+cl(xg*.8,.02,.65);gk.energy=cl(gk.energy-.09,18,100);
+      var catchable=xg<.25&&keeperRating(gk,'handling')>=72;
+      emit(m,escLocal(gk.name||'Goleiro')+(catchable?' encaixa a bola.':' faz uma grande defesa!'),'keeper_save',1.4);
+      if(catchable)transferPossession(m,other,gk,'keeper_claim'); else {m.ball.tx=gk.x;m.ball.ty=gk.y;setPossession(m,other,gk,false)}
+      return true;
+    }
+    return false;
+  }
   function chooseAction(m,side,p,brain){
     var best=[],top=-Infinity;
     for(var i=0;i<ACTIONS.length;i++){
