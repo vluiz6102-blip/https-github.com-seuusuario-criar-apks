@@ -17,7 +17,8 @@ if (await page.locator('#j90CinematicIntro').count() !== 1) {
 }
 
 // The startup must stay responsive and transition without JS errors.
-await page.waitForTimeout(3600);
+await page.locator('#j90CinematicIntro').waitFor({ state: 'detached', timeout: 7000 });
+await page.waitForTimeout(250);
 const startup = await page.evaluate(() => ({
   introVisible: !!document.getElementById('j90CinematicIntro'),
   bodyText: (document.body.innerText || '').length,
