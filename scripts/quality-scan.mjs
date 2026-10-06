@@ -13,7 +13,7 @@ function checkSyntax(label, source) {
   catch (e) { add(fail, label + ': ' + e.message); }
 }
 
-const inlineScripts = [...index.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m => m[1]).join('\\n');
+const inlineScripts = [...index.matchAll(/<script(?:\\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
