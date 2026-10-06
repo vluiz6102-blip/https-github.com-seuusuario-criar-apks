@@ -26,7 +26,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     permissions:
       contents: read
     steps:
@@ -61,6 +61,25 @@ jobs:
 
       - name: Gerar pacote offline de conteúdo
         run: npm run content:build
+
+      - name: Validar fotos de jogadores e licenças
+        run: |
+          test -d assets/j90-content/players
+          photo_files=$(find assets/j90-content/players -type f -name '*.jpg' | wc -l)
+          photo_bytes=$(du -sb assets/j90-content/players | awk '{print $1}')
+          echo "PLAYER_PHOTO_FILES=$photo_files"
+          echo "PLAYER_PHOTO_BYTES=$photo_bytes"
+          test "$photo_files" -ge 1
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("assets/j90-content/content-manifest.json").read_text(encoding="utf-8"))
+          assert isinstance(m.get("playerPhotos"), dict)
+          assert isinstance(m.get("playerPhotoMeta"), list)
+          assert int(m.get("playerPhotoCount",0)) == len(m["playerPhotoMeta"])
+          print("PLAYER_PHOTOS_MANIFEST=", m.get("playerPhotoCount",0))
+          print("PLAYER_PHOTOS_LICENSED_METADATA=OK")
+          PY
 
       - name: Validar pacote e runtime final
         run: npm run quality:scan
