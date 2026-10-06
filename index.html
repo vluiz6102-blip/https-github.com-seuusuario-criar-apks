@@ -1109,10 +1109,8 @@ function refreshJ90AtmosphereNodes(){
  if(j90AtmoResize)j90AtmoResize();
 }
 function startJ90Atmosphere(){
+ if(j90AtmoStarted&&j90AtmoNodes.length)return;
  if(j90AtmoResize){try{removeEventListener('resize',j90AtmoResize)}catch(e){}j90AtmoResize=null}
- if(j90AtmoStarted){
-  if(j90AtmoNodes.length)return;
- }
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
  j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
  j90AtmoSkyNodes=Array.from(document.querySelectorAll('.menuSkyCycle i'));
