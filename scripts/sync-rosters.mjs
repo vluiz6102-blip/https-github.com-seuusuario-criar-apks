@@ -350,6 +350,9 @@ catch(e){console.warn('BR1 2026 indisponível: '+e.message);}
 try{addBrazilOvr(staticMap,await fetchText(BR_OVR,30000));}
 catch(e){console.warn('BR-OVR 2026 indisponível: '+e.message);}
 
+// Atualização prioritária dos clubes de maior relevância: consulta uma fonte de elenco atualizada mesmo quando o pacote estático já possui dados.
+const criticalTeams=['PSG','Barcelona','Real Madrid','Manchester City','Liverpool','Bayern','Arsenal','Inter','Milan','Chelsea','Tottenham','Atlético de Madrid','Benfica','Porto','Sporting'];
+for(const league of ['eng.1','esp.1','deu.1','fra.1','ita.1','por.1'])await addEspnLeague(staticMap,league,teams.filter(t=>criticalTeams.includes(t)));
 const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga','Botafogo-SP','Ferroviária','São Bernardo','Confiança','Londrina','Aparecidense','Coritiba','Goiás','Ceará','Vila Nova','Avaí','Chapecoense','Sport','Novorizontino','Operário-PR','América-MG','Flamengo','Palmeiras','Botafogo','Cruzeiro','Corinthians','São Paulo','Grêmio','Internacional','Atlético-MG','Bahia','River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Toluca']);
 const unresolvedBrazilAndLatam=teams.filter(t=>brazilAndLatam.has(t)&&!findStatic(staticMap,t));
 for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,unresolvedBrazilAndLatam);
@@ -383,7 +386,16 @@ console.log('Elencos resolvidos: '+resolved+'/'+teams.length+' | jogadores regis
 
 const missingCritical=['Goiás','Operário-PR'].filter(t=>!next[t]?.players?.length);
 if(missingCritical.length)throw new Error('Elenco crítico ausente: '+missingCritical.join(', '));
-const realClubTeams=teams.filter(t=>!new Set(['Rival FC','United FC','União da Vila','Juventude do Bairro','Estrela da Zona','Real Parque','Operário da Várzea','São Jorge FC','Bairro Novo','Vila Esperança','Nacional da Praça','Juventude Central']).has(t));
+const fictionalTeams=new Set(['Rival FC','United FC','União da Vila','Juventude do Bairro','Estrela da Zona','Real Parque','Operário da Várzea','São Jorge FC','Bairro Novo','Vila Esperança','Nacional da Praça','Juventude Central']);
+const realClubTeams=teams.filter(t=>!fictionalTeams.has(t));
+const invalidReal=realClubTeams.filter(t=>{
+  const ps=next[t]?.players;
+  if(!Array.isArray(ps)||ps.length<11)return true;
+  const names=ps.map(p=>norm(p.name)).filter(Boolean);
+  return names.length!==new Set(names).size||names.some(n=>/^jogador( |$)|^player( |$)/.test(n));
+});
 const unresolvedReal=realClubTeams.filter(t=>!next[t]?.players?.length);
 if(unresolvedReal.length)console.warn('Times reais sem elenco: '+unresolvedReal.join(', '));
 console.log('Cobertura de clubes reais: '+(realClubTeams.length-unresolvedReal.length)+'/'+realClubTeams.length);
+console.log('Validação de elencos reais (mínimo 11, nomes únicos e sem placeholders): '+(invalidReal.length?'FALHA':'OK'));
+if(invalidReal.length)throw new Error('Elencos reais incompletos/inválidos: '+invalidReal.join(', '));

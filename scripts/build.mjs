@@ -38,6 +38,7 @@ Object.values(manifest).forEach(list => list.sort());
 
 const soundscapeSource = readFileSync('src/j90-soundscape.js', 'utf8');
 const expansionSource = readFileSync('src/j90-expansion.js', 'utf8');
+const phaserRuntimeSource = readFileSync('src/j90-phaser-runtime.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -59,6 +60,12 @@ copyFileSync('index.html', 'www/index.html');
 writeFileSync('www/j90-soundscape.js', soundscape);
 writeFileSync('www/j90-expansion.js', expansionSource);
 
+const phaserDist = 'node_modules/phaser/dist/phaser.min.js';
+if (!existsSync(phaserDist)) throw new Error('Phaser 4.2.1 ausente. Execute npm install antes da build.');
+mkdirSync('www/assets', { recursive: true });
+copyFileSync(phaserDist, 'www/assets/phaser.min.js');
+writeFileSync('www/j90-phaser-runtime.js', phaserRuntimeSource);
+
 if (existsSync(audioRoot)) {
   mkdirSync('www/assets', { recursive: true });
   cpSync(audioRoot, 'www/assets/audio', { recursive: true });
@@ -69,7 +76,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="assets/phaser.min.js"></script><script src="j90-phaser-runtime.js"></script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
