@@ -39,9 +39,10 @@ WIDTH, HEIGHT = 2048, 1152
 MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "2400"))
 
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
-COMMONS_UA = "Jornada90Manager/1.0 (open licensed player-photo build)"
+COMMONS_UA = "Jornada90Manager/1.1 (https://github.com/vluiz6102-blip/https-github.com-seuusuario-criar-apks; open licensed player-photo build)"
+COMMONS_RATE_LIMITED = False
 PLAYER_PHOTO_MAX = int(os.environ.get("J90_MAX_PLAYER_PHOTOS", "2500"))
-PLAYER_PHOTO_WORKERS = int(os.environ.get("J90_PLAYER_PHOTO_WORKERS", "4"))
+PLAYER_PHOTO_WORKERS = int(os.environ.get("J90_PLAYER_PHOTO_WORKERS", "1"))
 PLAYER_THUMB_WIDTH = int(os.environ.get("J90_PLAYER_THUMB_WIDTH", "512"))
 
 # Only licenses that permit reuse/derivatives and commercial use are accepted.
@@ -491,7 +492,7 @@ def download_player_photos() -> tuple[dict[str, str], list[dict], list[dict]]:
         "|", round(sum(int(x["bytes"]) for x in records) / 1024 / 1024, 2), "MiB",
         "| sem foto:", len(missing),
     )
-    return by_player, records, missing
+    return by_player, by_team_player, records, missing
 
 
 def download_openfootball() -> list[dict]:
@@ -531,7 +532,7 @@ def main() -> None:
     PLAYERS.mkdir(parents=True, exist_ok=True)
 
     teams = team_names()
-    player_photos, player_photo_records, player_photo_missing = download_player_photos()
+    player_photos, player_photos_by_team, player_photo_records, player_photo_missing = download_player_photos()
     # Four visual contexts per club minimum. Extra scenes are added until the
     # requested package size is reached, so smaller data sets still get a full
     # media library.
@@ -603,7 +604,7 @@ def main() -> None:
         "byTeam": by_team,
         "scenes": scenes,
         "playerPhotos": player_photos,
-        "playerPhotosByTeam": by_team_player,
+        "playerPhotosByTeam": player_photos_by_team,
         "playerPhotoCount": len(player_photo_records),
         "playerPhotoBytes": sum(int(x["bytes"]) for x in player_photo_records),
         "playerPhotosMissing": len(player_photo_missing),
