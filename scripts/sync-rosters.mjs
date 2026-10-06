@@ -16,6 +16,8 @@ const STATIC_EURO={
 };
 const SAUDI='https://raw.githubusercontent.com/TopMarx/spl/main/latest/spl-bootstrap.json';
 const CARTOLA='https://api.cartola.globo.com/atletas/mercado';
+const BR1='https://raw.githubusercontent.com/marcosmedeirros/gestordefranquia/main/games/data/elencos_fonte/br1.txt';
+const BR_OVR='https://raw.githubusercontent.com/marcosmedeirros/gestordefranquia/main/games/data/elencos_fonte/br-ovr.txt';
 const ESPN_BASE='https://site.api.espn.com/apis/site/v2';
 
 const SKIP=new Set(['Rival FC','United FC']);
@@ -115,6 +117,51 @@ async function fetchJson(url,ms=15000){
     if(!res.ok)throw new Error('HTTP '+res.status);
     return await res.json();
   }finally{clearTimeout(timer);}
+}
+async function fetchText(url,ms=15000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),ms);
+  try{
+    const res=await fetch(url,{headers:{'User-Agent':UA,'Accept':'text/plain,*/*'},redirect:'follow',signal:controller.signal});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return await res.text();
+  }finally{clearTimeout(timer);}
+}
+function addBrazilBr1(map,text,label='Brazil 2026 / Série A-B'){
+  let current=null;
+  for(const raw of String(text||'').split(/\r?\n/)){
+    const line=raw.trim();
+    const m=line.match(/^# CLUBE:\s*(.+)$/);
+    if(m){current=m[1].trim();continue;}
+    if(!current||!line||line.startsWith('#')||!line.includes(' | '))continue;
+    const parts=line.split(' | ');
+    const name=String(parts[0]||'').trim(),position=String(parts[1]||'').trim();
+    if(!name)continue;
+    if(!map.has(norm(current)))map.set(norm(current),{source:label,sourceName:current,players:[]});
+    const rec=map.get(norm(current));
+    if(!rec.players.some(p=>norm(p.name)===norm(name)))rec.players.push({name,position,number:null});
+  }
+}
+function addBrazilOvr(map,text,label='Brazil 2026 / Série C'){
+  const positions=['GOL','ZAG','LE','LD','VOL','MC','MEI','PE','PD','ATA'];
+  for(const raw of String(text||'').split(/\r?\n/)){
+    const line=raw.trim();
+    if(!line||line.startsWith('#'))continue;
+    const head=line.match(/^(.+?)PosNomeIdadeOVR/);
+    if(!head)continue;
+    const club=head[1].trim();
+    const body=line.slice(head[0].length);
+    const players=[];
+    const re=/(GOL|ZAG|LE|LD|VOL|MC|MEI|PE|PD|ATA)([^0-9]+?)(\d{2})(\d{2})/g;
+    let m;
+    while((m=re.exec(body))){
+      const name=String(m[2]||'').trim();
+      if(name&&positions.includes(m[1])&&!players.some(p=>norm(p.name)===norm(name))){
+        players.push({name,position:m[1],number:null});
+      }
+    }
+    if(players.length)map.set(norm(club),{source:label,sourceName:club,players});
+  }
 }
 function entriesFromEuroClub(club){
   const players=Array.isArray(club?.players)?club.players:[];
@@ -298,8 +345,14 @@ catch(e){console.warn('fonte Saudi indisponível: '+e.message);}
 try{addCartola(staticMap,await fetchJson(CARTOLA,30000));}
 catch(e){console.warn('Cartola 2026 indisponível: '+e.message);}
 
+try{addBrazilBr1(staticMap,await fetchText(BR1,30000));}
+catch(e){console.warn('BR1 2026 indisponível: '+e.message);}
+try{addBrazilOvr(staticMap,await fetchText(BR_OVR,30000));}
+catch(e){console.warn('BR-OVR 2026 indisponível: '+e.message);}
+
 const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga','Botafogo-SP','Ferroviária','São Bernardo','Confiança','Londrina','Aparecidense','Coritiba','Goiás','Ceará','Vila Nova','Avaí','Chapecoense','Sport','Novorizontino','Operário-PR','América-MG','Flamengo','Palmeiras','Botafogo','Cruzeiro','Corinthians','São Paulo','Grêmio','Internacional','Atlético-MG','Bahia','River Plate','Boca Juniors','Peñarol','Nacional','Lanús','Racing','Athletico-PR','Fortaleza','Defensa y Justicia','LDU','Toluca']);
-for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,teams.filter(t=>brazilAndLatam.has(t)));
+const unresolvedBrazilAndLatam=teams.filter(t=>brazilAndLatam.has(t)&&!findStatic(staticMap,t));
+for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,unresolvedBrazilAndLatam);
 const nationalTeams=new Set(['Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica']);
 await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t)));
 
@@ -330,3 +383,7 @@ console.log('Elencos resolvidos: '+resolved+'/'+teams.length+' | jogadores regis
 
 const missingCritical=['Goiás','Operário-PR'].filter(t=>!next[t]?.players?.length);
 if(missingCritical.length)throw new Error('Elenco crítico ausente: '+missingCritical.join(', '));
+const realClubTeams=teams.filter(t=>!new Set(['Rival FC','United FC','União da Vila','Juventude do Bairro','Estrela da Zona','Real Parque','Operário da Várzea','São Jorge FC','Bairro Novo','Vila Esperança','Nacional da Praça','Juventude Central']).has(t));
+const unresolvedReal=realClubTeams.filter(t=>!next[t]?.players?.length);
+if(unresolvedReal.length)console.warn('Times reais sem elenco: '+unresolvedReal.join(', '));
+console.log('Cobertura de clubes reais: '+(realClubTeams.length-unresolvedReal.length)+'/'+realClubTeams.length);
