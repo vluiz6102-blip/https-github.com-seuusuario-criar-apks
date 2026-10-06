@@ -15,8 +15,7 @@ on:
       - 'scripts/sync-rosters.mjs'
       - 'src/**'
       - 'scripts/generate-content-pack.py'
-      - 'scripts/generate-content-pack.mjs'
-      - 'scripts/generate-content-pack.*'
+      - 'scripts/generate-content-pack.py'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
@@ -57,6 +56,9 @@ jobs:
 
       - name: Sincronizar elencos reais dos times
         run: npm run data:rosters
+
+      - name: Varredura estrutural do projeto
+        run: npm run quality:scan
 
       - name: Gerar pacote offline de conteúdo
         run: npm run content:build
