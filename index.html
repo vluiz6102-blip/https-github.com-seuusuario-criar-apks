@@ -716,6 +716,69 @@ body.theme-amoled .stadiumScene .horizonGlow{opacity:.8}
 @media(prefers-reduced-motion:reduce){.j90-menu-active .menuHero:after{display:none}body.j90-cinematic-pulse #app,body.j90-cinematic-pulse #j90-world{animation:none!important}}
 @media(prefers-reduced-motion:reduce){#app.j90-enter,#app.j90-leave,.menuHero.j90-menu-enter,.menuActions.j90-menu-enter .menuBtn{animation:none!important}.menuBtn,.btn,.chip,.tabs button,.audioOption,.backBtn,.offerCard{transition:none!important}.stadiumScene .leaves.near,.stadiumScene .fireflies,.stadiumScene .birds,.stadiumScene .beam{animation:none!important;opacity:.45}.stadiumScene .atmoCanvas{opacity:.55}.menuHero .logoMark.big{animation:none!important}}
 @media(max-width:560px){body.j90-low-quality .stadiumScene .cloudLayer{opacity:.55}body.j90-low-quality .stadiumScene .dust{opacity:.35}body.j90-low-quality .stadiumScene .leaves.near{display:none}body.j90-low-quality .stadiumScene .beam{display:none}}
+</style><style id="j90-redesign">
+/* Jornada 90 redesign: CSS-first, compositor-friendly, sem RAF para decoração */
+:root{
+ --j90-ink:#f8f5ef;--j90-muted:rgba(248,245,239,.72);--j90-line:rgba(255,255,255,.14);
+ --j90-glass:rgba(16,20,28,.48);--j90-glass2:rgba(8,12,18,.72);--j90-gold:#ffc45a;
+ --j90-green:#5ed59a;--j90-shadow:0 18px 50px rgba(0,0,0,.28)
+}
+.j90Home{position:relative;min-height:calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:-14px -12px -22px;overflow:hidden;isolation:isolate;color:var(--j90-ink);background:#151a2d}
+.j90Sky{position:absolute;inset:0;overflow:hidden;z-index:-1;background:
+ linear-gradient(180deg,#101d3c 0%,#26345b 31%,#d76e4d 64%,#f3b85e 79%,#26352b 100%)}
+.j90Sky:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,14,31,.08),rgba(9,13,19,.18) 58%,rgba(4,7,8,.72));pointer-events:none}
+.j90Sun{position:absolute;width:clamp(90px,25vw,145px);height:clamp(90px,25vw,145px);border-radius:50%;right:12%;top:32%;background:#ffd98a;box-shadow:0 0 55px 18px rgba(255,196,90,.28);opacity:.95}
+.j90Horizon{position:absolute;left:-8%;right:-8%;top:67%;height:22%;background:linear-gradient(180deg,rgba(246,172,89,.5),rgba(71,71,51,.28) 34%,#17241f 100%);clip-path:polygon(0 48%,8% 43%,15% 49%,22% 38%,30% 46%,38% 41%,47% 49%,55% 37%,64% 47%,72% 42%,81% 49%,90% 40%,100% 47%,100% 100%,0 100%)}
+.j90Cloud{position:absolute;width:55vw;height:10vw;max-height:70px;min-height:22px;border-radius:50%;background:rgba(255,226,190,.12);filter:blur(12px);will-change:transform;animation:j90Cloud 30s ease-in-out infinite}
+.j90Cloud.c1{left:-12%;top:25%}.j90Cloud.c2{right:-18%;top:42%;animation-duration:38s;animation-direction:reverse}
+.j90Stadium{position:absolute;left:4%;right:4%;bottom:8%;height:25%;background:linear-gradient(180deg,rgba(18,31,32,.45),#101a19 45%,#0a1110);clip-path:polygon(0 72%,5% 49%,13% 38%,24% 30%,36% 25%,50% 22%,64% 25%,76% 30%,87% 39%,95% 50%,100% 72%,100% 100%,0 100%);opacity:.88}
+.j90Stadium:before{content:"";position:absolute;left:7%;right:7%;top:34%;height:2px;background:rgba(255,205,121,.22);box-shadow:0 8px rgba(255,205,121,.12)}
+.j90Lights{position:absolute;left:10%;right:10%;bottom:27%;height:4%;background:radial-gradient(circle at 8% 50%,#ffe9b1 0 2px,transparent 3px),radial-gradient(circle at 22% 50%,#ffe9b1 0 2px,transparent 3px),radial-gradient(circle at 38% 50%,#ffe9b1 0 2px,transparent 3px),radial-gradient(circle at 54% 50%,#ffe9b1 0 2px,transparent 3px),radial-gradient(circle at 70% 50%,#ffe9b1 0 2px,transparent 3px),radial-gradient(circle at 86% 50%,#ffe9b1 0 2px,transparent 3px);opacity:.55}
+.j90Leaves{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.j90Leaves i{position:absolute;top:-5%;left:var(--x);width:10px;height:5px;border-radius:100% 0 100% 0;background:rgba(255,216,135,.72);opacity:0;will-change:transform,opacity;animation:j90Leaf var(--t) linear var(--d) infinite}
+.j90Leaves i:nth-child(3n){width:7px;height:4px;background:rgba(229,174,91,.55)}
+.j90Leaves i:nth-child(2n){animation-name:j90Leaf2}
+.j90HomeContent{position:relative;z-index:2;min-height:100svh;display:flex;flex-direction:column;padding:max(18px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));max-width:560px;margin:auto}
+.j90Topline{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.66)}
+.j90LiveDot:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--j90-green);margin-right:6px;box-shadow:0 0 10px rgba(94,213,154,.65)}
+.j90BrandBlock{text-align:center;margin:auto 0 20px;animation:j90HomeIn .55s cubic-bezier(.2,.8,.2,1) both}
+.j90Badge{width:70px;height:70px;margin:0 auto 14px;display:grid;place-items:center;border-radius:22px;transform:rotate(-5deg);font:900 34px/1 system-ui,sans-serif;color:#1a1a1a;background:linear-gradient(145deg,#ffe09b,#e78a46);box-shadow:0 16px 45px rgba(70,31,10,.25)}
+.j90Brand{font:900 clamp(35px,10vw,54px)/.95 system-ui,sans-serif;letter-spacing:.055em;text-shadow:0 5px 24px rgba(0,0,0,.2)}
+.j90Brand b{color:var(--j90-gold)}
+.j90BrandBlock p{margin-top:10px;color:var(--j90-muted);font-size:14px}
+.j90Actions{display:grid;gap:10px;animation:j90HomeIn .65s .06s cubic-bezier(.2,.8,.2,1) both}
+.j90Action{appearance:none;width:100%;min-height:68px;border:1px solid var(--j90-line);border-radius:18px;padding:12px 14px;display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:12px;align-items:center;text-align:left;color:var(--j90-ink);background:var(--j90-glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,.13);transition:transform .16s ease,border-color .16s ease,background .16s ease;touch-action:manipulation}
+.j90Action:active{transform:translateY(1px) scale(.985);background:rgba(18,23,31,.64);border-color:rgba(255,196,90,.55)}
+.j90Action.j90Primary{border-color:rgba(255,196,90,.48);background:linear-gradient(135deg,rgba(72,91,61,.74),rgba(30,39,38,.66))}
+.j90ActionIcon{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:var(--j90-gold);font-weight:800}
+.j90Action b{display:block;font-size:16px;line-height:1.2}.j90Action small{display:block;margin-top:3px;color:var(--j90-muted);font-size:12px;line-height:1.3}.j90Action em{font-style:normal;font-size:26px;color:rgba(255,255,255,.5)}
+.j90UtilityGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.j90Utility{min-height:60px;border:1px solid rgba(255,255,255,.1);border-radius:15px;background:rgba(10,15,21,.4);color:var(--j90-ink);display:grid;place-items:center;align-content:center;gap:4px;transition:transform .15s ease,background .15s ease}
+.j90Utility:active{transform:scale(.97);background:rgba(10,15,21,.62)}
+.j90Utility span{font-size:17px;color:var(--j90-gold)}.j90Utility b{font-size:11px;font-weight:600;color:var(--j90-muted)}
+.j90HomeFooter{display:flex;justify-content:space-between;margin-top:14px;color:rgba(255,255,255,.42);font-size:9px;letter-spacing:.12em}
+.j90-enter{animation:j90PageIn .25s ease both}.j90-leave{animation:j90PageOut .16s ease both}.j90-press{transform:scale(.985)!important}.j90-disabled{pointer-events:none;opacity:.72}
+body.j90-cinematic-pulse .j90Sky:after{animation:j90Flash .9s ease-out both}
+@keyframes j90Leaf{0%{transform:translate3d(-8vw,-8vh,0) rotate(0deg);opacity:0}12%{opacity:.7}50%{transform:translate3d(18vw,48vh,0) rotate(170deg)}100%{transform:translate3d(72vw,112vh,0) rotate(350deg);opacity:0}}
+@keyframes j90Leaf2{0%{transform:translate3d(8vw,-10vh,0) rotate(30deg);opacity:0}14%{opacity:.55}52%{transform:translate3d(-24vw,46vh,0) rotate(190deg)}100%{transform:translate3d(-72vw,112vh,0) rotate(360deg);opacity:0}}
+@keyframes j90Cloud{0%,100%{transform:translate3d(-2%,0,0)}50%{transform:translate3d(5%,4px,0)}}
+@keyframes j90HomeIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes j90PageIn{from{opacity:.5;transform:translate3d(0,5px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes j90PageOut{to{opacity:0;transform:translate3d(0,-4px,0)}}
+@keyframes j90Flash{0%,100%{opacity:1}12%{opacity:.86}25%{opacity:1}}
+@media(max-width:390px){.j90HomeContent{padding-left:12px;padding-right:12px}.j90BrandBlock{margin-bottom:15px}.j90Badge{width:60px;height:60px;border-radius:19px}.j90Action{min-height:64px}.j90Utility{min-height:56px}}
+@media(prefers-reduced-motion:reduce){.j90Cloud,.j90Leaves i,.j90BrandBlock,.j90Actions,.j90-enter,.j90-leave{animation:none!important}.j90Action,.j90Utility{transition:none!important}}
+/* General UI system: flatter DOM, consistent rhythm, compositor-only transitions */
+#app:not(:has(.j90Home)){color:var(--j90-ink)}
+#app:not(:has(.j90Home)) .card{background:rgba(9,12,16,.94);border-color:rgba(255,255,255,.09);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.12);animation:j90CardIn .2s ease both}
+#app:not(:has(.j90Home)) .btn,#app:not(:has(.j90Home)) .menuBtn,#app:not(:has(.j90Home)) .chip,#app:not(:has(.j90Home)) .tabs button{transition:transform .14s ease,border-color .14s ease,background .14s ease,opacity .14s ease}
+#app:not(:has(.j90Home)) .btn:active,#app:not(:has(.j90Home)) .menuBtn:active,#app:not(:has(.j90Home)) .chip:active,#app:not(:has(.j90Home)) .tabs button:active{transform:scale(.985)}
+#app:not(:has(.j90Home)) .btn.go{background:linear-gradient(135deg,#4fca86,#2d9d67);border:0;box-shadow:0 8px 22px rgba(66,215,125,.12)}
+#app:not(:has(.j90Home)) .tabs button.on{background:rgba(255,196,90,.12);border-color:rgba(255,196,90,.52);color:var(--j90-gold)}
+#app:not(:has(.j90Home)) input,#app:not(:has(.j90Home)) select{background:#07090c;border-color:rgba(255,255,255,.11);border-radius:12px}
+#app:not(:has(.j90Home)) h1,#app:not(:has(.j90Home)) h2{letter-spacing:-.02em}
+@keyframes j90CardIn{from{opacity:.7;transform:translate3d(0,4px,0)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#app:not(:has(.j90Home)) .card{animation:none!important}}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
@@ -1045,14 +1108,22 @@ function menuV(){
  if(menuScreen==='howto')return howToView();
  if(menuScreen==='credits')return creditsView();
  const hasSave=!!S;
- return '<div class="menuHero"><div class="logoMark big">90</div><div class="brand">JORNADA <b>90</b></div><div class="tagline">A carreira é sua. A história também.</div></div>'+
- '<div class="menuActions">'+
- (hasSave?'<button class="menuBtn primary" onclick="resumeGame()"><strong>CONTINUAR</strong><span>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</span></button>':'<button class="menuBtn primary" onclick="newGame()"><strong>COMEÇAR CARREIRA</strong><span>Crie seu jogador e escolha o primeiro clube</span></button>')+
- (hasSave?'<button class="menuBtn" onclick="newGame()"><strong>NOVA CARREIRA</strong><span>Iniciar outra jornada com confirmação antes de substituir o save</span></button>':'')+
- '<button class="menuBtn" onclick="j90MenuNavigate(\'settings\')"><strong>CONFIGURAÇÕES</strong><span>Som ambiente, efeitos, vibração, tela e fluidez</span></button>'+
- '<button class="menuBtn" onclick="j90MenuNavigate(\'howto\')"><strong>COMO JOGAR</strong><span>Entenda energia, treinos, partidas e carreira</span></button>'+
- '<button class="menuBtn" onclick="j90MenuNavigate(\'credits\')"><strong>CRÉDITOS</strong><span>Equipe, tecnologia e versão</span></button>'+
- '</div><div class="credits">PRODUZIDO POR <b>VICTOR MAIA</b><br><span>Um projeto brasileiro independente</span></div>'
+ const leaves=Array.from({length:10},(_,i)=>'<i style="--x:'+((i*11)%104)+'%;--d:'+((i%5)*.9)+'s;--t:'+(8+(i%4)*1.7)+'s"></i>').join('');
+ return '<main class="j90Home" aria-label="Tela inicial Jornada 90">'+
+   '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
+   '<div class="j90HomeContent">'+
+     '<div class="j90Topline"><span>CARREIRA DE FUTEBOL</span><span class="j90LiveDot">JORNADA 90</span></div>'+
+     '<section class="j90BrandBlock"><div class="j90Badge">90</div><div class="j90Brand">JORNADA <b>90</b></div><p>A carreira é sua. A história também.</p></section>'+
+     '<section class="j90Actions">'+
+       (hasSave?
+         '<button class="j90Action j90Primary" onclick="resumeGame()"><span class="j90ActionIcon">▶</span><span><b>Continuar carreira</b><small>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</small></span><em>›</em></button>'+
+         '<button class="j90Action" onclick="newGame()"><span class="j90ActionIcon">＋</span><span><b>Nova carreira</b><small>Comece uma nova história</small></span><em>›</em></button>':
+         '<button class="j90Action j90Primary" onclick="newGame()"><span class="j90ActionIcon">▶</span><span><b>Começar carreira</b><small>Crie seu jogador e escolha seu primeiro clube</small></span><em>›</em></button>')+
+       '<div class="j90UtilityGrid"><button class="j90Utility" onclick="j90MenuNavigate(\'settings\')"><span>⚙</span><b>Configurações</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'howto\')"><span>?</span><b>Como jogar</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'credits\')"><span>i</span><b>Créditos</b></button></div>'+
+     '</section>'+
+     '<footer class="j90HomeFooter"><span>PRODUÇÃO INDEPENDENTE</span><span>ANDROID · WEB AUDIO</span></footer>'+
+   '</div>'+
+ '</main>';
 }
 function howToView(){
  const back=S?'resumeGame(true)':'mainMenu()',label=S?'Voltar para a carreira':'Voltar ao menu';
