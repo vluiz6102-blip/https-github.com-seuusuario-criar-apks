@@ -2033,7 +2033,7 @@ function mgrSquadFilter(v){var q=String(v||document.getElementById('mgrSquadSear
 function j90PerfState(){
  var vv=window.visualViewport,w=Math.max(240,Math.round(vv?.width||window.innerWidth||screen.width||360)),h=Math.max(320,Math.round(vv?.height||window.innerHeight||screen.height||640));
  var dpr=Number(devicePixelRatio)||1,cores=Number(navigator.hardwareConcurrency)||4,mem=Number(navigator.deviceMemory)||0,small=Math.min(w,h),manager=document.body.classList.contains('j90-manager-screen');
- var hardLow=manager&&(dpr>=2.5||small<=390||h<=640||(mem>0&&mem<=6)||cores<=6),baseLow=cores<=4||(mem>0&&mem<=4)||dpr>=2.75||small<=390,low=hardLow||baseLow,p=window.__J90_PERF;
+ var hardLow=manager&&(small<=360||h<=600||(mem>0&&mem<=3)||cores<=4),baseLow=cores<=4||(mem>0&&mem<=3)||small<=360,low=hardLow||baseLow,p=window.__J90_PERF;
  if(!p)p=window.__J90_PERF={low:low,hardLow:hardLow,detail:low?'low':'full',samples:0,avg:33,good:0,w:w,h:h,dpr:dpr,cores:cores,mem:mem,_layoutKey:'',_lastLow:null};
  else{p.w=w;p.h=h;p.dpr=dpr;p.cores=cores;p.mem=mem;p.hardLow=hardLow;if(hardLow)p.low=true}
  var layoutKey=w+'x'+h+'@'+dpr;
