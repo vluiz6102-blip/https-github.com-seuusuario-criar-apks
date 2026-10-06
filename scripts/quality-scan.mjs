@@ -14,6 +14,10 @@ function checkSyntax(label, source) {
 }
 
 const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
+if (!/function\s+startCareer\s*\(/.test(index)) add(fail, 'Fluxo crítico de início de carreira sem startCareer().');
+if (!/id=["']startConfirm["']/.test(index)) add(fail, 'Controle crítico startConfirm ausente da tela de criação.');
+if (/function\s+start\s*\(/.test(index)) add(fail, 'Função global start() detectada. Evitar colisão com APIs de áudio/browser.');
+
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
