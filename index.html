@@ -902,6 +902,59 @@ html,body,#app{width:100%;max-width:none;min-width:0}
 .go{animation:none!important;box-shadow:none!important}
 @media(prefers-reduced-motion:reduce){.j90Home *,.stadiumScene *{animation:none!important;transition:none!important}}
 @media(max-width:390px){.j90Brand{font-size:clamp(38px,12vw,52px)}.j90Action{min-height:72px}.j90Action b{font-size:17px}.j90Action small{font-size:13px}.j90Utility{min-height:60px}}
+</style><style id="j90-mobile-manager-overhaul">
+@media(max-width:720px){
+  body.j90-manager-screen #app{height:100dvh;min-height:100dvh;max-width:none}
+  .j90ManagerShell{height:100dvh;max-width:none;padding:6px;gap:6px;grid-template-rows:58px 58px minmax(0,1fr)}
+  .j90ManagerHead{padding:7px 9px;gap:8px}
+  .j90MgrBrand b{font-size:13px}.j90MgrBrand small{font-size:9px}
+  .j90MgrClub b{font-size:14px}.j90MgrClub span{font-size:10px}
+  .j90MgrMetrics{gap:6px}.j90MgrMetrics b{font-size:12px}.j90MgrMetrics small,.j90MgrDevice span,.j90MgrDevice small{font-size:8px}.j90MgrDevice b{font-size:9px}
+  .j90MgrLogo{width:34px;height:34px;font-size:14px}
+  .j90ManagerTabs{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  .j90ManagerTabs button{min-height:54px;padding:5px 2px}
+  .j90ManagerTabs button span{font-size:16px}.j90ManagerTabs button small{font-size:8px}
+  #j90-manager-content{overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .j90MgrPage{height:auto;min-height:0;display:flex!important;flex-direction:column;gap:9px;overflow:visible!important;padding-bottom:18px}
+  .j90MgrCard{flex:0 0 auto;min-height:0;padding:11px;border-radius:13px}
+  .j90MgrDash,.j90MgrSquad,.j90MgrScout,.j90MgrFinance,.j90MgrNews,.j90MgrTable,.j90MgrMarket,.j90MgrMatch{grid-template-columns:1fr!important;grid-template-rows:auto!important}
+  .j90MgrLineup,.j90MgrRoster,.j90MgrSelected{grid-column:auto!important;grid-row:auto!important}
+  .j90MgrEyebrow,.j90MgrSubLabel{font-size:10px}
+  .j90MgrMatch{gap:10px;margin:8px 0}.j90MgrMatch b{font-size:15px}.j90MgrMatch strong{font-size:19px}
+  .j90MgrStats,.j90MgrMoneyGrid{gap:7px}.j90MgrStats span,.j90MgrMoneyGrid span{padding:9px;border-radius:10px}
+  .j90MgrStats b,.j90MgrMoneyGrid b{font-size:12px}.j90MgrStats small,.j90MgrMoneyGrid small{font-size:8px}
+  .j90MgrActions{gap:7px;margin-top:8px}.j90MgrActions .btn,.j90MgrLineActions .btn{min-height:48px;padding:10px 11px;font-size:14px!important}
+  .j90MgrTitle{gap:9px;margin-bottom:8px}.j90MgrTitle>b{font-size:12px}.j90MgrTitle>small{font-size:9px}
+  .j90MgrChipGrid{gap:6px}.j90MgrChip,.j90MgrMiniChip,.j90MgrQuickGrid button,.j90MgrActionGrid button,.j90MgrMarketRow button,.j90MgrSearch,.j90MgrWindow button{border-radius:9px;padding:9px 8px;min-height:46px;font-size:11px}
+  .j90MgrChip b{font-size:11px}.j90MgrChip small{font-size:9px}.j90MgrMiniChip{font-size:11px}
+  .j90MgrProgressMeta{margin-top:6px;font-size:9px}.j90MgrRecent{gap:6px;margin-top:8px}.j90MgrResult{padding:9px;font-size:10px}
+  .j90MgrQuickGrid{gap:7px}.j90MgrQuickGrid b{font-size:11px}.j90MgrQuickGrid span{font-size:9px}
+  .j90MgrSlotGrid{gap:6px;margin-top:8px}.j90MgrSlot{min-height:46px;padding:7px}.j90MgrSlot b{font-size:10px}.j90MgrSlot small{font-size:8px}
+  .j90MgrPlayerGrid{gap:6px}.j90MgrPlayer{padding:8px;border-radius:9px}.j90MgrPlayer b{font-size:11px}.j90MgrPlayer small{font-size:8px}
+  .j90MgrSelectedHero{gap:11px}.j90MgrSelectedData{gap:5px 8px}.j90MgrSelectedData strong{font-size:30px}.j90MgrSelectedData span{font-size:10px}
+  .j90MgrActionGrid{gap:6px;margin-top:8px}.j90MgrActionGrid button{font-size:10px}
+  .j90MgrFilters{grid-template-columns:1fr 1fr;gap:6px}.j90MgrFilters input,.j90MgrFilters select{height:44px;padding:8px 9px;font-size:10px}.j90MgrSearch{font-size:10px}
+  .j90MgrWindow{gap:6px}.j90MgrWindow button{font-size:10px}
+  .j90MgrMarketList{gap:6px;margin-top:7px}.j90MgrMarketRow{gap:7px;padding:8px 9px}.j90MgrMarketRow b{font-size:11px}.j90MgrMarketRow small{font-size:8px}.j90MgrMarketRow button{font-size:10px;min-width:68px}
+  .j90MgrCompactList{gap:5px}.j90MgrCompactList>div{padding:8px;font-size:9px}.j90MgrCompactList small{font-size:8px}
+  .j90MgrNewsList{gap:6px}.j90MgrNewsList span{font-size:8px}.j90MgrNewsList b{font-size:11px}.j90MgrNewsList p{font-size:8px;-webkit-line-clamp:2}
+  .j90MatchHud{gap:6px;margin-bottom:6px}.j90MatchHud>div{padding:7px;border-radius:9px}.j90MatchScore{font-size:22px}.j90MatchClock{font-size:9px}
+  .j90MatchCanvas{height:min(46vh,300px);min-height:220px;border-radius:11px}
+  .j90MatchEvent{min-height:42px;padding:8px 10px;margin-top:7px;font-size:10px}
+  .j90MatchControls{gap:5px;margin-top:7px}.j90MatchControls .chip{min-height:42px;padding:7px 3px;font-size:9px}
+  .j90MatchBench{gap:5px;margin-top:7px}.j90MatchBench .chip{font-size:9px;padding:8px 4px;min-height:42px}
+  .j90MatchStats{gap:4px;margin-top:7px}.j90MatchStats .row{font-size:8px;padding:6px 7px}
+  .j90MatchResume{min-height:46px!important;margin-top:7px}
+}
+@media(max-width:390px){
+  .j90ManagerShell{grid-template-rows:56px 54px minmax(0,1fr);padding:5px}
+  .j90ManagerHead{padding:6px 7px;gap:5px}.j90MgrBrand b{font-size:12px}.j90MgrClub b{font-size:13px}.j90MgrMetrics b{font-size:11px}
+  .j90MgrDevice{display:none}
+  .j90ManagerTabs button span{font-size:15px}.j90ManagerTabs button small{font-size:7px}
+  .j90MgrCard{padding:10px}.j90MgrChipGrid{grid-template-columns:1fr 1fr 1fr}
+  .j90MgrActions,.j90MgrLineActions{grid-template-columns:1fr 1fr}
+  .j90MgrPlayerGrid{grid-template-columns:1fr}
+}
 </style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
@@ -1143,7 +1196,7 @@ function startJ90Atmosphere(){
  if(!j90AtmoNodes.length)return;
  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const pstate=typeof j90PerfState==='function'?j90PerfState():(window.J90Perf?.snapshot?.()||{tier:'balanced',low:false});
- const atmoRate=60;
+ const atmoRate=pstate.low?45:(pstate.tier==='high'?120:60);
  const particleCount=pstate.low?8:(pstate.tier==='high'?14:11);
  j90AtmoParticles.length=0;
  for(let i=0;i<particleCount;i++)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*.95,s:.000045+Math.random()*.00007,a:.028+Math.random()*.075,p:Math.random()*6.28});
