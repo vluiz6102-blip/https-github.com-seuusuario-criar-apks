@@ -332,5 +332,5 @@ function install(){
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 var tries=0;(function retry(){if(install()||tries++>80)return;setTimeout(retry,60)})();
-window.J90ManagerAI={version:VERSION,transfer:analyseTransfer,development:developmentPlan,opponent:opponentAnalysis,board:boardAI,install:install};
+window.J90ManagerAI={version:VERSION,transfer:analyseTransfer,development:developmentPlan,opponent:opponentAnalysis,board:boardAI,install:install,playerProfile:playerProfile,negotiation:negotiationAIView};
 })();
