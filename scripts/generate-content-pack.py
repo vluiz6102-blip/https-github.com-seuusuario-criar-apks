@@ -300,6 +300,61 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
     return ImageEnhance.Contrast(image).enhance(1.04)
 
 
+def build_stadium_supporter_profile(team: str, seed: int) -> dict:
+    n = team.lower()
+    known = {
+        "real madrid": ("Santiago Bernabéu", 76000, .94, .88, .48, "gigante"),
+        "paris saint-germain": ("Parc des Princes", 48000, .86, .92, .88, "ultras"),
+        "psg": ("Parc des Princes", 48000, .86, .92, .88, "ultras"),
+        "flamengo": ("Maracanã", 78838, .93, .97, .78, "popular"),
+        "corinthians": ("Neo Química Arena", 49205, .94, .99, .84, "popular"),
+        "palmeiras": ("Allianz Parque", 43713, .90, .91, .76, "popular"),
+        "barcelona": ("Spotify Camp Nou", 99354, .91, .84, .44, "gigante"),
+        "liverpool": ("Anfield", 61276, .90, .95, .70, "terrace"),
+        "borussia dortmund": ("Signal Iduna Park", 81365, .93, .98, .90, "terrace"),
+        "bayern": ("Allianz Arena", 75024, .91, .86, .48, "gigante"),
+        "boca juniors": ("La Bombonera", 54000, .92, .99, .92, "popular"),
+        "river plate": ("Monumental", 84567, .92, .95, .76, "gigante"),
+        "são paulo": ("MorumBIS", 66795, .88, .86, .60, "popular"),
+        "grêmio": ("Arena do Grêmio", 55662, .86, .90, .70, "popular"),
+        "internacional": ("Beira-Rio", 50842, .86, .88, .62, "popular"),
+        "atlético-mg": ("Arena MRV", 46000, .89, .96, .78, "popular"),
+        "cruzeiro": ("Mineirão", 61600, .87, .90, .70, "popular"),
+        "benfica": ("Estádio da Luz", 65647, .91, .86, .62, "gigante"),
+        "ajax": ("Johan Cruyff Arena", 55865, .82, .78, .42, "ultras"),
+        "galatasaray": ("RAMS Park", 53537, .90, .99, .92, "ultras"),
+        "celtic": ("Celtic Park", 60411, .88, .98, .88, "terrace"),
+    }
+    item = next((v for k, v in known.items() if k in n), None)
+    national = any(x in n for x in ("brasil", "brazil", "argentina", "frança", "france", "inglaterra", "england", "espanha", "spain", "alemanha", "germany", "portugal", "uruguai", "uruguay", "itália", "italy"))
+    if item is None and national:
+        item = ("Estádio da Seleção", 70000, .82, .90, .58, "national")
+    if item is None:
+        # Deterministic tiers cover every club in every loaded league, including
+        # lower divisions. The exact stadium identity is still generated from the
+        # real team key, while capacity/noise/ultras vary instead of using one
+        # global crowd preset.
+        capacity = int(6500 + rng_value(seed, 70) * 72000)
+        base = .34 + rng_value(seed, 71) * .54
+        energy = .38 + rng_value(seed, 72) * .58
+        ultras = .12 + rng_value(seed, 73) * .70
+        style = ["regional", "popular", "ultras", "terrace"][int(rng_value(seed, 74) * 4)]
+        item = ("Estádio de " + team, capacity, base, energy, ultras, style)
+    name, capacity, base, energy, ultras, style = item
+    return {
+        "name": name,
+        "capacity": capacity,
+        "baseSupport": round(base, 3),
+        "energy": round(energy, 3),
+        "ultras": round(ultras, 3),
+        "style": style,
+        "attendanceRate": round(.70 + base * .25, 3),
+        "homeAdvantage": round(.015 + energy * .045, 3),
+        "dynamic": True,
+        "sourceType": "known-stadium-profile" if name != "Estádio de " + team else "deterministic-team-profile",
+    }
+
+
 def build_team_intelligence(teams: list[str]) -> dict:
     profiles = {}
     roster_data = {}
@@ -318,8 +373,18 @@ def build_team_intelligence(teams: list[str]) -> dict:
             return int(lo + rng_value(seed, offset) * (hi - lo))
         quality = max(0.0, min(1.0, (avg - 55) / 40))
         profiles[team] = {
-            "version": 1,
+            "version": 2,
             "team": team,
+            "stadium": build_stadium_supporter_profile(team, seed),
+            "supporters": {
+                "capacityAware": True,
+                "dynamicNoise": True,
+                "dangerReaction": True,
+                "goalExplosion": True,
+                "derbyBoost": round(0.04 + rng_value(seed, 81) * 0.16, 3),
+                "competitionBoost": round(0.02 + rng_value(seed, 82) * 0.12, 3),
+                "lateGameBoost": round(0.03 + rng_value(seed, 83) * 0.14, 3),
+            },
             "squadRating": round(avg, 2),
             "style": ["posse", "transicao", "pressao", "reativo"][index % 4],
             "attributes": {
