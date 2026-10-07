@@ -57,18 +57,22 @@ jobs:
           echo "source_conclusion=$SOURCE_CONCLUSION" >> .j90-team/context.txt
           echo "commit=$GITHUB_SHA" >> .j90-team/context.txt
           if [ -n "$RUN_ID" ]; then gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-team/last-build.log 2>&1 || true; fi
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Planejar com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Planejar
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-1-prompt.txt <<'PROMPT'
 Você é a IA 1, COORDENADORA do time Jornada 90.
 Leia .github/copilot-instructions.md, .j90-team/context.txt, logs e código.
 Não altere o código nesta etapa. Crie .j90-team/plan.md.
@@ -76,7 +80,7 @@ Distribua ordens sem sobreposição para GAMEPLAY_AI, PERFORMANCE_STABILITY, UX_
 Para cada área informe prioridade P0/P1/P2, problema/oportunidade comprovado, arquivos/sistemas, ação esperada, testes e riscos.
 Se a build anterior falhou, a causa raiz é P0. Não invente problemas e não copie EA/FIFA.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="gemini,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-1-prompt.txt" --output-file ".j90-team/plan.md"
           test -s .j90-team/plan.md
       - name: Upload plan
         uses: actions/upload-artifact@v4
@@ -100,18 +104,22 @@ PROMPT
         with:
           name: j90-team-plan
           path: .j90-team
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Analisar missão com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Analisar missão
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-2-prompt.txt <<'PROMPT'
 Você é IA 2 - Gameplay e Football AI, especialista do time Jornada 90.
 Leia .github/copilot-instructions.md e .j90-team/plan.md.
 Execute SOMENTE a missão GAMEPLAY_AI: dribles, passes, movimentação, transições, decisão, comportamento de craques e equilíbrio.
@@ -119,7 +127,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/gameplay-ai.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="gemini,openrouter,groq,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-2-prompt.txt" --output-file ".j90-team/gameplay-ai.md"
           test -s .j90-team/gameplay-ai.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -143,18 +151,22 @@ PROMPT
         with:
           name: j90-team-plan
           path: .j90-team
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Analisar missão com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Analisar missão
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-3-prompt.txt <<'PROMPT'
 Você é IA 3 - Performance e estabilidade, especialista do time Jornada 90.
 Leia .github/copilot-instructions.md e .j90-team/plan.md.
 Execute SOMENTE a missão PERFORMANCE_STABILITY: RAF/timers, DOM, listeners, leaks, startup, Canvas, memória, crashes e rotação.
@@ -162,7 +174,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/performance.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="groq,openrouter,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-3-prompt.txt" --output-file ".j90-team/performance.md"
           test -s .j90-team/performance.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -186,18 +198,22 @@ PROMPT
         with:
           name: j90-team-plan
           path: .j90-team
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Analisar missão com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Analisar missão
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-4-prompt.txt <<'PROMPT'
 Você é IA 4 - UX mobile e acessibilidade, especialista do time Jornada 90.
 Leia .github/copilot-instructions.md e .j90-team/plan.md.
 Execute SOMENTE a missão UX_MOBILE: legibilidade, toque, overflow, navegação, acessibilidade e portrait/landscape.
@@ -205,7 +221,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/ux.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="gemini,openrouter,anthropic,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-4-prompt.txt" --output-file ".j90-team/ux.md"
           test -s .j90-team/ux.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -229,18 +245,22 @@ PROMPT
         with:
           name: j90-team-plan
           path: .j90-team
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Analisar missão com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Analisar missão
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-5-prompt.txt <<'PROMPT'
 Você é IA 5 - Manager, transferências e táticas, especialista do time Jornada 90.
 Leia .github/copilot-instructions.md e .j90-team/plan.md.
 Execute SOMENTE a missão MANAGER_TACTICS: carreira, elenco, formações, táticas, mercado, contratos, desenvolvimento e scouting.
@@ -248,7 +268,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/manager.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="gemini,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-5-prompt.txt" --output-file ".j90-team/manager.md"
           test -s .j90-team/manager.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -272,18 +292,22 @@ PROMPT
         with:
           name: j90-team-plan
           path: .j90-team
-      - name: Instalar Copilot
+      - name: Preparar provedores de IA
+        run: npm install -g @google/gemini-cli @github/copilot
+      - name: Analisar missão com pool multi-modelo
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Analisar missão
-        env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
         run: |
           set -e
-          copilot -p "$(cat <<'PROMPT'
+          cat > .j90-team/ai-6-prompt.txt <<'PROMPT'
 Você é IA 6 - Match, áudio e conteúdo, especialista do time Jornada 90.
 Leia .github/copilot-instructions.md e .j90-team/plan.md.
 Execute SOMENTE a missão MATCH_AUDIO_CONTENT: partida, arbitragem, eventos, torcida, áudio CC0, conteúdo, rosters e offline.
@@ -291,7 +315,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/match-content.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          J90_AI_PREFERENCE="openrouter,groq,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-6-prompt.txt" --output-file ".j90-team/match-content.md"
           test -s .j90-team/match-content.md
       - name: Upload report
         uses: actions/upload-artifact@v4
