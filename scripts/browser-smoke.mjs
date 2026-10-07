@@ -269,6 +269,9 @@ if (await play.count() === 1) {
       canvas2d: !!(m && m._ctx),
       v3Loaded: !!window.J90Match2DV3 && typeof window.J90Match2DV3.draw === 'function',
       v3Frames: Number(m?._j90v3Frames||0),
+      v3Mode: String(m?._j90v3Mode||window.J90Match2DV3?.mode||''),
+      v3RenderMsAvg: Number(m?._j90v3RenderMsAvg||0),
+      pixelated: getComputedStyle(c||document.body).imageRendering || '',
       canvasSample: (() => {
         try {
           if (!c || !m?._ctx) return 0;
@@ -286,7 +289,9 @@ if (await play.count() === 1) {
   }
   if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized: ' + JSON.stringify(rendererCheck));
   if (!rendererCheck.v3Loaded) throw new Error('Jornada 90 2D renderer V3 did not load: ' + JSON.stringify(rendererCheck));
+  if (rendererCheck.v3Mode !== 'pixel-topdown') throw new Error('2D renderer is not using the lightweight pixel top-down mode: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.v3Frames < 5) throw new Error('2D renderer initialized but did not paint frames: ' + JSON.stringify(rendererCheck));
+  if (!/pixelated/i.test(rendererCheck.pixelated)) throw new Error('2D canvas lost pixel-art rendering mode: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.canvasSample <= 0) throw new Error('2D canvas appears blank: ' + JSON.stringify(rendererCheck));
   if (await page.locator('#j90EventOverlayCanvas').count() !== 1) throw new Error('Match event overlay was not created.');
   if (!(await page.evaluate(() => !!window.J90MatchEvents?.state?.()))) throw new Error('Match event system did not initialize.');
@@ -295,9 +300,10 @@ if (await play.count() === 1) {
   if (rendererCheck.audioMode !== 'remote-cc0') throw new Error('Unexpected audio mode: ' + rendererCheck.audioMode);
   if (rendererCheck.musicTracks < 20) throw new Error('CC0 playlist has fewer than 20 tracks: ' + rendererCheck.musicTracks);
 
-  const before = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', frames: window.J90FrameStats?.().frames || 0 }));
+  const before = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', frames: window.J90FrameStats?.().frames || 0, v3Frames: Number(window.S?.match2d?._j90v3Frames||0) }));
   await page.waitForTimeout(1000);
-  const after = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', possession: document.querySelector('#j90MatchPoss')?.textContent || '', frames: window.J90FrameStats?.().frames || 0, perf: window.J90Perf?.snapshot?.() || null }));
+  const after = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', possession: document.querySelector('#j90MatchPoss')?.textContent || '', frames: window.J90FrameStats?.().frames || 0, v3Frames: Number(window.S?.match2d?._j90v3Frames||0), perf: window.J90Perf?.snapshot?.() || null }));
+  if (after.v3Frames <= before.v3Frames + 10) throw new Error('2D render loop stalled during live match: ' + JSON.stringify({before,after}));
   if (before.clock === after.clock) throw new Error('Match clock did not advance.');
   if (after.frames < before.frames) throw new Error('Frame counter regressed.');
   if (!after.possession.trim()) throw new Error('Possession HUD is empty.');
