@@ -93,12 +93,13 @@ const runtimeFiles = [
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
   'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-landscape.js','j90-auto-heal.js'
 ];
-let patched = generated;
-if (!patched.includes('window.J90_AUDIO_MANIFEST=')) patched = patched.replace('</body>', bootstrap + '</body>');
+const additions = [];
+if (!generated.includes('window.J90_AUDIO_MANIFEST=')) additions.push(bootstrap);
 for (const file of runtimeFiles) {
   const tag = '<script src="' + file + '"></script>';
-  if (!patched.includes(tag)) patched = patched.replace('</body>', tag + '</body>');
+  if (!generated.includes(tag)) additions.push(tag);
 }
+const patched = additions.length ? generated.replace('</body>', additions.join('') + '</body>') : generated;
 if (!patched.includes('<script src="j90-manager-ai.js"></script>') || !patched.includes('<script src="j90-auto-heal.js"></script>')) {
   throw new Error('Critical runtime scripts were not injected into www/index.html.');
 }
