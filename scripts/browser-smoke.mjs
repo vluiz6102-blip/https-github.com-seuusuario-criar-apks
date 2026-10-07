@@ -89,6 +89,45 @@ async function assertReadableLayout(page){
   if(result.problems.length) throw new Error('Text overlap detected: '+JSON.stringify(result.problems));
   if(result.overflow.length) throw new Error('Text/container overflow detected: '+JSON.stringify(result.overflow));
 }
+await page.evaluate(() => window.J90ManagerBridge.setTab('squad'));
+await page.waitForTimeout(180);
+if (await page.locator('.j90EliteProfile').count() < 1) throw new Error('Premium player profile did not render.');
+if (await page.locator('.j90Radar').count() < 1) throw new Error('Player radar chart did not render.');
+if (await page.locator('.j90MiniPitch').count() < 1) throw new Error('Mini tactical pitch did not render.');
+if (await page.locator('.j90EliteProfile').count()) await page.locator('.j90EliteProfile').first().scrollIntoViewIfNeeded();
+await assertReadableLayout(page);
+
+await page.evaluate(() => window.J90ManagerBridge.setTab('market'));
+await page.waitForTimeout(180);
+if (await page.locator('.j90AIMarketInsight').count() < 1) throw new Error('Transfer market AI panel did not render.');
+const marketAI = await page.evaluate(() => ({
+  managerAI: !!window.J90ManagerAI,
+  version: window.J90ManagerAI?.version || '',
+  playerCount: Array.isArray(window.J90_ROSTERS) ? Object.keys(window.J90_ROSTERS).length : Object.keys(window.J90_ROSTERS || {}).length
+}));
+if (!marketAI.managerAI || marketAI.version !== '2.0') throw new Error('Manager AI 2.0 did not initialize.');
+const firstTarget = await page.evaluate(() => {
+  const state = window.J90ManagerBridge.getState();
+  const f = state.marketFilter || {};
+  const q = window.J90ManagerAI ? null : null;
+  const all = typeof window.mgrMarketFiltered === 'function' ? window.mgrMarketFiltered() : [];
+  return all[0] ? {id:all[0].id,name:all[0].name,club:all[0].club,ovr:all[0].ovr} : null;
+});
+if (firstTarget) {
+  await page.evaluate((target) => {
+    const state=window.J90ManagerBridge.getState();
+    state.window='open';
+    const p=(window.mgrMarketFiltered&&window.mgrMarketFiltered()).find(x=>x.id===target.id);
+    if (p && typeof window.j90OpenContract==='function') window.j90OpenContract(p, Math.max(1, Number(p.ovr)*3.1));
+  }, firstTarget);
+  await page.waitForTimeout(120);
+  if (await page.locator('.j90NegotiationGrid').count() < 1) throw new Error('Premium AI negotiation screen did not render.');
+  if (await page.locator('input[type="range"]').count() < 3) throw new Error('Negotiation sliders did not render.');
+  await page.evaluate(() => { if (window.J90ManagerBridge.getState()?.negotiation) window.J90ManagerBridge.getState().negotiation=null; window.J90ManagerBridge.render(1); });
+  await page.waitForTimeout(100);
+}
+await page.evaluate(() => window.J90ManagerBridge.setTab('game'));
+await page.waitForTimeout(120);
 await assertReadableLayout(page);
 
 // Exercise the 2D match renderer for several frames.
