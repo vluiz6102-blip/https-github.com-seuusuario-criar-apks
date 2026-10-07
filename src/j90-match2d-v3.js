@@ -249,10 +249,10 @@
     if(c&&!c.__j90v3Resize){
       c.__j90v3Resize=true;
       if(window.ResizeObserver){
-        var ro=new ResizeObserver(function(){var m=window.S&&S.match2d;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}});
+        var ro=new ResizeObserver(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}});
         ro.observe(c);
       }
-      addEventListener('orientationchange',function(){setTimeout(function(){var m=window.S&&S.match2d;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}},120)},{passive:true});
+      addEventListener('orientationchange',function(){setTimeout(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}},120)},{passive:true});
     }
   }
 
