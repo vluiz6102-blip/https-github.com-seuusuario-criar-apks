@@ -20,6 +20,7 @@ var _target_ms: float = 16.6667
 var _ema_ms: float = 16.6667
 var _slow_frames: int = 0
 var _stable_frames: int = 0
+var _work_ms: float = 16.6667
 var _cooldown: int = 0
 var _secondary_fx_enabled: bool = true
 
@@ -49,7 +50,8 @@ func _process(delta: float) -> void:
         return
 
     var frame_ms := minf(delta * 1000.0, 250.0)
-    _ema_ms = lerpf(_ema_ms, frame_ms, SAMPLE_LERP)
+    _work_ms = minf(maxf(0.0, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0), 250.0)
+    _ema_ms = lerpf(_ema_ms, maxf(frame_ms, _work_ms), SAMPLE_LERP)
 
     if _cooldown > 0:
         _cooldown -= 1
@@ -61,10 +63,10 @@ func _process(delta: float) -> void:
             quality_changed.emit(&"lite", metrics())
         return
 
-    if _ema_ms > _target_ms * PRESSURE_THRESHOLD:
+    if _work_ms > _target_ms * PRESSURE_THRESHOLD:
         _slow_frames += 1
         _stable_frames = 0
-    elif _ema_ms < _target_ms * RECOVER_THRESHOLD:
+    elif _work_ms < _target_ms * RECOVER_THRESHOLD:
         _stable_frames += 1
         _slow_frames = 0
     else:
