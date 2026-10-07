@@ -302,6 +302,9 @@ jobs:
           cp android-overrides/MainActivity.java android/app/src/main/java/com/jornada90/manager/MainActivity.java
           cp android-overrides/J90DisplayRatePlugin.java android/app/src/main/java/com/jornada90/manager/J90DisplayRatePlugin.java
           cp android-overrides/J90HapticsPlugin.java android/app/src/main/java/com/jornada90/manager/J90HapticsPlugin.java
+          cp android-overrides/J90ExternalBrowserPlugin.java android/app/src/main/java/com/jornada90/manager/J90ExternalBrowserPlugin.java
+          test -s android/app/src/main/java/com/jornada90/manager/J90ExternalBrowserPlugin.java
+          grep -Fq 'registerPlugin(J90ExternalBrowserPlugin.class);' android/app/src/main/java/com/jornada90/manager/MainActivity.java
 
       - name: Instalar conversor SVG
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
