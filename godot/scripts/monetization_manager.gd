@@ -240,8 +240,13 @@ func _acknowledge_purchase(purchase_data: Dictionary, consumable: bool) -> void:
         return
     if _billing.has_method("acknowledgePurchase"):
         _billing.call("acknowledgePurchase", token)
-    if consumable and _billing.has_method("consumePurchase"):
-        _billing.call("consumePurchase", token)
+    elif _billing.has_method("acknowledge_purchase"):
+        _billing.call("acknowledge_purchase", token)
+    if consumable:
+        if _billing.has_method("consumePurchase"):
+            _billing.call("consumePurchase", token)
+        elif _billing.has_method("consume_purchase"):
+            _billing.call("consume_purchase", token)
 
 func _product_for_tier(tier_brl: float) -> StringName:
     var cents := int(round(tier_brl * 100.0))
