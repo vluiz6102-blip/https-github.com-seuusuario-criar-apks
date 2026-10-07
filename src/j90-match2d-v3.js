@@ -1,275 +1,150 @@
-/* Jornada 90 2D Match + AI presentation layer 1.0
- * Owns the final visible field renderer and mobile-safe match controls.
- * No extra RAF is created. It uses the existing shared match clock/tick.
+/* Jornada 90 2D Match renderer 2.0
+ * Lightweight top-down 3/4 pixel-art presentation.
+ * Original procedural art, inspired by classic RPG readability.
+ * The match simulation owns the single shared RAF. This renderer creates none.
  */
 (function(){
   'use strict';
-  if(window.__J90_MATCH2D_V3__) return;
-  window.__J90_MATCH2D_V3__=true;
+  if(window.J90Match2DV3&&window.J90Match2DV3.version==='2.0')return;
 
-  var esc2=function(v){
-    return typeof esc==='function'?esc(v):String(v==null?'':v).replace(/[&<>"']/g,function(c){
-      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
-    });
-  };
-  var clamp2=function(v,a,b){return Math.max(a,Math.min(b,v))};
-  function matchState(){
+  var W=320,H=180,PW=20,PH=24;
+  var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+  function state(){
     try{if(typeof S!=='undefined'&&S)return S}catch(e){}
     try{return window.J90ManagerBridge&&window.J90ManagerBridge.getState?window.J90ManagerBridge.getState():null}catch(e){return null}
   }
-
-  function palette(name){
-    try{
-      if(window.J90AI2&&typeof J90AI2.palette==='function') return J90AI2.palette(name);
-    }catch(e){}
-    var n=String(name||'').toLowerCase();
-    if(/real madrid/.test(n))return ['#f5f5f5','#7b1fa2','#c9b458'];
-    if(/barcelona|barça/.test(n))return ['#a50044','#004d98','#edbb00'];
-    if(/psg|paris saint/.test(n))return ['#004170','#da291c','#fff'];
-    if(/manchester city/.test(n))return ['#6cabdd','#fff','#00285e'];
-    if(/liverpool/.test(n))return ['#c8102e','#00a398','#fff'];
-    if(/arsenal/.test(n))return ['#db0007','#fff','#023474'];
-    if(/chelsea/.test(n))return ['#034694','#d1d3d4','#fff'];
-    return ['#25a45b','#143d28','#fff'];
+  function hash(v){
+    var s=String(v||'player'),h=2166136261>>>0;
+    for(var i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619)>>>0;
+    return h>>>0;
   }
-
-  function ensureCanvas(m){
-    if(!m)return null;
-    var c=document.getElementById('j90MatchCanvas');
-    if(!c)return null;
-    if(!m._j90v3StyleReady){
-      c.style.display='block';
-      c.style.visibility='visible';
-      c.style.opacity='1';
-      c.style.width='100%';
-      c.style.height='220px';
-      c.style.minHeight='180px';
-      m._j90v3StyleReady=true;
+  function colors(team){
+    var n=String(team||'').toLowerCase();
+    if(/real madrid/.test(n))return ['#f4f2ef','#8428b4','#dcc65c'];
+    if(/barcelona|barça/.test(n))return ['#a50044','#17408b','#edbb00'];
+    if(/psg|paris saint/.test(n))return ['#004170','#da291c','#f2f2f2'];
+    if(/manchester city/.test(n))return ['#6cabdd','#173a63','#f2f2f2'];
+    if(/liverpool/.test(n))return ['#c8102e','#f2f2f2','#00a398'];
+    if(/arsenal/.test(n))return ['#db0007','#f2f2f2','#123a73'];
+    if(/chelsea/.test(n))return ['#034694','#f2f2f2','#8cc7f0'];
+    if(/sport/.test(n))return ['#27a75c','#f0d458','#133c28'];
+    return ['#42b96b','#f1f3e7','#183d2a'];
+  }
+  function ensure(m){
+    var c=document.getElementById('j90MatchCanvas');if(!m||!c)return null;
+    if(!m._j90px){
+      c.style.display='block';c.style.visibility='visible';c.style.opacity='1';
+      c.style.width='100%';c.style.height='220px';c.style.minHeight='180px';
+      c.style.imageRendering='pixelated';m._j90px=true;
     }
-    var perf=window.__J90_PERF||{};
-    var dpr=Math.min(1.5,Number(perf.dpr)||Number(window.devicePixelRatio)||1);
-    var w=Math.max(280,Math.floor(c.clientWidth||c.parentElement&&c.parentElement.clientWidth||320));
-    var h=Math.max(180,Math.floor(c.clientHeight||220));
-    var bw=Math.round(w*dpr),bh=Math.round(h*dpr);
-    if(c.width!==bw||c.height!==bh||m._cw!==w||m._ch!==h||m._dpr!==dpr){
-      c.width=bw;c.height=bh;
+    if(c.width!==W||c.height!==H){
+      c.width=W;c.height=H;
       m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
-      m._cw=w;m._ch=h;m._dpr=dpr;
-      m._j90v3Field=null;m._j90v3Scene=null;
-    }else if(!m._ctx){
-      m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
-    }
-    m._dom=m._dom||{};m._dom.canvas=c;
+      m._pitch=null;m._sprites=Object.create(null);
+    }else if(!m._ctx)m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
+    if(m._ctx)m._ctx.imageSmoothingEnabled=false;
+    m._cw=W;m._ch=H;m._dpr=1;m._dom=m._dom||{};m._dom.canvas=c;
     return c;
   }
-
-  function fieldCache(m,w,h){
-    if(m._j90v3Field&&m._j90v3Field.width===w&&m._j90v3Field.height===h)return m._j90v3Field;
-    var bg=document.createElement('canvas');bg.width=w;bg.height=h;
-    var g=bg.getContext('2d',{alpha:false});
-    g.fillStyle='#0d4a2b';g.fillRect(0,0,w,h);
-    for(var i=0;i<14;i++){
-      g.fillStyle=i%2?'rgba(255,255,255,.020)':'rgba(0,0,0,.022)';
-      g.fillRect(Math.floor(i*w/14),0,Math.ceil(w/14)+1,h);
+  function pitch(m){
+    if(m._pitch)return m._pitch;
+    var o=document.createElement('canvas');o.width=W;o.height=H;
+    var g=o.getContext('2d',{alpha:false});g.imageSmoothingEnabled=false;
+    g.fillStyle='#1b2420';g.fillRect(0,0,W,H);
+    g.fillStyle='#2a342f';g.fillRect(0,0,W,19);g.fillRect(0,161,W,19);
+    for(var i=0;i<68;i++){
+      var x=(i*37)%W,y=5+(i%3)*4;
+      g.fillStyle=i%5===0?'#e5c45f':(i%3===0?'#9abd86':'#68776f');
+      g.fillRect(x,y,2,2);
     }
-    g.strokeStyle='rgba(255,255,255,.72)';g.lineWidth=1.15;
-    g.strokeRect(7,7,w-14,h-14);
-    g.beginPath();g.moveTo(w/2,7);g.lineTo(w/2,h-7);g.stroke();
-    g.beginPath();g.arc(w/2,h/2,Math.min(w,h)*.125,0,Math.PI*2);g.stroke();
-    g.fillStyle='rgba(255,255,255,.72)';g.beginPath();g.arc(w/2,h/2,2,0,Math.PI*2);g.fill();
-    function area(x,y,ww,hh){
-      g.strokeRect(x,y,ww,hh);g.strokeRect(x+ww*.22,y+hh*.25,ww*.56,hh*.5);
-      g.beginPath();g.arc(x+ww*.5,y+hh*.5,Math.min(ww,hh)*.12,0,Math.PI*2);g.stroke();
+    g.fillStyle='#3f9d5d';g.fillRect(10,20,300,140);
+    for(var yy=0;yy<10;yy++)for(var xx=0;xx<20;xx++){
+      g.fillStyle=((xx+yy)&1)?'#3b9558':'#43a260';
+      g.fillRect(10+xx*15,20+yy*14,15,14);
     }
-    g.lineWidth=1;area(7,h*.30,w*.18,h*.40);area(w*.82,h*.30,w*.18-7,h*.40);
-    m._j90v3Field=bg;return bg;
+    g.fillStyle='#347e4c';g.fillRect(10,20,300,4);g.fillRect(10,156,300,4);
+    g.strokeStyle='#ddf1dc';g.lineWidth=1;g.strokeRect(13,23,294,134);
+    g.beginPath();g.moveTo(160,23);g.lineTo(160,157);g.stroke();
+    g.beginPath();g.arc(160,90,18,0,Math.PI*2);g.stroke();g.fillStyle='#ddf1dc';g.fillRect(158,88,4,4);
+    function area(x,y,w,h){g.strokeRect(x,y,w,h);g.strokeRect(x+8,y+h*.22,w-16,h*.56);g.beginPath();g.arc(x+w/2,y+h/2,Math.min(w,h)*.11,0,Math.PI*2);g.stroke()}
+    area(13,55,40,70);area(267,55,40,70);
+    g.strokeRect(7,72,6,36);g.strokeRect(307,72,6,36);
+    g.fillStyle='#d3dfd7';
+    for(i=0;i<8;i++){g.fillRect(20+i*40,27,3,3);g.fillRect(20+i*40,150,3,3)}
+    g.fillStyle='#1e2823';g.fillRect(80,8,58,5);g.fillRect(182,167,58,5);
+    g.fillStyle='#d8c15f';g.fillRect(83,9,13,2);g.fillRect(185,168,13,2);
+    m._pitch=o;return o;
   }
-
-  function sceneCache(m,w,h){
-    var key=String(m&&m.home||'Estádio')+'|'+w+'x'+h;
-    if(m._j90v3Scene&&m._j90v3Scene.key===key)return m._j90v3Scene.canvas;
-    var scene=document.createElement('canvas');scene.width=w;scene.height=h;
-    var g=scene.getContext('2d',{alpha:false});
-    g.drawImage(fieldCache(m,w,h),0,0,w,h);stadiumIdentity(g,w,h,m);
-    m._j90v3Scene={key:key,canvas:scene};return scene;
+  function sprite(p,side,m,frame){
+    var id=String(p&&p.id||p&&p.name||'player'),key=side+'|'+id+'|'+frame;
+    var cache=m._sprites||(m._sprites=Object.create(null));if(cache[key])return cache[key];
+    var o=document.createElement('canvas');o.width=PW;o.height=PH;
+    var g=o.getContext('2d',{alpha:true});g.imageSmoothingEnabled=false;
+    var h=hash(id),pc=colors(side==='home'?m.home:m.away);
+    var skin=['#74442f','#995a3a','#bf7952','#d99b73','#efb18b'][h%5];
+    var hair=['#171717','#3a2318','#684027','#a86b35','#d8d8d8'][(h>>>4)%5];
+    var gk=/GOL|GK|GOAL/i.test(String(p&&p.position||p&&p.role||''));
+    var step=frame?1:0;
+    g.fillStyle='rgba(0,0,0,.24)';g.fillRect(4-step,21,12+step,2);
+    g.fillStyle='#171717';g.fillRect(5-step,18,3,4);g.fillRect(12+step,18,3,4);g.fillRect(4-step,21,5,2);g.fillRect(11+step,21,5,2);
+    g.fillStyle=pc[1];g.fillRect(5,13,10,6);
+    g.fillStyle=pc[0];g.fillRect(4,7,12,7);g.fillStyle=pc[2];g.fillRect(7,8,6,2);
+    if(gk){g.fillStyle='#f2c94c';g.fillRect(4,6,12,2);g.fillRect(5,13,2,5);g.fillRect(13,13,2,5)}
+    g.fillStyle=skin;g.fillRect(2,9,2,6);g.fillRect(16,9,2,6);
+    if(frame){g.fillRect(1,11,2,3);g.fillRect(17,11,2,3)}
+    g.fillStyle=skin;g.fillRect(6,1,8,7);g.fillStyle=hair;g.fillRect(6,1,8,3);g.fillRect(5,3,2,3);g.fillRect(13,3,2,3);
+    g.fillStyle='rgba(255,255,255,.45)';g.fillRect(10,4,2,1);
+    g.fillStyle='#fff';g.fillRect(9,10,2,1);
+    cache[key]=o;return o;
   }
-  function stadiumIdentity(g,w,h,m){
-    var n=String(m&&m.home||'Estádio').toLowerCase(),hash=0;
-    for(var i=0;i<n.length;i++)hash=(hash*33+n.charCodeAt(i))>>>0;
-    var style=hash%6;
-    g.save();
-    // Arquitetura procedural única por clube: cobertura, torres, refletores e faixas.
-    g.globalAlpha=.34;
-    g.fillStyle=style===0?'#101820':style===1?'#18202b':style===2?'#221b29':style===3?'#13251f':style===4?'#25211b':'#171d25';
-    g.fillRect(0,0,w,h*.19);g.fillRect(0,h*.81,w,h*.19);
-    g.globalAlpha=.75;
-    var lights=style+4;
-    for(var l=0;l<lights;l++){
-      var lx=(l+1)*w/(lights+1),ly=l%2?h*.045:h*.955;
-      g.fillStyle='#fff2b0';g.beginPath();g.arc(lx,ly,2.1,0,Math.PI*2);g.fill();
-      g.strokeStyle='rgba(255,242,176,.16)';g.lineWidth=5;
-      g.beginPath();g.moveTo(lx,ly);g.lineTo(w*.5,h*(ly<h*.5 ? .29 : .71));g.stroke();
+  function drawPlayer(g,p,side,m,now,low){
+    var x=Math.round(clamp(Number(p&&p.x)||.5,.02,.98)*W),y=Math.round(clamp(Number(p&&p.y)||.5,.04,.96)*H);
+    var fr=low?0:Math.floor(now/170)%2,img=sprite(p,side,m,fr);
+    var dx=x-10,dy=y-19;g.drawImage(img,dx,dy);
+    if(m.possessionTeam===side&&m.possessionPlayerId===p.id){
+      g.fillStyle='#ffe38b';g.fillRect(dx+4,dy-3,12,2);g.fillRect(dx+2,dy-1,16,1);
     }
-    g.globalAlpha=.55;
-    var stripe=style%3;
-    g.fillStyle=stripe===0?'#fff':stripe===1?'#ffd34f':'#d62839';
-    if(style===0||style===3)g.fillRect(0,h*.16,w,4);
-    else if(style===1||style===4)g.fillRect(0,h*.84,w,4);
-    else {g.fillRect(0,h*.16,w*.38,4);g.fillRect(w*.62,h*.16,w*.38,4);}
-    g.globalAlpha=.8;
-    g.fillStyle='rgba(255,255,255,.75)';g.font='900 '+Math.max(8,w/80)+'px system-ui';g.textAlign='center';
-    var label=String(m&&m.home||'ESTÁDIO').toUpperCase().slice(0,24);
-    g.fillText(label,w/2,style%2?h*.13:h*.88);
-    g.restore();
   }
-
-  function playerVisual(p,side,m){
-    var id=String(p.id||p.name||'player'),cache=m._j90v3Players||(m._j90v3Players=Object.create(null)),key=side+'|'+id;
-    if(cache[key])return cache[key];
-    var pal=palette(side==='home'?m.home:m.away);
-    var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||p.aiRole||''));
-    var hash=0;for(var i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
-    var skins=['#7a4b32','#9b6546','#c48762','#d39a76','#f0b38f'],hairs=['#171717','#3b2417','#6b4328','#a87942','#d8d8d8'];
-    return cache[key]={pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',lean:((hash>>>5)%9-4)/100,lastName:String(p.name||'Jogador').split(' ').slice(-1)[0].toUpperCase().slice(0,12),number:String(p.number||'')};
+  function drawBall(g,m){
+    var x=Math.round(clamp(Number(m.ball&&m.ball.x)||.5,.02,.98)*W),y=Math.round(clamp(Number(m.ball&&m.ball.y)||.5,.03,.97)*H);
+    g.fillStyle='rgba(0,0,0,.32)';g.fillRect(x-3,y+2,6,2);g.fillStyle='#f8f7ee';g.fillRect(x-2,y-2,5,5);g.fillStyle='#222';g.fillRect(x-1,y-1,2,2);
   }
-
-  function drawPlayer(g,p,side,m,w,h,now,low){
-    var v=playerVisual(p,side,m),pal=v.pal;
-    var x=clamp2(Number(p.x)||.5,.02,.98)*w;
-    var y=clamp2(Number(p.y)||.5,.04,.96)*h;
-    var s=low?0.72:1, scale=Math.max(1,Math.min(w,h)/260)*s;
-    var active=(m.possessionTeam===side&&m.possessionPlayerId===p.id);
-    var vx=Number(p.vx)||0,vy=Number(p.vy)||0;
-    g.save();g.translate(x,y);g.rotate(v.lean);
-    if(active&&!low){
-      g.globalAlpha=.18+.08*Math.sin(now/100);
-      g.fillStyle=pal[0];g.beginPath();g.ellipse(0,5,19*scale,24*scale,0,0,Math.PI*2);g.fill();
-      g.globalAlpha=1;g.strokeStyle='#fff';g.lineWidth=1.4*scale;g.beginPath();g.ellipse(0,5,21*scale,26*scale,0,0,Math.PI*2);g.stroke();
-    }
-    g.fillStyle='rgba(0,0,0,.34)';g.beginPath();g.ellipse(0,20*scale,12*scale,4*scale,0,0,Math.PI*2);g.fill();
-
-    // Pernas articuladas, em vez da antiga bolinha.
-    var stride=Math.sin(now/105+(Number(p.id)||0))*4*scale;
-    g.strokeStyle=v.leg;g.lineWidth=4.5*scale;g.lineCap='round';
-    g.beginPath();g.moveTo(-3*scale,9*scale);g.lineTo((-6+stride)*scale,18*scale);g.lineTo((-10+stride)*scale,22*scale);g.stroke();
-    g.beginPath();g.moveTo(3*scale,9*scale);g.lineTo((6-stride)*scale,18*scale);g.lineTo((10-stride)*scale,22*scale);g.stroke();
-    g.strokeStyle='#fff';g.lineWidth=2.3*scale;
-    g.beginPath();g.moveTo((-10+stride)*scale,22*scale);g.lineTo((-14+stride)*scale,22*scale);g.stroke();
-    g.beginPath();g.moveTo((10-stride)*scale,22*scale);g.lineTo((14-stride)*scale,22*scale);g.stroke();
-
-    // Tronco, camisa e shorts.
-    g.fillStyle=pal[1]||'#143d28';
-    g.beginPath();g.moveTo(-8*scale,-8*scale);g.lineTo(8*scale,-8*scale);g.lineTo(9*scale,8*scale);g.lineTo(5*scale,12*scale);g.lineTo(-5*scale,12*scale);g.lineTo(-9*scale,8*scale);g.closePath();g.fill();
-    g.fillStyle=pal[0]||'#25a45b';g.fillRect(-8*scale,-8*scale,16*scale,6*scale);
-    g.fillStyle='rgba(255,255,255,.88)';g.fillRect(-1*scale,-7*scale,2*scale,15*scale);
-    g.fillStyle=pal[0]||'#25a45b';g.fillRect(-7*scale,7*scale,14*scale,5*scale);
-
-    // Braços e cabeça.
-    g.strokeStyle=v.skin;g.lineWidth=3.4*scale;g.lineCap='round';
-    var arm=Math.sin(now/125+(Number(p.id)||0))*2.5;
-    g.beginPath();g.moveTo(-8*scale,-5*scale);g.lineTo((-13-arm)*scale,3*scale);g.stroke();
-    g.beginPath();g.moveTo(8*scale,-5*scale);g.lineTo((13+arm)*scale,3*scale);g.stroke();
-    g.fillStyle=v.skin;g.beginPath();g.arc(0,-14*scale,6.2*scale,0,Math.PI*2);g.fill();
-    g.fillStyle=v.hair;g.beginPath();g.arc(0,-16*scale,6*scale,Math.PI,Math.PI*2);g.fill();
-    if(v.isGK){
-      g.strokeStyle='#ffd45b';g.lineWidth=2*scale;g.beginPath();g.arc(0,0,16*scale,0,Math.PI*2);g.stroke();
-      g.fillStyle='#ffd45b';g.fillRect(-3*scale,-1*scale,6*scale,4*scale);
-    }
-
-    if(!low){
-      var name=v.lastName;
-      g.font='800 8px system-ui';g.textAlign='center';g.textBaseline='middle';
-      g.strokeStyle='rgba(0,0,0,.92)';g.lineWidth=3;g.strokeText(name,0,32*scale);g.fillStyle='#fff';g.fillText(name,0,32*scale);
-      g.font='900 7px system-ui';g.strokeText(v.number,0,1*scale);g.fillText(v.number,0,1*scale);
-    }
-    g.restore();
-  }
-
-  function drawBall(g,m,w,h,low){
-    var owner=null;
-    try{if(typeof getPlayer==='function'&&m.possessionPlayerId)owner=getPlayer(m,m.possessionTeam,m.possessionPlayerId)}catch(e){}
-    var bx=(owner&&!m.ball.flight?owner.x+(m.possessionTeam==='home'?.016:-.016):m.ball.x);
-    var by=(owner&&!m.ball.flight?owner.y-.012:m.ball.y);
-    bx=clamp2(bx,.01,.99)*w;by=clamp2(by,.01,.99)*h;
-    g.fillStyle='#fff';g.beginPath();g.arc(bx,by,low?3:4,0,Math.PI*2);g.fill();
-    g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=1;g.stroke();
-  }
-
-  function invalidate(m){
-    if(!m)return;
-    m._j90v3Field=null;m._j90v3Scene=null;m._j90v3Players=null;m._j90v3StyleReady=false;
-  }
-
-  function draw2D(){
-    var m=(typeof S!=='undefined'&&S)?S:null;
-    if(!m)return;
-    var c=ensureCanvas(m);
-    if(!c||!m._ctx)return;
-    var g=m._ctx,w=m._cw,h=m._ch,dpr=m._dpr||1;
-    var low=!!(window.__J90_PERF&&window.__J90_PERF.low);
-    g.setTransform(dpr,0,0,dpr,0,0);
-    g.clearRect(0,0,w,h);
-    g.drawImage(sceneCache(m,w,h),0,0,w,h);
-    var now=performance.now();
-    var camX=(.5-(Number(m.ball&&m.ball.x)||.5))*w*.08;
-    var camY=(.5-(Number(m.ball&&m.ball.y)||.5))*h*.045;
-    g.save();g.translate(camX,camY);
-    var hp=m.players||[],ap=m.oppPlayers||[];
-    for(var i=0;i<hp.length;i++)drawPlayer(g,hp[i],'home',m,w,h,now,low);
-    for(var j=0;j<ap.length;j++)drawPlayer(g,ap[j],'away',m,w,h,now,low);
-    drawBall(g,m,w,h,low);
-    g.restore();
+  function draw(){
+    var st=state(),m=st&&st.match2d;if(!m)return;
+    var c=ensure(m);if(!c||!m._ctx)return;
+    var g=m._ctx,low=!!(window.__J90_PERF&&window.__J90_PERF.low),now=performance.now(),t0=now;
+    g.imageSmoothingEnabled=false;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.drawImage(pitch(m),0,0);
+    var home=m.players||[],away=m.oppPlayers||[];
+    for(var i=0;i<home.length;i++)drawPlayer(g,home[i],'home',m,now,low);
+    for(var j=0;j<away.length;j++)drawPlayer(g,away[j],'away',m,now,low);
+    drawBall(g,m);
+    var pulse=Math.floor(now/280)%4;g.fillStyle='rgba(255,236,146,.48)';g.fillRect(18+pulse*72,19,2,2);g.fillRect(300-pulse*72,159,2,2);
     m._j90v3Frames=(m._j90v3Frames||0)+1;
-    // Always leave a visible state even before the simulation has advanced.
-    if(!m.players.length&&!m.oppPlayers.length){
-      g.fillStyle='rgba(0,0,0,.34)';g.fillRect(0,0,w,h);
-      g.fillStyle='#fff';g.font='900 18px system-ui';g.textAlign='center';
-      g.fillText('CAMPO 2D',w/2,h/2-8);
-      g.font='700 11px system-ui';g.fillStyle='rgba(255,255,255,.75)';
-      g.fillText('Preparando simulação de IA…',w/2,h/2+14);
-    }
+    var cost=performance.now()-t0;m._j90v3RenderMsAvg=m._j90v3RenderMsAvg?m._j90v3RenderMsAvg*.9+cost*.1:cost;m._j90v3Mode='pixel-topdown';m._j90v3LastFrame=now;
   }
-
   function controls(){
     if(document.getElementById('j90V3MatchBar'))return;
-    var canvas=document.getElementById('j90MatchCanvas');
-    if(!canvas||!canvas.parentElement)return;
-    var bar=document.createElement('div');
-    bar.id='j90V3MatchBar';
-    bar.innerHTML='<div class="j90V3Live"><b>CAMPO 2D</b><span>IA ADAPTATIVA ATIVA</span></div><div class="j90V3Hint">Passe, pressão, drible, inversão, bola longa e comportamento por função.</div>';
-    canvas.parentElement.insertBefore(bar,canvas);
-    var s=document.createElement('style');s.id='j90-v3-style';
-    s.textContent='.j90V3Live{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:5px 0 4px;padding:7px 9px;border:1px solid #28563c;border-radius:9px;background:#07130d;color:#f5f5f5;font:800 11px system-ui}.j90V3Live span{color:#5fe69a;font-size:9px}.j90V3Hint{font:700 9px system-ui;color:#8fa99b;margin:0 2px 5px;line-height:1.35}.j90V3Hint+canvas{display:block}';
-    document.head.appendChild(s);
+    var c=document.getElementById('j90MatchCanvas');if(!c||!c.parentElement)return;
+    var b=document.createElement('div');b.id='j90V3MatchBar';b.innerHTML='<div class="j90V3Live"><b>CAMPO 2D</b><span>PIXEL TOP-DOWN · IA ATIVA</span></div><div class="j90V3Hint">Passe, pressão, drible, inversão, bola longa e movimentação por função.</div>';
+    c.parentElement.insertBefore(b,c);
+    var s=document.createElement('style');s.id='j90-v3-style';s.textContent='.j90V3Live{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:5px 0 4px;padding:7px 9px;border:1px solid #28563c;border-radius:9px;background:#07130d;color:#f5f5f5;font:800 11px system-ui}.j90V3Live span{color:#7ee6a8;font-size:9px}.j90V3Hint{font:700 9px system-ui;color:#8fa99b;margin:0 2px 5px;line-height:1.35}.j90V3Hint+canvas{display:block;image-rendering:pixelated!important}';document.head.appendChild(s);
   }
-
+  function invalidate(m){if(!m)return;m._pitch=null;m._sprites=Object.create(null)}
   function hook(){
     controls();
-    if(typeof window.mgrDraw2D==='function'&&!window.mgrDraw2D.__j90v3){
-      var old=window.mgrDraw2D;
-      var wrapped=function(){draw2D();};
-      wrapped.__j90v3=true;wrapped.__original=old;
-      window.mgrDraw2D=wrapped;
-    }else if(typeof window.mgrDraw2D!=='function'){
-      window.mgrDraw2D=draw2D;
-    }
+    if(typeof window.mgrDraw2D==='function'&&!window.mgrDraw2D.__j90pixel){
+      var w=function(){draw()};w.__j90pixel=true;w.__original=window.mgrDraw2D;window.mgrDraw2D=w;
+    }else if(typeof window.mgrDraw2D!=='function')window.mgrDraw2D=draw;
     var c=document.getElementById('j90MatchCanvas');
-    if(c&&!c.__j90v3Resize){
-      c.__j90v3Resize=true;
+    if(c&&!c.__j90pixelResize){
+      c.__j90pixelResize=true;
       if(window.ResizeObserver){
-        var ro=new ResizeObserver(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){invalidate(m);ensureCanvas(m);draw2D();}});
+        var ro=new ResizeObserver(function(){var st=state(),m=st&&st.match2d;if(m){invalidate(m);ensure(m);draw()}});
         ro.observe(c);
       }
-      addEventListener('orientationchange',function(){setTimeout(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}},120)},{passive:true});
     }
   }
-
-  var tries=0;
-  function boot(){
-    if(tries++<40){hook();if(!document.getElementById('j90MatchCanvas'))setTimeout(boot,150);}
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
-  else boot();
-
-  window.J90Match2DV3={version:'1.1',draw:draw2D,ensure:ensureCanvas};
+  var tries=0;function boot(){if(tries++<50){hook();if(!document.getElementById('j90MatchCanvas'))setTimeout(boot,120)}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.J90Match2DV3={version:'2.0',mode:'pixel-topdown',draw:draw,ensure:ensure};
 })();
