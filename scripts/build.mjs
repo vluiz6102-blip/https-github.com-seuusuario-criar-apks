@@ -27,6 +27,7 @@ const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8')
 const managerStatsSource = readFileSync('src/j90-manager-stats.js', 'utf8');
 const copaBrasilSource = readFileSync('src/j90-copa-do-brasil.js', 'utf8');
 const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
+const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -54,6 +55,7 @@ writeFileSync('www/j90-match-replay.js', replaySource);
 writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
+writeFileSync('www/j90-manager-ai.js', managerAiSource);
 
 if (existsSync(contentRoot)) {
   mkdirSync('www/assets', { recursive: true });
@@ -61,7 +63,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script><script src="j90-manager-stats.js"></script><script src="j90-copa-do-brasil.js"></script><script src="j90-manager-ai.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script><script src="j90-manager-stats.js"></script><script src="j90-copa-do-brasil.js"></script><script src="j90-manager-ai.js"></script><script src="j90-manager-ai.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
