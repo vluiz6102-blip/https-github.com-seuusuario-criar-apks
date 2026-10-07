@@ -33,6 +33,7 @@ jobs:
     timeout-minutes: 75
     permissions:
       contents: write
+      actions: write
     steps:
       - name: Baixar projeto
         uses: actions/checkout@v5
@@ -387,6 +388,16 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
+
+      - name: Acionar IA autônoma para o próximo ciclo
+        if: always() && !cancelled()
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run j90-autonomous-improver.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f reason="Full build run \${GITHUB_RUN_NUMBER} finished with status: \${{ job.status }}" \
+            -f source_run_id="$GITHUB_RUN_ID"
 
       - name: Publicar relatório do build
         uses: actions/upload-artifact@v7
