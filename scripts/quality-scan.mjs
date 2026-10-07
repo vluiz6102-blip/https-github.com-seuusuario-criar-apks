@@ -29,6 +29,12 @@ if (!/Capacitor.*Web Audio.*Android/i.test(index)) add(warn, 'Tecnologias princi
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
+const webgl = read('src/j90-match2d-webgl.js');
+checkSyntax('Match 2D WebGL', webgl);
+const comfort = read('src/j90-comfort-ui.js');
+checkSyntax('Comfort UI', comfort);
+if (!/getContext\(['\"]webgl['\"]/.test(webgl)) add(fail, 'Renderer WebGL1 ausente.');
+if (!/webglcontextlost/.test(webgl) || !/webglcontextrestored/.test(webgl)) add(fail, 'Renderer WebGL sem recuperação de contexto.');
 const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 const ai2 = read('src/j90-ai2.js');
@@ -55,7 +61,10 @@ for (const [id,n] of idCounts) if (n > 1) add(fail, 'ID HTML duplicado: ' + id +
 
 if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 5) add(warn, 'Muitas referências a requestAnimationFrame. Manter um único loop visual compartilhado por cena.');
 if (/startJ90MatchLoop\s*=|function\s+startJ90MatchLoop|\bj90MatchFrame\b/.test(index)) add(fail, 'Loop de partida legado/duplicado detectado. A partida deve usar somente o RAF compartilhado.');
-if (!/j90-ai2\.js/.test(read('scripts/build.mjs'))) add(fail, 'scripts/build.mjs não empacota j90-ai2.js.');
+const buildScript=read('scripts/build.mjs');
+if (!/j90-ai2\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota j90-ai2.js.');
+if (!/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota renderer WebGL.');
+if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 const tacticsSourceForScan = read('src/j90-tactics.js');
 checkSyntax('Tactical Studio', tacticsSourceForScan);
 if (!/window\.J90TACT\s*=/.test(tacticsSourceForScan)) add(fail, 'Tactical Studio não exporta window.J90TACT.');
@@ -76,10 +85,11 @@ for (const m of index.matchAll(/(?:src|href)\s*=\s*["']([^"'#?]+)["']/gi)) {
 }
 for (const p of refs) if (!existsSync(p) && !existsSync(join('www', p))) add(warn, 'Referência de asset não encontrada no repositório: ' + p);
 
-if (/decodeAudioData|J90_AUDIO_MANIFEST|assets\/audio|audio-import/.test(soundscape)) add(fail, 'Pipeline antigo de áudio importado detectado no Soundscape.');
-if (!/J90_AUDIO_MODE=['\"]procedural-original['\"]/.test(soundscape)) add(fail, 'Soundscape não está no modo de áudio procedural original.');
-if (/assets\/audio|audio-import/.test(read('scripts/build.mjs'))) add(fail, 'Pipeline de build ainda referencia/pacoteia assets de áudio importado.');
-if (existsSync('www/assets/audio')) add(fail, 'Bundle www ainda contém assets/audio.');
+if (!/J90_AUDIO_MODE=['\"]remote-cc0['\"]/.test(soundscape)) add(fail, 'Soundscape não está no modo remoto CC0.');
+const cc0Tracks=(soundscape.match(/\['[^']+','[^']+','(?:Songs|A Soundtrack)'\]/g)||[]).length;
+if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas.');
+if (!/crowd_shouting\.ogg/.test(soundscape) || !/cheers\.ogg/.test(soundscape)) add(fail, 'Sons CC0 de torcida/evento ausentes.');
+if (/decodeAudioData/.test(soundscape)) add(fail, 'decodeAudioData inesperado no Soundscape.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
