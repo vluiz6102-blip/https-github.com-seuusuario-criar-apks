@@ -285,7 +285,7 @@ function install(){
    var wrapFin=function(){
      var html=oldFin.apply(this,arguments),b=boardAI(),budget=num(S&&S.finance&&S.finance.budget,0);
      var block='<div class="j90AIFinanceCard"><span>IA FINANCEIRA</span><b>'+esc(b.action)+'</b><small>Caixa atual: R$ '+money(budget)+' · severidade: '+esc(b.severity)+'</small></div>';
-     return html.replace('<section class="j90MgrPage','<section class="j90MgrPage">'+block);
+     return html.replace('<section class="j90MgrPage j90MgrFinance">','<section class="j90MgrPage j90MgrFinance">'+block);
    };
    wrapFin.__j90ManagerAI=true;wrapFin.__original=oldFin;mgrFinance=wrapFin;window.mgrFinance=wrapFin;
  }
