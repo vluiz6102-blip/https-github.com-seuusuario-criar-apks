@@ -35,7 +35,7 @@
   function ensure(m){
     if(!m)return;
     if(!m._j90EventState)m._j90EventState={
-      processedActions:0,processedPassClock:-1,lastClock:-1,
+      processedActions:0,seenActions:{},processedPassClock:-1,lastClock:-1,
       cards:{},injuries:{},offside:null,referee:{x:.5,y:.45},
       invader:null,flare:null,crowd:0,incidentUntil:0,lastInjuryClock:-999,
       nextCrowdPulse:0,lastScore:Number(m.homeScore||0)+':'+Number(m.awayScore||0),
@@ -71,9 +71,12 @@
   }
 
   function processActions(m){
-    var st=m._j90EventState,h=m.actionHistory||[],start=Math.min(st.processedActions,h.length);
-    for(var i=start;i<h.length;i++){
-      var a=h[i]||{},side=a.team,p=find(m,side,a.player);
+    var st=m._j90EventState,h=m.actionHistory||[];
+    for(var i=0;i<h.length;i++){
+      var a=h[i]||{},sig=String(a.clock)+'|'+String(a.team)+'|'+String(a.player)+'|'+String(a.action);
+      if(st.seenActions[sig])continue;
+      st.seenActions[sig]=1;
+      var side=a.team,p=find(m,side,a.player);
       if(!p)continue;
       if(a.action==='tackle'&&!a.success){
         var severity=rnd(m);
@@ -86,6 +89,7 @@
       if(a.action==='cross'&&a.success&&rnd(m)<.08)event(m,'O cruzamento encontra a área e a torcida cresce.','cross_crowd',2.5);
     }
     st.processedActions=h.length;
+    var keys=Object.keys(st.seenActions);if(keys.length>80)keys.slice(0,keys.length-60).forEach(function(k){delete st.seenActions[k]});
   }
 
   function defendersLine(m,side){
