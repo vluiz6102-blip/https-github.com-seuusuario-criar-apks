@@ -83,7 +83,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-squad-cards.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
