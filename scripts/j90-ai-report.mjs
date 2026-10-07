@@ -27,6 +27,48 @@ function writeOutput(text) {
   fs.writeFileSync(outputFile, value + "\n", "utf8");
 }
 
+function collectRepositoryContext() {
+  let files = [];
+  try {
+    files = execFileSync("git", ["ls-files"], { encoding: "utf8", maxBuffer: 2 * 1024 * 1024 })
+      .split("\n").filter(Boolean);
+  } catch {
+    return "git ls-files indisponível; use somente o prompt recebido.";
+  }
+  const priority = [
+    "package.json", "capacitor.config.ts", "index.html", "diag.html",
+    /^src\//, /^scripts\//, /^android-overrides\//, /^data\//
+  ];
+  files.sort((a, b) => {
+    const score = p => priority.reduce((n, rule, i) => n + (rule instanceof RegExp ? rule.test(p) : rule === p ? 100 : 0) * (priority.length - i), 0);
+    return score(b) - score(a);
+  });
+  const chunks = [];
+  let total = 0;
+  const maxChars = Number(process.env.J90_AI_CONTEXT_CHARS || 500000);
+  for (const file of files) {
+    if (total >= maxChars) break;
+    try {
+      const stat = fs.statSync(file);
+      if (!stat.isFile() || stat.size > 150000) continue;
+      const ext = file.split(".").pop()?.toLowerCase();
+      if (!["js","mjs","cjs","ts","tsx","json","html","css","md","py","xml","gradle","properties","yaml","yml"].includes(ext) && file !== "package.json") continue;
+      const text = fs.readFileSync(file, "utf8");
+      const room = maxChars - total;
+      const chunk = text.length <= room ? text : text.slice(0, room) + "\n[TRUNCADO]";
+      chunks.push(`### ${file}\n${chunk}`);
+      total += chunk.length;
+    } catch {
+      // Ignora binários, links quebrados e arquivos que mudarem durante a coleta.
+    }
+  }
+  const status = `Contexto coletado: ${chunks.length} arquivos, ${total} caracteres.`;
+  return status + "\n\n" + chunks.join("\n\n");
+}
+
+const repositoryContext = collectRepositoryContext();
+const fullPrompt = prompt + "\n\n=== SNAPSHOT DO REPOSITÓRIO ===\n" + repositoryContext;
+
 async function gemini() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY ausente.");
@@ -36,7 +78,7 @@ async function gemini() {
     systemInstruction: {
       parts: [{ text: "Você é um engenheiro sênior. Responda somente com o relatório solicitado, baseado em evidências do repositório. Não invente defeitos." }]
     },
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
     generationConfig: { maxOutputTokens }
   };
   const res = await fetch(url, {
@@ -66,7 +108,7 @@ async function anthropic() {
       model,
       max_tokens: maxOutputTokens,
       system: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos.",
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: fullPrompt }]
     })
   });
   if (!res.ok) throw new Error(`Anthropic HTTP ${res.status}: ${await res.text()}`);
