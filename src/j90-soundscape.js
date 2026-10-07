@@ -26,21 +26,19 @@
     const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
     try{
       AC=new C();master=AC.createGain();master.gain.value=.58;master.connect(AC.destination);
-      offlineGain=AC.createGain();offlineGain.gain.value=0;offlineGain.connect(master);
-      [110,146.83,164.81].forEach((f)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.value=.018;o.connect(g);g.connect(offlineGain);o.start();offlineOsc.push(o);});
     }catch(e){AC=null}
     return AC;
   }
   function resumeOffline(){const c=ensureOffline();if(c&&c.state==='suspended')c.resume();return c;}
-  function stopOffline(){offlineOsc.forEach(o=>{try{o.stop()}catch(e){}});offlineOsc=[];if(offlineGain)offlineGain.gain.value=0;}
+  function stopOffline(){offlineOsc=[];if(offlineGain)offlineGain.gain.value=0;}
   function showState(){window.dispatchEvent(new CustomEvent('j90-audio-state',{detail:{track:activeTrack>=0?tracks[activeTrack].title:'',remote:!!musicEl,mode:window.J90_AUDIO_MODE}}));}
   function stopMusic(){pendingPlay=false;if(musicEl){musicEl.pause();musicEl.removeAttribute('src');try{musicEl.load()}catch(e){}musicEl=null;}stopOffline();showState();}
-  function playOffline(){const c=resumeOffline();if(!c||!musicEnabled)return false;if(offlineGain)offlineGain.gain.setValueAtTime(matchAudio?.045:.018,c.currentTime);return true;}
+  function playOffline(){return false;}
   function playTrack(index){
     if(!musicEnabled)return false;
     index=((index%tracks.length)+tracks.length)%tracks.length;activeTrack=index;
     if(musicEl){musicEl.pause();musicEl.removeAttribute('src');try{musicEl.load()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.12:.055;a.src=tracks[index].url;
+    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.12:.055;a.crossOrigin='anonymous';a.src=tracks[index].url;
     a.addEventListener('ended',()=>playTrack(index+1),{once:true});
     a.addEventListener('error',()=>{pendingPlay=false;playOffline();showState();},{once:true});
     musicEl=a;pendingPlay=true;const promise=a.play();if(promise&&promise.catch)promise.catch(()=>{pendingPlay=true;});
