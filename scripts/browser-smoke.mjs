@@ -14,7 +14,24 @@ page.on('requestfailed', req => {
   errors.push('requestfailed: ' + req.url() + ' :: ' + (req.failure()?.errorText || 'unknown'));
 });
 
-await page.goto(base, { waitUntil: 'networkidle' });
+await page.goto(base, { waitUntil: 'domcontentloaded' });
+
+const runtimeContract = await page.evaluate(() => {
+  const expected = ['j90-manager-ai.js', 'j90-auto-heal.js'];
+  const scripts = [...document.scripts].map(s => s.src || 'inline').filter(Boolean);
+  const external = [...document.querySelectorAll('script[src]')].map(s => s.src);
+  const missing = expected.filter(name =>
+    !external.some(src => {
+      try { return new URL(src, location.href).pathname.endsWith('/' + name); }
+      catch (_) { return false; }
+    })
+  );
+  return { expected, external, missing };
+});
+if (runtimeContract.missing.length) {
+  throw new Error('Critical runtime script tags are missing from the browser DOM: ' + JSON.stringify(runtimeContract));
+}
+
 await page.waitForFunction(
   () => !!window.J90AutoHealAI && !!window.J90BugGuard,
   { timeout: 15000 }
@@ -25,6 +42,7 @@ await page.waitForFunction(
     autoHealVersion: window.J90AutoHealAI?.version || '',
     bugGuardVersion: window.J90BugGuard?.version || '',
     scripts: [...document.scripts].map(s => s.src || 'inline').filter(Boolean),
+    runtimeScriptTags: [...document.querySelectorAll('script[src]')].map(s => s.src),
     runtimeResources: performance.getEntriesByType('resource')
       .map(x => x.name)
       .filter(x => /j90-(auto-heal|manager-ai)\.js/.test(x))
