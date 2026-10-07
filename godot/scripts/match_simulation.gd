@@ -6,6 +6,8 @@ signal match_completed(result: Dictionary)
 
 const HIGH_HZ := 60.0
 const LITE_HZ := 30.0
+const MATCH_AI_SCRIPT: Script = preload("res://scripts/match_tactics_ai.gd")
+const MATCH_EVENTS_SCRIPT: Script = preload("res://scripts/match_event_manager.gd")
 const HOME_POSITIONS := [
     Vector2(0.07, 0.50),
     Vector2(0.22, 0.20), Vector2(0.22, 0.40), Vector2(0.22, 0.60), Vector2(0.22, 0.80),
@@ -31,8 +33,8 @@ var _accumulator: float = 0.0
 var _step: float = 1.0 / HIGH_HZ
 var _home_score: int = 0
 var _away_score: int = 0
-var _ai := J90MatchTacticsAI.new()
-var _events: J90MatchEventManager
+var _ai: RefCounted
+var _events: Node
 
 var _state: Dictionary = {
     "home_score": 0,
@@ -44,7 +46,8 @@ var _state: Dictionary = {
 }
 
 func _ready() -> void:
-    _events = J90MatchEventManager.new()
+    _ai = MATCH_AI_SCRIPT.new()
+    _events = MATCH_EVENTS_SCRIPT.new()
     add_child(_events)
 
 func start(context: Dictionary = {}) -> void:
