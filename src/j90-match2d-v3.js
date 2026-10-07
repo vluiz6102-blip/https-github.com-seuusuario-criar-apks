@@ -40,9 +40,11 @@
     }
     if(c.width!==W||c.height!==H){
       c.width=W;c.height=H;
-      m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
+      try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
       m._pitch=null;m._sprites=Object.create(null);
-    }else if(!m._ctx)m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
+    }else if(!m._ctx){
+      try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
+    }
     if(m._ctx)m._ctx.imageSmoothingEnabled=false;
     m._cw=W;m._ch=H;m._dpr=1;m._dom=m._dom||{};m._dom.canvas=c;
     return c;
@@ -171,7 +173,8 @@
   function draw(){
     var st=state(),m=st&&st.match2d;if(!m)return;
     var c=ensure(m);if(!c||!m._ctx)return;
-    var g=m._ctx,low=!!(window.__J90_PERF&&window.__J90_PERF.low),now=performance.now(),t0=now;
+    var g=m._ctx;if(!g){m._j90RenderError='Canvas 2D unavailable';m._j90v3Mode='pixel-topdown';return}
+    var low=!!(window.__J90_PERF&&window.__J90_PERF.low)||!!m._j90AutoLow,now=performance.now(),t0=now;
     g.imageSmoothingEnabled=false;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.drawImage(fieldCache(m),0,0);
     var home=m.players||[],away=m.oppPlayers||[];
     for(var i=0;i<home.length;i++)drawPlayer(g,home[i],'home',m,now,low);
@@ -180,7 +183,10 @@
     var pulse=Math.floor(now/280)%4;
     if(!low){g.fillStyle='rgba(255,236,146,.48)';g.fillRect(18+pulse*72,19,2,2);g.fillRect(300-pulse*72,159,2,2)}
     m._j90v3Frames=(m._j90v3Frames||0)+1;
-    var cost=performance.now()-t0;m._j90v3RenderMsAvg=m._j90v3RenderMsAvg?m._j90v3RenderMsAvg*.9+cost*.1:cost;m._j90v3Mode='pixel-topdown';m._j90v3LastFrame=now;
+    var cost=performance.now()-t0;m._j90v3RenderMsAvg=m._j90v3RenderMsAvg?m._j90v3RenderMsAvg*.9+cost*.1:cost;
+    m._j90RenderSamples=(m._j90RenderSamples||0)+1;
+    if(m._j90RenderSamples%24===0)m._j90AutoLow=Number(m._j90v3RenderMsAvg||0)>10;
+    m._j90v3Mode='pixel-topdown';m._j90v3LastFrame=now;
     m._j90AnimationProfile='action-aware-8dir';
   }
   function controls(){
