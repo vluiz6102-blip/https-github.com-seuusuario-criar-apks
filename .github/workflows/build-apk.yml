@@ -113,9 +113,8 @@ jobs:
           echo "WEB_SCENE_FILES=$scene_files"
           test "$scene_files" -ge 1
 
-          # O runtime atual usa áudio procedural/original e pode expor
-          # J90_AUDIO_MANIFEST como um objeto vazio. Isso não significa que
-          # existam arquivos de áudio importados no bundle.
+          # O runtime atual usa música CC0 remota + efeitos procedurais originais.
+          # O bundle Android continua sem arquivos de áudio importados.
           if find www/assets -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \) -print -quit | grep -q .; then
             echo 'IMPORTED_AUDIO_FILES_DETECTED'
             find www/assets -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \) -print
@@ -129,7 +128,7 @@ jobs:
 
           test -f www/j90-soundscape.js
           grep -F -n 'J90_AUDIO_MODE' www/j90-soundscape.js >/dev/null
-          grep -F -n 'procedural-original' www/j90-soundscape.js >/dev/null
+          grep -F -n 'remote-cc0' www/j90-soundscape.js >/dev/null
           echo 'AUDIO_RUNTIME=VALIDATED'
           echo 'IMPORTED_AUDIO_FILES=0'
 
