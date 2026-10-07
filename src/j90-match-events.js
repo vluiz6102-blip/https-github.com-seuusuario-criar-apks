@@ -39,7 +39,8 @@
       cards:{},injuries:{},offside:null,referee:{x:.5,y:.45},
       invader:null,flare:null,crowd:0,incidentUntil:0,lastInjuryClock:-999,
       nextCrowdPulse:0,lastScore:Number(m.homeScore||0)+':'+Number(m.awayScore||0),
-      events:0,\n      refereeAI:{strictness:.52,advantage:0,pressure:0,varReviews:0,decisions:0,lastDecision:-999,lastVAR:-999,profile:'equilibrado'},
+      events:0,
+      refereeAI:{strictness:.52,advantage:0,pressure:0,varReviews:0,decisions:0,lastDecision:-999,lastVAR:-999,profile:'equilibrado'},
       crowdMomentum:0,crowdBase:0,crowdNoise:0,crowdAttendance:0,crowdCapacity:0,
       crowdProfile:null,stadiumProfile:null
     };
