@@ -47,6 +47,10 @@ try{marker=JSON.parse(readFileSync('.j90-release-ready.json','utf8'));}catch{}
 if (strict) {
   ok('agent:completion-marker',!!marker?.ready && !!marker?.revision,'marker missing or ready=false');
   ok('agent:marker-checks',!!marker?.checks && Object.values(marker.checks).every(Boolean));
+  const head=spawnSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).stdout.trim();
+  const dirty=spawnSync('git',['status','--porcelain'],{encoding:'utf8'}).stdout.trim();
+  ok('agent:marker-current',!!head && marker?.revision===head,'marker revision does not match HEAD');
+  ok('agent:working-tree-clean',dirty==='','ready marker exists with uncommitted changes');
 } else {
   console.log(marker?.ready ? 'RELEASE_MARKER_PRESENT=YES' : 'RELEASE_MARKER_PRESENT=NO');
 }
