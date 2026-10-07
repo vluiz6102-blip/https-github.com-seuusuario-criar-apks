@@ -24,7 +24,10 @@ func apply_stadium(stadium_id: StringName, camera: Camera2D) -> bool:
 
     current = stadium
     if camera != null:
-        _apply_camera(camera, stadium.get("camera_config") as Resource)
+        var config: Resource = stadium.get("camera_config") as Resource
+        if config == null or config.get("zoom") == null or config.get("smooth_damp") == null or config.get("vertical_offset") == null:
+            return false
+        _apply_camera(camera, config)
     stadium_changed.emit(stadium)
     return true
 
