@@ -165,6 +165,58 @@ jobs:
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
 
+      - name: Identificar o aplicativo como jogo no Android
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text(encoding="utf-8")
+          app=re.search(r'<application\b[^>]*>',s)
+          if not app:
+              raise SystemExit("application tag not found in generated AndroidManifest.xml")
+          tag=app.group(0)
+          def set_attr(tag,name,value):
+              pat=r'\sandroid:'+re.escape(name)+r'="[^"]*"'
+              repl=' android:'+name+'="'+value+'"'
+              if re.search(pat,tag):
+                  return re.sub(pat,repl,tag)
+              return tag[:-1]+repl+'>'
+          tag=set_attr(tag,"appCategory","game")
+          s=s[:app.start()]+tag+s[app.end():]
+
+          activity=re.search(r'<activity\b[^>]+android:name="[^"]*MainActivity"[^>]*>',s)
+          if not activity:
+              activity=re.search(r'<activity\b[^>]+android:name="[^"]+\.MainActivity"[^>]*>',s)
+          if not activity:
+              raise SystemExit("MainActivity not found in generated AndroidManifest.xml")
+
+          end=activity.end()
+          main_close=s.find('</activity>',end)
+          if main_close<0:
+              raise SystemExit("MainActivity closing tag not found")
+
+          block=s[activity.start():main_close]
+          if 'android.intent.category.GAME' not in block:
+              target='<category android:name="android.intent.category.GAME" />'
+              launcher='''<category android:name="android.intent.category.LAUNCHER" />'''
+              if launcher in block:
+                  block=block.replace(launcher,launcher+'\n            '+target,1)
+              else:
+                  first_filter=re.search(r'<intent-filter\b[^>]*>([\s\S]*?)</intent-filter>',block)
+                  if first_filter:
+                      inside=first_filter.group(1)
+                      block=block[:first_filter.start(1)]+inside+'\n            '+target+block[first_filter.end(1):]
+                  else:
+                      raise SystemExit("MainActivity launcher intent-filter not found")
+              s=s[:activity.start()]+block+s[main_close:]
+
+          p.write_text(s,encoding="utf-8")
+          assert 'android:appCategory="game"' in s
+          assert 'android.intent.category.GAME' in s
+          print("ANDROID_GAME_CLASSIFICATION=OK")
+          PY
+
       - name: Habilitar rotação segura e paisagem nas partidas
         run: |
           python3 - <<'PY'
