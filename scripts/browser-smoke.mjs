@@ -313,50 +313,96 @@ if (await play.count() === 1) {
   if (after.frames < before.frames) throw new Error('Frame counter regressed.');
   if (!after.possession.trim()) throw new Error('Possession HUD is empty.');
 
-  // Landscape regression: same live match/state, only viewport orientation changes.
-  const portraitViewport = { width: 390, height: 844 };
-  await page.setViewportSize({ width: 844, height: 390 });
-  await page.waitForTimeout(220);
-  const landscape = await page.evaluate(() => {
-    const pageBox=document.querySelector('.j90MatchOnlyPage')?.getBoundingClientRect();
-    const stage=document.querySelector('.j90MatchStage')?.getBoundingClientRect();
-    const canvas=document.querySelector('#j90MatchCanvas')?.getBoundingClientRect();
+  // Portrait-only live match contract + lifecycle recovery.
+  const liveScene = await page.evaluate(() => {
+    const c=document.querySelector('#j90MatchCanvas');
+    const nav=document.querySelector('#j90MgrRightNav');
     const m=window.S?.match2d;
     return {
-      ok: !!document.querySelector('.j90MatchOnlyPage'),
       orientation: innerWidth>innerHeight?'landscape':'portrait',
       overflow: document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2,
-      pageWidth: pageBox?.width||0,
-      pageHeight: pageBox?.height||0,
-      stageWidth: stage?.width||0,
-      stageHeight: stage?.height||0,
-      canvasWidth: canvas?.width||0,
-      canvasHeight: canvas?.height||0,
-      actionGrid: getComputedStyle(document.querySelector('.j90MatchActionBar')).gridTemplateColumns||'',
-      matchClock: document.querySelector('#j90MatchClock')?.textContent||'',
-      score: document.querySelector('#j90MatchScore')?.textContent||'',
-      aiLandscape: typeof window.J90Landscape?.isActive==='function' ? !!window.J90Landscape.isActive() : false,
-      elapsed: Number(m?.elapsed||0)
+      canvas: !!c,
+      liveClass: document.body.classList.contains('j90-live-match'),
+      navHidden: !nav || getComputedStyle(nav).display==='none',
+      managerHeaderHidden: !document.querySelector('#j90-manager-head') || getComputedStyle(document.querySelector('#j90-manager-head')).display==='none',
+      elapsed: Number(m?.elapsed||0),
+      paused: !!m?.paused
     };
   });
-  if (landscape.orientation !== 'landscape') throw new Error('Landscape viewport was not applied.');
-  if (!landscape.ok || landscape.overflow) throw new Error('Landscape match overflowed the viewport: '+JSON.stringify(landscape));
-  if (landscape.stageWidth < 300 || landscape.stageHeight < 130) throw new Error('Landscape match stage is too small: '+JSON.stringify(landscape));
-  if (landscape.canvasWidth < 280 || landscape.canvasHeight < 120) throw new Error('Landscape canvas dimensions are invalid: '+JSON.stringify(landscape));
-  if (!landscape.actionGrid || landscape.actionGrid.trim().split(/\s+/).length !== 2) throw new Error('Landscape action bar did not reflow to two columns: '+landscape.actionGrid);
-  if (!landscape.matchClock || !landscape.score) throw new Error('Landscape HUD lost match state.');
-  if (landscape.elapsed <= Number(beforeLiveElapsed||0)) throw new Error('Landscape rotation reset or stopped the match clock.');
-  await page.setViewportSize(portraitViewport);
-  await page.waitForTimeout(180);
-  const portrait = await page.evaluate(() => ({
-    orientation: innerWidth>innerHeight?'landscape':'portrait',
-    overflow: document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2,
-    canvasHeight: document.querySelector('#j90MatchCanvas')?.getBoundingClientRect().height||0,
-    clock: document.querySelector('#j90MatchClock')?.textContent||''
-  }));
-  if (portrait.orientation !== 'portrait' || portrait.overflow || portrait.canvasHeight < 180 || !portrait.clock) {
-    throw new Error('Portrait recovery after landscape failed: '+JSON.stringify(portrait));
+  if (liveScene.orientation !== 'portrait') throw new Error('Live match opened in landscape.');
+  if (liveScene.overflow) throw new Error('Portrait live match overflowed the viewport: '+JSON.stringify(liveScene));
+  if (!liveScene.canvas || !liveScene.liveClass || !liveScene.navHidden || !liveScene.managerHeaderHidden) {
+    throw new Error('Live match scene isolation failed: '+JSON.stringify(liveScene));
   }
+
+  const persistence = await page.evaluate(() => {
+    try {
+      window.J90ManagerBridge?.save?.();
+      const raw=localStorage.getItem('carreirafc2');
+      const parsed=raw?JSON.parse(raw):null;
+      const match=parsed?.match2d;
+      const forbidden=[];
+      function walk(v,path){
+        if(!v||typeof v!=='object'||forbidden.length>8)return;
+        Object.keys(v).forEach(k=>{
+          if(/^_/.test(k)){forbidden.push(path+'.'+k);return}
+          if(k!=='__j90ResumeOnRestore')walk(v[k],path+'.'+k);
+        });
+      }
+      walk(match,'match2d');
+      return {
+        ok: !!match,
+        elapsed: Number(match?.elapsed||0),
+        paused: !!match?.paused,
+        resumeOnRestore: !!match?.__j90ResumeOnRestore,
+        forbidden: forbidden.slice(0,8)
+      };
+    } catch(e) {
+      return {ok:false,error:String(e?.message||e)};
+    }
+  });
+  if (!persistence.ok) throw new Error('Live match save failed: '+JSON.stringify(persistence));
+  if (persistence.forbidden.length) throw new Error('Live match save leaked runtime-only fields: '+JSON.stringify(persistence.forbidden));
+
+  const beforeExit = await page.evaluate(() => Number(window.S?.match2d?.elapsed||0));
+  const lifecycle = await page.evaluate(() => {
+    const m=window.S?.match2d;
+    const life=window.J90MatchLifecycle;
+    if(!m||!life)return {ok:false,reason:'lifecycle runtime missing'};
+    life.pauseForBackground();
+    const paused=!!m.paused;
+    const savedElapsed=Number(m.elapsed||0);
+    life.resumeAfterForeground();
+    return {ok:true,paused,savedElapsed,resumed:!m.paused,after:Number(m.elapsed||0)};
+  });
+  if (!lifecycle.ok || !lifecycle.paused || !lifecycle.resumed) {
+    throw new Error('Background/foreground lifecycle recovery failed: '+JSON.stringify(lifecycle));
+  }
+  if (lifecycle.savedElapsed + 0.05 < beforeExit) throw new Error('Lifecycle pause regressed match clock: '+JSON.stringify({beforeExit,lifecycle}));
+
+  // Reload with the active match persisted. The app must reopen the live match, not the menu.
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForTimeout(4200);
+  const restored = await page.evaluate(() => {
+    const m=window.S?.match2d;
+    const c=document.querySelector('#j90MatchCanvas');
+    const nav=document.querySelector('#j90MgrRightNav');
+    return {
+      match: !!m,
+      canvas: !!c,
+      managerScreen: !!document.querySelector('.j90MatchOnly'),
+      liveClass: document.body.classList.contains('j90-live-match'),
+      navHidden: !nav || getComputedStyle(nav).display==='none',
+      elapsed: Number(m?.elapsed||0),
+      paused: !!m?.paused,
+      overflow: document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2
+    };
+  });
+  if (!restored.match || !restored.canvas || !restored.managerScreen || !restored.liveClass || !restored.navHidden || restored.overflow) {
+    throw new Error('Saved live match was not restored cleanly after reload: '+JSON.stringify(restored));
+  }
+  if (restored.elapsed + 0.2 < lifecycle.savedElapsed) throw new Error('Saved live match clock regressed after reload: '+JSON.stringify({lifecycle,restored}));
+
 }
 
 if (errors.length) {
