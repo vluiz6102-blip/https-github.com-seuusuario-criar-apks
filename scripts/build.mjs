@@ -27,6 +27,7 @@ const managerStatsSource = readFileSync('src/j90-manager-stats.js', 'utf8');
 const copaBrasilSource = readFileSync('src/j90-copa-do-brasil.js', 'utf8');
 const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
 const landscapeSource = readFileSync('src/j90-landscape.js', 'utf8');
+const autoHealSource = readFileSync('src/j90-auto-heal.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -50,7 +51,8 @@ const syntaxUnits = [
   ['j90-manager-stats.js', managerStatsSource],
   ['j90-copa-do-brasil.js', copaBrasilSource],
   ['j90-manager-ai.js', managerAiSource],
-  ['j90-landscape.js', landscapeSource]
+  ['j90-landscape.js', landscapeSource],
+  ['j90-auto-heal.js', autoHealSource]
 ];
 try {
   for (const [name, code] of syntaxUnits) {
@@ -77,6 +79,7 @@ writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
 writeFileSync('www/j90-landscape.js', landscapeSource);
+writeFileSync('www/j90-auto-heal.js', autoHealSource);
 
 if (existsSync(contentRoot)) {
   mkdirSync('www/assets', { recursive: true });
@@ -84,13 +87,23 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script><script src="j90-manager-stats.js"></script><script src="j90-copa-do-brasil.js"></script><script src="j90-manager-ai.js"></script><script src="j90-landscape.js"></script>';
-if (!generated.includes('src="j90-soundscape.js"')) {
-  const patched = generated.replace('</body>', injection + '</body>');
-  if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
-  writeFileSync('www/index.html', patched);
+const bootstrap = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script>';
+const runtimeFiles = [
+  'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
+  'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
+  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-landscape.js','j90-auto-heal.js'
+];
+let patched = generated;
+if (!patched.includes('window.J90_AUDIO_MANIFEST=')) patched = patched.replace('</body>', bootstrap + '</body>');
+for (const file of runtimeFiles) {
+  const tag = '<script src="' + file + '"></script>';
+  if (!patched.includes(tag)) patched = patched.replace('</body>', tag + '</body>');
 }
+if (!patched.includes('<script src="j90-manager-ai.js"></script>') || !patched.includes('<script src="j90-auto-heal.js"></script>')) {
+  throw new Error('Critical runtime scripts were not injected into www/index.html.');
+}
+writeFileSync('www/index.html', patched);
 
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D Canvas + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 + modo paisagem de partida injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
+console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D Canvas + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 + Auto-Heal AI + BugGuard + modo paisagem de partida injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
