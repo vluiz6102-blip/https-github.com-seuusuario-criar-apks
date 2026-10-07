@@ -94,7 +94,7 @@ if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas: '+cc0Tracks);
 if (!/crowd_shouting\.ogg/.test(soundscape) || !/cheers\.ogg/.test(soundscape)) add(fail, 'Sons CC0 de torcida/evento ausentes.');
 if (/decodeAudioData/.test(soundscape)) add(fail, 'decodeAudioData inesperado no Soundscape.');
 if (!/fitText\(/.test(read('src/j90-squad-cards.js')) || !/\.clip\(\)/.test(read('src/j90-squad-cards.js'))) add(fail, 'Cards sem proteção contra texto saindo da carta.');
-if (!/var(--j90-ui-scale)/.test(read('src/j90-comfort-ui.js'))) add(fail, 'Comfort UI sem escala tipográfica.');
+if (!/var\(--j90-ui-scale\)/.test(read('src/j90-comfort-ui.js'))) add(fail, 'Comfort UI sem escala tipográfica.');
 if (!/J90MatchEvents/.test(read('src/j90-match-events.js')) || !/offsideCheck/.test(read('src/j90-match-events.js')) || !/discipline/.test(read('src/j90-match-events.js')) || !/injuryCheck/.test(read('src/j90-match-events.js')) || !/pitchInvader/.test(read('src/j90-match-events.js'))) add(fail, 'Sistema de eventos de partida incompleto.');
 if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos de partida não estão no pipeline de build.');
 
