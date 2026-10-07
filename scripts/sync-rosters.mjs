@@ -258,7 +258,22 @@ const ESPN_DIRECT_TEAMS={
   'França':{id:'478',league:'fifa.world'},
   'Holanda':{id:'449',league:'fifa.world'},
   'Inglaterra':{id:'448',league:'fifa.world'},
-  'Bélgica':{id:'459',league:'fifa.world'}
+  'Bélgica':{id:'459',league:'fifa.world'},
+  'Japão':{id:'627',league:'fifa.world'},
+  'Marrocos':{id:'2869',league:'fifa.world'},
+  'Suíça':{id:'475',league:'fifa.world'},
+  'Uruguai':{id:'212',league:'fifa.world'},
+  'Aparecidense':{id:'18188',league:'bra.copa_do_brazil'},
+  'Confiança':{id:'4875',league:'bra.copa_do_brazil'},
+  'Volta Redonda':{id:'4806',league:'bra.copa_do_brazil'},
+  'Ypiranga':{id:'4935',league:'bra.1'},
+  'Urawa Red Diamonds':{id:'3385',league:'fifa.cwc'},
+  'Nantes':{id:'165',league:'fra.1'},
+  'Reims':{id:'3243',league:'fra.1'},
+  'Rennes':{id:'169',league:'fra.1'},
+  'West Ham':{id:'371',league:'eng.1'},
+  'Wolfsburg':{id:'138',league:'ger.1'},
+  'Girona':{id:'9812',league:'esp.1'}
 };
 
 async function addEspnDirectTeams(map,names){
