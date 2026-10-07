@@ -96,7 +96,7 @@
       var lx=(l+1)*w/(lights+1),ly=l%2?h*.045:h*.955;
       g.fillStyle='#fff2b0';g.beginPath();g.arc(lx,ly,2.1,0,Math.PI*2);g.fill();
       g.strokeStyle='rgba(255,242,176,.16)';g.lineWidth=5;
-      g.beginPath();g.moveTo(lx,ly);g.lineTo(w*.5,h*(ly<h*.5?.29:.71));g.stroke();
+      g.beginPath();g.moveTo(lx,ly);g.lineTo(w*.5,h*(ly<h*.5 ? .29 : .71));g.stroke();
     }
     g.globalAlpha=.55;
     var stripe=style%3;
