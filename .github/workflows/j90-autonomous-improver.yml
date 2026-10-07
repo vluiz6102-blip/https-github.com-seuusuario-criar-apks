@@ -82,13 +82,13 @@ jobs:
         run: |
           set -e
           cat > .j90-team/ai-1-prompt.txt <<'PROMPT'
-Você é a IA 1, COORDENADORA do time Jornada 90.
-Leia .github/copilot-instructions.md, .j90-team/context.txt, logs e código.
-Não altere o código nesta etapa. Crie .j90-team/plan.md.
-Distribua ordens sem sobreposição para GAMEPLAY_AI, PERFORMANCE_STABILITY, UX_MOBILE, MANAGER_TACTICS e MATCH_AUDIO_CONTENT.
-Para cada área informe prioridade P0/P1/P2, problema/oportunidade comprovado, arquivos/sistemas, ação esperada, testes e riscos.
-Se a build anterior falhou, a causa raiz é P0. Não invente problemas e não copie EA/FIFA.
-PROMPT
+          Você é a IA 1, COORDENADORA do time Jornada 90.
+          Leia .github/copilot-instructions.md, .j90-team/context.txt, logs e código.
+          Não altere o código nesta etapa. Crie .j90-team/plan.md.
+          Distribua ordens sem sobreposição para GAMEPLAY_AI, PERFORMANCE_STABILITY, UX_MOBILE, MANAGER_TACTICS e MATCH_AUDIO_CONTENT.
+          Para cada área informe prioridade P0/P1/P2, problema/oportunidade comprovado, arquivos/sistemas, ação esperada, testes e riscos.
+          Se a build anterior falhou, a causa raiz é P0. Não invente problemas e não copie EA/FIFA.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-1-prompt.txt" --output-file ".j90-team/plan.md"
           test -s .j90-team/plan.md
       - name: Upload plan
@@ -138,13 +138,13 @@ PROMPT
         run: |
           set -e
           cat > .j90-team/ai-2-prompt.txt <<'PROMPT'
-Você é IA 2 - Gameplay e Football AI, especialista do time Jornada 90.
-Leia .github/copilot-instructions.md e .j90-team/plan.md.
-Execute SOMENTE a missão GAMEPLAY_AI: dribles, passes, movimentação, transições, decisão, comportamento de craques e equilíbrio.
-Você é analista nesta etapa. Não faça commit, push ou release.
-Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
-Produza .j90-team/gameplay-ai.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
-PROMPT
+          Você é IA 2 - Gameplay e Football AI, especialista do time Jornada 90.
+          Leia .github/copilot-instructions.md e .j90-team/plan.md.
+          Execute SOMENTE a missão GAMEPLAY_AI: dribles, passes, movimentação, transições, decisão, comportamento de craques e equilíbrio.
+          Você é analista nesta etapa. Não faça commit, push ou release.
+          Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
+          Produza .j90-team/gameplay-ai.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-2-prompt.txt" --output-file ".j90-team/gameplay-ai.md"
           test -s .j90-team/gameplay-ai.md
       - name: Upload report
@@ -194,13 +194,13 @@ PROMPT
         run: |
           set -e
           cat > .j90-team/ai-3-prompt.txt <<'PROMPT'
-Você é IA 3 - Performance e estabilidade, especialista do time Jornada 90.
-Leia .github/copilot-instructions.md e .j90-team/plan.md.
-Execute SOMENTE a missão PERFORMANCE_STABILITY: RAF/timers, DOM, listeners, leaks, startup, Canvas, memória, crashes e rotação.
-Você é analista nesta etapa. Não faça commit, push ou release.
-Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
-Produza .j90-team/performance.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
-PROMPT
+          Você é IA 3 - Performance e estabilidade, especialista do time Jornada 90.
+          Leia .github/copilot-instructions.md e .j90-team/plan.md.
+          Execute SOMENTE a missão PERFORMANCE_STABILITY: RAF/timers, DOM, listeners, leaks, startup, Canvas, memória, crashes e rotação.
+          Você é analista nesta etapa. Não faça commit, push ou release.
+          Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
+          Produza .j90-team/performance.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-3-prompt.txt" --output-file ".j90-team/performance.md"
           test -s .j90-team/performance.md
       - name: Upload report
@@ -250,13 +250,13 @@ PROMPT
         run: |
           set -e
           cat > .j90-team/ai-4-prompt.txt <<'PROMPT'
-Você é IA 4 - UX mobile e acessibilidade, especialista do time Jornada 90.
-Leia .github/copilot-instructions.md e .j90-team/plan.md.
-Execute SOMENTE a missão UX_MOBILE: legibilidade, toque, overflow, navegação, acessibilidade e portrait/landscape.
-Você é analista nesta etapa. Não faça commit, push ou release.
-Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
-Produza .j90-team/ux.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
-PROMPT
+          Você é IA 4 - UX mobile e acessibilidade, especialista do time Jornada 90.
+          Leia .github/copilot-instructions.md e .j90-team/plan.md.
+          Execute SOMENTE a missão UX_MOBILE: legibilidade, toque, overflow, navegação, acessibilidade e portrait/landscape.
+          Você é analista nesta etapa. Não faça commit, push ou release.
+          Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
+          Produza .j90-team/ux.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-4-prompt.txt" --output-file ".j90-team/ux.md"
           test -s .j90-team/ux.md
       - name: Upload report
@@ -306,13 +306,13 @@ PROMPT
         run: |
           set -e
           cat > .j90-team/ai-5-prompt.txt <<'PROMPT'
-Você é IA 5 - Manager, transferências e táticas, especialista do time Jornada 90.
-Leia .github/copilot-instructions.md e .j90-team/plan.md.
-Execute SOMENTE a missão MANAGER_TACTICS: carreira, elenco, formações, táticas, mercado, contratos, desenvolvimento e scouting.
-Você é analista nesta etapa. Não faça commit, push ou release.
-Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
-Produza .j90-team/manager.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
-PROMPT
+          Você é IA 5 - Manager, transferências e táticas, especialista do time Jornada 90.
+          Leia .github/copilot-instructions.md e .j90-team/plan.md.
+          Execute SOMENTE a missão MANAGER_TACTICS: carreira, elenco, formações, táticas, mercado, contratos, desenvolvimento e scouting.
+          Você é analista nesta etapa. Não faça commit, push ou release.
+          Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
+          Produza .j90-team/manager.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-5-prompt.txt" --output-file ".j90-team/manager.md"
           test -s .j90-team/manager.md
       - name: Upload report
@@ -362,13 +362,13 @@ PROMPT
         run: |
           set -e
           cat > .j90-team/ai-6-prompt.txt <<'PROMPT'
-Você é IA 6 - Match, áudio e conteúdo, especialista do time Jornada 90.
-Leia .github/copilot-instructions.md e .j90-team/plan.md.
-Execute SOMENTE a missão MATCH_AUDIO_CONTENT: partida, arbitragem, eventos, torcida, áudio CC0, conteúdo, rosters e offline.
-Você é analista nesta etapa. Não faça commit, push ou release.
-Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
-Produza .j90-team/match-content.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
-PROMPT
+          Você é IA 6 - Match, áudio e conteúdo, especialista do time Jornada 90.
+          Leia .github/copilot-instructions.md e .j90-team/plan.md.
+          Execute SOMENTE a missão MATCH_AUDIO_CONTENT: partida, arbitragem, eventos, torcida, áudio CC0, conteúdo, rosters e offline.
+          Você é analista nesta etapa. Não faça commit, push ou release.
+          Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
+          Produza .j90-team/match-content.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
+          PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-6-prompt.txt" --output-file ".j90-team/match-content.md"
           test -s .j90-team/match-content.md
       - name: Upload report
@@ -430,14 +430,14 @@ PROMPT
             "manager=$MANAGER" \
             "match-content=$MATCH_CONTENT" > .j90-team/fallback-status.txt
           copilot -p "$(cat <<'PROMPT'
-Você é IA 8 - RECUPERADORA DE CONTINUIDADE do Jornada 90.
-Você entra quando uma ou mais IAs pararam, falharam ou não produziram relatório.
-Não dependa do histórico de conversa de outras IAs. Trabalhe com o estado persistido no repositório e nos artefatos disponíveis.
-Leia .github/copilot-instructions.md, .j90-team/fallback-status.txt, quaisquer arquivos .j90-team disponíveis e o código.
-Identifique o que ficou incompleto, priorize P0 e gere .j90-team/fallback-recovery.md.
-Aplique contexto em etapas: leia somente arquivos necessários e grave decisões importantes em arquivos para a próxima IA.
-Não faça commit, push ou release. Não reduza testes, não remova funcionalidades e não invente defeitos.
-PROMPT
+          Você é IA 8 - RECUPERADORA DE CONTINUIDADE do Jornada 90.
+          Você entra quando uma ou mais IAs pararam, falharam ou não produziram relatório.
+          Não dependa do histórico de conversa de outras IAs. Trabalhe com o estado persistido no repositório e nos artefatos disponíveis.
+          Leia .github/copilot-instructions.md, .j90-team/fallback-status.txt, quaisquer arquivos .j90-team disponíveis e o código.
+          Identifique o que ficou incompleto, priorize P0 e gere .j90-team/fallback-recovery.md.
+          Aplique contexto em etapas: leia somente arquivos necessários e grave decisões importantes em arquivos para a próxima IA.
+          Não faça commit, push ou release. Não reduza testes, não remova funcionalidades e não invente defeitos.
+          PROMPT
 )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
           test -s .j90-team/fallback-recovery.md
 
@@ -495,14 +495,14 @@ PROMPT
           set -e
           rm -f .j90-release-ready.json
           copilot -p "$(cat <<'PROMPT'
-Você é a IA 7, INTEGRADORA SÊNIOR do Jornada 90.
-Leia .github/copilot-instructions.md, .j90-team/plan.md, todos os relatórios em .j90-team/reports/ e o código.
-Valide criticamente os relatórios. Eles são recomendações, não ordens cegas.
-Primeiro corrija qualquer P0. Depois implemente as melhores melhorias P1/P2 sem quebrar outros sistemas.
-Teste as mudanças, execute npm run build e não enfraqueça nenhum gate.
-Não faça push nem release dentro da IA. A etapa externa fará isso.
-Somente quando o contrato completo de release estiver comprovado e nenhuma melhoria material segura restar, crie .j90-release-ready.json conforme .github/copilot-instructions.md.
-PROMPT
+          Você é a IA 7, INTEGRADORA SÊNIOR do Jornada 90.
+          Leia .github/copilot-instructions.md, .j90-team/plan.md, todos os relatórios em .j90-team/reports/ e o código.
+          Valide criticamente os relatórios. Eles são recomendações, não ordens cegas.
+          Primeiro corrija qualquer P0. Depois implemente as melhores melhorias P1/P2 sem quebrar outros sistemas.
+          Teste as mudanças, execute npm run build e não enfraqueça nenhum gate.
+          Não faça push nem release dentro da IA. A etapa externa fará isso.
+          Somente quando o contrato completo de release estiver comprovado e nenhuma melhoria material segura restar, crie .j90-release-ready.json conforme .github/copilot-instructions.md.
+          PROMPT
 )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
       - name: Validar integração
         env:
@@ -582,17 +582,17 @@ PROMPT
           mkdir -p .j90-team
           printf '%s\n' "integrator=$IA7" "fallback-recovery=$IA8" > .j90-team/emergency-status.txt
           copilot -p "$(cat <<'PROMPT'
-Você é IA 9 - INTEGRADOR DE EMERGÊNCIA e última instância do Jornada 90.
-Você entra para impedir que o pipeline pare porque uma IA falhou, parou, perdeu contexto ou atingiu o limite operacional da execução anterior.
-Não dependa de histórico de chat. Leia o código atual e os artefatos .j90-team/reports.
-Leia .github/copilot-instructions.md e .j90-team/emergency-status.txt.
-Se IA 7 já deixou uma versão pronta e o marcador .j90-release-ready.json é válido, não faça alterações desnecessárias.
-Caso contrário, assuma o trabalho pendente: corrija P0, integre as melhores descobertas, execute npm run build, npm run quality:scan quando aplicável, node scripts/release-readiness.mjs e git diff --check.
-Nunca enfraqueça gates, nunca apague funcionalidades para obter verde e nunca copie conteúdo protegido.
-Use contexto em etapas e registre decisões no repositório para permitir continuidade.
-Não faça uma release manualmente: o pipeline principal fará a publicação.
-Quando houver mudança real e validada, integre a versão atual. Quando o contrato completo estiver comprovado, somente então crie .j90-release-ready.json.
-PROMPT
+          Você é IA 9 - INTEGRADOR DE EMERGÊNCIA e última instância do Jornada 90.
+          Você entra para impedir que o pipeline pare porque uma IA falhou, parou, perdeu contexto ou atingiu o limite operacional da execução anterior.
+          Não dependa de histórico de chat. Leia o código atual e os artefatos .j90-team/reports.
+          Leia .github/copilot-instructions.md e .j90-team/emergency-status.txt.
+          Se IA 7 já deixou uma versão pronta e o marcador .j90-release-ready.json é válido, não faça alterações desnecessárias.
+          Caso contrário, assuma o trabalho pendente: corrija P0, integre as melhores descobertas, execute npm run build, npm run quality:scan quando aplicável, node scripts/release-readiness.mjs e git diff --check.
+          Nunca enfraqueça gates, nunca apague funcionalidades para obter verde e nunca copie conteúdo protegido.
+          Use contexto em etapas e registre decisões no repositório para permitir continuidade.
+          Não faça uma release manualmente: o pipeline principal fará a publicação.
+          Quando houver mudança real e validada, integre a versão atual. Quando o contrato completo estiver comprovado, somente então crie .j90-release-ready.json.
+          PROMPT
 )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
 
       - name: Validar e continuar ciclo
