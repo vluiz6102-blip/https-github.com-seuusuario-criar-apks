@@ -3218,6 +3218,46 @@ function mgrMarket(){
 }
 function managerV(){ensureManager();if(S.negotiation)return j90NegotiationView();if(S.match2d)return mgrMatchView();if(tab==="game")return mgrDashboardPro();if(tab==="squad")return j90SquadView();if(tab==="lineup")return mgrTacticsHub()+mgrLineupView();if(tab==="market")return mgrMarket();if(tab==="scout")return mgrScoutView();if(tab==="finance")return mgrFinance();if(tab==="tbl")return mgrTable();if(tab==="club")return mgrClubHub();if(tab==="news")return mgrInboxHub();return mgrDashboardPro()}
 window.managerV=managerV;window.j90TransferSquadV2={version:"fc27-fifa19-inspired"};
+Object.assign(window,{
+ j90NegotiationView:j90NegotiationView,
+ j90OpenContract:j90OpenContract,
+ j90NegotiateStage:j90NegotiateStage,
+ j90NegInput:j90NegInput,
+ j90NegRole:j90NegRole,
+ mgrMarket:mgrMarket,
+ mgrMarketPool:mgrMarketPool,
+ mgrMarketFiltered:mgrMarketFiltered,
+ mgrStartNegotiation:mgrStartNegotiation,
+ mgrBuy:mgrBuy,
+ mgrOpen:mgrOpen,
+ mgrClose:mgrClose,
+ mgrMarketSearch:mgrMarketSearch,
+ j90OnlineSync:j90OnlineSync,
+ mgrRenew:mgrRenew,
+ mgrLoan:mgrLoan,
+ mgrSell:mgrSell,
+ j90EditPlayer:j90EditPlayer,
+ j90SavePlayer:j90SavePlayer,
+ j90SetSquadMode:j90SetSquadMode,
+ mgrLineupAuto:mgrLineupAuto,
+ mgrTactic:mgrTactic,
+ mgrTraining:mgrTraining,
+ mgrScout:mgrScout,
+ mgrOffer:mgrOffer,
+ mgrPlay:mgrPlay,
+ mgrTeamTalk:mgrTeamTalk,
+ mgrBoardDecision:mgrBoardDecision,
+ mgrSetMatchDuration:mgrSetMatchDuration,
+ mgrMatchTactic:mgrMatchTactic,
+ mgrMatchSub:mgrMatchSub,
+ j90MatchInstruction:j90MatchInstruction,
+ j90MatchOpenPanel:j90MatchOpenPanel,
+ j90MatchClosePanel:j90MatchClosePanel,
+ mgrMatchPauseToggle:mgrMatchPauseToggle,
+ mgrMatchResume:mgrMatchResume,
+ j90PlusOpen:j90PlusOpen,
+ render:render
+});
 })();
 </script><script id="j90-polish-runtime">
 (()=>{'use strict';if(window.__J90_POLISH__)return;window.__J90_POLISH__=true;
