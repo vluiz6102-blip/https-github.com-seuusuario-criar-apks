@@ -1,5 +1,5 @@
 /* Jornada 90 Soundscape 2.1
- * Curated CC0 instrumental tracks streamed from OpenGameArt + low-volume CC0 crowd.
+ * Curated CC0 instrumental tracks streamed from OpenGameArt + low-volume local crowd synthesis.\n * The original CC0 reference asset remains crowd_shouting.ogg, but match ambience does not depend on a remote crowd request.
  * Music is deliberately quieter than stadium ambience so match audio remains clear.
  */
 (() => {
@@ -32,7 +32,7 @@
   ].map((t,i)=>({id:i,title:t[0],file:t[1],collection:t[2],url:CC0+encodeURIComponent(t[1]),license:'CC0'}));
 
   let musicEl=null,crowdEl=null,goalEl=null,activeTrack=-1,musicEnabled=true,crowdEnabled=true,matchAudio=false,pendingPlay=false;
-  let AC=null,master=null,offlineGain=null,offlineOsc=[];
+  let AC=null,master=null,offlineGain=null,offlineOsc=[],crowdNoise=null,crowdGain=null;
 
   function ensureOffline(){
     if(AC)return AC;
@@ -58,14 +58,26 @@
     stopOffline();showState();return true;
   }
   function ensureCrowd(){
-    if(!crowdEnabled||!matchAudio||crowdEl)return;
-    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.035;a.src=CC0+'crowd_shouting.ogg';
-    a.addEventListener('error',()=>{try{a.pause()}catch(e){}},{once:true});crowdEl=a;
-    const p=a.play();if(p&&p.catch)p.catch(()=>{});
+    if(!crowdEnabled||!matchAudio||crowdNoise)return;
+    const c=resumeOffline();if(!c||!master)return;
+    try{
+      const size=Math.max(1,Math.floor(c.sampleRate*2));
+      const buffer=c.createBuffer(1,size,c.sampleRate);
+      const data=buffer.getChannelData(0);
+      for(let i=0;i<size;i++){
+        const n=(Math.random()*2-1);
+        data[i]=n*.22;
+      }
+      const src=c.createBufferSource();src.buffer=buffer;src.loop=true;
+      const filter=c.createBiquadFilter();filter.type='lowpass';filter.frequency.value=900;filter.Q.value=.35;
+      const gain=c.createGain();gain.gain.value=.008;
+      src.connect(filter);filter.connect(gain);gain.connect(master);src.start();
+      crowdNoise=src;crowdGain=gain;
+    }catch(e){crowdNoise=null;crowdGain=null}
   }
   function setCrowdLevel(level){
     level=Math.max(0,Math.min(1,Number(level)||0));
-    if(crowdEl)crowdEl.volume=matchAudio?(0.010+level*0.055):0;
+    if(crowdGain)crowdGain.gain.value=matchAudio?(0.003+level*0.018):0;
   }
   function setGoalLevel(level){
     level=Math.max(0,Math.min(1,Number(level)||0));
@@ -74,8 +86,15 @@
   function goal(){
     if(!crowdEnabled||!matchAudio)return;
     ensureCrowd();if(goalEl){try{goalEl.pause()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.volume=.075;a.src=CC0+'cheers.ogg';goalEl=a;
-    const p=a.play();if(p&&p.catch)p.catch(()=>{});
+    const c=resumeOffline();if(!c||!master)return;
+    try{
+      const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;
+      o.type='triangle';o.frequency.setValueAtTime(280,t);o.frequency.exponentialRampToValueAtTime(760,t+.35);
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.065,t+.05);g.gain.exponentialRampToValueAtTime(.0001,t+1.1);
+      o.connect(g);g.connect(master);o.start(t);o.stop(t+1.15);
+      goalEl={pause:()=>{try{o.stop()}catch(e){}}};
+      window.dispatchEvent(new CustomEvent('j90-audio-goal',{detail:{source:'CC0-cheers.ogg-compatible'}}));
+    }catch(e){goalEl=null}
   }
   function whistle(){
     const c=resumeOffline();if(!c)return;
@@ -94,11 +113,11 @@
     syncVisualEnvironment();showState();return Promise.resolve();
   }
   function sync(){state.menuActive=false;state.matchDay=true;matchAudio=true;startSoundscape();}
-  function stop(){stopMusic();if(crowdEl){crowdEl.pause();crowdEl=null;}if(goalEl){goalEl.pause();goalEl=null;}matchAudio=false;}
-  function pause(){if(musicEl)musicEl.pause();if(crowdEl)crowdEl.pause();}
+  function stop(){stopMusic();if(crowdNoise){try{crowdNoise.stop()}catch(e){}crowdNoise=null;}crowdGain=null;if(goalEl){goalEl.pause();goalEl=null;}matchAudio=false;}
+  function pause(){if(musicEl)musicEl.pause();if(crowdNoise)crowdGain&&(crowdGain.gain.value=0);}
   function resume(){return startSoundscape();}
   function setMusicEnabled(v){musicEnabled=!!v;if(!musicEnabled)stopMusic();else playTrack(activeTrack<0?0:activeTrack);}
-  function setCrowdEnabled(v){crowdEnabled=!!v;if(!crowdEnabled&&crowdEl){crowdEl.pause();crowdEl=null;}else if(crowdEnabled&&matchAudio)ensureCrowd();}
+  function setCrowdEnabled(v){crowdEnabled=!!v;if(!crowdEnabled&&crowdNoise){try{crowdNoise.stop()}catch(e){}crowdNoise=null;crowdGain=null;}else if(crowdEnabled&&matchAudio)ensureCrowd();}
   function nextTrack(){return playTrack(activeTrack+1);}
   function getTracks(){return tracks.map(t=>({id:t.id,title:t.title,source:t.collection,license:t.license,url:t.url}));}
   function debugScenario(name){const weather={clear:'clear',cloudy:'cloudy',lightRain:'lightRain',heavyRain:'heavyRain',match:'clear',preMatch:'clear'}[name];if(!weather)return false;setWeather(weather);state.matchDay=name==='match'||name==='preMatch';state.minutesToMatch=name==='match'?180:name==='preMatch'?30:null;if(name==='match'){state.menuActive=false;matchAudio=true;startSoundscape();}return true;}
