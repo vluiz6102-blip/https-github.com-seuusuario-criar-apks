@@ -41,7 +41,7 @@
     if(c.width!==W||c.height!==H){
       c.width=W;c.height=H;
       try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
-      m._pitch=null;m._sprites=Object.create(null);
+      m._pitch=null;m._sprites=Object.create(null);m._spriteOrder=[];
     }else if(!m._ctx){
       try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
     }
@@ -107,7 +107,7 @@
   function sprite(p,side,m,dir,action,frame){
     var id=String(p&&p.id||p&&p.name||'player'),number=String(p&&p.number!=null?p.number:'');
     var key=side+'|'+id+'|'+number+'|'+dir+'|'+action+'|'+frame;
-    var cache=m._sprites||(m._sprites=Object.create(null));if(cache[key])return cache[key];
+    var cache=m._sprites||(m._sprites=Object.create(null)),order=m._spriteOrder||(m._spriteOrder=[]);if(cache[key])return cache[key];
     var o=document.createElement('canvas');o.width=PW;o.height=PH;
     var g=o.getContext('2d',{alpha:true});g.imageSmoothingEnabled=false;
     var h=hash(id),pc=colors(side==='home'?m.home:m.away);
@@ -144,7 +144,9 @@
       if(tackle){g.fillStyle='#d9e3db';g.fillRect(7,9,10,2)}
     }
     if(action==='idle'&&frame===1){g.fillStyle='rgba(255,255,255,.20)';g.fillRect(9,1,2,1)}
-    cache[key]=o;return o;
+    cache[key]=o;order.push(key);
+    if(order.length>960){var dropped=order.splice(0,320);for(var di=0;di<dropped.length;di++)delete cache[dropped[di]];}
+    return o;
   }
   function drawPlayer(g,p,side,m,now,low){
     var x=Math.round(clamp(Number(p&&p.x)||.5,.025,.975)*W),y=Math.round(clamp(Number(p&&p.y)||.5,.05,.95)*H);

@@ -76,6 +76,8 @@ const workflow = read('.github/workflows/build-apk.yml');
 if (/j90-landscape|screen\.orientation|orientation:landscape/i.test(index + '\\n' + buildScript + '\\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
 if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android não está fixado em orientação retrato.');
 if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
+if (existsSync('src/j90-landscape.js')) add(fail, 'Arquivo legado de paisagem ainda existe no projeto.');
+if (!/getContext\(['"]2d['"]/.test(match2d) || !/ResizeObserver/.test(match2d) || !/_j90AutoLow/.test(match2d)) add(fail, 'Renderer 2D sem fallback/otimização adaptativa suficiente para dispositivos com menor capacidade.');
 const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
 if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');

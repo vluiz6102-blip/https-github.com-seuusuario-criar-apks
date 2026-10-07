@@ -1395,6 +1395,14 @@ pre,code{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
   .j90ManagerShell *{scroll-behavior:auto!important}
 }
 </style>
+<style id="j90-portrait-ui-stability">
+@media(max-width:1024px){
+  .j90MgrRightNav{display:none!important}
+  body.j90-manager-nav-right #app{padding-right:0!important}
+}
+body.j90-live-match .j90MgrRightNav,
+body.j90-match-fullscreen .j90MgrRightNav{display:none!important}
+</style>
 </head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>

@@ -2,10 +2,10 @@ import { chromium } from 'playwright';
 
 const base = process.env.J90_SMOKE_URL || 'http://127.0.0.1:4173/';
 const viewports = [
+  { width: 320, height: 568, name: 'compact-phone' },
   { width: 360, height: 800, name: 'small-phone' },
   { width: 390, height: 844, name: 'phone' },
-  { width: 412, height: 915, name: 'large-phone' },
-  { width: 844, height: 390, name: 'landscape' }
+  { width: 412, height: 915, name: 'large-phone' }
 ];
 
 const browser = await chromium.launch({ headless: true, args: ['--disable-dev-shm-usage', '--disable-gpu-sandbox'] });
