@@ -38,7 +38,7 @@
     if(!musicEnabled)return false;
     index=((index%tracks.length)+tracks.length)%tracks.length;activeTrack=index;
     if(musicEl){musicEl.pause();musicEl.removeAttribute('src');try{musicEl.load()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.12:.055;a.crossOrigin='anonymous';a.src=tracks[index].url;
+    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.12:.055;a.src=tracks[index].url;
     a.addEventListener('ended',()=>playTrack(index+1),{once:true});
     a.addEventListener('error',()=>{pendingPlay=false;playOffline();showState();},{once:true});
     musicEl=a;pendingPlay=true;const promise=a.play();if(promise&&promise.catch)promise.catch(()=>{pendingPlay=true;});
