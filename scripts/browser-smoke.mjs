@@ -360,7 +360,7 @@ if (await play.count() === 1) {
         ok: !!match,
         elapsed: Number(match?.elapsed||0),
         paused: !!match?.paused,
-        resumeOnRestore: !!match?.__j90ResumeOnRestore,
+        resumeOnRestore: !!match?.j90ResumeOnRestore,
         forbidden: forbidden.slice(0,8)
       };
     } catch(e) {
@@ -368,6 +368,7 @@ if (await play.count() === 1) {
     }
   });
   if (!persistence.ok) throw new Error('Live match save failed: '+JSON.stringify(persistence));
+  if (!persistence.resumeOnRestore) throw new Error('Live match save did not persist resume marker: '+JSON.stringify(persistence));
   if (persistence.forbidden.length) throw new Error('Live match save leaked runtime-only fields: '+JSON.stringify(persistence.forbidden));
 
   const beforeExit = await page.evaluate(() => Number(window.S?.match2d?.elapsed||0));
