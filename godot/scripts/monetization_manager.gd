@@ -104,7 +104,7 @@ func _on_custom_checkout_completed(
         purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"checkout_unavailable")
         return
     var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
-    if parsed is Dictionary and bool((parsed as Dictionary).get("verified", false)):
+    if parsed is Dictionary and (parsed as Dictionary).get("verified", null) is bool and (parsed as Dictionary).get("verified", false) == true:
         purchase_verified.emit(PRODUCT_CAFE_PREFIX, parsed)
     else:
         purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"invalid_checkout_response")
@@ -215,7 +215,7 @@ func _on_verification_completed(
         return
 
     var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
-    if not (parsed is Dictionary) or not bool(parsed.get("verified", false)):
+    if not (parsed is Dictionary) or not ((parsed as Dictionary).get("verified", null) is bool) or (parsed as Dictionary).get("verified", false) != true:
         purchase_failed.emit(product_id, &"verification_rejected")
         return
 
