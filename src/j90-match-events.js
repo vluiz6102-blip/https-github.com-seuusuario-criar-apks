@@ -142,6 +142,66 @@
     if(level>.90&&decision&&decision.decision==='play_on')event(m,'📣 Vaias e protestos aumentam a pressão sobre a arbitragem.','ref_boo_'+Math.floor(Number(m._simClock)||0),4);
   }
 
+
+  /* Dynamic stadium mosaic / tifo layer. Uses procedural vector art inspired by documented
+     supporter traditions, not copied photographic assets. It adapts to club + occasion. */
+  function mosaicProfile(m,occasion){
+    var n=String(m&&m.home||'').toLowerCase(),o=String(occasion||'').toLowerCase();
+    var p={style:'crest',colors:['#e8e8e8','#164b31','#0b0b0b'],title:'DIA DE JOGO',intensity:.35};
+    if(/corinthians/.test(n))p={style:'gaviao',colors:['#050505','#f4f4f4','#bcbcbc'],title:/flamengo|palmeiras|sao paulo|são paulo/.test(String(m.away||'').toLowerCase())?'BANDO DE LOUCOS':'VAI PRA CIMA, TIMÃO',intensity:.95};
+    else if(/flamengo/.test(n))p={style:'rubro',colors:['#111','#e31b23','#fff'],title:/final|copa|libertadores|decis/.test(o)?'MENGÃO':'NAÇÃO RUBRO-NEGRA',intensity:.92};
+    else if(/palmeiras/.test(n))p={style:'caravela',colors:['#006437','#fff','#b8d9c5'],title:'AVANTI PALESTRA',intensity:.82};
+    else if(/real madrid/.test(n))p={style:'crown',colors:['#f7f7f7','#7b1fa2','#c9b458'],title:'HALA MADRID',intensity:.82};
+    else if(/paris saint-germain|\\bpsg\\b/.test(n))p={style:'ultras',colors:['#004170','#da291c','#fff'],title:'ICI C\'EST PARIS',intensity:.94};
+    else if(/borussia dortmund/.test(n))p={style:'wall',colors:['#ffd500','#111','#f2f2f2'],title:'DIE GELBE WAND',intensity:1};
+    else if(/galatasaray/.test(n))p={style:'lion',colors:['#a90432','#f5b335','#fff'],title:'CIM BOM BOM',intensity:.98};
+    else if(/liverpool/.test(n))p={style:'kop',colors:['#c8102e','#fff','#f2c75c'],title:'YOU\'LL NEVER WALK ALONE',intensity:.88};
+    else if(/boca juniors/.test(n))p={style:'bluegold',colors:['#003b7a','#f6c800','#fff'],title:'BOCA',intensity:.94};
+    else if(/river plate/.test(n))p={style:'band',colors:['#fff','#d71920','#111'],title:'RIVER PLATE',intensity:.90};
+    else if(/barcelona|barça/.test(n))p={style:'senyera',colors:['#a50044','#004d98','#edbb00'],title:'MÉS QUE UN CLUB',intensity:.82};
+    return p;
+  }
+  function drawMosaic(m){
+    try{
+      var st=m&&m._j90EventState;if(!st||!st.mosaic||!st.mosaic.active)return;
+      var c=document.getElementById('j90EventOverlayCanvas');if(!c)return;var g=c.getContext('2d');if(!g)return;
+      var w=c.clientWidth||c.width,h=c.clientHeight||c.height;if(!w||!h)return;
+      var q=st.mosaic,p=q.profile||mosaicProfile(m,q.occasion),t=Math.max(0,Math.min(1,(Number(q.t)||0))),cols=p.colors;
+      g.save();g.globalAlpha=.82*(1-Math.abs(t-.55)*.12);g.clearRect(0,0,w,h);
+      var top=h*.06,bottom=h*.31,left=w*.04,right=w*.96,rows=7,columns=48,cw=(right-left)/columns,ch=(bottom-top)/rows;
+      for(var y=0;y<rows;y++)for(var x=0;x<columns;x++){
+        var nx=x/columns,ny=y/rows,sel=0;
+        if(p.style==='wall')sel=(x+y)%2;
+        else if(p.style==='gaviao')sel=Math.abs(ny-.5)<.23&&Math.abs(nx-.5)<.20?1:0;
+        else if(p.style==='crown')sel=ny<.25&&(nx>.30&&nx<.70)?2:((x+y)%3===0?1:0);
+        else if(p.style==='caravela')sel=(nx>.28&&nx<.72&&ny>.12&&ny<.88)?1:((x+2*y)%4===0?2:0);
+        else if(p.style==='lion')sel=Math.abs(nx-.5)<.16&&Math.abs(ny-.52)<.42?1:2;
+        else if(p.style==='kop')sel=(y===3||x%9<2)?1:0;
+        else if(p.style==='ultras')sel=(Math.abs(nx-.5)<.10||y===3)?1:(x+y)%5===0?2:0;
+        else if(p.style==='senyera')sel=x%4<2?0:(x%4===2?1:2);
+        else if(p.style==='band')sel=Math.abs(ny-.5)<.20?1:(x+y)%5===0?2:0;
+        else if(p.style==='bluegold')sel=x%3===0?1:0;
+        else sel=(x+y)%3===0?1:((x*3+y)%7===0?2:0);
+        g.fillStyle=cols[sel];g.fillRect(left+x*cw,top+y*ch,cw+.6,ch+.6);
+      }
+      g.fillStyle='rgba(0,0,0,.42)';g.fillRect(w*.16,bottom+h*.018,w*.68,h*.055);
+      g.fillStyle='#fff';g.font='900 '+Math.max(9,Math.round(h*.045))+'px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(p.title,w*.5,bottom+h*.045);
+      g.restore();
+    }catch(e){}
+  }
+  function updateMosaic(m){
+    ensure(m);var st=m._j90EventState,now=Number(m._simClock)||0;
+    var score=String(m.homeScore||0)+':'+String(m.awayScore||0),profile=st.crowdProfile||crowdProfile(m);
+    var derby=String(m.home||'').toLowerCase()===String(m.away||'').toLowerCase()?false:/derby|clássico|classico|final|semifinal|quartas|libertadores|copa do brasil|champions/.test(String(m.competition||m.stage||m.matchType||'').toLowerCase());
+    var big=Number(profile.capacity||0)>=45000||derby;
+    if(!st.mosaic&&big){st.mosaic={active:true,shown:false,occasion:String(m.competition||m.stage||'jogo grande'),profile:mosaicProfile(m,String(m.competition||m.stage||'')),start:now,t:0,score:score};}
+    if(st.mosaic){
+      if(score!==st.mosaic.score){st.mosaic.score=score;st.mosaic.active=false;st.mosaic.celebrationUntil=now+5;}
+      if(st.mosaic.active)st.mosaic.t=cl((now-st.mosaic.start)/4,0,1);
+      drawMosaic(m);
+    }
+  }
+
   function discipline(m,side,p,kind){
     if(!p)return;
     ensure(m);
@@ -435,7 +495,7 @@
   else boot();
 
   window.J90MatchEvents={
-    version:'1.0',
+    version:'1.1',
     state:function(){var m=window.S&&S.match2d;return m&&m._j90EventState||null;},
     onInjury:null
   };
