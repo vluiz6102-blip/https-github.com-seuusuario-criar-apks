@@ -1,4 +1,4 @@
-import { mkdirSync, copyFileSync, readFileSync, readdirSync, existsSync, cpSync, writeFileSync } from 'node:fs';
+import { mkdirSync, copyFileSync, readFileSync, existsSync, cpSync, writeFileSync } from 'node:fs';
 import { join, relative, dirname, extname } from 'node:path';
 
 const source = readFileSync('index.html', 'utf8');
@@ -13,28 +13,11 @@ if (/j90Music(Start|Stop|Track|Notes|Timer|Nodes)/.test(scripts)) {
   throw new Error('Obsolete menu music engine detected in canonical index.html.');
 }
 
-const audioRoot = 'assets/audio';
 const rosterPath = 'data/rosters.json';
 if (!existsSync(rosterPath)) throw new Error('data/rosters.json ausente. Execute npm run data:rosters antes da build.');
 let rosters;
 try { rosters = JSON.parse(readFileSync(rosterPath, 'utf8')); } catch (error) { throw new Error('data/rosters.json inválido: ' + error.message); }
 const manifest = {};
-const audioExt = new Set(['.mp3', '.ogg', '.wav', '.m4a']);
-
-function walk(dir) {
-  if (!existsSync(dir)) return;
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) walk(full);
-    else if (audioExt.has(extname(entry.name).toLowerCase())) {
-      const rel = relative(audioRoot, full).replaceAll('\\\\', '/');
-      const category = dirname(rel) === '.' ? 'root' : dirname(rel).replaceAll('\\\\', '/');
-      (manifest[category] ||= []).push(rel);
-    }
-  }
-}
-walk(audioRoot);
-Object.values(manifest).forEach(list => list.sort());
 
 const soundscapeSource = readFileSync('src/j90-soundscape.js', 'utf8');
 const expansionSource = readFileSync('src/j90-expansion.js', 'utf8');
@@ -73,10 +56,6 @@ writeFileSync('www/j90-lineup-ai.js', lineupAiSource);
 writeFileSync('www/j90-match-replay.js', replaySource);
 writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 
-if (existsSync(audioRoot)) {
-  mkdirSync('www/assets', { recursive: true });
-  cpSync(audioRoot, 'www/assets/audio', { recursive: true });
-}
 if (existsSync(contentRoot)) {
   mkdirSync('www/assets', { recursive: true });
   cpSync(contentRoot, 'www/assets/j90-content', { recursive: true });
@@ -93,4 +72,4 @@ if (!generated.includes('src="j90-soundscape.js"')) {
 const totalAssets = Object.values(manifest).reduce((n, list) => n + list.length, 0);
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: canonical source validated, soundscape + expansion + AI 2.0 + Match 2D V3 + Squad Cards injected, ' + totalAssets + ' audio assets found, ' + rosterTeams + ' team rosters / ' + rosterPlayers + ' players injected, ' + (contentManifest.sceneCount || 0) + ' stadium scenes / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB content pack.');
+console.log('Jornada 90 web build OK: fonte validada, áudio totalmente desativado, soundscape compatível sem Web Audio, expansão + IA 2.0 + Match 2D V3 + Squad Cards injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
