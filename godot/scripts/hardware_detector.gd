@@ -6,6 +6,8 @@ signal profile_changed(profile: Dictionary)
 enum Profile { HIGH_PERFORMANCE, LITE }
 
 const MIN_RAM_HIGH_BYTES: int = 3 * 1024 * 1024 * 1024
+const MIN_VULKAN_MAJOR: int = 1
+const MIN_VULKAN_MINOR: int = 2
 const HIGH_PHYSICS_HZ: int = 60
 const LITE_PHYSICS_HZ: int = 30
 
@@ -29,9 +31,10 @@ func profile() -> Dictionary:
         "ram_gb": float(_info.get("ram_bytes", 0)) / 1073741824.0,
         "cpu_cores": int(_info.get("cpu_cores", 1)),
         "renderer": str(_info.get("renderer", "")),
+        "driver": str(_info.get("driver", "")),
         "gpu": str(_info.get("gpu", "")),
         "api_version": str(_info.get("api_version", "")),
-        "has_vulkan": bool(_info.get("has_vulkan", false))
+        "has_vulkan_1_2": bool(_info.get("has_vulkan_1_2", false))
     }
 
 func is_lite() -> bool:
@@ -41,28 +44,41 @@ func _probe() -> Dictionary:
     var mem: Dictionary = OS.get_memory_info()
     var ram_bytes: int = int(mem.get("physical", 0))
     var api_version: String = RenderingServer.get_video_adapter_api_version()
-    var renderer: String = str(ProjectSettings.get_setting(
-        "rendering/renderer/rendering_method", "mobile"
-    ))
     var gpu: String = RenderingServer.get_video_adapter_name()
-    var has_vulkan: bool = api_version.begins_with("1.")
+    var renderer: String = RenderingServer.get_current_rendering_method()
+    var driver: String = RenderingServer.get_current_rendering_driver_name()
     var cores: int = maxi(1, OS.get_processor_count())
 
     return {
         "ram_bytes": ram_bytes,
         "cpu_cores": cores,
         "renderer": renderer,
+        "driver": driver,
         "gpu": gpu,
         "api_version": api_version,
-        "has_vulkan": has_vulkan
+        "has_vulkan_1_2": driver == "vulkan" and _version_at_least_1_2(api_version)
     }
+
+func _version_at_least_1_2(version: String) -> bool:
+    var clean := version.strip_edges()
+    var parts := clean.split(".")
+    if parts.size() < 2:
+        return false
+    var major := parts[0].to_int()
+    var minor := parts[1].to_int()
+    return major > MIN_VULKAN_MAJOR or (
+        major == MIN_VULKAN_MAJOR and minor >= MIN_VULKAN_MINOR
+    )
 
 func _select_profile(info: Dictionary) -> Profile:
     var ram_bytes: int = int(info.get("ram_bytes", 0))
     var cores: int = int(info.get("cpu_cores", 1))
-    var has_vulkan: bool = bool(info.get("has_vulkan", false))
+    var has_vulkan: bool = bool(info.get("has_vulkan_1_2", false))
+    var current_renderer: String = str(info.get("renderer", ""))
 
     if ram_bytes > 0 and ram_bytes < MIN_RAM_HIGH_BYTES:
+        return Profile.LITE
+    if current_renderer == "gl_compatibility":
         return Profile.LITE
     if not has_vulkan:
         return Profile.LITE
