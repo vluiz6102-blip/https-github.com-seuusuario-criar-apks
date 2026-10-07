@@ -193,7 +193,8 @@
     var low=!!(window.__J90_PERF&&window.__J90_PERF.low);
     g.setTransform(dpr,0,0,dpr,0,0);
     g.clearRect(0,0,w,h);
-    g.drawImage(fieldCache(m,w,h),0,0,w,h);\n    stadiumIdentity(g,w,h,m);
+    g.drawImage(fieldCache(m,w,h),0,0,w,h);
+    stadiumIdentity(g,w,h,m);
     var now=performance.now();
     var camX=(.5-(Number(m.ball&&m.ball.x)||.5))*w*.08;
     var camY=(.5-(Number(m.ball&&m.ball.y)||.5))*h*.045;
