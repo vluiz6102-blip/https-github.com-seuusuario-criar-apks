@@ -38,6 +38,11 @@ if (!/webglcontextlost/.test(webgl) || !/webglcontextrestored/.test(webgl)) add(
 const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 const ai2 = read('src/j90-ai2.js');
+const managerAi = read('src/j90-manager-ai.js');
+checkSyntax('Manager AI 2.0', managerAi);
+if (!/window\\.J90ManagerAI/.test(managerAi) || !/transferAI/.test(managerAi) || !/developmentPlan/.test(managerAi) || !/opponentAnalysis/.test(managerAi)) add(fail, 'Manager AI 2.0 incompleta.');
+if (!/j90EliteProfile/.test(managerAi) || !/j90Radar/.test(managerAi) || !/j90MiniPitch/.test(managerAi) || !/input\\[type=\"range\"\\]/.test(managerAi)) add(fail, 'UI premium de elenco/negociação incompleta.');
+
 checkSyntax('Jornada 90 AI 2.0', ai2);
 if (!/window\.J90AI2/.test(ai2)) add(fail, 'Jornada 90 AI 2.0 não exporta window.J90AI2.');
 if (/setInterval\s*\(/.test(ai2)) add(fail, 'AI 2.0 usa setInterval. Manter a simulação no RAF compartilhado.');
