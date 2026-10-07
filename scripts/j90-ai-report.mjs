@@ -183,6 +183,30 @@ async function groq() {
   return text;
 }
 
+async function nvidia() {
+  const key = process.env.NVIDIA_INFERENCE_API_KEY;
+  if (!key) throw new Error("NVIDIA_INFERENCE_API_KEY ausente.");
+  const model = process.env.NVIDIA_MODEL || "z-ai/glm5-3-flash";
+  const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "content-type": "application/json", "authorization": "Bearer " + key },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
+        { role: "user", content: fullPrompt }
+      ],
+      max_tokens: maxOutputTokens,
+      temperature: 0.2,
+      stream: false
+    })
+  });
+  if (!res.ok) throw new Error("NVIDIA HTTP " + res.status + ": " + await res.text());
+  const json = await res.json();
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("NVIDIA não retornou conteúdo.");
+  return text;
+}
 function copilot() {
   const token = process.env.COPILOT_GITHUB_TOKEN;
   if (!token) throw new Error("COPILOT_GITHUB_TOKEN ausente.");
@@ -195,7 +219,7 @@ function copilot() {
   return text;
 }
 
-const providers = { gemini, anthropic, openrouter, groq, copilot };
+const providers = { gemini, anthropic, openrouter, groq, nvidia, copilot };
 const errors = [];
 
 for (const provider of preference) {
