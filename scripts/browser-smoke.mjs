@@ -174,7 +174,7 @@ if (await page.locator('.j90EliteProfile').count() < 1) {
         out.directProfile = { ok: false, reason: 'playerProfile unavailable or roster empty' };
       }
     } catch (e) { out.directProfile = { ok: false, error: String(e?.stack || e?.message || e) }; }
-    try { out.resources = performance.getEntriesByType('resource').map(x => x.name).filter(x => /j90-manager-ai|j90-landscape|j90-match-events/.test(x)); } catch (e) {}
+    try { out.resources = performance.getEntriesByType('resource').map(x => x.name).filter(x => /j90-manager-ai|j90-match-lifecycle|j90-match-events/.test(x)); } catch (e) {}
     return out;
   });
   throw new Error('Premium player profile did not render. ' + JSON.stringify({ errors, profileDiagnostic }));
