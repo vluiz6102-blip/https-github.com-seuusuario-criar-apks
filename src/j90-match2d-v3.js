@@ -130,7 +130,7 @@
     var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||p.aiRole||''));
     var hash=0;for(var i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
     var skins=['#7a4b32','#9b6546','#c48762','#d39a76','#f0b38f'],hairs=['#171717','#3b2417','#6b4328','#a87942','#d8d8d8'];
-    return cache[key]={pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',height:.92+(hash%13)/100,lean:((hash>>>5)%9-4)/100};
+    return cache[key]={pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',lean:((hash>>>5)%9-4)/100,lastName:String(p.name||'Jogador').split(' ').slice(-1)[0].toUpperCase().slice(0,12),number:String(p.number||'')};
   }
 
   function drawPlayer(g,p,side,m,w,h,now,low){
@@ -139,8 +139,7 @@
     var y=clamp2(Number(p.y)||.5,.04,.96)*h;
     var s=low?0.72:1, scale=Math.max(1,Math.min(w,h)/260)*s;
     var active=(m.possessionTeam===side&&m.possessionPlayerId===p.id);
-    var vx=Number(p.vx)||0,vy=Number(p.vy)||0,run=Math.sin(now/95+(Number(p.id)||0))*Math.min(2.5,Math.abs(vx)+Math.abs(vy)*.5);
-    var dir=vx!==0?Math.sign(vx):((side==='home')?1:-1);
+    var vx=Number(p.vx)||0,vy=Number(p.vy)||0;
     g.save();g.translate(x,y);g.rotate(v.lean);
     if(active&&!low){
       g.globalAlpha=.18+.08*Math.sin(now/100);
@@ -178,10 +177,10 @@
     }
 
     if(!low){
-      var name=String(p.name||'Jogador').split(' ').slice(-1)[0].toUpperCase().slice(0,12);
+      var name=v.lastName;
       g.font='800 8px system-ui';g.textAlign='center';g.textBaseline='middle';
       g.strokeStyle='rgba(0,0,0,.92)';g.lineWidth=3;g.strokeText(name,0,32*scale);g.fillStyle='#fff';g.fillText(name,0,32*scale);
-      g.font='900 7px system-ui';g.strokeText(String(p.number||''),0,1*scale);g.fillText(String(p.number||''),0,1*scale);
+      g.font='900 7px system-ui';g.strokeText(v.number,0,1*scale);g.fillText(v.number,0,1*scale);
     }
     g.restore();
   }
