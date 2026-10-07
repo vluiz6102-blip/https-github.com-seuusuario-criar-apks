@@ -80,11 +80,20 @@
     var parent=c.parentElement;
     var w=Math.max(280,Math.floor(c.clientWidth||parent&&parent.clientWidth||320));
     var h=Math.max(260,Math.floor(c.clientHeight||300));
-    var dpr=Math.min(2,window.devicePixelRatio||1);
+    var dpr=Math.min((window.__J90_PERF&&window.__J90_PERF.low)?1.5:2,window.devicePixelRatio||1);
     if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
     m._cw=w;m._ch=h;m._dpr=dpr;m._dom=m._dom||{};m._dom.canvas=c;
     if(!m._ctx){
-      try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true,willReadFrequently:false})||c.getContext('2d',{alpha:false});}catch(e){m._ctx=null;}
+      try{
+        m._ctx=c.getContext('2d',{alpha:false,desynchronized:true,preserveDrawingBuffer:false})||c.getContext('2d',{alpha:false});
+      }catch(e){
+        try{m._ctx=c.getContext('2d');}catch(_){m._ctx=null;}
+      }
+      if(m._ctx&&!m._j90CanvasCompatBound){
+        m._j90CanvasCompatBound=true;
+        c.addEventListener('contextlost',function(e){try{e.preventDefault();}catch(_){} m._ctx=null;m._cw=0;m._ch=0;},{passive:false});
+        c.addEventListener('contextrestored',function(){try{m._ctx=c.getContext('2d',{alpha:false})||c.getContext('2d');}catch(_){} m._cw=0;m._ch=0;});
+      }
     }
     if(window.J90_USE_WEBGL===true && (!m._j90gl||!m._j90gl.ready)){
       try{m._j90gl=initGL(c);}catch(e){m._j90gl=null;}
