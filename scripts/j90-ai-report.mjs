@@ -50,6 +50,30 @@ async function gemini() {
   if (!text) throw new Error("Gemini não retornou conteúdo.");
   return text;
 }
+\nasync function anthropic() {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error("ANTHROPIC_API_KEY ausente.");
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxOutputTokens,
+      system: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos.",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  if (!res.ok) throw new Error(\`Anthropic HTTP \${res.status}: \${await res.text()}\`);
+  const json = await res.json();
+  const text = json?.content?.filter(p => p.type === "text").map(p => p.text).join("\\n").trim();
+  if (!text) throw new Error("Anthropic não retornou conteúdo.");
+  return text;
+}
 
 async function openrouter() {
   const key = process.env.OPENROUTER_API_KEY;
@@ -117,7 +141,7 @@ function copilot() {
   return text;
 }
 
-const providers = { gemini, openrouter, groq, copilot };
+const providers = { gemini, anthropic, openrouter, groq, copilot };
 const errors = [];
 
 for (const provider of preference) {
