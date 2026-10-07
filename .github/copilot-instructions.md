@@ -79,3 +79,14 @@ IA 2-6 are analysts during their team pass. They must report findings instead of
 No AI service can honestly be guaranteed to have infinite/unlimited tokens. The fallback design therefore avoids reliance on chat history, keeps context compact, persists decisions in files/artifacts, and gives IA 8 and IA 9 independent execution windows. Hitting a provider quota can still fail that individual job, but it should not strand the entire improvement cycle when another fallback can run.
 
 All agents must preserve tests, existing features, release gates, copyright-safe content and the single-source build.
+
+
+## Multi-provider AI pool
+
+The specialist analysis pass must not consume Copilot exclusively. Use `scripts/j90-ai-report.mjs` to route each report across providers in this order, according to the role: Gemini, Anthropic, OpenRouter, Groq, then Copilot as the last fallback.
+
+Supported GitHub Actions secrets are optional: `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, and `COPILOT_GITHUB_TOKEN`. Optional repository variables can override `GEMINI_MODEL`, `ANTHROPIC_MODEL`, `OPENROUTER_MODEL`, and `GROQ_MODEL`.
+
+Current default specialist models are Gemini 3.8 Flash, Claude Sonnet 4.5, OpenRouter `openrouter/free`, and Groq `openai/gpt-oss-120b`. These services have their own limits; the purpose of the pool is to spread workload and preserve continuity, not to claim unlimited usage.
+
+The normal integrator and emergency code-changing stages remain protected behind the existing Copilot path until a second agentic coding provider is explicitly enabled and tested. No secret may ever be committed to the repository.
