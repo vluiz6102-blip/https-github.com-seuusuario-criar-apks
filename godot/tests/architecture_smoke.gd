@@ -65,9 +65,11 @@ func _initialize() -> void:
         if main == null:
             failures.append("MAIN_SCENE_INSTANTIATE_FAILED")
         else:
+            root.add_child(main)
             if main.get_node_or_null("HomeShell") == null:
                 failures.append("HOME_SHELL_MISSING")
-            main.free()
+            main.queue_free()
+            await process_frame
 
     if failures.is_empty():
         print("J90_GODOT_ARCHITECTURE=OK")
