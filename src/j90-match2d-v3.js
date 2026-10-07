@@ -81,6 +81,36 @@
     return bg;
   }
 
+  function stadiumIdentity(g,w,h,m){
+    var n=String(m&&m.home||'Estádio').toLowerCase(),hash=0;
+    for(var i=0;i<n.length;i++)hash=(hash*33+n.charCodeAt(i))>>>0;
+    var style=hash%6;
+    g.save();
+    // Arquitetura procedural única por clube: cobertura, torres, refletores e faixas.
+    g.globalAlpha=.34;
+    g.fillStyle=style===0?'#101820':style===1?'#18202b':style===2?'#221b29':style===3?'#13251f':style===4?'#25211b':'#171d25';
+    g.fillRect(0,0,w,h*.19);g.fillRect(0,h*.81,w,h*.19);
+    g.globalAlpha=.75;
+    var lights=style+4;
+    for(var l=0;l<lights;l++){
+      var lx=(l+1)*w/(lights+1),ly=l%2?h*.045:h*.955;
+      g.fillStyle='#fff2b0';g.beginPath();g.arc(lx,ly,2.1,0,Math.PI*2);g.fill();
+      g.strokeStyle='rgba(255,242,176,.16)';g.lineWidth=5;
+      g.beginPath();g.moveTo(lx,ly);g.lineTo(w*.5,h*(ly<h*.5?.29:.71));g.stroke();
+    }
+    g.globalAlpha=.55;
+    var stripe=style%3;
+    g.fillStyle=stripe===0?'#fff':stripe===1?'#ffd34f':'#d62839';
+    if(style===0||style===3)g.fillRect(0,h*.16,w,4);
+    else if(style===1||style===4)g.fillRect(0,h*.84,w,4);
+    else {g.fillRect(0,h*.16,w*.38,4);g.fillRect(w*.62,h*.16,w*.38,4);}
+    g.globalAlpha=.8;
+    g.fillStyle='rgba(255,255,255,.75)';g.font='900 '+Math.max(8,w/80)+'px system-ui';g.textAlign='center';
+    var label=String(m&&m.home||'ESTÁDIO').toUpperCase().slice(0,24);
+    g.fillText(label,w/2,style%2?h*.13:h*.88);
+    g.restore();
+  }
+
   function playerVisual(p,side,m){
     var pal=palette(side==='home'?m.home:m.away);
     var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||p.aiRole||''));
@@ -163,7 +193,7 @@
     var low=!!(window.__J90_PERF&&window.__J90_PERF.low);
     g.setTransform(dpr,0,0,dpr,0,0);
     g.clearRect(0,0,w,h);
-    g.drawImage(fieldCache(m,w,h),0,0,w,h);
+    g.drawImage(fieldCache(m,w,h),0,0,w,h);\n    stadiumIdentity(g,w,h,m);
     var now=performance.now();
     var camX=(.5-(Number(m.ball&&m.ball.x)||.5))*w*.08;
     var camY=(.5-(Number(m.ball&&m.ball.y)||.5))*h*.045;
