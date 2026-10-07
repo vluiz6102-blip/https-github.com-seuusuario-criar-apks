@@ -91,7 +91,48 @@ async function assertReadableLayout(page){
 }
 await page.evaluate(() => window.J90ManagerBridge.setTab('squad'));
 await page.waitForTimeout(180);
-if (await page.locator('.j90EliteProfile').count() < 1) throw new Error('Premium player profile did not render.');
+if (await page.locator('.j90EliteProfile').count() < 1) {
+  const profileDiagnostic = await page.evaluate(() => {
+    const out = { managerAI: null, bindings: {}, state: null, rosterHost: '', directProfile: null, resources: [] };
+    try { out.managerAI = window.J90ManagerAI ? { version: window.J90ManagerAI.version || '', keys: Object.keys(window.J90ManagerAI), playerProfileType: typeof window.J90ManagerAI.playerProfile } : null; } catch (e) { out.managerAI = { error: String(e?.message || e) }; }
+    try {
+      out.bindings = {
+        j90ManagerAI2: !!window.__J90_MANAGER_AI_2__,
+        managerVWindow: typeof window.managerV,
+        squadWindow: typeof window.j90SquadView,
+        renderWindow: typeof window.render,
+        renderBinding: typeof render,
+        squadBinding: typeof j90SquadView,
+        tabBinding: typeof tab === 'undefined' ? 'undefined' : tab
+      };
+    } catch (e) { out.bindings = { error: String(e?.message || e) }; }
+    try {
+      out.state = typeof S !== 'undefined' && S ? {
+        manager: !!S.manager,
+        managerClub: S.managerClub || '',
+        roster: Array.isArray(S.roster) ? S.roster.length : -1,
+        slots: Array.isArray(S.lineup?.slots) ? S.lineup.slots.length : -1,
+        firstPlayer: S.roster?.[0]?.name || ''
+      } : null;
+    } catch (e) { out.state = { error: String(e?.message || e) }; }
+    try {
+      const host = document.querySelector('.j90RosterHub');
+      out.rosterHost = host ? host.outerHTML.slice(0, 1200) : '';
+    } catch (e) { out.rosterHost = 'ERROR: ' + String(e?.message || e); }
+    try {
+      const p = typeof S !== 'undefined' && S?.roster?.[0];
+      if (p && window.J90ManagerAI && typeof window.J90ManagerAI.playerProfile === 'function') {
+        const html = window.J90ManagerAI.playerProfile(p);
+        out.directProfile = { ok: true, length: html.length, hasElite: html.includes('j90EliteProfile'), hasRadar: html.includes('j90Radar'), hasPitch: html.includes('j90MiniPitch') };
+      } else {
+        out.directProfile = { ok: false, reason: 'playerProfile unavailable or roster empty' };
+      }
+    } catch (e) { out.directProfile = { ok: false, error: String(e?.stack || e?.message || e) }; }
+    try { out.resources = performance.getEntriesByType('resource').map(x => x.name).filter(x => /j90-manager-ai|j90-landscape|j90-match-events/.test(x)); } catch (e) {}
+    return out;
+  });
+  throw new Error('Premium player profile did not render. ' + JSON.stringify({ errors, profileDiagnostic }));
+}
 if (await page.locator('.j90Radar').count() < 1) throw new Error('Player radar chart did not render.');
 if (await page.locator('.j90MiniPitch').count() < 1) throw new Error('Mini tactical pitch did not render.');
 if (await page.locator('.j90EliteProfile').count()) await page.locator('.j90EliteProfile').first().scrollIntoViewIfNeeded();
