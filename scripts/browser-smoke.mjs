@@ -181,6 +181,51 @@ if (await play.count() === 1) {
   if (before.clock === after.clock) throw new Error('Match clock did not advance.');
   if (after.frames < before.frames) throw new Error('Frame counter regressed.');
   if (!after.possession.trim()) throw new Error('Possession HUD is empty.');
+
+  // Landscape regression: same live match/state, only viewport orientation changes.
+  const portraitViewport = { width: 390, height: 844 };
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.waitForTimeout(220);
+  const landscape = await page.evaluate(() => {
+    const pageBox=document.querySelector('.j90MatchOnlyPage')?.getBoundingClientRect();
+    const stage=document.querySelector('.j90MatchStage')?.getBoundingClientRect();
+    const canvas=document.querySelector('#j90MatchCanvas')?.getBoundingClientRect();
+    const m=window.S?.match2d;
+    return {
+      ok: !!document.querySelector('.j90MatchOnlyPage'),
+      orientation: innerWidth>innerHeight?'landscape':'portrait',
+      overflow: document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2,
+      pageWidth: pageBox?.width||0,
+      pageHeight: pageBox?.height||0,
+      stageWidth: stage?.width||0,
+      stageHeight: stage?.height||0,
+      canvasWidth: canvas?.width||0,
+      canvasHeight: canvas?.height||0,
+      actionGrid: getComputedStyle(document.querySelector('.j90MatchActionBar')).gridTemplateColumns||'',
+      matchClock: document.querySelector('#j90MatchClock')?.textContent||'',
+      score: document.querySelector('#j90MatchScore')?.textContent||'',
+      aiLandscape: typeof window.J90Landscape?.isActive==='function' ? !!window.J90Landscape.isActive() : false,
+      elapsed: Number(m?.elapsed||0)
+    };
+  });
+  if (landscape.orientation !== 'landscape') throw new Error('Landscape viewport was not applied.');
+  if (!landscape.ok || landscape.overflow) throw new Error('Landscape match overflowed the viewport: '+JSON.stringify(landscape));
+  if (landscape.stageWidth < 300 || landscape.stageHeight < 130) throw new Error('Landscape match stage is too small: '+JSON.stringify(landscape));
+  if (landscape.canvasWidth < 280 || landscape.canvasHeight < 120) throw new Error('Landscape canvas dimensions are invalid: '+JSON.stringify(landscape));
+  if (!landscape.actionGrid || !landscape.actionGrid.includes('1fr')) throw new Error('Landscape action bar did not reflow.');
+  if (!landscape.matchClock || !landscape.score) throw new Error('Landscape HUD lost match state.');
+  if (landscape.elapsed <= Number(beforeLiveElapsed||0)) throw new Error('Landscape rotation reset or stopped the match clock.');
+  await page.setViewportSize(portraitViewport);
+  await page.waitForTimeout(180);
+  const portrait = await page.evaluate(() => ({
+    orientation: innerWidth>innerHeight?'landscape':'portrait',
+    overflow: document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2,
+    canvasHeight: document.querySelector('#j90MatchCanvas')?.getBoundingClientRect().height||0,
+    clock: document.querySelector('#j90MatchClock')?.textContent||''
+  }));
+  if (portrait.orientation !== 'portrait' || portrait.overflow || portrait.canvasHeight < 180 || !portrait.clock) {
+    throw new Error('Portrait recovery after landscape failed: '+JSON.stringify(portrait));
+  }
 }
 
 if (errors.length) {
