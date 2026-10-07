@@ -12,16 +12,21 @@ var _rng := RandomNumberGenerator.new()
 var _cooldowns: Dictionary = {}
 var _history: Array[Dictionary] = []
 var _match_active: bool = false
+var _last_weather_key: String = ""
+var _last_weather_modifiers: Dictionary = {}
 
 func start_match(seed_value: int = 0) -> void:
     _rng.seed = seed_value if seed_value != 0 else Time.get_unix_time_from_system()
     _cooldowns.clear()
     _history.clear()
+    _last_weather_key = ""
+    _last_weather_modifiers.clear()
     _match_active = true
 
 func stop_match() -> void:
     _match_active = false
     _cooldowns.clear()
+    _last_weather_key = ""
 
 func evaluate_context(ctx: Dictionary) -> void:
     if not _match_active:
@@ -34,7 +39,12 @@ func evaluate_context(ctx: Dictionary) -> void:
     var classic: bool = bool(ctx.get("classic", false))
     var home_noise: float = clampf(float(ctx.get("home_crowd", 0.5)), 0.0, 1.0)
 
-    weather_effect_changed.emit(_weather_modifiers(weather, pitch))
+    var weather_key := weather + "|" + pitch
+    if weather_key != _last_weather_key:
+        _last_weather_key = weather_key
+        _last_weather_modifiers = _weather_modifiers(weather, pitch)
+        weather_effect_changed.emit(_last_weather_modifiers.duplicate())
+    
     _try_situational_event(minute, tension, classic)
     _try_referee_pressure(ctx, tension, home_noise)
     _try_stoppage(minute, tension)
@@ -60,6 +70,9 @@ func record_action_event(event_id: StringName, payload: Dictionary, cooldown_sec
 
     event_triggered.emit(event_id, payload)
     return true
+
+func current_weather_modifiers() -> Dictionary:
+    return _last_weather_modifiers.duplicate(true)
 
 func history() -> Array[Dictionary]:
     return _history.duplicate(true)
@@ -117,13 +130,12 @@ func _try_referee_pressure(ctx: Dictionary, tension: float, home_noise: float) -
     if not bool(ctx.get("last_foul", false)) or _rng.randf() > 0.05:
         return
 
-    var decision := {
+    referee_decision.emit({
         "type": "advantage_check",
         "home_pressure": home_noise,
         "bias": clampf((home_noise - 0.5) * 0.10, -0.10, 0.10),
         "confidence": clampf(0.72 + tension * 0.2, 0.0, 1.0)
-    }
-    referee_decision.emit(decision)
+    })
 
 func _try_stoppage(minute: float, tension: float) -> void:
     if minute < 85.0 or tension < 0.75:
@@ -133,5 +145,5 @@ func _try_stoppage(minute: float, tension: float) -> void:
 
 func _exit_tree() -> void:
     stop_match()
-    _cooldowns.clear()
     _history.clear()
+    _cooldowns.clear()
