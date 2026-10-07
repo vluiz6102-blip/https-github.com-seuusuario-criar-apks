@@ -42,7 +42,7 @@ const managerAi = read('src/j90-manager-ai.js');
 const landscape = read('src/j90-landscape.js');
 checkSyntax('Manager AI 2.0', managerAi);
 if (!/window\.J90ManagerAI/.test(managerAi) || !/transferAI/.test(managerAi) || !/developmentPlan/.test(managerAi) || !/opponentAnalysis/.test(managerAi)) add(fail, 'Manager AI 2.0 incompleta.');
-if (!/j90EliteProfile/.test(managerAi) || !/j90Radar/.test(managerAi) || !/j90MiniPitch/.test(managerAi) || !/input\[type=["']range["']\]/.test(managerAi)) add(fail, 'UI premium de elenco/negociação incompleta.');
+if (!/j90EliteProfile/.test(managerAi) || !/j90Radar/.test(managerAi) || !/j90MiniPitch/.test(managerAi) || !/input\[type\s*=\s*["']?range["']?\]/.test(managerAi)) add(fail, 'UI premium de elenco/negociação incompleta.');
 
 checkSyntax('Jornada 90 AI 2.0', ai2);
 if (!/window\.J90AI2/.test(ai2)) add(fail, 'Jornada 90 AI 2.0 não exporta window.J90AI2.');
