@@ -147,7 +147,13 @@ jobs:
           J90_DIAG_URL=http://127.0.0.1:4173/diag.html node scripts/diag-smoke.mjs
 
       - name: Teste visual responsivo e anti-overflow
-        run: node scripts/visual-scan.mjs
+        run: |
+          set -euo pipefail
+          nohup python3 -m http.server 4173 --directory www >/tmp/j90-visual-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          sleep 1
+          J90_SMOKE_URL=http://127.0.0.1:4173/ node scripts/visual-scan.mjs
 
       - name: Preparar Android
         run: |
