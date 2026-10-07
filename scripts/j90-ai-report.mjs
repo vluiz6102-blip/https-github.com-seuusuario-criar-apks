@@ -50,7 +50,8 @@ async function gemini() {
   if (!text) throw new Error("Gemini não retornou conteúdo.");
   return text;
 }
-\nasync function anthropic() {
+
+async function anthropic() {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY ausente.");
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
@@ -68,9 +69,9 @@ async function gemini() {
       messages: [{ role: "user", content: prompt }]
     })
   });
-  if (!res.ok) throw new Error(\`Anthropic HTTP \${res.status}: \${await res.text()}\`);
+  if (!res.ok) throw new Error(`Anthropic HTTP ${res.status}: ${await res.text()}`);
   const json = await res.json();
-  const text = json?.content?.filter(p => p.type === "text").map(p => p.text).join("\\n").trim();
+  const text = json?.content?.filter(p => p.type === "text").map(p => p.text).join("\n").trim();
   if (!text) throw new Error("Anthropic não retornou conteúdo.");
   return text;
 }
