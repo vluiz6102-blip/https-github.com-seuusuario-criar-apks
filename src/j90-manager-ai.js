@@ -286,7 +286,7 @@ function install(){
    var oldDash=mgrDashboardPro;
    var wrapDash=function(){
      var html=oldDash.apply(this,arguments),b=boardAI(),d=developmentPlan();
-     var block='<div class="j90AIBoardStrip"><div><span>IA DE GESTÃO</span><b>'+esc(b.action)+'</b><small>Prioridade '+esc(b.severity)+' · foco de desenvolvimento: '+esc(d.focusLabel)+'</small></div><button onclick="tab='lineup';render(1)">Abrir análise</button></div>';
+     var block='<div class="j90AIBoardStrip"><div><span>IA DE GESTÃO</span><b>'+esc(b.action)+'</b><small>Prioridade '+esc(b.severity)+' · foco de desenvolvimento: '+esc(d.focusLabel)+'</small></div><button onclick="tab=&quot;lineup&quot;;render(1)">Abrir análise</button></div>';
      return html.replace('<section class="j90MgrPage">','<section class="j90MgrPage">'+block);
    };
    wrapDash.__j90ManagerAI=true;wrapDash.__original=oldDash;mgrDashboardPro=wrapDash;window.mgrDashboardPro=wrapDash;
