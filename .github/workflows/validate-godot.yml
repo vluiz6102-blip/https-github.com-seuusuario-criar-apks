@@ -23,9 +23,7 @@ jobs:
       - name: Download Godot 4.7.2
         run: |
           set -euo pipefail
-          curl -L --fail --retry 3 \
-            -o /tmp/godot.zip \
-            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          curl -L --fail --retry 3             -o /tmp/godot.zip             https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x /tmp/godot/Godot_v4.7.2-stable_linux.x86_64
 
@@ -40,8 +38,8 @@ jobs:
             godot/scripts/match_event_manager.gd
             godot/scripts/monetization_manager.gd
           )
-          for file in "\${forbidden[@]}"; do
-            if grep -nE 'func _process\\(|func _physics_process\\(' "$file"; then
+          for file in "${forbidden[@]}"; do
+            if grep -nE 'func _process\(|func _physics_process\(' "$file"; then
               echo "Runtime ownership violation: $file"
               exit 1
             fi
@@ -50,12 +48,19 @@ jobs:
           test ! -f src/j90-landscape.js
           grep -Fq 'handheld/orientation=1' godot/project.godot
           grep -Fq 'stretch/scale_mode="integer"' godot/project.godot
+          grep -Fq 'rendering/renderer/rendering_method="mobile"' godot/project.godot
+          grep -Fq 'rendering/rendering_device/driver.android="vulkan"' godot/project.godot
           grep -Fq 'rendering/rendering_device/fallback_to_opengl3=true' godot/project.godot
+          grep -Fq 'textures/vram_compression/import_etc2_astc=true' godot/project.godot
+          grep -Fq 'PerformanceGovernor="*res://scripts/performance_governor.gd"' godot/project.godot
+          grep -Fq 'J90AnimationSystem="*res://scripts/animation_system.gd"' godot/project.godot
 
       - name: Parse and load every Godot class
         run: |
           set -euo pipefail
-          /tmp/godot/Godot_v4.7.2-stable_linux.x86_64 \
-            --headless \
-            --path godot \
-            --script res://tests/architecture_smoke.gd
+          /tmp/godot/Godot_v4.7.2-stable_linux.x86_64             --headless             --path godot             --script res://tests/architecture_smoke.gd
+
+      - name: NextGen feature smoke
+        run: |
+          set -euo pipefail
+          /tmp/godot/Godot_v4.7.2-stable_linux.x86_64             --headless             --path godot             --script res://tests/nextgen_smoke.gd
