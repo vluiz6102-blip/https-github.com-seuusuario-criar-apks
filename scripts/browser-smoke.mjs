@@ -97,6 +97,18 @@ if (await play.count() === 1) {
   await play.click();
   await page.waitForTimeout(1200);
   if (await page.locator('#j90MatchCanvas').count() !== 1) throw new Error('Match canvas did not open.');
+  if (await page.locator('.j90ManagerTabs').count() !== 0) throw new Error('Manager navigation leaked into fullscreen match.');
+  if (await page.locator('.j90MatchActionBar').count() !== 1) throw new Error('Live match action bar did not open.');
+  const beforeLiveElapsed = await page.evaluate(() => Number(window.S?.match2d?.elapsed || 0));
+  await page.getByRole('button', { name: /^Tática/ }).click();
+  if (await page.locator('#j90MatchPanel.open .j90MatchPane[data-pane="tactics"]').count() !== 1) throw new Error('Live tactics panel did not open.');
+  const afterTacticElapsed = await page.evaluate(() => Number(window.S?.match2d?.elapsed || 0));
+  if (afterTacticElapsed + 0.15 < beforeLiveElapsed) throw new Error('Opening/applying live tactics reset the match clock.');
+  await page.getByRole('button', { name: /Fechar/ }).click();
+  await page.getByRole('button', { name: /^Instruções/ }).click();
+  await page.getByRole('button', { name: 'Pressionar alto' }).click();
+  const instruction = await page.evaluate(() => window.S?.match2d?.management?.instruction || '');
+  if (instruction !== 'press') throw new Error('Live instruction was not applied.');
   if (await page.locator('#j90MatchPoss').count() !== 1) throw new Error('Possession HUD did not open.');
   const rendererCheck = await page.evaluate(() => {
     const c = document.querySelector('#j90MatchCanvas');
