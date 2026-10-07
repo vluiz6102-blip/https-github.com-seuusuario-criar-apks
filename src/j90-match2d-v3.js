@@ -33,36 +33,40 @@
     if(!m)return null;
     var c=document.getElementById('j90MatchCanvas');
     if(!c)return null;
-    c.style.display='block';
-    c.style.visibility='visible';
-    c.style.opacity='1';
-    c.style.width='100%';
-    c.style.height='220px';
-    c.style.minHeight='180px';
+    if(!m._j90v3StyleReady){
+      c.style.display='block';
+      c.style.visibility='visible';
+      c.style.opacity='1';
+      c.style.width='100%';
+      c.style.height='220px';
+      c.style.minHeight='180px';
+      m._j90v3StyleReady=true;
+    }
+    var perf=window.__J90_PERF||{};
+    var dpr=Math.min(1.5,Number(perf.dpr)||Number(window.devicePixelRatio)||1);
     var w=Math.max(280,Math.floor(c.clientWidth||c.parentElement&&c.parentElement.clientWidth||320));
     var h=Math.max(180,Math.floor(c.clientHeight||220));
-    var dpr=Math.min(2,window.devicePixelRatio||1);
-    if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){
-      c.width=Math.round(w*dpr);
-      c.height=Math.round(h*dpr);
+    var bw=Math.round(w*dpr),bh=Math.round(h*dpr);
+    if(c.width!==bw||c.height!==bh||m._cw!==w||m._ch!==h||m._dpr!==dpr){
+      c.width=bw;c.height=bh;
+      m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
+      m._cw=w;m._ch=h;m._dpr=dpr;
+      m._j90v3Field=null;m._j90v3Scene=null;
+    }else if(!m._ctx){
+      m._ctx=c.getContext('2d',{alpha:false,desynchronized:true});
     }
-    m._cw=w;m._ch=h;
-    m._ctx=c.getContext('2d',{alpha:false});
-    m._dpr=dpr;
-    m._dom=m._dom||{};
-    m._dom.canvas=c;
+    m._dom=m._dom||{};m._dom.canvas=c;
     return c;
   }
 
   function fieldCache(m,w,h){
     if(m._j90v3Field&&m._j90v3Field.width===w&&m._j90v3Field.height===h)return m._j90v3Field;
-    var bg=document.createElement('canvas');
-    bg.width=w;bg.height=h;
-    var g=bg.getContext('2d');
+    var bg=document.createElement('canvas');bg.width=w;bg.height=h;
+    var g=bg.getContext('2d',{alpha:false});
     g.fillStyle='#0d4a2b';g.fillRect(0,0,w,h);
     for(var i=0;i<14;i++){
       g.fillStyle=i%2?'rgba(255,255,255,.020)':'rgba(0,0,0,.022)';
-      g.fillRect(i*w/14,0,w/14,h);
+      g.fillRect(Math.floor(i*w/14),0,Math.ceil(w/14)+1,h);
     }
     g.strokeStyle='rgba(255,255,255,.72)';g.lineWidth=1.15;
     g.strokeRect(7,7,w-14,h-14);
@@ -70,17 +74,21 @@
     g.beginPath();g.arc(w/2,h/2,Math.min(w,h)*.125,0,Math.PI*2);g.stroke();
     g.fillStyle='rgba(255,255,255,.72)';g.beginPath();g.arc(w/2,h/2,2,0,Math.PI*2);g.fill();
     function area(x,y,ww,hh){
-      g.strokeRect(x,y,ww,hh);
-      g.strokeRect(x+(ww*.22),y+hh*.25,ww*.56,hh*.5);
+      g.strokeRect(x,y,ww,hh);g.strokeRect(x+ww*.22,y+hh*.25,ww*.56,hh*.5);
       g.beginPath();g.arc(x+ww*.5,y+hh*.5,Math.min(ww,hh)*.12,0,Math.PI*2);g.stroke();
     }
-    g.lineWidth=1;
-    area(7,h*.30,w*.18,h*.40);
-    area(w*.82,h*.30,w*.18-7,h*.40);
-    m._j90v3Field=bg;
-    return bg;
+    g.lineWidth=1;area(7,h*.30,w*.18,h*.40);area(w*.82,h*.30,w*.18-7,h*.40);
+    m._j90v3Field=bg;return bg;
   }
 
+  function sceneCache(m,w,h){
+    var key=String(m&&m.home||'Estádio')+'|'+w+'x'+h;
+    if(m._j90v3Scene&&m._j90v3Scene.key===key)return m._j90v3Scene.canvas;
+    var scene=document.createElement('canvas');scene.width=w;scene.height=h;
+    var g=scene.getContext('2d',{alpha:false});
+    g.drawImage(fieldCache(m,w,h),0,0,w,h);stadiumIdentity(g,w,h,m);
+    m._j90v3Scene={key:key,canvas:scene};return scene;
+  }
   function stadiumIdentity(g,w,h,m){
     var n=String(m&&m.home||'Estádio').toLowerCase(),hash=0;
     for(var i=0;i<n.length;i++)hash=(hash*33+n.charCodeAt(i))>>>0;
@@ -112,13 +120,13 @@
   }
 
   function playerVisual(p,side,m){
+    var id=String(p.id||p.name||'player'),cache=m._j90v3Players||(m._j90v3Players=Object.create(null)),key=side+'|'+id;
+    if(cache[key])return cache[key];
     var pal=palette(side==='home'?m.home:m.away);
     var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||p.aiRole||''));
-    var id=String(p.id||p.name||'player'),hash=0;
-    for(var i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
-    var skins=['#7a4b32','#9b6546','#c48762','#d39a76','#f0b38f'];
-    var hairs=['#171717','#3b2417','#6b4328','#a87942','#d8d8d8'];
-    return {pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',height:.92+(hash%13)/100,lean:((hash>>>5)%9-4)/100};
+    var hash=0;for(var i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
+    var skins=['#7a4b32','#9b6546','#c48762','#d39a76','#f0b38f'],hairs=['#171717','#3b2417','#6b4328','#a87942','#d8d8d8'];
+    return cache[key]={pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',height:.92+(hash%13)/100,lean:((hash>>>5)%9-4)/100};
   }
 
   function drawPlayer(g,p,side,m,w,h,now,low){
@@ -193,8 +201,7 @@
     var low=!!(window.__J90_PERF&&window.__J90_PERF.low);
     g.setTransform(dpr,0,0,dpr,0,0);
     g.clearRect(0,0,w,h);
-    g.drawImage(fieldCache(m,w,h),0,0,w,h);
-    stadiumIdentity(g,w,h,m);
+    g.drawImage(sceneCache(m,w,h),0,0,w,h);
     var now=performance.now();
     var camX=(.5-(Number(m.ball&&m.ball.x)||.5))*w*.08;
     var camY=(.5-(Number(m.ball&&m.ball.y)||.5))*h*.045;
@@ -204,6 +211,7 @@
     for(var j=0;j<ap.length;j++)drawPlayer(g,ap[j],'away',m,w,h,now,low);
     drawBall(g,m,w,h,low);
     g.restore();
+    m._j90v3Frames=(m._j90v3Frames||0)+1;
     // Always leave a visible state even before the simulation has advanced.
     if(!m.players.length&&!m.oppPlayers.length){
       g.fillStyle='rgba(0,0,0,.34)';g.fillRect(0,0,w,h);
