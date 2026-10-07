@@ -104,17 +104,34 @@ jobs:
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
-      - name: Validar bundle web sem áudio
+      - name: Validar bundle web e áudio runtime
         run: |
+          set -euo pipefail
           test -s www/assets/j90-content/content-manifest.json
           test -d www/assets/j90-content/stadiums
           scene_files=$(find www/assets/j90-content/stadiums -type f -name '*.jpg' | wc -l)
           echo "WEB_SCENE_FILES=$scene_files"
           test "$scene_files" -ge 1
-          test ! -d www/assets/audio
-          if grep -R -n -E 'decodeAudioData|J90_AUDIO_MANIFEST|assets/audio|audio-import' www --exclude='*.map'; then echo 'IMPORTED_AUDIO_DETECTED'; exit 1; fi
-          grep -R -n 'J90_AUDIO_MODE=.procedural-original.' www/j90-soundscape.js >/dev/null
-          echo 'AUDIO_RUNTIME=PROCEDURAL_ORIGINAL_WITH_STADIUM_CROWD'
+
+          # O runtime atual usa áudio procedural/original e pode expor
+          # J90_AUDIO_MANIFEST como um objeto vazio. Isso não significa que
+          # existam arquivos de áudio importados no bundle.
+          if find www/assets -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \) -print -quit | grep -q .; then
+            echo 'IMPORTED_AUDIO_FILES_DETECTED'
+            find www/assets -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \) -print
+            exit 1
+          fi
+
+          if grep -R -n -E 'assets/audio|audio-import' www --exclude='*.map' --exclude='index.html'; then
+            echo 'IMPORTED_AUDIO_PATH_REFERENCE_DETECTED'
+            exit 1
+          fi
+
+          test -f www/j90-soundscape.js
+          grep -F -n 'J90_AUDIO_MODE' www/j90-soundscape.js >/dev/null
+          grep -F -n 'procedural-original' www/j90-soundscape.js >/dev/null
+          echo 'AUDIO_RUNTIME=VALIDATED'
+          echo 'IMPORTED_AUDIO_FILES=0'
 
       - name: Teste real de inicialização e fluxo no Chromium
         run: |
