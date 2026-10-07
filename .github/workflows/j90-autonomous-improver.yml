@@ -300,9 +300,80 @@ PROMPT
           path: .j90-team/match-content.md
           retention-days: 7
 
+  fallback-recovery:
+    name: "IA 8 - Recuperadora de continuidade"
+    needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Verificar credencial Copilot
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: test -n "$COPILOT_GITHUB_TOKEN"
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Baixar evidências disponíveis
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: j90-team-*
+          path: .j90-team
+          merge-multiple: true
+
+      - name: Instalar Copilot
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: npm install -g @github/copilot
+
+      - name: Recuperar a missão
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COORDINATOR: ${{ needs.coordinator.result }}
+          GAMEPLAY: ${{ needs.gameplay-ai.result }}
+          PERFORMANCE: ${{ needs.performance.result }}
+          UX: ${{ needs.ux.result }}
+          MANAGER: ${{ needs.manager.result }}
+          MATCH_CONTENT: ${{ needs.match-content.result }}
+        run: |
+          set -e
+          mkdir -p .j90-team
+          printf '%s\n' \
+            "coordinator=$COORDINATOR" \
+            "gameplay-ai=$GAMEPLAY" \
+            "performance=$PERFORMANCE" \
+            "ux=$UX" \
+            "manager=$MANAGER" \
+            "match-content=$MATCH_CONTENT" > .j90-team/fallback-status.txt
+          copilot -p "$(cat <<'PROMPT'
+Você é IA 8 - RECUPERADORA DE CONTINUIDADE do Jornada 90.
+Você entra quando uma ou mais IAs pararam, falharam ou não produziram relatório.
+Não dependa do histórico de conversa de outras IAs. Trabalhe com o estado persistido no repositório e nos artefatos disponíveis.
+Leia .github/copilot-instructions.md, .j90-team/fallback-status.txt, quaisquer arquivos .j90-team disponíveis e o código.
+Identifique o que ficou incompleto, priorize P0 e gere .j90-team/fallback-recovery.md.
+Aplique contexto em etapas: leia somente arquivos necessários e grave decisões importantes em arquivos para a próxima IA.
+Não faça commit, push ou release. Não reduza testes, não remova funcionalidades e não invente defeitos.
+PROMPT
+)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          test -s .j90-team/fallback-recovery.md
+
+      - name: Publicar relatório de recuperação
+        uses: actions/upload-artifact@v4
+        with:
+          name: j90-team-fallback-recovery
+          path: .j90-team/fallback-recovery.md
+          retention-days: 7
+
   integrator:
     name: "IA 7 - Integradora e Release Manager"
     needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -316,11 +387,13 @@ PROMPT
           fetch-depth: 0
       - name: Baixar plano
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: j90-team-plan
           path: .j90-team
       - name: Baixar relatórios
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           pattern: j90-team-*
           path: .j90-team/reports
@@ -378,5 +451,93 @@ PROMPT
           git add -A
           if git diff --cached --quiet; then echo "::error::O time não produziu alteração nem comprovou prontidão."; exit 1; fi
           git commit -m "autonomy: team improvement"
+          git push origin HEAD:main
+          gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+  emergency-integrator:
+    name: "IA 9 - Integrador de emergência"
+    needs: [coordinator, gameplay-ai, performance, ux, manager, match-content, fallback-recovery, integrator]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - name: Verificar credencial Copilot
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: test -n "$COPILOT_GITHUB_TOKEN"
+
+      - name: Checkout do estado mais recente
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Baixar evidências disponíveis
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: j90-team-*
+          path: .j90-team/reports
+          merge-multiple: true
+
+      - name: Configurar Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Instalar Copilot
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: npm install -g @github/copilot
+
+      - name: Assumir a continuidade
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          IA7: ${{ needs.integrator.result }}
+          IA8: ${{ needs.fallback-recovery.result }}
+        run: |
+          set -e
+          mkdir -p .j90-team
+          printf '%s\n' "integrator=$IA7" "fallback-recovery=$IA8" > .j90-team/emergency-status.txt
+          copilot -p "$(cat <<'PROMPT'
+Você é IA 9 - INTEGRADOR DE EMERGÊNCIA e última instância do Jornada 90.
+Você entra para impedir que o pipeline pare porque uma IA falhou, parou, perdeu contexto ou atingiu o limite operacional da execução anterior.
+Não dependa de histórico de chat. Leia o código atual e os artefatos .j90-team/reports.
+Leia .github/copilot-instructions.md e .j90-team/emergency-status.txt.
+Se IA 7 já deixou uma versão pronta e o marcador .j90-release-ready.json é válido, não faça alterações desnecessárias.
+Caso contrário, assuma o trabalho pendente: corrija P0, integre as melhores descobertas, execute npm run build, npm run quality:scan quando aplicável, node scripts/release-readiness.mjs e git diff --check.
+Nunca enfraqueça gates, nunca apague funcionalidades para obter verde e nunca copie conteúdo protegido.
+Use contexto em etapas e registre decisões no repositório para permitir continuidade.
+Não faça uma release manualmente: o pipeline principal fará a publicação.
+Quando houver mudança real e validada, integre a versão atual. Quando o contrato completo estiver comprovado, somente então crie .j90-release-ready.json.
+PROMPT
+)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+
+      - name: Validar e continuar ciclo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          npm run build
+          node scripts/release-readiness.mjs
+          if [ -f .j90-release-ready.json ]; then node scripts/release-readiness.mjs --strict; fi
+          git diff --check
+          if [ -f .j90-release-ready.json ] && node -e "process.exit(JSON.parse(require('fs').readFileSync('.j90-release-ready.json','utf8')).ready===true?0:1)"; then
+            echo "JORNADA90_EMERGENCY=RELEASE_READY"
+            exit 0
+          fi
+          rm -rf .j90-team
+          git config user.name "Jornada 90 AI Emergency"
+          git config user.email "actions@github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "::error::IA 9 não encontrou alteração validada nem um contrato de release completo."
+            exit 1
+          fi
+          git commit -m "autonomy: emergency continuity improvement"
           git push origin HEAD:main
           gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref main
