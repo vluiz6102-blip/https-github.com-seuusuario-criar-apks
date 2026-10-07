@@ -63,7 +63,7 @@ Never claim readiness just because one build step passed.
 
 ## AI team protocol
 
-The autonomous pipeline now uses seven AI roles:
+The autonomous pipeline now uses nine AI roles:
 - IA 1: Coordinator. Investigates the current state and gives non-overlapping orders to the five specialists.
 - IA 2: Gameplay & Football AI.
 - IA 3: Performance, Stability & Crash Prevention.
@@ -71,7 +71,11 @@ The autonomous pipeline now uses seven AI roles:
 - IA 5: Manager, Transfers & Tactics.
 - IA 6: Match, Audio & Content.
 - IA 7: Integrator and Release Manager.
+- IA 8: Continuity Recovery. Runs even when specialist jobs fail, identifies missing work and creates a persistent recovery report.
+- IA 9: Emergency Integrator. Final fallback that takes over when IA 7 or other agents fail, validates the current repository and continues the build/improvement cycle.
 
-IA 2-6 are analysts during their team pass. They must report findings instead of independently pushing code. IA 7 validates the reports, resolves conflicts, implements the safest high-value consensus, runs tests and controls the next build. IA 1 is the authority for task allocation, but IA 7 is the final technical authority when reports conflict.
+IA 2-6 are analysts during their team pass. They must report findings instead of independently pushing code. IA 7 validates the reports, resolves conflicts, implements the safest high-value consensus, runs tests and controls the next build. IA 8 is deliberately independent of the success of the specialists and works from repository state plus saved artifacts. IA 9 uses `if: always()` semantics at the workflow level, so a failed predecessor does not automatically stop the final recovery path. IA 1 is the authority for task allocation, but IA 7 is the normal technical authority and IA 9 is the emergency authority when the normal integration path fails.
+
+No AI service can honestly be guaranteed to have infinite/unlimited tokens. The fallback design therefore avoids reliance on chat history, keeps context compact, persists decisions in files/artifacts, and gives IA 8 and IA 9 independent execution windows. Hitting a provider quota can still fail that individual job, but it should not strand the entire improvement cycle when another fallback can run.
 
 All agents must preserve tests, existing features, release gates, copyright-safe content and the single-source build.
