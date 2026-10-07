@@ -45,7 +45,7 @@ function collectRepositoryContext() {
   });
   const chunks = [];
   let total = 0;
-  const maxChars = Number(process.env.J90_AI_CONTEXT_CHARS || 500000);
+  const maxChars = Number(process.env.J90_AI_CONTEXT_CHARS || 280000);
   for (const file of files) {
     if (total >= maxChars) break;
     try {
@@ -70,6 +70,7 @@ const repositoryContext = collectRepositoryContext();
 function collectTeamContext() {
   try {
     if (!fs.existsSync(".j90-team")) return "";
+    let total = 0;
     return fs.readdirSync(".j90-team").filter(name => /\.(md|txt|log)$/i.test(name)).map(name => {
       try { return `### .j90-team/${name}\\n${fs.readFileSync(`.j90-team/${name}`, "utf8").slice(0, 120000)}`; }
       catch { return ""; }
