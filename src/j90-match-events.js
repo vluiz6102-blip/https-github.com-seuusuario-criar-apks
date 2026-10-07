@@ -39,7 +39,7 @@
       cards:{},injuries:{},offside:null,referee:{x:.5,y:.45},
       invader:null,flare:null,crowd:0,incidentUntil:0,lastInjuryClock:-999,
       nextCrowdPulse:0,lastScore:Number(m.homeScore||0)+':'+Number(m.awayScore||0),
-      events:0,
+      events:0,\n      refereeAI:{strictness:.52,advantage:0,pressure:0,varReviews:0,decisions:0,lastDecision:-999,lastVAR:-999,profile:'equilibrado'},
       crowdMomentum:0,crowdBase:0,crowdNoise:0,crowdAttendance:0,crowdCapacity:0,
       crowdProfile:null,stadiumProfile:null
     };
@@ -94,6 +94,54 @@
     if(reason==='goal'&&window.J90Ambience&&typeof window.J90Ambience.setGoalLevel==='function')window.J90Ambience.setGoalLevel(cl(st.crowd+.18,0,1));
   }
 
+  function refereeAI(m){
+    ensure(m);
+    var st=m._j90EventState,now=Number(m._simClock)||0;
+    if(!st.refereeAI)st.refereeAI={strictness:.52,advantage:0,pressure:0,varReviews:0,decisions:0,lastDecision:-999,lastVAR:-999,profile:'equilibrado'};
+    var r=st.refereeAI;
+    r.pressure=cl((Number(st.crowd)||0)*.52+(Number(st.crowdMomentum)||0)*.34,0,1);
+    r.strictness=cl(.48+r.pressure*.10,0,1);
+    if(now-r.lastDecision>5)r.advantage=cl(r.advantage*.94,0,1);
+  }
+  function refereeDecision(m,ctx){
+    ensure(m);refereeAI(m);
+    var st=m._j90EventState,r=st.refereeAI,now=Number(m._simClock)||0;
+    if(!ctx||now-r.lastDecision<.35)return null;
+    var severity=cl(Number(ctx.severity)||0,0,1),area=Number(ctx.areaX),decision='play_on',confidence=.58;
+    if(ctx.foul!==false){
+      if(severity>.82){decision='red';confidence=.88}
+      else if(severity>.55){decision='yellow';confidence=.78}
+      else if(Number.isFinite(area)&&area>.86){decision='penalty';confidence=.82}
+      else {decision='foul';confidence=.72}
+    }
+    if(decision==='foul'&&severity<.30&&Number(ctx.attackingAdvantage||0)>.55){decision='advantage';confidence=.76;r.advantage=1}
+    r.lastDecision=now;r.decisions++;
+    return {decision:decision,confidence:confidence,pressure:r.pressure};
+  }
+  function varReview(m,decision,ctx){
+    ensure(m);var st=m._j90EventState,r=st.refereeAI,now=Number(m._simClock)||0;
+    if(!ctx||!decision||now-(r.lastVAR||-999)<6)return decision;
+    if(!/penalty|red|goal/.test(decision.decision||'')||Number(ctx.ambiguity||0)<.42)return decision;
+    r.lastVAR=now;r.varReviews++;
+    var corrected=decision.decision;
+    if(decision.decision==='penalty'&&Number(ctx.areaX)<.86)corrected='foul';
+    if(decision.decision==='red'&&Number(ctx.severity)<.88)corrected='yellow';
+    if(corrected!==decision.decision){
+      event(m,'🖥️ VAR: decisão corrigida após revisão.','var_'+Math.floor(now),5);
+      return {decision:corrected,confidence:.91,reviewed:true};
+    }
+    event(m,'🖥️ VAR: decisão de campo mantida após revisão.','var_hold_'+Math.floor(now),5);
+    return {decision:decision.decision,confidence:.90,reviewed:true};
+  }
+  function crowdPressuresReferee(m,decision,ctx){
+    ensure(m);var st=m._j90EventState,profile=st.crowdProfile||crowdProfile(m);
+    var level=cl(Number(st.crowd)||0,0,1),pressure=cl(level*.60+Number(profile.ultras||0)*.30+(Number(st.crowdMomentum)||0)*.20,0,1);
+    st.refereeAI=st.refereeAI||{strictness:.52,advantage:0,pressure:0,varReviews:0,decisions:0,lastDecision:-999,lastVAR:-999};
+    st.refereeAI.pressure=pressure;
+    if(level>.82&&ctx&&ctx.attackingTeam==='home'&&decision&&decision.decision==='foul')event(m,'🗣️ A torcida pressiona o árbitro por uma decisão favorável.','ref_pressure_'+Math.floor(Number(m._simClock)||0),3);
+    if(level>.90&&decision&&decision.decision==='play_on')event(m,'📣 Vaias e protestos aumentam a pressão sobre a arbitragem.','ref_boo_'+Math.floor(Number(m._simClock)||0),4);
+  }
+
   function discipline(m,side,p,kind){
     if(!p)return;
     ensure(m);
@@ -104,7 +152,7 @@
       s[id].yellow=2;s[id].red=1;
       p.j90Red=true;p.j90Suspended=true;
       event(m,'🟥 Expulsão! '+escLocal(p.name||'Jogador')+' recebe o segundo amarelo.','red_'+id,0);
-      m._j90EventState.crowd=1;
+      m._j90EventState.crowd=1;crowdAI(m,'red');
       return;
     }
     if(kind==='red'){
@@ -116,7 +164,7 @@
     if(s[id].yellow>=1){discipline(m,side,p,'second');return}
     s[id].yellow=1;p.j90Yellow=true;
     event(m,'🟨 Cartão amarelo para '+escLocal(p.name||'Jogador')+'.','yellow_'+id,0);
-    m._j90EventState.crowd=.82;
+    m._j90EventState.crowd=.82;crowdAI(m,'base');
   }
 
   function processActions(m){
@@ -129,9 +177,14 @@
       if(!p)continue;
       if(a.action==='tackle'&&!a.success){
         var severity=rnd(m);
-        if(severity<.055)discipline(m,side,p,'red');
-        else if(severity<.32)discipline(m,side,p,'yellow');
-        else event(m,'O árbitro marca falta no duelo de '+escLocal(p.name||'jogador')+'.','foul_'+Math.floor(Number(a.clock)||0),1.4);
+        var decision=refereeDecision(m,{severity:severity,areaX:Number(p.x),attackingAdvantage:Number(a.advantage||0),attackingTeam:side,foul:true});
+        decision=varReview(m,decision,{severity:severity,areaX:Number(p.x),ambiguity:.35+rnd(m)*.55});
+        crowdPressuresReferee(m,decision,{attackingTeam:side});
+        if(decision&&decision.decision==='red')discipline(m,side,p,'red');
+        else if(decision&&decision.decision==='yellow')discipline(m,side,p,'yellow');
+        else if(decision&&decision.decision==='penalty')event(m,'⚽ Pênalti! O árbitro aponta para a marca da cal.','penalty_'+Math.floor(Number(a.clock)||0),0);
+        else if(decision&&decision.decision==='advantage')event(m,'▶️ Lei da vantagem: o árbitro deixa o jogo seguir.','advantage_'+Math.floor(Number(a.clock)||0),2);
+        else if(decision&&decision.decision==='foul')event(m,'O árbitro marca falta no duelo de '+escLocal(p.name||'jogador')+'.','foul_'+Math.floor(Number(a.clock)||0),1.4);
       }
       if(a.action==='shot'&&a.success){st.crowdMomentum=cl(st.crowdMomentum+.16,0,1);crowdAI(m,'shot');}
       if(a.action==='dribble'&&a.success&&rnd(m)<.18){st.crowdMomentum=cl(st.crowdMomentum+.12,0,1);crowdAI(m,'danger');}
