@@ -46,7 +46,7 @@
     m._cw=W;m._ch=H;m._dpr=1;m._dom=m._dom||{};m._dom.canvas=c;
     return c;
   }
-  function pitch(m){
+  function fieldCache(m){
     if(m._pitch)return m._pitch;
     var o=document.createElement('canvas');o.width=W;o.height=H;
     var g=o.getContext('2d',{alpha:false});g.imageSmoothingEnabled=false;
@@ -113,7 +113,7 @@
     var st=state(),m=st&&st.match2d;if(!m)return;
     var c=ensure(m);if(!c||!m._ctx)return;
     var g=m._ctx,low=!!(window.__J90_PERF&&window.__J90_PERF.low),now=performance.now(),t0=now;
-    g.imageSmoothingEnabled=false;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.drawImage(pitch(m),0,0);
+    g.imageSmoothingEnabled=false;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.drawImage(fieldCache(m),0,0);
     var home=m.players||[],away=m.oppPlayers||[];
     for(var i=0;i<home.length;i++)drawPlayer(g,home[i],'home',m,now,low);
     for(var j=0;j<away.length;j++)drawPlayer(g,away[j],'away',m,now,low);
