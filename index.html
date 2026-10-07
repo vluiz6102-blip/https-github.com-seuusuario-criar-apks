@@ -2837,7 +2837,17 @@ function wcV(){const w=S.wc,l=w.last,df=S.pos=='GOL'||S.pos=='ZAG';
  if(w.q==0)return`<div class="card wc">${art(['🇧🇷','🏆'])}<span class="round">${WCR[w.r]}</span><h2>Brasil x ${w.opp[w.r]}</h2><p>Copa do Mundo ${S.year-1}. ${w.r<3?'Pontos no grupo: '+w.pts+'. ':'Jogo eliminatório: quem perder está fora. '}Como o Brasil vai jogar?</p><button class="btn" onclick="wcPlay(0)"><b>Atacar</b><span>Mais chances de gol, maior desgaste</span></button><button class="btn" onclick="wcPlay(1)"><b>Equilibrar</b><span>Controle e segurança</span></button><button class="btn" onclick="wcPlay(2)"><b>Jogar no contra-ataque</b><span>Menos gols sofridos, menos desgaste</span></button></div>`;
  if(w.q==1)return`<div class="card wc"><span class="round">${l.st}</span><h2>Brasil ${l.my} x ${l.og} ${l.opp}</h2><p><b>Acréscimos.</b> ${df?'O adversário parte em contra-ataque perigoso na sua direção.':'A bola sobra para você na entrada da área.'}</p><button class="btn go" onclick="wcDec(1)"><b>${df?'Fazer a intervenção':'Assumir a finalização'}</b><span>Depende de ${df?'defesa':'finalização'} e moral</span></button><button class="btn" onclick="wcDec(0)"><b>${df?'Deixar para a defesa':'Tocar para o companheiro'}</b><span>Menos pressão sobre você</span></button></div>`;
  return`<div class="card wc">${w.end=='champ'?conf('🏆'):l.g?conf('⚽'):''}<span class="round">${l.st}</span><div class="sc">Brasil ${l.my} x ${l.og} ${l.opp}</div><p>${l.ln.join(' ')}</p><p class="mu">${l.res} · seus gols: ${l.g}${w.r<3?' · pontos no grupo: '+w.pts:''}</p>${w.end=='champ'?'<h2>🏆 O Brasil é campeão do mundo!</h2>':w.end?'<p>O Brasil está eliminado.</p>':''}<button class="btn go" onclick="wcNext()">${w.end?'Voltar para a carreira':'Próximo jogo'}</button></div>`}
-function save(){if(!S)return;try{S._savedAt=Date.now();localStorage.setItem('carreirafc2',JSON.stringify(S))}catch(e){}}
+function j90SaveReplacer(k,v){
+ if(/^_/.test(k)&&k!=='_savedAt')return undefined;
+ if(k==='__j90LifecyclePaused')return undefined;
+ try{
+  if(typeof Element!=='undefined'&&v instanceof Element)return undefined;
+  if(typeof HTMLCanvasElement!=='undefined'&&v instanceof HTMLCanvasElement)return undefined;
+  if(typeof ResizeObserver!=='undefined'&&v instanceof ResizeObserver)return undefined;
+ }catch(e){}
+ return v;
+}
+function save(){if(!S)return false;try{S._savedAt=Date.now();localStorage.setItem('carreirafc2',JSON.stringify(S,j90SaveReplacer));return true}catch(e){try{localStorage.setItem('carreirafc2',JSON.stringify(S,function(k,v){return /^_/.test(k)&&k!=='_savedAt'?undefined:v}));return true}catch(_){return false}}}
 window.J90ManagerBridge={getState:function(){return S},save:function(){save()},render:function(still){render(still)},setTab:function(k){tab=k;render(1)}};function j90PlusOpen(){if(window.J90Expansion&&typeof window.J90Expansion.open==='function')window.J90Expansion.open()}
 addEventListener('visibilitychange',()=>{if(document.hidden&&S)save()},{passive:true});addEventListener('pagehide',()=>{if(S)save()},{passive:true});
 function renderManagerPartial(still){
@@ -3280,58 +3290,6 @@ window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.w
   document.addEventListener('contextmenu',function(e){if(!allowTextSelection(e.target))e.preventDefault();});
 })();
 </script>
-<style id="j90-landscape-match-style">
-/* Jornada 90: landscape match. Same controls/data, only space is reflowed. */
-@media (orientation:landscape) and (max-height:620px){
-  body.j90-match-fullscreen #app{height:100dvh!important;width:100vw!important}
-  .j90MatchOnlyPage{
-    grid-template-areas:"top top" "stage actions" "log log";
-    grid-template-columns:minmax(0,1fr) minmax(210px,29vw);
-    grid-template-rows:auto minmax(0,1fr) auto;
-    gap:6px;
-    padding:max(5px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));
-  }
-  .j90MatchTop{grid-area:top}
-  .j90MatchStage{grid-area:stage;min-height:0}
-  .j90MatchActionBar{
-    grid-area:actions;
-    grid-template-columns:1fr 1fr;
-    align-content:center;
-    gap:6px;
-    min-width:0;
-    min-height:0;
-  }
-  .j90MatchActionBar button{min-height:44px;padding:5px 4px}
-  .j90MatchActionBar strong{font-size:9px}
-  .j90MatchActionBar small{font-size:6px}
-  .j90MatchLog{grid-area:log;min-height:27px}
-  .j90MatchResumeFull{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(360px,52vw);min-height:38px;z-index:90}
-  .j90MatchTeam{padding:5px 7px}
-  .j90MatchTeam b{font-size:clamp(11px,2.4vw,18px)}
-  .j90MatchScoreBlock{min-width:88px}
-  .j90MatchScoreBlock strong{font-size:clamp(19px,4.6vw,30px)}
-  .j90MatchStage .j90MatchEvent{font-size:8px;bottom:6px;left:6px;right:6px}
-  .j90MatchPanel{
-    left:auto;
-    right:8px;
-    width:min(460px,42vw);
-    max-height:calc(100dvh - 78px);
-    overflow:auto;
-    bottom:58px;
-  }
-  .j90MatchChoiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .j90MatchSubs{max-height:24vh}
-}
-@media (orientation:landscape) and (max-height:420px){
-  .j90MatchOnlyPage{grid-template-columns:minmax(0,1fr) minmax(190px,26vw);gap:4px}
-  .j90MatchActionBar{gap:4px}
-  .j90MatchActionBar button{min-height:40px}
-  .j90MatchLog{min-height:24px}
-  .j90MatchLog span{font-size:6px}
-  .j90MatchPanel{bottom:52px;right:6px;width:min(430px,46vw);padding:8px}
-}
-html.j90-landscape-requested{background:#071013}
-</style>
 <script id="j90-manager-nav-right-v7-runtime">
 (()=>{'use strict';if(window.__J90_MANAGER_NAV_RIGHT_V7__)return;window.__J90_MANAGER_NAV_RIGHT_V7__=true;
 const items=[['game','⌂','Visão geral'],['squad','♙','Elenco'],['lineup','◇','Táticas'],['market','↔','Transferências'],['scout','◎','Olheiros'],['finance','¤','Finanças'],['tbl','▤','Tabela'],['club','◆','Clube'],['news','◈','Notícias']];
