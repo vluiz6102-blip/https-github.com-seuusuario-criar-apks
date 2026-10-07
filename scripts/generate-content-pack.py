@@ -241,6 +241,44 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
             draw.polygon([(x, y), (x + 14, y + 5), (x + 8, y + 45), (x - 5, y + 38)],
                          fill=(220, 229, 235, 52))
 
+    # Stadium fingerprint: each club receives a deterministic architectural
+    # silhouette, roof pattern, light towers and stand geometry. It is original
+    # procedural art, not a copied photograph.
+    stadium_seed = stable_seed("stadium-identity", team)
+    stadium_style = stadium_seed % 7
+    arch_color = (
+        (42, 54, 66, 190) if stadium_style == 0 else
+        (64, 39, 52, 190) if stadium_style == 1 else
+        (34, 67, 54, 190) if stadium_style == 2 else
+        (62, 58, 38, 190) if stadium_style == 3 else
+        (43, 44, 69, 190) if stadium_style == 4 else
+        (68, 45, 31, 190) if stadium_style == 5 else
+        (36, 58, 68, 190)
+    )
+    roof_height = 70 + (stadium_seed % 90)
+    for section in range(5 + stadium_style % 4):
+        sx = int(section * WIDTH / (5 + stadium_style % 4))
+        sw = int(WIDTH / (5 + stadium_style % 4)) + 4
+        draw.rounded_rectangle(
+            (sx, horizon_y-roof_height, sx+sw, horizon_y+55),
+            radius=18 + stadium_style*2,
+            fill=arch_color,
+            outline=(235, 226, 194, 70),
+            width=3,
+        )
+    # Signature roof beams.
+    for beam in range(3 + stadium_style % 3):
+        bx = int((beam+1) * WIDTH / (4 + stadium_style % 3))
+        draw.line((bx, horizon_y-roof_height-25, bx-70, horizon_y+60),
+                  fill=(220, 220, 215, 105), width=7)
+    # Unique end-stand light pattern.
+    for light in range(8 + stadium_style):
+        lx = int(120 + rng_value(stadium_seed, 700+light) * (WIDTH-240))
+        ly = int(horizon_y-45-rng_value(stadium_seed, 800+light)*80)
+        draw.ellipse((lx, ly, lx+9, ly+9), fill=(255, 231, 163, 150))
+    draw.text((WIDTH-650, 125), f"ESTÁDIO {team.upper()[:24]}",
+              fill=(245, 245, 235, 190))
+
     # Team identity panel, generated from the real roster/team name but without
     # claiming to be a photograph of a real stadium.
     label = team.upper()
