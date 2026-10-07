@@ -629,6 +629,47 @@
     return best||nearest(arr,goalX,.5)||arr[0];
   }
 
+
+  function defensivePressure(m,side,p){
+    var opp=getTeamPlayers(m,side==='home'?'away':'home')||[],best=0,closest=1;
+    for(var i=0;i<opp.length;i++){
+      var q=opp[i],d=dist(p,q);
+      if(d<closest)closest=d;
+      var role=playerRole(q),weight=role==='DEF'?1.12:role==='MID'?.72:.35;
+      var skill=clamp((playerRating(q,'defend',q.ovr||65)-55)/55,.2,1.15);
+      best=Math.max(best,clamp(1-d*4.8,0,1)*weight*skill);
+    }
+    return clamp(best,0,1);
+  }
+  function separateTeam(m,side){
+    var arr=getTeamPlayers(m,side)||[];
+    for(var i=0;i<arr.length;i++){
+      for(var j=i+1;j<arr.length;j++){
+        var a=arr[i],b=arr[j];
+        if(!a||!b)continue;
+        if(a.id===m.possessionPlayerId&&m.possessionTeam===side)continue;
+        if(b.id===m.possessionPlayerId&&m.possessionTeam===side)continue;
+        var dx=Number(a.tx||a.x)-Number(b.tx||b.x),dy=Number(a.ty||a.y)-Number(b.ty||b.y),d=Math.sqrt(dx*dx+dy*dy);
+        if(d>0&&d<.052){
+          var push=(.052-d)*.38,ux=dx/d,uy=dy/d;
+          a.tx=clamp(Number(a.tx||a.x)+ux*push,.035,.965);a.ty=clamp(Number(a.ty||a.y)+uy*push,.045,.955);
+          b.tx=clamp(Number(b.tx||b.x)-ux*push,.035,.965);b.ty=clamp(Number(b.ty||b.y)-uy*push,.045,.955);
+        }
+      }
+    }
+  }
+  function compactDefensiveLine(m,side,brain){
+    var arr=getTeamPlayers(m,side)||[],home=side==='home',diff=home?m.homeScore-m.awayScore:m.awayScore-m.homeScore;
+    var retreat=diff>0?.025:diff<0?-.018:0;
+    arr.forEach(function(p){
+      if(playerRole(p)!=='DEF')return;
+      var bx=num(p.baseX,p.x),goal=home?0:1,line=home?.27:.73;
+      var target=line+(bx-line)*.35+retreat*(home?1:-1);
+      if(brain.press>.72)target+=home?.035:-.035;
+      p.tx=clamp(lerp(p.tx,target,.055),.05,.95);
+    });
+  }
+
   function outcomeChance(m,side,owner,action,receiver,brain,oppBrain){
     var skill={
       short_pass:playerRating(owner,'pass',owner.ovr),
@@ -644,10 +685,10 @@
       tackle:playerRating(owner,'defend',owner.ovr),
       hold:playerRating(owner,'technical',owner.ovr)
     }[action]||num(owner.ovr,65);
-    var press=pressureAt(m,side,owner),fat=clamp(1-num(owner.energy,75)/100,0,1),cp=m._compProfile||{duel:1,discipline:1};
-    var base=clamp(.54+(skill-65)/210+(brain.quality-.55)*.18-press*.22-fat*.18, .12,.93);
-    if(action==='dribble')base=clamp(base+(styleForPlayer(owner)==='dribbler'?.16:0),.14,.94);
-    if(action==='shot')base=clamp(base+(brain.attack*.08)-press*.10,.12,.91);
+    var press=pressureAt(m,side,owner),defPress=defensivePressure(m,side,owner),fat=clamp(1-num(owner.energy,75)/100,0,1),cp=m._compProfile||{duel:1,discipline:1};
+    var base=clamp(.54+(skill-65)/210+(brain.quality-.55)*.18-press*.22-defPress*.10-fat*.18, .12,.93);
+    if(action==='dribble')base=clamp(base+(styleForPlayer(owner)==='dribbler'?.16:0)-defPress*.13,.14,.94);
+    if(action==='shot')base=clamp(base+(brain.attack*.08)-press*.10-defPress*.05,.12,.91);
     if(action==='tackle')base=clamp(base+(brain.defense*.10)*num(cp.duel,1),.15,.94);
     if(action==='clearance')base=clamp(base+.12+press*.08,.22,.97);
     if(oppBrain)base=clamp(base-(oppBrain.press*.10),.10,.95);
@@ -663,6 +704,7 @@
   function releaseBall(m,side,owner,receiver,kind,success){
     var other=side==='home'?'away':'home';
     if(success&&receiver){
+      m._transitionTeam=side;m._transitionUntil=num(m._simClock,0)+.72;
       var distGoal=side==='home'?.98:0;
       var push=kind==='switch'?.20:kind==='through_ball'?.18:kind==='progressive_pass'?.14:.08;
       var tx=receiver.x+(distGoal-receiver.x)*push;
@@ -890,6 +932,10 @@
       integratePossession(m,stepMs/1000);
 
       var hb=teamBrainEnhanced(m,'home'),ab=teamBrainEnhanced(m,'away');
+      if(num(m._transitionUntil,0)>m._simClock){
+        var ts=m._transitionTeam==='home'?hb:ab;
+        ts.transition=clamp(num(ts.transition,.6)+.16,.2,.99);ts.tempo=clamp(num(ts.tempo,.6)+.08,.2,.99);
+      }
       m._ai2={home:hb,away:ab};
 
       updateOffBall(m,'home',hb);updateOffBall(m,'away',ab);
@@ -897,6 +943,8 @@
       updateDefenseAI(m,'home',hb);updateDefenseAI(m,'away',ab);
       updateMidfieldAI(m,'home',hb);updateMidfieldAI(m,'away',ab);
       updateAttackAI(m,'home',hb);updateAttackAI(m,'away',ab);
+      compactDefensiveLine(m,'home',hb);compactDefensiveLine(m,'away',ab);
+      separateTeam(m,'home');separateTeam(m,'away');
 
       var possSide=m.possessionTeam||'home',owner=getPlayer(m,possSide,m.possessionPlayerId);
       if(!owner){
