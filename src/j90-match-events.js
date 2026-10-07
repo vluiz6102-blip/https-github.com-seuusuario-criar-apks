@@ -39,10 +39,59 @@
       cards:{},injuries:{},offside:null,referee:{x:.5,y:.45},
       invader:null,flare:null,crowd:0,incidentUntil:0,lastInjuryClock:-999,
       nextCrowdPulse:0,lastScore:Number(m.homeScore||0)+':'+Number(m.awayScore||0),
-      events:0
+      events:0,
+      crowdMomentum:0,crowdBase:0,crowdNoise:0,crowdAttendance:0,crowdCapacity:0,
+      crowdProfile:null,stadiumProfile:null
     };
     m._j90EventState.crowd=cl(Number(m._j90EventState.crowd)||0,0,1);
     m._j90EventState.referee=m._j90EventState.referee||{x:.5,y:.45};
+  }
+
+  function crowdProfile(m){
+    var n=String(m&&m.home||'').toLowerCase();
+    var p={base:.48,energy:.50,ultras:.22,capacity:18000,style:'regional',name:'Estádio local'};
+    if(/real madrid/.test(n))p={base:.94,energy:.88,ultras:.48,capacity:76000,style:'gigante',name:'Santiago Bernabéu'};
+    else if(/paris saint-germain|\bpsg\b/.test(n))p={base:.86,energy:.92,ultras:.88,capacity:48000,style:'ultras',name:'Parc des Princes'};
+    else if(/flamengo/.test(n))p={base:.93,energy:.97,ultras:.78,capacity:78838,style:'popular',name:'Maracanã'};
+    else if(/corinthians/.test(n))p={base:.94,energy:.99,ultras:.84,capacity:49205,style:'popular',name:'Neo Química Arena'};
+    else if(/palmeiras/.test(n))p={base:.90,energy:.91,ultras:.76,capacity:43713,style:'popular',name:'Allianz Parque'};
+    else if(/barcelona|barça/.test(n))p={base:.91,energy:.84,ultras:.44,capacity:99354,style:'gigante',name:'Spotify Camp Nou'};
+    else if(/liverpool/.test(n))p={base:.90,energy:.95,ultras:.70,capacity:61276,style:'kop',name:'Anfield'};
+    else if(/borussia dortmund/.test(n))p={base:.93,energy:.98,ultras:.90,capacity:81365,style:'terrace',name:'Signal Iduna Park'};
+    else if(/bayern/.test(n))p={base:.91,energy:.86,ultras:.48,capacity:75024,style:'gigante',name:'Allianz Arena'};
+    else if(/boca juniors/.test(n))p={base:.92,energy:.99,ultras:.92,capacity:54000,style:'popular',name:'La Bombonera'};
+    else if(/river plate/.test(n))p={base:.92,energy:.95,ultras:.76,capacity:84567,style:'gigante',name:'Monumental'};
+    else if(/são paulo/.test(n))p={base:.88,energy:.86,ultras:.60,capacity:66795,style:'popular',name:'MorumBIS'};
+    else if(/grêmio/.test(n))p={base:.86,energy:.90,ultras:.70,capacity:55662,style:'popular',name:'Arena do Grêmio'};
+    else if(/internacional/.test(n))p={base:.86,energy:.88,ultras:.62,capacity:50842,style:'popular',name:'Beira-Rio'};
+    else if(/atlético-mg|atletico mineiro/.test(n))p={base:.89,energy:.96,ultras:.78,capacity:46000,style:'popular',name:'Arena MRV'};
+    else if(/cruzeiro/.test(n))p={base:.87,energy:.90,ultras:.70,capacity:61600,style:'popular',name:'Mineirão'};
+    else if(/benfica/.test(n))p={base:.91,energy:.86,ultras:.62,capacity:65647,style:'gigante',name:'Estádio da Luz'};
+    else if(/ajax/.test(n))p={base:.82,energy:.78,ultras:.42,capacity:55865,style:'ultras',name:'Johan Cruyff Arena'};
+    else if(/galatasaray/.test(n))p={base:.90,energy:.99,ultras:.92,capacity:53537,style:'ultras',name:'RAMS Park'};
+    else if(/celtic/.test(n))p={base:.88,energy:.98,ultras:.88,capacity:60411,style:'terrace',name:'Celtic Park'};
+    else if(/seleção|brazil|brasil/.test(n))p={base:.96,energy:.96,ultras:.58,capacity:70000,style:'national',name:'Estádio da Seleção'};
+    else if(/argentina/.test(n))p={base:.95,energy:.99,ultras:.70,capacity:70000,style:'national',name:'Estádio da Seleção'};
+    return p;
+  }
+  function crowdAI(m,reason){
+    ensure(m);
+    var st=m._j90EventState,p=st.crowdProfile||crowdProfile(m);
+    st.crowdProfile=p;
+    st.stadiumProfile={name:p.name,capacity:p.capacity,style:p.style};
+    var momentum=cl(Number(st.crowdMomentum)||0,0,1);
+    var noise=cl(p.base*.52+p.energy*.25+p.ultras*.13+momentum*.24,0,1);
+    if(reason==='danger')noise=cl(noise+.18,0,1);
+    if(reason==='shot')noise=cl(noise+.10,0,1);
+    if(reason==='goal')noise=cl(noise+.38,0,1);
+    if(reason==='save')noise=cl(noise+.16,0,1);
+    if(reason==='red')noise=cl(noise+.20,0,1);
+    st.crowdBase=p.base;
+    st.crowdNoise=noise;
+    st.crowdAttendance=Math.round(p.capacity*(.72+.24*p.base));
+    st.crowd=cl(Math.max(st.crowd,noise),0,1);
+    if(window.J90Ambience&&typeof window.J90Ambience.setCrowdLevel==='function')window.J90Ambience.setCrowdLevel(st.crowd);
+    if(reason==='goal'&&window.J90Ambience&&typeof window.J90Ambience.setGoalLevel==='function')window.J90Ambience.setGoalLevel(cl(st.crowd+.18,0,1));
   }
 
   function discipline(m,side,p,kind){
@@ -84,8 +133,8 @@
         else if(severity<.32)discipline(m,side,p,'yellow');
         else event(m,'O árbitro marca falta no duelo de '+escLocal(p.name||'jogador')+'.','foul_'+Math.floor(Number(a.clock)||0),1.4);
       }
-      if(a.action==='shot'&&a.success)m._j90EventState.crowd=cl(st.crowd+.25,0,1);
-      if(a.action==='dribble'&&a.success&&rnd(m)<.12)st.crowd=cl(st.crowd+.18,0,1);
+      if(a.action==='shot'&&a.success){st.crowdMomentum=cl(st.crowdMomentum+.16,0,1);crowdAI(m,'shot');}
+      if(a.action==='dribble'&&a.success&&rnd(m)<.18){st.crowdMomentum=cl(st.crowdMomentum+.12,0,1);crowdAI(m,'danger');}
       if(a.action==='cross'&&a.success&&rnd(m)<.08)event(m,'O cruzamento encontra a área e a torcida cresce.','cross_crowd',2.5);
     }
     st.processedActions=h.length;
@@ -165,7 +214,7 @@
   function scorePulse(m){
     var st=m._j90EventState,score=Number(m.homeScore||0)+':'+Number(m.awayScore||0);
     if(score===st.lastScore)return;
-    st.lastScore=score;st.crowd=1;
+    st.lastScore=score;st.crowdMomentum=1;crowdAI(m,'goal');st.crowd=1;
     event(m,'🏟️ O estádio explode após o gol!','goal_crowd',0);
   }
 
@@ -182,10 +231,13 @@
     if(now===st.lastClock)return;
     st.lastClock=now;
     processActions(m);
+    crowdAI(m,'base');
     scorePulse(m);
     refereeFollow(m);
     if(now>=st.nextCrowdPulse){
+      st.crowdMomentum=cl(st.crowdMomentum-.055,0,1);
       st.crowd=cl(st.crowd-.035,0,1);
+      if(st.crowdMomentum>0)crowdAI(m,'base');
       st.nextCrowdPulse=now+.55;
     }
     injuryCheck(m);
