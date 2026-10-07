@@ -191,7 +191,7 @@
     if(c&&!c.__j90v4Resize){
       c.__j90v4Resize=true;
       if(window.ResizeObserver) new ResizeObserver(function(){var m=window.S&&S.match2d;if(m){m._j90gl=null;ensureCanvas(m);draw();}}).observe(c);
-      window.addEventListener('orientationchange',function(){setTimeout(function(){var m=window.S&&S.match2d;if(m){m._j90gl=null;ensureCanvas(m);draw();}},120),},{passive:true});
+      window.addEventListener('orientationchange',function(){setTimeout(function(){var m=window.S&&S.match2d;if(m){m._j90gl=null;ensureCanvas(m);draw();}},120);},{passive:true});
     }
     var m=window.S&&S.match2d;if(m)draw();
   }
