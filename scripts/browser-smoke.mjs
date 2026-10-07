@@ -10,8 +10,27 @@ page.on('pageerror', err => errors.push('pageerror: ' + err.message));
 page.on('console', msg => {
   if (msg.type() === 'error') errors.push('console: ' + msg.text());
 });
+page.on('requestfailed', req => {
+  errors.push('requestfailed: ' + req.url() + ' :: ' + (req.failure()?.errorText || 'unknown'));
+});
 
 await page.goto(base, { waitUntil: 'networkidle' });
+await page.waitForFunction(
+  () => !!window.J90AutoHealAI && !!window.J90BugGuard,
+  { timeout: 10000 }
+).catch(async error => {
+  const diagnostic = await page.evaluate(() => ({
+    autoHeal: !!window.J90AutoHealAI,
+    bugGuard: !!window.J90BugGuard,
+    autoHealVersion: window.J90AutoHealAI?.version || '',
+    bugGuardVersion: window.J90BugGuard?.version || '',
+    scripts: [...document.scripts].map(s => s.src || 'inline').filter(Boolean),
+    runtimeResources: performance.getEntriesByType('resource')
+      .map(x => x.name)
+      .filter(x => /j90-(auto-heal|manager-ai)\.js/.test(x))
+  }));
+  throw new Error('Runtime resilience did not initialize within 10s. ' + JSON.stringify({ diagnostic, errors, waitError: error.message }));
+});
 if (await page.locator('#j90CinematicIntro').count() !== 1) {
   throw new Error('Cinematic intro was not created.');
 }
@@ -26,8 +45,15 @@ const startup = await page.evaluate(() => ({
 }));
 if (startup.bodyText < 50) throw new Error('Startup rendered an unexpectedly empty UI.');
 if (startup.perf && startup.perf.frames < 5) throw new Error('Shared animation loop did not produce enough frames after startup.');
-const resilience = await page.evaluate(() => ({ autoHeal: !!window.J90AutoHealAI, bugGuard: !!window.J90BugGuard, autoHealVersion: window.J90AutoHealAI?.version || '', bugGuardVersion: window.J90BugGuard?.version || '' }));
-if (!resilience.autoHeal || !resilience.bugGuard) throw new Error('Runtime Auto-Heal AI / BugGuard did not initialize: ' + JSON.stringify(resilience));
+const resilience = await page.evaluate(() => ({
+  autoHeal: !!window.J90AutoHealAI,
+  bugGuard: !!window.J90BugGuard,
+  autoHealVersion: window.J90AutoHealAI?.version || '',
+  bugGuardVersion: window.J90BugGuard?.version || ''
+}));
+if (!resilience.autoHeal || !resilience.bugGuard) {
+  throw new Error('Runtime Auto-Heal AI / BugGuard did not initialize: ' + JSON.stringify({ resilience, errors }));
+}
 
 // Exercise the primary career flow.
 const start = page.getByRole('button', { name: /Começar carreira|Continuar carreira/i }).first();
