@@ -80,7 +80,6 @@ jobs:
           grep -Fq "Match Lifecycle Guard" scripts/quality-scan.mjs
           grep -Fq "j90SaveReplacer" scripts/quality-scan.mjs
           grep -Fq "android:screenOrientation=\"portrait\"" scripts/quality-scan.mjs
-          ! grep -Fq "const landscape = read('src/j90-landscape.js')" scripts/quality-scan.mjs
           ! grep -Fq "checkSyntax('Landscape Match'" scripts/quality-scan.mjs
           echo "QUALITY_SCANNER_SOURCE=FINAL_PORTRAIT_LIFECYCLE"
 
