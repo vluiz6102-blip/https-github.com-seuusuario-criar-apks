@@ -2,7 +2,7 @@
 
 ## Target
 
-Godot 4.x, com prioridade para uma versão estável atual da linha 4.x. Para 2D pixel art, **Compatibility** é uma escolha especialmente forte quando o objetivo principal é alcançar a maior variedade de hardware. O renderer **Mobile** fica disponível para aparelhos modernos capazes de Vulkan.
+Godot **4.7.2 stable** como baseline do projeto. Godot 4.8 estava em desenvolvimento no momento desta decisão, então não entra no alvo de lançamento. Para 2D pixel art, **Compatibility** é uma escolha especialmente forte quando o objetivo principal é alcançar a maior variedade de hardware. O renderer **Mobile** fica disponível para aparelhos modernos capazes de Vulkan.
 
 A documentação oficial do Godot descreve Compatibility como o renderer com maior alcance em hardware antigo/baixo e observa que, para jogos 2D, ele costuma ser suficiente. O renderer Mobile é o caminho para dispositivos modernos com Vulkan. O próprio Godot também possui fallback automático para Compatibility quando o renderer baseado em RenderingDevice não pode ser usado.
 
@@ -15,6 +15,14 @@ A documentação oficial do Godot descreve Compatibility como o renderer com mai
   - limita FPS a 120/60;
   - desliga efeitos secundários no Lite;
   - controla a resolução interna do SubViewport sem redimensionar a janela.
+- `autoload/AudioManager.gd`
+  - pool fixo de vozes;
+  - deduplicação por evento e por frame;
+  - prioridade/cooldown para impedir o SFX `puf...puf...` em loop.
+- `autoload/AssetPreloader.gd`
+  - `ResourceLoader.load_threaded_request()`;
+  - progresso monitorado entre frames;
+  - nunca chama `load_threaded_get()` antes de `LOADED`.
 - `autoload/MonetizationManager.gd`
   - Google Play Billing;
   - verificação server-side;
@@ -39,7 +47,7 @@ O pedido original falava em Billing v6+. Isso não deve ser usado para um lança
 - Billing Library 7: prazo de novos apps/updates até 31/08/2026.
 - Billing Library 8: suporte até 31/08/2027.
 - Billing Library 9: suporte até 31/08/2028.
-- A release atual encontrada na documentação oficial é Billing Library **9.1.0**.
+- A release atual encontrada na documentação oficial é Billing Library **9.1.0**, portanto o projeto não deve iniciar uma integração nova em Billing 6.
 
 A integração Godot recomendada para Google Play Billing é o plugin first-party **GodotGooglePlayBilling**, compatível com Godot 4.2+, e a documentação atual do plugin registra a API `BillingClient.new()`, sinais assíncronos e `acknowledge_purchase()`/`consume_purchase()`.
 
@@ -84,10 +92,11 @@ Não altere `rendering_method` em runtime como se fosse um botão de qualidade. 
 
 Recomendação:
 
-1. build principal: `mobile`;
-2. manter fallback para OpenGL/Compatibility;
-3. validar no aparelho real;
-4. se o suporte de hardware for prioridade absoluta para a versão 2D, uma build Compatibility dedicada é válida e pode ser até mais previsível.
+1. baseline de produção: `mobile` em Godot 4.7.2;
+2. manter uma configuração/export Compatibility para aparelhos sem Vulkan;
+3. o `HardwareDetector` lê o renderer efetivamente iniciado e escolhe o perfil de carga;
+4. nunca trocar o renderer em runtime;
+5. validar em aparelhos reais de baixo/médio/alto nível.
 
 ## Migração do núcleo
 
@@ -99,6 +108,8 @@ Recomendação:
 6. Manter saves e entitlements fora da cena.
 7. Substituir callbacks DOM por signals Godot.
 8. Testar cold boot, retorno do background, perda de rede, compra pendente e reinstalação.
+9. Testar o `AudioManager` com rajadas de eventos e garantir no máximo 12 vozes.
+10. Testar o `AssetPreloader` com falha de asset e fila vazia.
 
 ## Critérios de lançamento
 
