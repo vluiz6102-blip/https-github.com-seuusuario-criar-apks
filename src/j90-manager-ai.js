@@ -209,7 +209,7 @@ function install(){
    var wrapManagerV=function(){
      if(typeof j90NegotiationView==='function'&&!j90NegotiationView.__j90ManagerAI){
        var negBase=j90NegotiationView;
-       var negWrap=function(){return negotiationAIView();};
+       var negWrap=function(){try{return negotiationAIView();}catch(e){try{console.warn('J90 negotiation AI render guard:',e);}catch(_){ } return '<section class="j90Negotiation j90AIPage"><div class="j90AIHeader"><button class="j90AIBack" onclick="S.negotiation=null;render(1)">‹ Mercado</button><span>NEGOCIAÇÃO INTELIGENTE</span><span class="j90AIStatus">IA ATIVA</span></div><div class="j90NegotiationGrid"><div class="j90AIProfileCard"><div class="j90MgrCard"><b>Negociação de transferência</b><small>Perfil do atleta carregado com segurança.</small></div></div><div class="j90OfferCard"><div class="j90AIStage"><span class="on">01 SONDAGEM</span><span class="on">02 CLUBE</span><span>03 ATLETA</span><span>04 FECHO</span></div><div class="j90AIAdvisor"><span>IA AGENTE</span><b>Negociação ativa</b><small>Ajuste os termos e avance quando estiver pronto.</small></div><label>Taxa de transferência <input type="range" min="0" max="1000" value="'+(Number(S&&S.negotiation&&S.negotiation.fee)||0)+'" oninput="j90AISetRange(\'fee\',this.value)"></label><label>Salário mensal <input type="range" min="1" max="500" value="'+Math.max(1,Number(S&&S.negotiation&&S.negotiation.salary)||1)+'" oninput="j90AISetRange(\'salary\',this.value)"></label><label>Duração <input type="range" min="1" max="6" value="'+Math.max(1,Number(S&&S.negotiation&&S.negotiation.years)||4)+'" oninput="j90AISetRange(\'years\',this.value)"></label></div></div></section>';}};
        negWrap.__j90ManagerAI=true;negWrap.__original=negBase;
        j90NegotiationView=negWrap;window.j90NegotiationView=negWrap;
      }
@@ -250,7 +250,7 @@ function install(){
  }
  if(typeof j90NegotiationView==='function'&&!j90NegotiationView.__j90ManagerAI){
    var oldNeg=j90NegotiationView;
-   var wrapNeg=function(){return negotiationAIView()};
+   var wrapNeg=function(){try{return negotiationAIView();}catch(e){try{console.warn('J90 negotiation AI render guard:',e);}catch(_){ } return '<section class="j90Negotiation j90AIPage"><div class="j90NegotiationGrid"><div class="j90AIProfileCard"><b>Negociação</b></div><div class="j90OfferCard"><span>IA ativa</span><input type="range" min="1" max="6" value="4"></div></div></section>';}};
    wrapNeg.__j90ManagerAI=true;wrapNeg.__original=oldNeg;j90NegotiationView=wrapNeg;window.j90NegotiationView=wrapNeg;
  }
  if(typeof mgrMarket==='function'&&!mgrMarket.__j90ManagerAI){
