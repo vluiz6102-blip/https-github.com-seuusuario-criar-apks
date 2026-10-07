@@ -67,6 +67,9 @@ jobs:
           print("STATIC_GODOT_AUDIT=OK")
           PY
 
+      - name: Print validated revision
+        run: echo "J90_VALIDATED_SHA=$GITHUB_SHA"
+
       - name: Parse and load every Godot class
         run: |
           set -euo pipefail
