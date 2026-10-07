@@ -1863,6 +1863,9 @@ E(['🏅','🎯'],'Você está a uma boa sequência de entrar para a seleção d
 const ADV=['Pedir conselho a um veterano','+mental, +moral',()=>{at('men',.3);mo(2)}];
 EV.forEach(e=>e.o.length<3&&e.o.push(ADV));
 let S=null,tab='game';
+try{
+  Object.defineProperty(window,'S',{configurable:true,enumerable:false,get:()=>S,set:v=>{S=v}});
+}catch(e){try{window.S=S}catch(_){}}
 const fm=v=>{const a=Math.abs(v);return(v<0?'-':'')+(a>=1000?(a/1000).toFixed(1).replace('.',',')+' mi':Math.round(a)+' mil')};
 function syncPlayerStats(){
  if(!S||!S.at)return;
