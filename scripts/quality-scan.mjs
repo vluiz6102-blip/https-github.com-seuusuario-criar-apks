@@ -80,6 +80,12 @@ if (existsSync('src/j90-landscape.js')) add(fail, 'Arquivo legado de paisagem ai
 if (!/getContext\(['"]2d['"]/.test(match2d) || !/ResizeObserver/.test(match2d) || !/_j90AutoLow/.test(match2d)) add(fail, 'Renderer 2D sem fallback/otimização adaptativa suficiente para dispositivos com menor capacidade.');
 const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
+if (!/J90_CAFE90_URL=['"]https:\/\/www\.buymeacoffee\.com\/['"]/.test(index) || !/function\s+j90OpenCafe90\s*\(/.test(index)) add(fail, 'Entrada do Café 90 ausente ou URL insegura.');
+if (/J90_CAFE90_URL=['"]http:/.test(index) || !/buymeacoffee\.com/.test(index)) add(fail, 'Café 90 não está preso ao domínio oficial HTTPS.');
+const externalBrowser = read('android-overrides/J90ExternalBrowserPlugin.java');
+const mainActivity = read('android-overrides/MainActivity.java');
+if (!/J90ExternalBrowser/.test(externalBrowser) || !/https/.test(externalBrowser) || !/buymeacoffee\.com/.test(externalBrowser)) add(fail, 'Plugin nativo de navegador seguro do Café 90 incompleto.');
+if (!/registerPlugin\(J90ExternalBrowserPlugin\.class\)/.test(mainActivity)) add(fail, 'MainActivity não registra o navegador seguro do Café 90.');
 if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');
 if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
