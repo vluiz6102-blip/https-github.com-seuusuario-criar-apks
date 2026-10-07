@@ -74,7 +74,7 @@ if (await play.count() === 1) {
       cssWidth: rect?.width || 0,
       cssHeight: rect?.height || 0,
       webgl: !!(m && m._j90gl && m._j90gl.ready),
-      canvas2d: !!m?._ctx,
+      canvas2d: !!(m && m._ctx),
       audioMode: window.J90_AUDIO_MODE || '',
       musicTracks: window.J90Ambience?.getTracks?.().length || 0
     };
