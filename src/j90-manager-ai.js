@@ -25,21 +25,21 @@ function ensureState(){if(!S)return null;S.j90ManagerAI=S.j90ManagerAI&&typeof S
 function transferAI(p){
  var o=num(p&&p.ovr,65),age=num(p&&p.age,25),potential=num(p&&p.potential,o+8),form=num(p&&p.form,70),morale=num(p&&p.morale,70),years=num(p&&p.years,1),salary=Math.max(1,num(p&&p.salary,Math.max(1,o*.11)));
  var ageFactor=age<=21?1.42:age<=24?1.24:age<=28?1.0:age<=31?.78:age<=34?.53:.34;
- var potentialFactor=1+cl(potential-o,0,25)*.018;
+ var potentialFactor=1+clamp(potential-o,0,25)*.018;
  var performanceFactor=1+(form-70)/420+(morale-70)/700;
  var contractPressure=years<=1?1.15:years<=2?1.07:years>=5?.92:1;
  var value=Math.max(3,Math.round((o*2.65+Math.max(0,o-60)*2.8)*ageFactor*potentialFactor*performanceFactor*contractPressure));
  var wage=Math.max(1,Math.round((o*.11)*(age<=23?1.08:1)*(1+(form-70)/380)));
- var sellerUrgency=cl((age>=30?.22:0)+(years<=1?.28:0)+(form<62?.22:0)+(num(p&&p.transferListed,0)?.20:0),0,1);
- var buyerFit=cl((o-60)/35+(potential-o)/120+(form-55)/260,0,1);
+ var sellerUrgency=clamp((age>=30?.22:0)+(years<=1?.28:0)+(form<62?.22:0)+(num(p&&p.transferListed,0)?.20:0),0,1);
+ var buyerFit=clamp((o-60)/35+(potential-o)/120+(form-55)/260,0,1);
  return {value:value,fairValue:Math.round(value),wage:wage,sellerUrgency:sellerUrgency,buyerFit:buyerFit,form:form,morale:morale,potential:potential,age:age,contractYears:years};
 }
 function personality(p){
  var o=transferAI(p),seed=key(p&&p.name).split('').reduce(function(a,c){return((a*33+c.charCodeAt(0))>>>0)},7)%100;
- var demanding=cl(.25+(o.value>250?0.30:0)+(o.wage>12?0.12:0)+seed/500,0,1);
- var patient=cl(1-demanding+(o.age>=29?.10:0),0,1);
+ var demanding=clamp(.25+(o.value>250?0.30:0)+(o.wage>12?0.12:0)+seed/500,0,1);
+ var patient=clamp(1-demanding+(o.age>=29?.10:0),0,1);
  var labels=demanding>.68?'Exigente':patient>.66?'Paciente':'Competitivo';
- var walk=cl(20+o.buyerFit*36+o.value/14-demanding*14,18,88);
+ var walk=clamp(20+o.buyerFit*36+o.value/14-demanding*14,18,88);
  return {type:labels,demanding:demanding,patient:patient,walkAway:Math.round(walk)};
 }
 function clubPower(name){
@@ -53,12 +53,12 @@ function playerInterest(p){
  var playingTime=num(p&&p.age,25)<=23?8:0;
  var domestic=key(p&&p.nationality).indexOf('brasil')>=0&&key(S&&S.managerClub).indexOf('brasil')>=0?4:0;
  var delta=(my-club)*.42+(S&&S.board&&num(S.board.confidence,60)-60)*.08+roleNeed+playingTime+domestic;
- return {interest:Math.round(cl(44+delta+(base.buyerFit*18),8,96)),personality:pers,roleNeed:roleNeed,buyerPower:my,sellerPower:club};
+ return {interest:Math.round(clamp(44+delta+(base.buyerFit*18),8,96)),personality:pers,roleNeed:roleNeed,buyerPower:my,sellerPower:club};
 }
 function analyseTransfer(p){
  var t=transferAI(p),i=playerInterest(p),budget=num(S&&S.finance&&S.finance.budget,0),can=budget>=t.value;
  var recommendation=t.sellerUrgency>.58?'Negocie abaixo do valor e use parcelas':t.buyerFit>.66?'Prioridade alta para o projeto':'Sondar antes de oferecer';
- return Object.assign({},t,i,{affordable:can,recommendation:recommendation,score:Math.round(cl(50+i.interest*.35+t.buyerFit*34-t.sellerUrgency*8,0,99))});
+ return Object.assign({},t,i,{affordable:can,recommendation:recommendation,score:Math.round(clamp(50+i.interest*.35+t.buyerFit*34-t.sellerUrgency*8,0,99))});
 }
 
 function developmentPlan(){
@@ -104,7 +104,7 @@ function ensureAnalysis(p){
 function safePlayerId(p){return p&&p.id||p&&p.name||''}
 function range(k,value){
  if(!S||!S.negotiation)return;
- var n=S.negotiation,v=Math.max(0,Math.round(num(value,0)));n[k]=k==='years'?cl(v,1,6):v;
+ var n=S.negotiation,v=Math.max(0,Math.round(num(value,0)));n[k]=k==='years'?clamp(v,1,6):v;
  var id='j90AIVal_'+k,o=document.getElementById(id);if(o)o.textContent=k==='years'?String(n[k])+' anos':'R$ '+money(n[k]);
  var total=(num(n.fee,0)+num(n.signing,0)+num(n.bonus,0));
  var t=document.getElementById('j90AITotal');if(t)t.textContent='R$ '+money(total);
@@ -115,7 +115,7 @@ window.j90AISetRange=range;
 function radar(p){
  var vals=[rating(p,'pac'),rating(p,'sho'),rating(p,'pas'),rating(p,'dri'),rating(p,'def'),rating(p,'phy')];
  var cx=100,cy=100,r=68,pts=[],i;
- for(i=0;i<6;i++){var a=(-Math.PI/2)+(Math.PI*2*i/6),rr=r*cl(vals[i],0,100)/100;pts.push((cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1))}
+ for(i=0;i<6;i++){var a=(-Math.PI/2)+(Math.PI*2*i/6),rr=r*clamp(vals[i],0,100)/100;pts.push((cx+Math.cos(a)*rr).toFixed(1)+','+(cy+Math.sin(a)*rr).toFixed(1))}
  var grid=[];for(i=0;i<6;i++){var ang=(-Math.PI/2)+(Math.PI*2*i/6);grid.push((cx+Math.cos(ang)*r).toFixed(1)+','+(cy+Math.sin(ang)*r).toFixed(1))}
  var labs=['PAC','SHO','PAS','DRI','DEF','PHY'],label='';
  for(i=0;i<6;i++){var ang=(-Math.PI/2)+(Math.PI*2*i/6),lx=cx+Math.cos(ang)*83,ly=cy+Math.sin(ang)*83+3;label+='<text x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="middle" class="j90RadarLabel">'+labs[i]+'</text>'}
@@ -137,9 +137,9 @@ function playerProfile(p){
 function negotiationAIView(){
  var n=S&&S.negotiation;if(!n)return '';
  var p=n.renewal?(roster().find(function(x){return x.id===n.playerId})||{}):(typeof j90ContractPlayer==='function'?j90ContractPlayer(n):null)||{};
- var a=analyseTransfer(p),interest=playerInterest(p),tension=cl(num(n.tension,18),0,100),total=num(n.fee,0)+num(n.signing,0)+num(n.bonus,0),maxFee=Math.max(num(n.fee,a.fairValue),a.fairValue*1.45,10),maxSalary=Math.max(num(n.salary,a.wage),a.wage*1.8,10);
+ var a=analyseTransfer(p),interest=playerInterest(p),tension=clamp(num(n.tension,18),0,100),total=num(n.fee,0)+num(n.signing,0)+num(n.bonus,0),maxFee=Math.max(num(n.fee,a.fairValue),a.fairValue*1.45,10),maxSalary=Math.max(num(n.salary,a.wage),a.wage*1.8,10);
  var failed=n.stage==='failed',renew=!!n.renewal;
- n.interest=cl(Math.round((num(n.interest,45)*.45+interest.interest*.55)),8,96);
+ n.interest=clamp(Math.round((num(n.interest,45)*.45+interest.interest*.55)),8,96);
  var roleFit=n.role==='Titular importante'?'Titular importante':n.role==='Rotação'?'Rotação':'Reserva';
  var advice=a.sellerUrgency>.60?'Vendedor pode ceder com parcelas.':interest.personality.type==='Exigente'?'Agente exige projeto esportivo e salário.':'Negociação equilibrada. Evite elevar a tensão.';
  var b=transferAI(p);
@@ -148,7 +148,7 @@ function negotiationAIView(){
  '<div class="j90RangeGrid">'+
  '<label>Taxa de transferência <span id="j90AIVal_fee">R$ '+money(n.fee)+'</span><input type="range" min="0" max="'+Math.ceil(maxFee)+'" step="1" value="'+num(n.fee,0)+'" oninput="j90AISetRange(\'fee\',this.value)"></label>'+
  '<label>Salário mensal <span id="j90AIVal_salary">R$ '+money(n.salary)+'</span><input type="range" min="1" max="'+Math.ceil(maxSalary)+'" step="1" value="'+Math.max(1,num(n.salary,a.wage))+'" oninput="j90AISetRange(\'salary\',this.value)"></label>'+
- '<label>Duração <span id="j90AIVal_years">'+num(n.years,4)+' anos</span><input type="range" min="1" max="6" step="1" value="'+cl(num(n.years,4),1,6)+'" oninput="j90AISetRange(\'years\',this.value)"></label>'+
+ '<label>Duração <span id="j90AIVal_years">'+num(n.years,4)+' anos</span><input type="range" min="1" max="6" step="1" value="'+clamp(num(n.years,4),1,6)+'" oninput="j90AISetRange(\'years\',this.value)"></label>'+
  '<label>Luvas <span id="j90AIVal_signing">R$ '+money(n.signing)+'</span><input type="range" min="0" max="'+Math.ceil(Math.max(10,a.fairValue*.35))+'" step="1" value="'+num(n.signing,0)+'" oninput="j90AISetRange(\'signing\',this.value)"></label>'+
  '<label>Bônus <span id="j90AIVal_bonus">R$ '+money(n.bonus)+'</span><input type="range" min="0" max="'+Math.ceil(Math.max(10,a.fairValue*.20))+'" step="1" value="'+num(n.bonus,0)+'" oninput="j90AISetRange(\'bonus\',this.value)"></label>'+
  '<label>Cláusula de saída <span id="j90AIVal_release">R$ '+money(n.release)+'</span><input type="range" min="0" max="'+Math.ceil(Math.max(10,a.fairValue*2.2))+'" step="1" value="'+num(n.release,0)+'" oninput="j90AISetRange(\'release\',this.value)"></label>'+
@@ -217,12 +217,12 @@ function install(){
    var oldOpen=j90OpenContract;
    var wrapOpen=function(p,price){
      var a=p&&analyseTransfer(p);
-     var aiPrice=a&&a.fairValue?Math.round(cl(num(price,a.fairValue),Math.max(1,a.fairValue*.82),a.fairValue*1.18)):price;
+     var aiPrice=a&&a.fairValue?Math.round(clamp(num(price,a.fairValue),Math.max(1,a.fairValue*.82),a.fairValue*1.18)):price;
      var out=oldOpen.apply(this,[p,aiPrice]);
      if(S&&S.negotiation&&a){
        S.negotiation.interest=Math.round(a.interest);
        S.negotiation.ai={fairValue:a.fairValue,wage:a.wage,sellerUrgency:a.sellerUrgency,personality:a.personality,recommendation:a.recommendation,score:a.score};
-       S.negotiation.fee=Math.round(cl(num(S.negotiation.fee,a.fairValue),0,Math.max(a.fairValue*1.55,a.fairValue+5)));
+       S.negotiation.fee=Math.round(clamp(num(S.negotiation.fee,a.fairValue),0,Math.max(a.fairValue*1.55,a.fairValue+5)));
        S.negotiation.salary=Math.max(num(S.negotiation.salary,1),a.wage);
        S.j90ManagerAI.last=a;
        ensureState().history.unshift({r:num(S.managerRound,0),player:p.name,score:a.score,at:Date.now()});
@@ -247,8 +247,8 @@ function install(){
        var fair=ai.fairValue,wage=ai.wage,feeRatio=fair?fee/fair:1,wageRatio=wage?salary/wage:1;
        var walk=ai.interest<30||feeRatio<.72||wageRatio<.72;
        n.ai=n.ai||{};n.ai.fairValue=fair;n.ai.wage=wage;n.ai.feeRatio=+feeRatio.toFixed(2);n.ai.wageRatio=+wageRatio.toFixed(2);
-       if(walk){n.tension=cl(num(n.tension,18)+12,0,100);n.interest=cl(num(n.interest,45)-7,8,96);}
-       else if(feeRatio>=1.05&&wageRatio>=1.05){n.tension=cl(num(n.tension,18)-5,0,100);n.interest=cl(num(n.interest,45)+5,8,96);}
+       if(walk){n.tension=clamp(num(n.tension,18)+12,0,100);n.interest=clamp(num(n.interest,45)-7,8,96);}
+       else if(feeRatio>=1.05&&wageRatio>=1.05){n.tension=clamp(num(n.tension,18)-5,0,100);n.interest=clamp(num(n.interest,45)+5,8,96);}
      }
      return oldStage.apply(this,arguments);
    };
@@ -264,8 +264,8 @@ function install(){
        var intensity=/intenso|fis|final|tecnico/.test(String(t||'').toLowerCase())?1.15:0.92;
        roster().filter(function(p){return p.start||num(p.age,25)<=23}).forEach(function(p){
          var k=d.focus;
-         if(k&&Number.isFinite(Number(p[k])))p[k]=cl(Number(p[k])+.25*intensity,0,99);
-         p.form=cl(num(p.form,70)+(/recuper|descanso/.test(String(t||'').toLowerCase())?1.6:-.2),0,100);
+         if(k&&Number.isFinite(Number(p[k])))p[k]=clamp(Number(p[k])+.25*intensity,0,99);
+         p.form=clamp(num(p.form,70)+(/recuper|descanso/.test(String(t||'').toLowerCase())?1.6:-.2),0,100);
        });
        ensureState().development.lastTraining={type:t,focus:d.focus,focusLabel:d.focusLabel,at:Date.now()};
      }catch(e2){}
