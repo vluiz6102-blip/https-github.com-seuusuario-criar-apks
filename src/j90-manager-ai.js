@@ -217,7 +217,8 @@ function install(){
    var oldOpen=j90OpenContract;
    var wrapOpen=function(p,price){
      var a=p&&analyseTransfer(p);
-     var out=oldOpen.apply(this,[p,price||((a&&a.fairValue)||0)]);
+     var aiPrice=a&&a.fairValue?Math.round(cl(num(price,a.fairValue),Math.max(1,a.fairValue*.82),a.fairValue*1.18)):price;
+     var out=oldOpen.apply(this,[p,aiPrice]);
      if(S&&S.negotiation&&a){
        S.negotiation.interest=Math.round(a.interest);
        S.negotiation.ai={fairValue:a.fairValue,wage:a.wage,sellerUrgency:a.sellerUrgency,personality:a.personality,recommendation:a.recommendation,score:a.score};
@@ -252,6 +253,25 @@ function install(){
      return oldStage.apply(this,arguments);
    };
    wrapStage.__j90ManagerAI=true;wrapStage.__original=oldStage;j90NegotiateStage=wrapStage;window.j90NegotiateStage=wrapStage;
+ }
+ if(typeof mgrTraining==='function'&&!mgrTraining.__j90ManagerAI){
+   var oldTraining=mgrTraining;
+   var wrapTraining=function(t){
+     var d=developmentPlan(),before={};
+     try{roster().forEach(function(p){before[p.id]=num(p[d.focus],0)})}catch(e){}
+     var out=oldTraining.apply(this,arguments);
+     try{
+       var intensity=/intenso|fis|final|tecnico/.test(String(t||'').toLowerCase())?1.15:0.92;
+       roster().filter(function(p){return p.start||num(p.age,25)<=23}).forEach(function(p){
+         var k=d.focus;
+         if(k&&Number.isFinite(Number(p[k])))p[k]=cl(Number(p[k])+.25*intensity,0,99);
+         p.form=cl(num(p.form,70)+(/recuper|descanso/.test(String(t||'').toLowerCase())?1.6:-.2),0,100);
+       });
+       ensureState().development.lastTraining={type:t,focus:d.focus,focusLabel:d.focusLabel,at:Date.now()};
+     }catch(e2){}
+     return out;
+   };
+   wrapTraining.__j90ManagerAI=true;wrapTraining.__original=oldTraining;mgrTraining=wrapTraining;window.mgrTraining=wrapTraining;
  }
  if(typeof mgrStartMatch==='function'&&!mgrStartMatch.__j90ManagerAI){
    var oldStart=mgrStartMatch;
