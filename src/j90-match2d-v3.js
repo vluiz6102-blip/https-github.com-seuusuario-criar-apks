@@ -196,6 +196,11 @@
     g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=1;g.stroke();
   }
 
+  function invalidate(m){
+    if(!m)return;
+    m._j90v3Field=null;m._j90v3Scene=null;m._j90v3Players=null;m._j90v3StyleReady=false;
+  }
+
   function draw2D(){
     var m=(typeof S!=='undefined'&&S)?S:null;
     if(!m)return;
@@ -253,7 +258,7 @@
     if(c&&!c.__j90v3Resize){
       c.__j90v3Resize=true;
       if(window.ResizeObserver){
-        var ro=new ResizeObserver(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}});
+        var ro=new ResizeObserver(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){invalidate(m);ensureCanvas(m);draw2D();}});
         ro.observe(c);
       }
       addEventListener('orientationchange',function(){setTimeout(function(){var m=(typeof S!=='undefined'&&S)?S:null;if(m){m._j90v3Field=null;ensureCanvas(m);draw2D();}},120)},{passive:true});
