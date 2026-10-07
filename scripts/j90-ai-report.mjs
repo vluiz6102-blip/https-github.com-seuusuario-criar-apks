@@ -147,7 +147,8 @@ async function openrouter() {
         { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
         { role: "user", content: fullPrompt }
       ],
-      max_tokens: maxOutputTokens
+      max_completion_tokens: maxOutputTokens,
+      reasoning_effort: "medium"
     })
   });
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}: ${await res.text()}`);
@@ -210,7 +211,7 @@ async function nvidia() {
 async function openai() {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error("OPENAI_API_KEY ausente.");
-  const model = process.env.OPENAI_MODEL || "gpt-5.6-sol";
+  const model = process.env.OPENAI_MODEL || "gpt-6.1-sol";
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
