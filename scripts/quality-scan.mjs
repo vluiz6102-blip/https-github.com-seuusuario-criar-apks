@@ -18,7 +18,9 @@ if (!/function\s+startCareer\s*\(/.test(index)) add(fail, 'Fluxo crítico de in�
 if (!/id=["']startConfirm["']/.test(index)) add(fail, 'Controle crítico startConfirm ausente da tela de criação.');
 if (/function\s+start\s*\(/.test(index)) add(fail, 'Função global start() detectada. Evitar colisão com APIs de áudio/browser.');
 if (/Crie seu jogador/i.test(index)) add(fail, 'Texto legado de criação de jogador ainda presente na interface Manager.');
-if (/POSN\[S\.pos\]/.test(index)) add(fail, 'Tela inicial ainda apresenta posição de jogador em vez de identidade de Manager.');
+const homeSection = (() => { const a=index.indexOf('function menuV()'); const b=index.indexOf('function howToView()', a); return a>=0 ? index.slice(a, b>0?b:a+12000) : ''; })();
+if (/POSN\[S\.pos\]/.test(homeSection)) add(fail, 'Tela inicial ainda apresenta posição de jogador em vez de identidade de Manager.');
+if (/Crie seu jogador/i.test(homeSection)) add(fail, 'Tela inicial ainda usa linguagem de criação de jogador.');
 if (!/PRODUZIDO POR VICTOR/i.test(index)) add(fail, 'Assinatura PRODUZIDO POR VICTOR ausente da tela inicial.');
 if (!/Créditos &amp; tecnologia/i.test(index) || !/Tecnologias usadas/i.test(index)) add(fail, 'Área de créditos tecnológicos incompleta.');
 if (!/Capacitor.*Web Audio.*Android/i.test(index)) add(warn, 'Tecnologias principais não estão descritas juntas nos créditos.');
