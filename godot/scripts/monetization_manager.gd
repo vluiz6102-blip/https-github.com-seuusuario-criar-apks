@@ -27,6 +27,7 @@ func initialize() -> void:
     _verification_url = str(ProjectSettings.get_setting(
         "j90/monetization/verification_url", ""
     ))
+    _load_cached_entitlements()
     _connect_billing_signals()
     _emit_catalog()
 
@@ -193,6 +194,9 @@ func _verify_server_side(product_id: StringName, purchase_data: Dictionary) -> v
             _cache_verified(product_id, verified)
 
             var pending: Dictionary = _pending.get(String(product_id), {})
+            var metadata: Dictionary = pending.get("metadata", {})
+            if metadata.size() > 0:
+                verified["j90_metadata"] = metadata.duplicate(true)
             _acknowledge_purchase(purchase_data, bool(pending.get("consumable", false)))
             purchase_verified.emit(product_id, verified)
             _pending.erase(String(product_id))
@@ -239,6 +243,24 @@ func _sanitize_uniform(uniform: Dictionary) -> Dictionary:
         "pattern": str(uniform.get("pattern", "classic")).substr(0, 32),
         "name": str(uniform.get("name", "Café 90")).substr(0, 24)
     }
+
+func _load_cached_entitlements() -> void:
+    var dir := DirAccess.open("user://")
+    if dir == null:
+        return
+    dir.list_dir_begin()
+    var filename := dir.get_next()
+    while not filename.is_empty():
+        if filename.begins_with("verified_") and filename.ends_with(".json"):
+            var file := FileAccess.open("user://" + filename, FileAccess.READ)
+            if file:
+                var parsed: Variant = JSON.parse_string(file.get_as_text())
+                file.close()
+                if parsed is Dictionary:
+                    var product_id := filename.trim_prefix("verified_").trim_suffix(".json")
+                    _verified[product_id] = (parsed as Dictionary).duplicate(true)
+        filename = dir.get_next()
+    dir.list_dir_end()
 
 func _cache_pending(product_id: StringName, payload: Dictionary) -> void:
     var path := "user://pending_%s.json" % String(product_id)
