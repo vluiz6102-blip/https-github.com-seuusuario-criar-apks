@@ -113,7 +113,7 @@ jobs:
           echo "WEB_SCENE_FILES=$scene_files"
           test "$scene_files" -ge 1
 
-          # O runtime atual usa música CC0 remota + efeitos procedurais originais.
+          # O runtime atual usa música instrumental CC0 remota + torcida/eventos CC0 de baixo volume.
           # O bundle Android continua sem arquivos de áudio importados.
           if find www/assets -type f \( -iname '*.mp3' -o -iname '*.wav' -o -iname '*.ogg' -o -iname '*.m4a' -o -iname '*.aac' \) -print -quit | grep -q .; then
             echo 'IMPORTED_AUDIO_FILES_DETECTED'
