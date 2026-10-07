@@ -26,7 +26,7 @@ const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8')
 const managerStatsSource = readFileSync('src/j90-manager-stats.js', 'utf8');
 const copaBrasilSource = readFileSync('src/j90-copa-do-brasil.js', 'utf8');
 const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
-const landscapeSource = readFileSync('src/j90-landscape.js', 'utf8');
+const lifecycleSource = readFileSync('src/j90-match-lifecycle.js', 'utf8');
 const autoHealSource = readFileSync('src/j90-auto-heal.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
@@ -51,7 +51,7 @@ const syntaxUnits = [
   ['j90-manager-stats.js', managerStatsSource],
   ['j90-copa-do-brasil.js', copaBrasilSource],
   ['j90-manager-ai.js', managerAiSource],
-  ['j90-landscape.js', landscapeSource],
+  ['j90-match-lifecycle.js', lifecycleSource],
   ['j90-auto-heal.js', autoHealSource]
 ];
 try {
@@ -59,7 +59,7 @@ try {
     try { new Function(code); }
     catch (error) { throw new Error(name + ': ' + error.message); }
   }
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + landscapeSource + '\n' + autoHealSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + lifecycleSource + '\n' + autoHealSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
@@ -79,7 +79,7 @@ writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
 writeFileSync('www/j90-copa-do-brasil.js', copaBrasilSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
-writeFileSync('www/j90-landscape.js', landscapeSource);
+writeFileSync('www/j90-match-lifecycle.js', lifecycleSource);
 writeFileSync('www/j90-auto-heal.js', autoHealSource);
 
 if (existsSync(contentRoot)) {
@@ -91,7 +91,7 @@ const generated = readFileSync('www/index.html', 'utf8');
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
-  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-landscape.js','j90-auto-heal.js'
+  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js'
 ];
 
 function assertBalancedTagPair(html, name) {
@@ -148,4 +148,4 @@ writeFileSync('www/index.html', patched);
 
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D Canvas + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 + Auto-Heal AI + BugGuard + modo paisagem de partida injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
+console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D Canvas + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 + Auto-Heal AI + BugGuard + recuperação de partida e modo retrato injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
