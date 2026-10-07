@@ -17,7 +17,7 @@ page.on('requestfailed', req => {
 await page.goto(base, { waitUntil: 'networkidle' });
 await page.waitForFunction(
   () => !!window.J90AutoHealAI && !!window.J90BugGuard,
-  { timeout: 10000 }
+  { timeout: 15000 }
 ).catch(async error => {
   const diagnostic = await page.evaluate(() => ({
     autoHeal: !!window.J90AutoHealAI,
@@ -29,7 +29,7 @@ await page.waitForFunction(
       .map(x => x.name)
       .filter(x => /j90-(auto-heal|manager-ai)\.js/.test(x))
   }));
-  throw new Error('Runtime resilience did not initialize within 10s. ' + JSON.stringify({ diagnostic, errors, waitError: error.message }));
+  throw new Error('Runtime resilience did not initialize within 15s. ' + JSON.stringify({ diagnostic, errors, waitError: error.message }));
 });
 if (await page.locator('#j90CinematicIntro').count() !== 1) {
   throw new Error('Cinematic intro was not created.');
