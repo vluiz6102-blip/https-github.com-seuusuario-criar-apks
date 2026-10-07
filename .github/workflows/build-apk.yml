@@ -63,11 +63,8 @@ jobs:
           console.log('PREFLIGHT_JS=OK');
           NODE
 
-      - name: Preparar ferramentas de conteúdo e áudio
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg python3-pil
-
-      - name: Importar e converter áudios reais
-        run: npm run audio:import
+      - name: Preparar ferramentas de conteúdo
+        run: sudo apt-get update && sudo apt-get install -y python3-pil
 
       - name: Sincronizar elencos reais dos times
         run: npm run data:rosters
@@ -107,14 +104,16 @@ jobs:
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
-      - name: Validar bundle web e áudios reais
+      - name: Validar bundle web sem áudio
         run: |
           test -s www/assets/j90-content/content-manifest.json
           test -d www/assets/j90-content/stadiums
           scene_files=$(find www/assets/j90-content/stadiums -type f -name '*.jpg' | wc -l)
           echo "WEB_SCENE_FILES=$scene_files"
           test "$scene_files" -ge 1
-          npm run audio:validate
+          test ! -d www/assets/audio
+          if grep -R -n -E 'AudioContext|webkitAudioContext|decodeAudioData|createBufferSource|new[[:space:]]+Audio[[:space:]]*\(' www --exclude='*.map'; then echo 'RUNTIME_AUDIO_DETECTED'; exit 1; fi
+          echo 'AUDIO_RUNTIME=DISABLED'
 
       - name: Teste real de inicialização e fluxo no Chromium
         run: |
