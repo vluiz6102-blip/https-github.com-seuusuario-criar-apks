@@ -3,10 +3,18 @@
  */
 (function(){
 'use strict';
-if(window.__J90_AUTO_HEAL_AI__)return;
-window.__J90_AUTO_HEAL_AI__=true;
 
 var VERSION='1.0';
+
+// Boot contract: os dois globais existem imediatamente, sem depender do DOM.
+if(!window.J90AutoHealAI){
+  window.J90AutoHealAI={version:VERSION,health:function(){return true}};
+}
+if(!window.J90BugGuard){
+  window.J90BugGuard={version:VERSION,scan:function(){return true},stats:function(){return{}}};
+}
+if(window.__J90_AUTO_HEAL_AI__)return;
+window.__J90_AUTO_HEAL_AI__=true;
 var MAX_ATTEMPTS=24;
 var attempts=0;
 var repairing=false;
