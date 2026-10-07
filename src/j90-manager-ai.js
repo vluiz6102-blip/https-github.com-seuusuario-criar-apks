@@ -188,11 +188,29 @@ function install(){
    var wrapSquad=function(){
      var html=oldSquad.apply(this,arguments);
      var selectedId=window.__J90_SELECTED_PLAYER||(S.lineup&&S.lineup.slots&&S.lineup.slots[0]);
-     var p=roster().find(function(x){return x&&x.id===selectedId})||starters()[0];
-     if(p)html=html.replace('<section class="j90RosterHub">','<section class="j90RosterHub"><div class="j90MgrCard j90AISelectedWrap">'+playerProfile(p)+'</div>');
+     var p=roster().find(function(x){return x&&x.id===selectedId})||starters()[0]||roster()[0]||null;
+     if(p&&!html.includes('j90EliteProfile'))html=html.replace('<section class="j90RosterHub">','<section class="j90RosterHub"><div class="j90MgrCard j90AISelectedWrap">'+playerProfile(p)+'</div>');
      return html;
    };
    wrapSquad.__j90ManagerAI=true;wrapSquad.__original=oldSquad;j90SquadView=wrapSquad;window.j90SquadView=wrapSquad;
+ }
+ if(typeof managerV==='function'&&!managerV.__j90ManagerAI){
+   var oldManagerV=managerV;
+   var wrapManagerV=function(){
+     var html=oldManagerV.apply(this,arguments);
+     try{
+       if(typeof tab!=='undefined'&&tab==='squad'&&S&&!S.negotiation&&!S.match2d&&!html.includes('j90EliteProfile')){
+         var selectedId=window.__J90_SELECTED_PLAYER||(S.lineup&&Array.isArray(S.lineup.slots)&&S.lineup.slots[0]);
+         var p=roster().find(function(x){return x&&x.id===selectedId})||starters()[0]||roster()[0]||null;
+         if(p){
+           var profile=playerProfile(p),mark='<section class="j90RosterHub">',at=html.indexOf(mark);
+           if(at>=0)html=html.slice(0,at)+'<div class="j90MgrCard j90AISelectedWrap">'+profile+'</div>'+html.slice(at);
+         }
+       }
+     }catch(e){}
+     return html;
+   };
+   wrapManagerV.__j90ManagerAI=true;wrapManagerV.__original=oldManagerV;managerV=wrapManagerV;window.managerV=wrapManagerV;
  }
  if(typeof j90NegotiationView==='function'&&!j90NegotiationView.__j90ManagerAI){
    var oldNeg=j90NegotiationView;
