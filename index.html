@@ -2723,11 +2723,15 @@ function mgrMatchTick(frameNow){
  var smooth=p.low?.16:.24;for(var k=0;k<m.players.length;k++){var a=m.players[k];a.x+=(a.tx-a.x)*smooth;a.y+=(a.ty-a.y)*smooth}for(var l=0;l<m.oppPlayers.length;l++){var b=m.oppPlayers[l];b.x+=(b.tx-b.x)*smooth;b.y+=(b.ty-b.y)*smooth}m.ball.x+=(m.ball.tx-m.ball.x)*smooth;m.ball.y+=(m.ball.ty-m.ball.y)*smooth;
  mgrMatchHud();mgrDraw2D();
 }
-function mgrMatchHud(){
+function mgrMatchHud(force){
  var m=S.match2d,d=m._dom||{};
+ if(!m)return;
+ m._hudCounter=(m._hudCounter||0)+1;
+ if(!force && m._hudCounter%4!==0 && m._hudLastScore===m.homeScore+'×'+m.awayScore && m._hudLastHalf===m.half)return;
  if(d.clock)d.clock.textContent=mgrMatchFormat(m.elapsed)+' / '+mgrMatchFormat(m.duration);
  if(d.score)d.score.textContent=m.homeScore+' × '+m.awayScore;
  if(d.half)d.half.textContent=m.half===1?'1º TEMPO':'2º TEMPO';
+ m._hudLastScore=m.homeScore+'×'+m.awayScore;m._hudLastHalf=m.half;
 }
 function mgrMatchResume(){
  if(!S||!S.match2d)return;
