@@ -110,6 +110,11 @@ jobs:
       - name: Validar bundle web e áudio runtime
         run: |
           set -euo pipefail
+          test -s www/index.html
+          test -s www/j90-manager-ai.js
+          test -s www/j90-auto-heal.js
+          grep -F -n '<script src="j90-manager-ai.js"></script>' www/index.html >/dev/null
+          grep -F -n '<script src="j90-auto-heal.js"></script>' www/index.html >/dev/null
           test -s www/assets/j90-content/content-manifest.json
           test -d www/assets/j90-content/stadiums
           scene_files=$(find www/assets/j90-content/stadiums -type f -name '*.jpg' | wc -l)
