@@ -65,11 +65,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-1-prompt.txt <<'PROMPT'
@@ -80,7 +82,7 @@ Distribua ordens sem sobreposição para GAMEPLAY_AI, PERFORMANCE_STABILITY, UX_
 Para cada área informe prioridade P0/P1/P2, problema/oportunidade comprovado, arquivos/sistemas, ação esperada, testes e riscos.
 Se a build anterior falhou, a causa raiz é P0. Não invente problemas e não copie EA/FIFA.
 PROMPT
-          J90_AI_PREFERENCE="gemini,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-1-prompt.txt" --output-file ".j90-team/plan.md"
+          J90_AI_PREFERENCE="gemini,nvidia,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-1-prompt.txt" --output-file ".j90-team/plan.md"
           test -s .j90-team/plan.md
       - name: Upload plan
         uses: actions/upload-artifact@v4
@@ -112,11 +114,13 @@ PROMPT
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-2-prompt.txt <<'PROMPT'
@@ -127,7 +131,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/gameplay-ai.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-          J90_AI_PREFERENCE="gemini,openrouter,groq,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-2-prompt.txt" --output-file ".j90-team/gameplay-ai.md"
+          J90_AI_PREFERENCE="gemini,nvidia,openrouter,groq,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-2-prompt.txt" --output-file ".j90-team/gameplay-ai.md"
           test -s .j90-team/gameplay-ai.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -159,11 +163,13 @@ PROMPT
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-3-prompt.txt <<'PROMPT'
@@ -174,7 +180,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/performance.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-          J90_AI_PREFERENCE="groq,openrouter,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-3-prompt.txt" --output-file ".j90-team/performance.md"
+          J90_AI_PREFERENCE="nvidia,groq,openrouter,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-3-prompt.txt" --output-file ".j90-team/performance.md"
           test -s .j90-team/performance.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -206,11 +212,13 @@ PROMPT
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-4-prompt.txt <<'PROMPT'
@@ -221,7 +229,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/ux.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-          J90_AI_PREFERENCE="gemini,openrouter,anthropic,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-4-prompt.txt" --output-file ".j90-team/ux.md"
+          J90_AI_PREFERENCE="gemini,nvidia,openrouter,anthropic,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-4-prompt.txt" --output-file ".j90-team/ux.md"
           test -s .j90-team/ux.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -253,11 +261,13 @@ PROMPT
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-5-prompt.txt <<'PROMPT'
@@ -268,7 +278,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/manager.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-          J90_AI_PREFERENCE="gemini,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-5-prompt.txt" --output-file ".j90-team/manager.md"
+          J90_AI_PREFERENCE="gemini,nvidia,anthropic,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-5-prompt.txt" --output-file ".j90-team/manager.md"
           test -s .j90-team/manager.md
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -300,11 +310,13 @@ PROMPT
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_INFERENCE_API_KEY: ${{ secrets.NVIDIA_INFERENCE_API_KEY }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          NVIDIA_MODEL: ${{ vars.NVIDIA_MODEL }}
         run: |
           set -e
           cat > .j90-team/ai-6-prompt.txt <<'PROMPT'
@@ -315,7 +327,7 @@ Você é analista nesta etapa. Não faça commit, push ou release.
 Não enfraqueça testes, não apague funcionalidades e não copie assets protegidos.
 Produza .j90-team/match-content.md com diagnóstico baseado no código, mudanças recomendadas em ordem, arquivos-alvo, testes, riscos e conflitos.
 PROMPT
-          J90_AI_PREFERENCE="openrouter,groq,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-6-prompt.txt" --output-file ".j90-team/match-content.md"
+          J90_AI_PREFERENCE="nvidia,openrouter,groq,gemini,anthropic,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-6-prompt.txt" --output-file ".j90-team/match-content.md"
           test -s .j90-team/match-content.md
       - name: Upload report
         uses: actions/upload-artifact@v4
