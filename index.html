@@ -1302,63 +1302,8 @@ async function j90SoundscapeStart(){
 function j90SyncSoundscape(){if(j90IntroActive||!audioOK||introStep!==0){j90SoundscapeStop();return}j90SoundscapeStart()}
 // Compatibility bridge for legacy UI hooks. The current audio engine is the soundscape.
 function j90SyncMusic(){try{j90SyncSoundscape()}catch(e){}}
-async function unlockAudio(){
- try{
-  const C=window.AudioContext||window.webkitAudioContext;
-  if(!C)return null;
-  AC=AC||new C();
-  if(!audioBus){
-   audioBus=AC.createGain();
-   audioCompressor=AC.createDynamicsCompressor();
-   audioCompressor.threshold.setValueAtTime(-20,AC.currentTime);
-   audioCompressor.knee.setValueAtTime(18,AC.currentTime);
-   audioCompressor.ratio.setValueAtTime(5,AC.currentTime);
-   audioCompressor.attack.setValueAtTime(.003,AC.currentTime);
-   audioCompressor.release.setValueAtTime(.12,AC.currentTime);
-   audioBus.gain.setValueAtTime(.34,AC.currentTime);
-   audioBus.connect(audioCompressor);
-   audioCompressor.connect(AC.destination);
-  }
-  if(AC.state==='suspended')await AC.resume();
-  return AC;
- }catch(e){return AC}
-}
-async function sfx(type){
- haptic(type);
- if(!audioOK)return;
- const tnow=performance.now(),gap=j90LastSfx[type]||0;
- if(tnow-gap<55)return;
- j90LastSfx[type]=tnow;
- try{
-  const c=await unlockAudio();
-  if(!c||!audioBus)return;
-  const M={
-   start:[[392,.07],[523,.07],[659,.10],[784,.14]],
-   click:[[560,.045]],
-   train:[[330,.06],[440,.07],[554,.09]],
-   rest:[[260,.07],[220,.11]],
-   whistle:[[720,.07],[980,.11]],
-   goal:[[392,.06],[523,.06],[659,.08],[784,.10],[988,.15]],
-   correct:[[659,.06],[784,.07],[988,.11]],
-   wrong:[[260,.075],[196,.12]],
-   injury:[[220,.09],[175,.14]],
-   card:[[700,.055],[500,.065],[330,.12]],
-   transfer:[[523,.065],[659,.065],[784,.065],[1047,.15]],
-   trophy:[[523,.06],[659,.06],[784,.07],[1047,.10],[1319,.16]]
-  };
-  const seq=M[type]||M.click,now=c.currentTime;
-  seq.forEach((x,i)=>{
-   const seqPan={start:[-.28,.28,0,.2],click:[0],train:[-.22,.22,0],rest:[.18,-.18],whistle:[-.35,.35],goal:[-.38,.3,-.16,.3,0],correct:[-.22,.22,0],wrong:[-.28,.28,0],injury:[-.18,.18],card:[.28,-.28,0],transfer:[-.32,.24,-.12,.32],trophy:[-.36,.28,-.14,.3,0]}[type]||[0];
-   const seqDepth={start:[.15,.05,-.05,.1],click:[0],train:[.05,-.05,0],rest:[-.08,.08],whistle:[-.25,.2],goal:[.12,.04,-.08,.05,0],correct:[.08,-.06,0],wrong:[-.12,.12,0],injury:[-.18,.18],card:[.08,-.08,0],transfer:[.15,.05,-.1,.08],trophy:[.1,.02,-.08,.06,0]}[type]||[0];
-   const basePan=seqPan[i%seqPan.length],baseDepth=seqDepth[i%seqDepth.length],o=c.createOscillator(),g=c.createGain(),t=now+i*.075;
-   const voiceGain=type==='click'?.026:.055,target=Math.max(-1,Math.min(1,audioMode==='mono'?0:basePan*(audioMode==='stereo'?.72:1)));
-   o.type=type==='goal'||type==='trophy'?'triangle':'sine';o.frequency.setValueAtTime(x[0],t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(voiceGain,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+x[1]);
-   let out=g;
-   if(audioMode==='immersive'&&c.createPanner){const p=c.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=1;p.maxDistance=8;p.rolloffFactor=.55;const px=target*1.8,py=baseDepth*1.8,pz=Math.max(.25,2.1-Math.abs(baseDepth)*.7);if(p.positionX){p.positionX.setValueAtTime(px,t);p.positionY.setValueAtTime(py,t);p.positionZ.setValueAtTime(pz,t)}else p.setPosition(px,py,pz);out=p}else if(audioMode!=='mono'&&c.createStereoPanner){const pan=c.createStereoPanner();pan.pan.setValueAtTime(target,t);out=pan}
-   o.connect(out);out.connect(audioBus);o.start(t);o.stop(t+x[1]+.025);
-  });
- }catch(e){}
-}
+async function unlockAudio(){try{return window.J90Ambience?.start?.().then(()=>window.AudioContext?null:null)}catch(e){return null}}
+async function sfx(type){haptic(type);try{if(type==='goal')window.J90Ambience?.goal?.();else if(type==='whistle')window.J90Ambience?.whistle?.()}catch(e){}}
 document.addEventListener('pointerdown',e=>{
  if(e.target&&e.target.closest&&e.target.closest('button'))unlockAudio().then(()=>{
   j90SyncMusic();
