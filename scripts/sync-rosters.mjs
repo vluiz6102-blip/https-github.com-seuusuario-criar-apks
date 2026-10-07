@@ -250,6 +250,36 @@ function espnRosterEntries(payload){
   }
   return out;
 }
+const ESPN_DIRECT_TEAMS={
+  'Goiás':{id:'3395',league:'fifa.world'},
+  'Operário-PR':{id:'18187',league:'bra.2'},
+  'Brasil':{id:'205',league:'fifa.world'},
+  'Alemanha':{id:'481',league:'fifa.world'},
+  'França':{id:'478',league:'fifa.world'},
+  'Holanda':{id:'449',league:'fifa.world'},
+  'Inglaterra':{id:'448',league:'fifa.world'},
+  'Bélgica':{id:'459',league:'fifa.world'}
+};
+
+async function addEspnDirectTeams(map,names){
+  for(const target of names){
+    const cfg=ESPN_DIRECT_TEAMS[target];
+    if(!cfg)continue;
+    try{
+      const roster=await fetchJson(ESPN_BASE+'/sports/soccer/'+cfg.league+'/teams/'+encodeURIComponent(cfg.id)+'/roster?limit=500',20000);
+      const players=espnRosterEntries(roster);
+      if(players.length>=11){
+        map.set(norm(target),{source:'ESPN direct '+cfg.league,sourceName:target,players});
+        console.log('ESPN DIRECT '+target+' | '+players.length+' jogadores | '+cfg.league);
+      }else{
+        console.warn('ESPN direct '+target+' retornou elenco curto: '+players.length);
+      }
+    }catch(e){
+      console.warn('ESPN direct '+target+' indisponível: '+String(e?.message||e));
+    }
+  }
+}
+
 async function addEspnLeague(map,league,gameNames){
   try{
     const payload=await fetchJson(ESPN_BASE+'/sports/soccer/'+league+'/teams?limit=100',20000);
@@ -354,7 +384,8 @@ const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga
 const unresolvedBrazilAndLatam=teams.filter(t=>brazilAndLatam.has(t)&&!findStatic(staticMap,t));
 for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,unresolvedBrazilAndLatam);
 const nationalTeams=new Set(['Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica']);
-await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t)));
+await addEspnDirectTeams(staticMap,teams.filter(t=>nationalTeams.has(t)&&ESPN_DIRECT_TEAMS[t]));
+await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t)&&!findStatic(staticMap,t)));
 
 const next={};
 const pending=[];
@@ -381,8 +412,8 @@ const resolved=teams.filter(t=>Array.isArray(next[t]?.players)&&next[t].players.
 const players=teams.reduce((n,t)=>n+(next[t]?.players?.length||0),0);
 console.log('Elencos resolvidos: '+resolved+'/'+teams.length+' | jogadores registrados: '+players);
 
-const missingCritical=['Goiás','Operário-PR'].filter(t=>!next[t]?.players?.length);
-if(missingCritical.length)throw new Error('Elenco crítico ausente: '+missingCritical.join(', '));
+const missingCritical=teams.filter(t=>!next[t]?.players?.length);
+if(missingCritical.length)throw new Error('Elencos ausentes após todas as fontes e fallback: '+missingCritical.join(', '));
 const realClubTeams=teams.filter(t=>!new Set(['Rival FC','United FC','União da Vila','Juventude do Bairro','Estrela da Zona','Real Parque','Operário da Várzea','São Jorge FC','Bairro Novo','Vila Esperança','Nacional da Praça','Juventude Central']).has(t));
 const unresolvedReal=realClubTeams.filter(t=>!next[t]?.players?.length);
 if(unresolvedReal.length)console.warn('Times reais sem elenco: '+unresolvedReal.join(', '));
