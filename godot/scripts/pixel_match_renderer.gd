@@ -7,6 +7,7 @@ const PLAYER_SIZE := Vector2(7.0, 9.0)
 var _previous: Dictionary = {}
 var _current: Dictionary = {}
 var _render_alpha: float = 1.0
+var _match_duration: float = 90.0
 var _visual_time: float = 0.0
 
 func _ready() -> void:
@@ -17,6 +18,7 @@ func _ready() -> void:
 func apply_snapshot(snapshot: Dictionary) -> void:
     _previous = _current.duplicate(true)
     _current = snapshot.duplicate(true)
+    _match_duration = maxf(1.0, float(_current.get("duration_seconds", _current.get("duration", 90.0))))
     _render_alpha = 0.0
     queue_redraw()
 
@@ -78,8 +80,10 @@ func _draw_players(old_players: Array, new_players: Array, home: bool) -> void:
         var secondary := Color("#174ea6") if home else Color("#e8c547")
         var body_size := Vector2(PLAYER_SIZE.x * squash, PLAYER_SIZE.y)
         draw_rect(Rect2(pos - body_size * 0.5, body_size), primary)
-        draw_rect(Rect2(pos - Vector2(3 * direction, 1), Vector2(6, 3)), secondary)
-        draw_rect(Rect2(pos - Vector2(2 * direction, 6), Vector2(5, 5)), Color("#b97855"))
+        var stripe_x := pos.x - 3.0
+        draw_rect(Rect2(Vector2(stripe_x, pos.y - 1.0), Vector2(6, 3)), secondary)
+        var head_x := pos.x - 2.5
+        draw_rect(Rect2(Vector2(head_x, pos.y - 6.0), Vector2(5, 5)), Color("#b97855"))
 
 func _draw_ball() -> void:
     var old_ball: Vector2 = _previous.get("ball", Vector2(0.5, 0.5))
@@ -102,7 +106,8 @@ func _draw_ball() -> void:
 func _draw_clock() -> void:
     var elapsed := float(_current.get("elapsed", 0.0))
     draw_rect(Rect2(74, 7, 62, 5), Color("#1c2621"))
-    var progress := clampf(elapsed / 90.0, 0.0, 1.0)
-    draw_rect(Rect2(77, 8, 15.0 + progress * 56.0, 2), Color("#d8c15f"))
+    var progress := clampf(elapsed / _match_duration, 0.0, 1.0)
+    var fill_width := 15.0 + progress * 44.0
+    draw_rect(Rect2(77, 8, minf(fill_width, 59.0), 2), Color("#d8c15f"))
     var shown := "%02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
     draw_string(ThemeDB.fallback_font, Vector2(184, 12), shown, HORIZONTAL_ALIGNMENT_LEFT, 60, 7, Color("#e5f1df"))
