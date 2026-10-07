@@ -27,6 +27,7 @@ const match2dSource = readFileSync('src/j90-match2d-v3.js', 'utf8');
 const squadCardsSource = readFileSync('src/j90-squad-cards.js', 'utf8');
 const webglSource = readFileSync('src/j90-match2d-webgl.js', 'utf8');
 const comfortSource = readFileSync('src/j90-comfort-ui.js', 'utf8');
+const matchEventsSource = readFileSync('src/j90-match-events.js', 'utf8');
 const lineupAiSource = readFileSync('src/j90-lineup-ai.js', 'utf8');
 const replaySource = readFileSync('src/j90-match-replay.js', 'utf8');
 const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8');
@@ -41,7 +42,7 @@ const soundscape = soundscapeSource.replace(
 );
 
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource);
 } catch (error) {
   throw new Error('JavaScript syntax validation failed: ' + error.message);
 }
@@ -55,6 +56,7 @@ writeFileSync('www/j90-tactics.js', tacticsSource);
 writeFileSync('www/j90-match2d-v3.js', match2dSource);
 writeFileSync('www/j90-match2d-webgl.js', webglSource);
 writeFileSync('www/j90-comfort-ui.js', comfortSource);
+writeFileSync('www/j90-match-events.js', matchEventsSource);
 writeFileSync('www/j90-squad-cards.js', squadCardsSource);
 writeFileSync('www/j90-lineup-ai.js', lineupAiSource);
 writeFileSync('www/j90-match-replay.js', replaySource);
@@ -66,7 +68,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
