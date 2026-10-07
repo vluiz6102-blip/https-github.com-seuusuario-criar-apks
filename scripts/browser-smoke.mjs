@@ -111,17 +111,31 @@ async function assertReadableLayout(page){
       const r=el.getBoundingClientRect(),s=getComputedStyle(el);
       return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';
     });
-    const nested=(a,b)=>a.contains(b)||b.contains(a);
     const problems=[];
+    const independentParent=(a,b)=>{
+      let pa=a.parentElement,pb=b.parentElement;
+      while(pa&&pa!==b){if(pa===b.parentElement)return false;pa=pa.parentElement}
+      while(pb&&pb!==a){if(pb===a.parentElement)return false;pb=pb.parentElement}
+      return true;
+    };
+    const ignoreSameControl=(a,b)=>{
+      const ca=a.closest('button,a,label');
+      const cb=b.closest('button,a,label');
+      return !!ca&&ca===cb;
+    };
     for(let i=0;i<nodes.length;i++){
       const a=nodes[i],ra=a.getBoundingClientRect();
       if(ra.width<8||ra.height<8)continue;
       for(let j=i+1;j<nodes.length;j++){
-        const b=nodes[j];if(nested(a,b))continue;
+        const b=nodes[j];
+        if(!independentParent(a,b)||ignoreSameControl(a,b))continue;
         const rb=b.getBoundingClientRect();
         const ix=Math.max(0,Math.min(ra.right,rb.right)-Math.max(ra.left,rb.left));
         const iy=Math.max(0,Math.min(ra.bottom,rb.bottom)-Math.max(ra.top,rb.top));
-        if(ix>3&&iy>3) problems.push({a:a.tagName+'.'+String(a.className||''),b:b.tagName+'.'+String(b.className||''),ix:Math.round(ix),iy:Math.round(iy)});
+        const area=ix*iy;
+        const minArea=Math.min(ra.width*ra.height,rb.width*rb.height);
+        const meaningful=area>24&&area>minArea*.08;
+        if(meaningful) problems.push({a:a.tagName+'.'+String(a.className||''),b:b.tagName+'.'+String(b.className||''),ix:Math.round(ix),iy:Math.round(iy),area:Math.round(area)});
         if(problems.length>=10)break;
       }
       if(problems.length>=10)break;
