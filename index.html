@@ -1357,7 +1357,24 @@ body:has(.j90MgrPage),body:has(.managerCreate){
  .j90MgrHeroTitle{font-size:29px}
 }
 </style>
-</head>
+<style id="j90-manager-nav-right-v7">
+@keyframes j90NavIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes j90NavGlow{0%,100%{box-shadow:0 6px 22px rgba(0,0,0,.28)}50%{box-shadow:0 8px 28px rgba(66,215,125,.10)}}
+@keyframes j90NavTap{0%{transform:scale(.94)}65%{transform:scale(1.04)}100%{transform:scale(1)}}
+.j90MgrRightNav{position:fixed;right:max(8px,env(safe-area-inset-right));top:50%;transform:translateY(-50%);z-index:1200;width:62px;padding:7px 6px;border:1px solid #252a31;border-radius:22px;background:rgba(10,12,15,.90);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;flex-direction:column;gap:6px;animation:j90NavIn .32s ease both,j90NavGlow 4s ease-in-out infinite}
+.j90MgrRightNav button{position:relative;width:50px;height:50px;padding:5px 2px;border:1px solid #292e35;border-radius:15px;background:#11151a;color:#929aa5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .16s ease,background .18s ease,border-color .18s ease,color .18s ease}
+.j90MgrRightNav button:active,.j90MgrRightNav button.j90-nav-tap{animation:j90NavTap .22s ease}
+.j90MgrRightNav button.on{background:linear-gradient(145deg,#173a29,#10251b);border-color:#42d77d;color:#b8ffd0;box-shadow:inset 0 0 0 1px rgba(66,215,125,.10)}
+.j90MgrRightNav button .j90NavIcon{font-size:18px;line-height:18px}
+.j90MgrRightNav button small{font-size:8px;line-height:9px;white-space:nowrap}
+.j90MgrRightNav button.on:before{content:"";position:absolute;right:-4px;top:50%;width:4px;height:22px;transform:translateY(-50%);border-radius:4px;background:#42d77d}
+.j90MgrRightNav .j90NavLabel{position:absolute;right:58px;top:50%;transform:translateY(-50%);padding:7px 9px;border:1px solid #292e35;border-radius:10px;background:#0b0e12;color:#e9edf2;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.j90MgrRightNav button:hover .j90NavLabel,.j90MgrRightNav button:focus-visible .j90NavLabel{opacity:1}
+body.j90-manager-nav-right #app{padding-right:70px}
+@media(max-width:420px){.j90MgrRightNav{width:54px;padding:6px 5px;border-radius:19px;gap:5px}.j90MgrRightNav button{width:44px;height:47px;border-radius:13px}.j90MgrRightNav button .j90NavIcon{font-size:17px}.j90MgrRightNav button small{font-size:7px}.j90MgrRightNav .j90NavLabel{right:51px}}
+@media(orientation:landscape) and (max-height:620px){.j90MgrRightNav{top:auto;bottom:8px;right:8px;transform:none;flex-direction:row;width:auto}.j90MgrRightNav .j90NavLabel{top:auto;bottom:55px;right:0;transform:none}.body.j90-manager-nav-right #app{padding-right:0}}
+@media(prefers-reduced-motion:reduce){.j90MgrRightNav,.j90MgrRightNav button{animation:none!important;transition:none!important}}
+</style></head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
 <script>
@@ -3238,7 +3255,20 @@ window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.w
 }
 html.j90-landscape-requested{background:#071013}
 
-</body>
+<script id="j90-manager-nav-right-v7-runtime">
+(()=>{'use strict';if(window.__J90_MANAGER_NAV_RIGHT_V7__)return;window.__J90_MANAGER_NAV_RIGHT_V7__=true;
+const items=[['game','⌂','Visão geral'],['squad','♙','Elenco'],['lineup','◇','Táticas'],['market','↔','Transferências'],['scout','◎','Olheiros'],['finance','¤','Finanças'],['tbl','▤','Tabela'],['club','◆','Clube'],['news','◈','Notícias']];
+function inManager(){try{return !!(window.S&&S.manager)}catch(e){return false}}
+function current(){try{return typeof tab==='string'?tab:''}catch(e){return ''}}
+function setTab(v){try{window.tab=v; if(typeof render==='function')render(1)}catch(e){}}
+function feedback(kind){try{if(typeof haptic==='function')haptic(kind||'click');else if(navigator.vibrate)navigator.vibrate(kind==='success'?[8,24,8]:7)}catch(e){};try{if(!window.AudioContext&&!window.webkitAudioContext)return;const C=window.AudioContext||window.webkitAudioContext;const a=window.__J90_UI_AUDIO||(window.__J90_UI_AUDIO=new C());if(a.state==='suspended')a.resume();const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=kind==='success'?720:520;g.gain.setValueAtTime(.0001,a.currentTime);g.gain.exponentialRampToValueAtTime(.018,a.currentTime+.008);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.065);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+.07)}catch(e){}}
+function build(){if(document.getElementById('j90MgrRightNav'))return;const n=document.createElement('nav');n.id='j90MgrRightNav';n.className='j90MgrRightNav';n.setAttribute('aria-label','Navegação principal do Manager');items.forEach(([id,icon,label])=>{const b=document.createElement('button');b.type='button';b.dataset.tab=id;b.innerHTML='<span class="j90NavIcon">'+icon+'</span><small>'+label+'</small><span class="j90NavLabel">'+label+'</span>';b.addEventListener('click',()=>{feedback(id==='game'?'success':'click');b.classList.add('j90-nav-tap');setTimeout(()=>b.classList.remove('j90-nav-tap'),230);setTab(id);sync()},{passive:true});n.appendChild(b)});document.body.appendChild(n);document.body.classList.add('j90-manager-nav-right');}
+function sync(){const n=document.getElementById('j90MgrRightNav');if(!n)return;n.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===current()));n.style.display=inManager()?'flex':'none';document.body.classList.toggle('j90-manager-nav-right',inManager());}
+function init(){build();sync();setInterval(sync,350);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('button');if(!b||b.closest('#j90MgrRightNav'))return;try{if(!b.disabled)feedback('click')}catch(_){}},{passive:true});
+})();
+</script></body>
 </html>
 
 <style id="j90-manager-readability-v5">
