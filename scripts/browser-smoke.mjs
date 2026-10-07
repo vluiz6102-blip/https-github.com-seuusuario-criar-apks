@@ -208,8 +208,28 @@ if (firstTarget) {
     if (p && typeof window.j90OpenContract==='function') window.j90OpenContract(p, Math.max(1, Number(p.ovr)*3.1));
   }, firstTarget);
   await page.waitForTimeout(120);
-  if (await page.locator('.j90NegotiationGrid').count() < 1) throw new Error('Premium AI negotiation screen did not render.');
-  if (await page.locator('input[type="range"]').count() < 3) throw new Error('Negotiation sliders did not render.');
+  const negotiationDiagnostic = await page.evaluate(() => ({
+    manager: !!window.J90ManagerBridge?.getState?.()?.manager,
+    managerClub: window.J90ManagerBridge?.getState?.()?.managerClub || '',
+    windowState: window.J90ManagerBridge?.getState?.()?.window || '',
+    negotiation: window.J90ManagerBridge?.getState?.()?.negotiation ? {
+      playerId: window.J90ManagerBridge.getState().negotiation.playerId || '',
+      player: window.J90ManagerBridge.getState().negotiation.player || '',
+      stage: window.J90ManagerBridge.getState().negotiation.stage || ''
+    } : null,
+    functions: {
+      open: typeof window.j90OpenContract,
+      managerV: typeof window.managerV,
+      negotiationView: typeof window.j90NegotiationView,
+      managerAI: typeof window.J90ManagerAI?.negotiation
+    },
+    tab: typeof window.tab !== 'undefined' ? window.tab : 'n/a',
+    gridCount: document.querySelectorAll('.j90NegotiationGrid').length,
+    rangeCount: document.querySelectorAll('input[type="range"]').length,
+    app: document.querySelector('#app')?.innerHTML?.slice(0, 2200) || ''
+  }));
+  if (negotiationDiagnostic.gridCount < 1) throw new Error('Premium AI negotiation screen did not render. DIAG=' + JSON.stringify(negotiationDiagnostic));
+  if (negotiationDiagnostic.rangeCount < 3) throw new Error('Negotiation sliders did not render. DIAG=' + JSON.stringify(negotiationDiagnostic));
   await page.evaluate(() => { if (window.J90ManagerBridge.getState()?.negotiation) window.J90ManagerBridge.getState().negotiation=null; window.J90ManagerBridge.render(1); });
   await page.waitForTimeout(100);
 }
