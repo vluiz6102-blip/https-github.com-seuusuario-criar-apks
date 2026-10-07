@@ -346,6 +346,7 @@
     processActions(m);
     crowdAI(m,'base');
     scorePulse(m);
+    updateMosaic(m);
     refereeFollow(m);
     if(now>=st.nextCrowdPulse){
       st.crowdMomentum=cl(st.crowdMomentum-.055,0,1);
