@@ -3115,10 +3115,12 @@ function j90ContractSeed(p,price){
 function j90ContractPlayer(n){return n&&S&&S.roster?S.roster.find(function(p){return p.id===n.playerId}):null}
 function j90OpenContract(p,price){
   if(!p)return;
+  S.manager=true;
+  S.window='open';
   S.negotiation=j90ContractSeed(p,price);
   S.negotiation.playerId=p.id;
   mgrNews("Negociação iniciada","Sondagem por "+p.name+" aberta com "+(p.club||"o clube vendedor")+".");
-  render(1);
+  if(typeof renderManagerPartial==='function')renderManagerPartial(1);else render(1);
 }
 function j90NegotiateStage(action){
   var n=S.negotiation;if(!n)return;
