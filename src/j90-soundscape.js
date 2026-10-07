@@ -1,6 +1,6 @@
-/* Jornada 90 Soundscape 2.0
- * Real CC0 music streamed from OpenGameArt + CC0 stadium ambience.
- * Offline fallback is a quiet original WebAudio bed, never white noise.
+/* Jornada 90 Soundscape 2.1
+ * Curated CC0 instrumental tracks streamed from OpenGameArt + low-volume CC0 crowd.
+ * Music is deliberately quieter than stadium ambience so match audio remains clear.
  */
 (() => {
   'use strict';
@@ -9,13 +9,27 @@
 
   const CC0='https://opengameart.org/sites/default/files/';
   const tracks=[
-    ['Wealthy','wealthy3.mp3','Songs'],['Woke','woke2.mp3','Songs'],['Billion','billion.mp3','Songs'],['Farm','farm.mp3','Songs'],
-    ['Trailer','trailer.mp3','Songs'],['Rush','rush.mp3','Songs'],['Sakuriasis','sakuriasis.mp3','Songs'],['Vox','vox.mp3','Songs'],
-    ['Beatnik','beatnik.mp3','Songs'],['Moments','moments.mp3','Songs'],['Too','too.mp3','Songs'],['Fakie Dakie','fakie_dakie.mp3','Songs'],
-    ['Hard','hard.mp3','Songs'],['Rush 2','rush_2.mp3','Songs'],['A Song','a song_0.ogg','A Soundtrack'],['Castle 2','castle 2_0.ogg','A Soundtrack'],
-    ['Final or Regular Boss Theme','Final or Regular Boss Theme_0.ogg','A Soundtrack'],
-    ['Into Depths','Into Depths! Keep in mind, it is forced_0.ogg','A Soundtrack'],
-    ['Sad Village',"sad village with claps 'n shit at the end_0.ogg",'A Soundtrack'],["Stooge's Story","Stooge's Story_0.ogg",'A Soundtrack']
+    ['Mythica','mythica.mp3','OpenGameArt CC0'],
+    ['Chill Loopable','chillloopable.mp3','OpenGameArt CC0'],
+    ['In the Middle of Nowhere · guitar','unknown_space_bassed.mp3','OpenGameArt CC0'],
+    ['In the Middle of Nowhere · ambience','unknown_space_ambience.mp3','OpenGameArt CC0'],
+    ['MindStream','DST-MindStream.mp3','OpenGameArt CC0'],
+    ['Classical Pop · instrumental','ClassicalPop (Instrumental).mp3','OpenGameArt CC0'],
+    ['A Chill Fever','a_chill_fever.mp3','OpenGameArt CC0'],
+    ['Calm Music','song_2.mp3','OpenGameArt CC0'],
+    ['Perces','perces1.mp3','OpenGameArt CC0'],
+    ['Once Upon a Time · loop','once_upon_a_time_loop.mp3','OpenGameArt CC0'],
+    ['Pointless Loop','pointless_loop.mp3','OpenGameArt CC0'],
+    ['A Cup of Tea','A cup of tea.mp3','OpenGameArt CC0'],
+    ['Cue','Cue.mp3','OpenGameArt CC0'],
+    ['Cat Caffe','Cat caffe.mp3','OpenGameArt CC0'],
+    ['Rainy Forest','Rainy Forest.mp3','OpenGameArt CC0'],
+    ['Countryside','Countryside.mp3','OpenGameArt CC0'],
+    ['Oceanside','Oceanside.mp3','OpenGameArt CC0'],
+    ['Joyfully · loop','joyfully_loop_bpm170.mp3','OpenGameArt CC0'],
+    ['Florist','Florist.mp3','OpenGameArt CC0'],
+    ['Morning Rain','Morning rain.mp3','OpenGameArt CC0'],
+    ['Our Expanse · loop','our_expanse_-_loop-version-.mp3','OpenGameArt CC0']
   ].map((t,i)=>({id:i,title:t[0],file:t[1],collection:t[2],url:CC0+encodeURIComponent(t[1]),license:'CC0'}));
 
   let musicEl=null,crowdEl=null,goalEl=null,activeTrack=-1,musicEnabled=true,crowdEnabled=true,matchAudio=false,pendingPlay=false;
@@ -38,7 +52,7 @@
     if(!musicEnabled)return false;
     index=((index%tracks.length)+tracks.length)%tracks.length;activeTrack=index;
     if(musicEl){musicEl.pause();musicEl.removeAttribute('src');try{musicEl.load()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.12:.055;a.src=tracks[index].url;
+    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.022:.045;a.src=tracks[index].url;
     a.addEventListener('ended',()=>playTrack(index+1),{once:true});
     a.addEventListener('error',()=>{pendingPlay=false;playOffline();showState();},{once:true});
     musicEl=a;pendingPlay=true;const promise=a.play();if(promise&&promise.catch)promise.catch(()=>{pendingPlay=true;});
@@ -46,20 +60,20 @@
   }
   function ensureCrowd(){
     if(!crowdEnabled||!matchAudio||crowdEl)return;
-    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.075;a.src=CC0+'crowd_shouting.ogg';
+    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.035;a.src=CC0+'crowd_shouting.ogg';
     a.addEventListener('error',()=>{try{a.pause()}catch(e){}},{once:true});crowdEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
   }
   function goal(){
     if(!crowdEnabled||!matchAudio)return;
     ensureCrowd();if(goalEl){try{goalEl.pause()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.volume=.13;a.src=CC0+'cheers.ogg';goalEl=a;
+    const a=new Audio();a.preload='metadata';a.volume=.075;a.src=CC0+'cheers.ogg';goalEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
   }
   function whistle(){
     const c=resumeOffline();if(!c)return;
     const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.type='sine';o.frequency.setValueAtTime(1450,t);o.frequency.exponentialRampToValueAtTime(2050,t+.32);
-    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.40);o.connect(g);g.connect(master);o.start(t);o.stop(t+.45);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.05,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.40);o.connect(g);g.connect(master);o.start(t);o.stop(t+.45);
   }
   function setWeather(weather){state.weather=['clear','cloudy','lightRain','heavyRain'].includes(weather)?weather:'clear';state.rainIntensity=0;state.windIntensity=0;syncVisualEnvironment();}
   function syncVisualEnvironment(){
@@ -67,7 +81,7 @@
   }
   function startSoundscape(){
     matchAudio=!!(state.matchDay&&!state.menuActive);resumeOffline();
-    if(musicEnabled&&activeTrack<0)playTrack(Math.floor(Math.random()*tracks.length));
+    if(musicEnabled&&activeTrack<0)playTrack(0);
     else if(musicEnabled&&pendingPlay&&musicEl){const p=musicEl.play();if(p&&p.catch)p.catch(()=>{});}
     if(matchAudio)ensureCrowd();else if(crowdEl){crowdEl.pause();crowdEl=null;}
     syncVisualEnvironment();showState();return Promise.resolve();
@@ -80,7 +94,6 @@
   function setCrowdEnabled(v){crowdEnabled=!!v;if(!crowdEnabled&&crowdEl){crowdEl.pause();crowdEl=null;}else if(crowdEnabled&&matchAudio)ensureCrowd();}
   function nextTrack(){return playTrack(activeTrack+1);}
   function getTracks(){return tracks.map(t=>({id:t.id,title:t.title,source:t.collection,license:t.license,url:t.url}));}
-  function externalMusic(provider,url){const allowed=['spotify','appleMusic','amazonMusic'];if(!allowed.includes(provider))return false;const target=String(url||'').trim();if(!target)return false;window.open(target,'_blank','noopener,noreferrer');return true;}
   function debugScenario(name){const weather={clear:'clear',cloudy:'cloudy',lightRain:'lightRain',heavyRain:'heavyRain',match:'clear',preMatch:'clear'}[name];if(!weather)return false;setWeather(weather);state.matchDay=name==='match'||name==='preMatch';state.minutesToMatch=name==='match'?180:name==='preMatch'?30:null;if(name==='match'){state.menuActive=false;matchAudio=true;startSoundscape();}return true;}
   function snapshot(){
     const base=typeof j90PerfSnapshot==='function'?j90PerfSnapshot():{};
@@ -88,9 +101,9 @@
   }
 
   window.addEventListener('pointerdown',()=>{if(pendingPlay&&musicEl){const p=musicEl.play();if(p&&p.catch)p.catch(()=>{});}}, {once:false,passive:true});
-  window.J90Ambience={start:startSoundscape,stop,pause,resume,setWeather,debugScenario,snapshot,state,setMusicEnabled,setCrowdEnabled,nextTrack,getTracks,externalMusic,goal,whistle};
+  window.J90Ambience={start:startSoundscape,stop,pause,resume,setWeather,debugScenario,snapshot,state,setMusicEnabled,setCrowdEnabled,nextTrack,getTracks,goal,whistle};
   window.J90Perf=window.J90Perf||{};window.J90Perf.snapshot=snapshot;
   window.j90SoundscapeStart=startSoundscape;window.j90SoundscapeStop=stop;window.j90SyncSoundscape=sync;window.updateJ90MenuEnvironment=syncVisualEnvironment;
-  window.J90_AUDIO_DISABLED=false;window.J90_AUDIO_MODE='remote-cc0';
+  window.J90_AUDIO_DISABLED=false;window.J90_AUDIO_MODE='remote-cc0';window.J90_AUDIO_PROFILE='quiet-match-2.1';
   syncVisualEnvironment();
 })();
