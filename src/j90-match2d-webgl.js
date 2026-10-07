@@ -92,18 +92,24 @@
     for(var i=0;i<6;i++) co.push(c[0],c[1],c[2],c[3]);
   }
   function pushCircle(v,co,cx,cy,r,col,segments){
-    segments=segments||16;v.push(cx,cy);co.push(col[0],col[1],col[2],col[3]);
-    for(var i=0;i<=segments;i++){var a=i/segments*Math.PI*2;v.push(cx+Math.cos(a)*r,cy+Math.sin(a)*r);co.push(col[0],col[1],col[2],col[3]);}
+    segments=segments||16;
+    for(var i=0;i<segments;i++){
+      var a0=i/segments*Math.PI*2,a1=(i+1)/segments*Math.PI*2;
+      v.push(cx,cy,cx+Math.cos(a0)*r,cy+Math.sin(a0)*r,cx+Math.cos(a1)*r,cy+Math.sin(a1)*r);
+      for(var j=0;j<3;j++)co.push(col[0],col[1],col[2],col[3]);
+    }
   }
-  function line(v,co,x1,y1,x2,y2,col){
-    v.push(x1,y1,x2,y2);co.push(col[0],col[1],col[2],col[3],col[0],col[1],col[2],col[3]);
+  function line(v,co,x1,y1,x2,y2,col,width){
+    var dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy)||1,hw=(width||1.1)/2,nx=-dy/len*hw,ny=dx/len*hw;
+    v.push(x1+nx,y1+ny,x2+nx,y2+ny,x2-nx,y2-ny,x1+nx,y1+ny,x2-nx,y2-ny,x1-nx,y1-ny);
+    for(var i=0;i<6;i++)co.push(col[0],col[1],col[2],col[3]);
   }
 
   function field(g,v,co,w,h){
     pushRect(v,co,0,0,w,h,color('#0d4a2b',1));
     for(var i=0;i<12;i++) pushRect(v,co,i*w/12,0,w/12+1,h,color(i%2?'#0e512f':'#0b4528',.62));
     var white=color('#d8f2df',.66);
-    line(v,co,7,7,w-7,7,white);line(v,co,w-7,7,w-7,h-7,white);line(v,co,w-7,h-7,7,h-7,white);line(v,co,7,h-7,7,7,white);
+    line(v,co,7,7,w-7,7,white,1.2);line(v,co,w-7,7,w-7,h-7,white,1.2);line(v,co,w-7,h-7,7,h-7,white,1.2);line(v,co,7,h-7,7,7,white,1.2);
     line(v,co,w/2,7,w/2,h-7,white);
     for(var s=0;s<32;s++){var a=s/32*Math.PI*2;line(v,co,w/2+Math.cos(a)*Math.min(w,h)*.115,h/2+Math.sin(a)*Math.min(w,h)*.115,w/2+Math.cos(a+.2)*Math.min(w,h)*.115,h/2+Math.sin(a+.2)*Math.min(w,h)*.115,white);}
     pushCircle(v,co,w/2,h/2,2,color('#fff',.9),12);
