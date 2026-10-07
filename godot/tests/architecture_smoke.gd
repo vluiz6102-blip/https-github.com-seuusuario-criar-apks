@@ -12,6 +12,7 @@ const REQUIRED := [
     "res://scripts/transfer_market_ai.gd",
     "res://scripts/match_event_manager.gd",
     "res://scripts/match_scene_controller.gd",
+    "res://scripts/match_scene.gd",
     "res://scripts/match_simulation.gd",
     "res://scripts/pixel_match_renderer.gd",
     "res://scripts/monetization_manager.gd"
@@ -24,6 +25,10 @@ func _initialize() -> void:
         var script: Script = load(path)
         if script == null:
             failures.append("LOAD_FAILED:" + path)
+
+    var match_scene: PackedScene = load("res://scenes/match.tscn")
+    if match_scene == null:
+        failures.append("MATCH_SCENE_LOAD_FAILED")
 
     if int(ProjectSettings.get_setting("display/window/handheld/orientation", -1)) != 1:
         failures.append("PORTRAIT_NOT_LOCKED")
