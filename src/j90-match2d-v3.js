@@ -13,6 +13,10 @@
     });
   };
   var clamp2=function(v,a,b){return Math.max(a,Math.min(b,v))};
+  function matchState(){
+    try{if(typeof S!=='undefined'&&S)return S}catch(e){}
+    try{return window.J90ManagerBridge&&window.J90ManagerBridge.getState?window.J90ManagerBridge.getState():null}catch(e){return null}
+  }
 
   function palette(name){
     try{
