@@ -23,7 +23,9 @@ jobs:
       - name: Download Godot 4.7.2
         run: |
           set -euo pipefail
-          curl -L --fail --retry 3             -o /tmp/godot.zip             https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          curl -L --fail --retry 3 \
+            -o /tmp/godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x /tmp/godot/Godot_v4.7.2-stable_linux.x86_64
 
@@ -49,20 +51,47 @@ jobs:
                       raise SystemExit(f"RUNTIME_OWNERSHIP_VIOLATION:{file_name}:{signature}")
 
           project = Path("godot/project.godot").read_text(encoding="utf-8")
+
+          def active_setting(key: str, expected: str) -> bool:
+              for raw_line in project.splitlines():
+                  line = raw_line.strip()
+                  if not line or line.startswith("#") or "=" not in line:
+                      continue
+                  lhs, rhs = line.split("=", 1)
+                  if lhs.strip() == key:
+                      return rhs.strip() == expected
+              return False
+
           required = [
-              'handheld/orientation=1',
-              'stretch/scale_mode="integer"',
-              'renderer/rendering_method="mobile"',
-              'rendering/rendering_device/driver.android="vulkan"',
-              'rendering/rendering_device/fallback_to_opengl3=true',
-              'textures/vram_compression/import_etc2_astc=true',
-              'PerformanceGovernor="*res://scripts/performance_governor.gd"',
-              'J90AnimationSystem="*res://scripts/animation_system.gd"',
+              ("display/window/handheld/orientation", "1"),
+              ("display/window/stretch/scale_mode", '"integer"'),
+              ("rendering/renderer/rendering_method", '"mobile"'),
+              ("rendering/rendering_device/driver.android", '"vulkan"'),
+              ("rendering/rendering_device/fallback_to_opengl3", "true"),
+              ("textures/vram_compression/import_etc2_astc", "true"),
           ]
 
-          for needle in required:
-              if needle not in project:
-                  raise SystemExit(f"PROJECT_SETTING_MISSING:{needle}")
+          for key, expected in required:
+              if not active_setting(key, expected):
+                  raise SystemExit(f"PROJECT_SETTING_MISSING_OR_INVALID:{key}")
+
+          autoload_section = False
+          autoloads = {}
+          for raw_line in project.splitlines():
+              line = raw_line.strip()
+              if line.startswith("["):
+                  autoload_section = line == "[autoload]"
+                  continue
+              if autoload_section and not line.startswith("#") and "=" in line:
+                  lhs, rhs = line.split("=", 1)
+                  autoloads[lhs.strip()] = rhs.strip()
+
+          for key, expected in [
+              ("PerformanceGovernor", '"*res://scripts/performance_governor.gd"'),
+              ("J90AnimationSystem", '"*res://scripts/animation_system.gd"'),
+          ]:
+              if autoloads.get(key) != expected:
+                  raise SystemExit(f"AUTOLOAD_MISSING_OR_INVALID:{key}")
 
           print("STATIC_GODOT_AUDIT=OK")
           PY
