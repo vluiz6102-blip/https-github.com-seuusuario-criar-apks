@@ -231,6 +231,28 @@ function install(){
    };
    wrapOpen.__j90ManagerAI=true;wrapOpen.__original=oldOpen;j90OpenContract=wrapOpen;window.j90OpenContract=wrapOpen;
  }
+ if(typeof j90NegotiateStage==='function'&&!j90NegotiateStage.__j90ManagerAI){
+   var oldStage=j90NegotiateStage;
+   var wrapStage=function(action){
+     var n=S&&S.negotiation;
+     if(n&&action==='club'){
+       var p=n.renewal?(roster().find(function(x){return x.id===n.playerId})||{}):(typeof j90ContractPlayer==='function'?j90ContractPlayer(n):null)||{};
+       var ai=analyseTransfer(p);
+       n.interest=Math.round(clamp(num(n.interest,45)*.35+ai.interest*.65,8,96));
+       n.ai=n.ai||{};n.ai.fairValue=ai.fairValue;n.ai.personality=ai.personality;n.ai.recommendation=ai.recommendation;
+     }
+     if(n&&action==='final'){
+       var fee=num(n.fee,0),salary=num(n.salary,0),p=n.renewal?(roster().find(function(x){return x.id===n.playerId})||{}):(typeof j90ContractPlayer==='function'?j90ContractPlayer(n):null)||{},ai=analyseTransfer(p);
+       var fair=ai.fairValue,wage=ai.wage,feeRatio=fair?fee/fair:1,wageRatio=wage?salary/wage:1;
+       var walk=ai.interest<30||feeRatio<.72||wageRatio<.72;
+       n.ai=n.ai||{};n.ai.fairValue=fair;n.ai.wage=wage;n.ai.feeRatio=+feeRatio.toFixed(2);n.ai.wageRatio=+wageRatio.toFixed(2);
+       if(walk){n.tension=cl(num(n.tension,18)+12,0,100);n.interest=cl(num(n.interest,45)-7,8,96);}
+       else if(feeRatio>=1.05&&wageRatio>=1.05){n.tension=cl(num(n.tension,18)-5,0,100);n.interest=cl(num(n.interest,45)+5,8,96);}
+     }
+     return oldStage.apply(this,arguments);
+   };
+   wrapStage.__j90ManagerAI=true;wrapStage.__original=oldStage;j90NegotiateStage=wrapStage;window.j90NegotiateStage=wrapStage;
+ }
  if(typeof mgrStartMatch==='function'&&!mgrStartMatch.__j90ManagerAI){
    var oldStart=mgrStartMatch;
    var wrapStart=async function(){
@@ -239,6 +261,33 @@ function install(){
      return out;
    };
    wrapStart.__j90ManagerAI=true;wrapStart.__original=oldStart;mgrStartMatch=wrapStart;window.mgrStartMatch=wrapStart;
+ }
+ if(typeof mgrDashboardPro==='function'&&!mgrDashboardPro.__j90ManagerAI){
+   var oldDash=mgrDashboardPro;
+   var wrapDash=function(){
+     var html=oldDash.apply(this,arguments),b=boardAI(),d=developmentPlan();
+     var block='<div class="j90AIBoardStrip"><div><span>IA DE GESTÃO</span><b>'+esc(b.action)+'</b><small>Prioridade '+esc(b.severity)+' · foco de desenvolvimento: '+esc(d.focusLabel)+'</small></div><button onclick="tab='lineup';render(1)">Abrir análise</button></div>';
+     return html.replace('<section class="j90MgrPage">','<section class="j90MgrPage">'+block);
+   };
+   wrapDash.__j90ManagerAI=true;wrapDash.__original=oldDash;mgrDashboardPro=wrapDash;window.mgrDashboardPro=wrapDash;
+ }
+ if(typeof mgrTacticsHub==='function'&&!mgrTacticsHub.__j90ManagerAI){
+   var oldTac=mgrTacticsHub;
+   var wrapTac=function(){
+     var html=oldTac.apply(this,arguments),o=opponentAnalysis();
+     var block='<div class="j90AIOpponentCard"><div><span>SCOUTING IA · PRÓXIMO ADVERSÁRIO</span><b>'+esc(o.team||'Adversário')+'</b><small>Média '+o.average+' · principal ameaça: '+esc(o.topThreat)+' · criação: '+esc(o.creator)+'</small><small><strong>Plano:</strong> '+esc(o.weakness)+' · sugestão: '+esc(o.recommendedTactic)+'</small></div></div>';
+     return html.replace('<section class="j90MgrPage">','<section class="j90MgrPage">'+block);
+   };
+   wrapTac.__j90ManagerAI=true;wrapTac.__original=oldTac;mgrTacticsHub=wrapTac;window.mgrTacticsHub=wrapTac;
+ }
+ if(typeof mgrFinance==='function'&&!mgrFinance.__j90ManagerAI){
+   var oldFin=mgrFinance;
+   var wrapFin=function(){
+     var html=oldFin.apply(this,arguments),b=boardAI(),budget=num(S&&S.finance&&S.finance.budget,0);
+     var block='<div class="j90AIFinanceCard"><span>IA FINANCEIRA</span><b>'+esc(b.action)+'</b><small>Caixa atual: R$ '+money(budget)+' · severidade: '+esc(b.severity)+'</small></div>';
+     return html.replace('<section class="j90MgrPage','<section class="j90MgrPage">'+block);
+   };
+   wrapFin.__j90ManagerAI=true;wrapFin.__original=oldFin;mgrFinance=wrapFin;window.mgrFinance=wrapFin;
  }
  return true;
 }
