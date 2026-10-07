@@ -3050,6 +3050,58 @@ window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.w
   document.addEventListener('contextmenu',function(e){if(!allowTextSelection(e.target))e.preventDefault();});
 })();
 </script>
+<style id="j90-landscape-match-style">
+/* Jornada 90: landscape match. Same controls/data, only space is reflowed. */
+@media (orientation:landscape) and (max-height:620px){
+  body.j90-match-fullscreen #app{height:100dvh!important;width:100vw!important}
+  .j90MatchOnlyPage{
+    grid-template-areas:"top top" "stage actions" "log log";
+    grid-template-columns:minmax(0,1fr) minmax(210px,29vw);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:6px;
+    padding:max(5px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));
+  }
+  .j90MatchTop{grid-area:top}
+  .j90MatchStage{grid-area:stage;min-height:0}
+  .j90MatchActionBar{
+    grid-area:actions;
+    grid-template-columns:1fr 1fr;
+    align-content:center;
+    gap:6px;
+    min-width:0;
+    min-height:0;
+  }
+  .j90MatchActionBar button{min-height:44px;padding:5px 4px}
+  .j90MatchActionBar strong{font-size:9px}
+  .j90MatchActionBar small{font-size:6px}
+  .j90MatchLog{grid-area:log;min-height:27px}
+  .j90MatchResumeFull{grid-column:1/-1;min-height:38px}
+  .j90MatchTeam{padding:5px 7px}
+  .j90MatchTeam b{font-size:clamp(11px,2.4vw,18px)}
+  .j90MatchScoreBlock{min-width:88px}
+  .j90MatchScoreBlock strong{font-size:clamp(19px,4.6vw,30px)}
+  .j90MatchStage .j90MatchEvent{font-size:8px;bottom:6px;left:6px;right:6px}
+  .j90MatchPanel{
+    left:auto;
+    right:8px;
+    width:min(460px,42vw);
+    max-height:calc(100dvh - 78px);
+    overflow:auto;
+    bottom:58px;
+  }
+  .j90MatchChoiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .j90MatchSubs{max-height:24vh}
+}
+@media (orientation:landscape) and (max-height:420px){
+  .j90MatchOnlyPage{grid-template-columns:minmax(0,1fr) minmax(190px,26vw);gap:4px}
+  .j90MatchActionBar{gap:4px}
+  .j90MatchActionBar button{min-height:40px}
+  .j90MatchLog{min-height:24px}
+  .j90MatchLog span{font-size:6px}
+  .j90MatchPanel{bottom:52px;right:6px;width:min(430px,46vw);padding:8px}
+}
+html.j90-landscape-requested{background:#071013}
+
 </body>
 </html>
 
