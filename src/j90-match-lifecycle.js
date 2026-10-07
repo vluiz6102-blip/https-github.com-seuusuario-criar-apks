@@ -45,6 +45,7 @@
     m.elapsed=elapsed;
     m.paused=true;
     m.__j90LifecyclePaused=true;
+    m.__j90ResumeOnRestore=true;
     safeSave();
     return true;
   }
@@ -108,6 +109,12 @@
     m.ball.y=Number.isFinite(+m.ball.y)?+m.ball.y:.5;
     m.ball.tx=Number.isFinite(+m.ball.tx)?+m.ball.tx:m.ball.x;
     m.ball.ty=Number.isFinite(+m.ball.ty)?+m.ball.ty:m.ball.y;
+    if(m.__j90ResumeOnRestore){
+      delete m.__j90ResumeOnRestore;
+      m.paused=false;
+      m.startedAt=Date.now()-m.elapsed*1000;
+      m._lastTick=performance.now();
+    }
     if(m.elapsed>=m.duration){
       if(m.half===1){m.half=2;m.elapsed=0;m.startedAt=Date.now();m.paused=true}
       else{if(typeof window.mgrMatchFinish==='function')window.mgrMatchFinish();return false}
@@ -115,6 +122,7 @@
     if(!m.startedAt)m.startedAt=Date.now()-m.elapsed*1000;
     if(!m._simAcc)m._simAcc=0;
     if(!m._simClock)m._simClock=0;
+    if(m&&m.home&&m.away){try{if(typeof introStep!=='undefined'&&introStep===0){introStep=1;menuScreen='game';tab='game'}}catch(e){}}
     syncScene();
     if(document.visibilityState==='visible'&&!m.paused){
       try{if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,80)}catch(e){}
