@@ -21,8 +21,8 @@ energy_saving/keep_screen_on=true
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
 renderer/rendering_method.web="gl_compatibility"
-rendering_device/fallback_to_vulkan=true
-rendering_device/fallback_to_d3d12=true
+rendering/rendering_device/driver.android="vulkan"
+rendering/rendering_device/fallback_to_opengl3=true
 2d/snap/snap_2d_transforms_to_pixel=true
 2d/snap/snap_2d_vertices_to_pixel=true
 anti_aliasing/quality/msaa_2d=0
@@ -30,7 +30,6 @@ anti_aliasing/quality/msaa_3d=0
 anti_aliasing/quality/screen_space_aa=0
 anti_aliasing/quality/use_taa=false
 textures/vram_compression/import_etc2_astc=true
-driver/threads/thread_model=1
 
 [physics]
 
@@ -42,3 +41,12 @@ common/max_physics_steps_per_frame=4
 AudioManager="*res://scripts/audio_manager.gd"
 HardwareDetector="*res://scripts/hardware_detector.gd"
 MonetizationManager="*res://scripts/monetization_manager.gd"
+MatchSceneController="*res://scripts/match_scene_controller.gd"
+StadiumManager="*res://scripts/stadium_manager.gd"
+
+[j90]
+
+[j90/monetization]
+
+verification_url=""
+custom_donation_url=""
