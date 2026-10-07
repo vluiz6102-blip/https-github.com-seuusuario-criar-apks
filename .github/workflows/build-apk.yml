@@ -72,8 +72,22 @@ jobs:
       - name: Sincronizar elencos reais dos times
         run: npm run data:rosters
 
+      - name: Verificar scanner de qualidade usado no CI
+        run: |
+          set -euo pipefail
+          echo "CI_COMMIT=$(git rev-parse HEAD)"
+          test -f scripts/quality-scan.mjs
+          grep -Fq "Match Lifecycle Guard" scripts/quality-scan.mjs
+          grep -Fq "j90SaveReplacer" scripts/quality-scan.mjs
+          grep -Fq "android:screenOrientation=\"portrait\"" scripts/quality-scan.mjs
+          ! grep -Fq "const landscape = read('src/j90-landscape.js')" scripts/quality-scan.mjs
+          ! grep -Fq "checkSyntax('Landscape Match'" scripts/quality-scan.mjs
+          echo "QUALITY_SCANNER_SOURCE=FINAL_PORTRAIT_LIFECYCLE"
+
       - name: Varredura estrutural do projeto
-        run: npm run quality:scan
+        run: |
+          echo "QUALITY_SCAN_COMMIT=$(git rev-parse HEAD)"
+          npm run quality:scan
 
       - name: Gerar pacote offline de conteúdo
         run: npm run content:build
@@ -112,7 +126,9 @@ jobs:
           set -euo pipefail
           test -s www/index.html
           test -s www/j90-manager-ai.js
+          test -s www/j90-match-lifecycle.js
           test -s www/j90-auto-heal.js
+          grep -Fq '<script src="j90-match-lifecycle.js"></script>' www/index.html
           grep -F -n '<script src="j90-manager-ai.js"></script>' www/index.html >/dev/null
           grep -F -n '<script src="j90-auto-heal.js"></script>' www/index.html >/dev/null
           test -s www/assets/j90-content/content-manifest.json
