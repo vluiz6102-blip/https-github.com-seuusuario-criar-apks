@@ -2849,7 +2849,23 @@ function j90SaveReplacer(k,v){
  }catch(e){}
  return v;
 }
-function save(){if(!S)return false;try{S._savedAt=Date.now();localStorage.setItem('carreirafc2',JSON.stringify(S,j90SaveReplacer));return true}catch(e){try{localStorage.setItem('carreirafc2',JSON.stringify(S,function(k,v){return /^_/.test(k)&&k!=='_savedAt'?undefined:v}));return true}catch(_){return false}}}
+function save(){
+ if(!S)return false;
+ try{
+  if(S.match2d){
+   if(S.match2d.paused&&!S.match2d.__j90LifecyclePaused)delete S.match2d.j90ResumeOnRestore;
+   else if(!S.match2d.paused)S.match2d.j90ResumeOnRestore=true;
+  }
+  S._savedAt=Date.now();
+  localStorage.setItem('carreirafc2',JSON.stringify(S,j90SaveReplacer));
+  return true;
+ }catch(e){
+  try{
+   localStorage.setItem('carreirafc2',JSON.stringify(S,function(k,v){return /^_/.test(k)&&k!=='_savedAt'?undefined:v}));
+   return true;
+  }catch(_){return false}
+ }
+}
 window.J90ManagerBridge={getState:function(){return S},save:function(){save()},render:function(still){render(still)},setTab:function(k){tab=k;render(1)}};function j90PlusOpen(){if(window.J90Expansion&&typeof window.J90Expansion.open==='function')window.J90Expansion.open()}
 addEventListener('visibilitychange',()=>{if(document.hidden&&S)save()},{passive:true});addEventListener('pagehide',()=>{if(S)save()},{passive:true});
 function renderManagerPartial(still){
