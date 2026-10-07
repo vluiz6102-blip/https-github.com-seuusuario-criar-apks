@@ -146,6 +146,9 @@ jobs:
           J90_SMOKE_URL=http://127.0.0.1:4173/ node scripts/browser-smoke.mjs
           J90_DIAG_URL=http://127.0.0.1:4173/diag.html node scripts/diag-smoke.mjs
 
+      - name: Teste visual responsivo e anti-overflow
+        run: node scripts/visual-scan.mjs
+
       - name: Preparar Android
         run: |
           if [ ! -d android ]; then npx cap add android; fi
