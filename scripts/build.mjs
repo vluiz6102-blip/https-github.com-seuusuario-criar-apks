@@ -43,6 +43,8 @@ const tacticsSource = readFileSync('src/j90-tactics.js', 'utf8');
 const match2dSource = readFileSync('src/j90-match2d-v3.js', 'utf8');
 const squadCardsSource = readFileSync('src/j90-squad-cards.js', 'utf8');
 const lineupAiSource = readFileSync('src/j90-lineup-ai.js', 'utf8');
+const replaySource = readFileSync('src/j90-match-replay.js', 'utf8');
+const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -54,7 +56,7 @@ const soundscape = soundscapeSource.replace(
 );
 
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + squadCardsSource + '\n' + lineupAiSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource);
 } catch (error) {
   throw new Error('JavaScript syntax validation failed: ' + error.message);
 }
@@ -68,6 +70,8 @@ writeFileSync('www/j90-tactics.js', tacticsSource);
 writeFileSync('www/j90-match2d-v3.js', match2dSource);
 writeFileSync('www/j90-squad-cards.js', squadCardsSource);
 writeFileSync('www/j90-lineup-ai.js', lineupAiSource);
+writeFileSync('www/j90-match-replay.js', replaySource);
+writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 
 if (existsSync(audioRoot)) {
   mkdirSync('www/assets', { recursive: true });
