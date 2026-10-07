@@ -205,6 +205,23 @@ function install(){
  if(typeof managerV==='function'&&!managerV.__j90ManagerAI){
    var oldManagerV=managerV;
    var wrapManagerV=function(){
+     if(typeof j90NegotiationView==='function'&&!j90NegotiationView.__j90ManagerAI){
+       var negBase=j90NegotiationView;
+       var negWrap=function(){return negotiationAIView();};
+       negWrap.__j90ManagerAI=true;negWrap.__original=negBase;
+       j90NegotiationView=negWrap;window.j90NegotiationView=negWrap;
+     }
+     if(typeof j90OpenContract==='function'&&!j90OpenContract.__j90ManagerAI){
+       var openBase=j90OpenContract;
+       var openWrap=function(p,price){
+         var a=p?analyseTransfer(p):null;
+         var out=openBase.apply(this,[p,a&&a.fairValue?Math.round(clamp(num(price,a.fairValue),Math.max(1,a.fairValue*.82),a.fairValue*1.18)):price]);
+         if(S&&S.negotiation&&a){S.negotiation.interest=Math.round(a.interest);S.negotiation.ai=a;S.j90ManagerAI.last=a;}
+         return out;
+       };
+       openWrap.__j90ManagerAI=true;openWrap.__original=openBase;
+       j90OpenContract=openWrap;window.j90OpenContract=openWrap;
+     }
      if(typeof mgrMarket==='function'&&!mgrMarket.__j90ManagerAI){
        var marketBase=mgrMarket;
        var marketWrap=function(){return marketInject(marketBase.apply(this,arguments));};
