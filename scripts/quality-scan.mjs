@@ -76,12 +76,11 @@ for (const m of index.matchAll(/(?:src|href)\s*=\s*["']([^"'#?]+)["']/gi)) {
 }
 for (const p of refs) if (!existsSync(p) && !existsSync(join('www', p))) add(warn, 'Referência de asset não encontrada no repositório: ' + p);
 
-const audioExpected = [
-  'assets/audio/wind/wind-soft-01.ogg','assets/audio/trees/leaves-soft-01.ogg','assets/audio/neighborhood/neighborhood-bed-01.ogg',
-  'assets/audio/birdsBed/birds-distant-01.ogg','assets/audio/birdEvents/bird-call-01.ogg','assets/audio/dog/dog-distant-01.ogg',
-  'assets/audio/car/car-pass-01.ogg','assets/audio/rain/light-rain-bed-01.ogg','assets/audio/rain/heavy-rain-bed-01.ogg','assets/audio/crowd/crowd-distant-01.ogg'
-];
-for (const p of audioExpected) if (!existsSync(p) || statSync(p).size === 0) add(fail, 'Áudio obrigatório ausente/vazio: ' + p);
+if (/AudioContext|webkitAudioContext|new\s+Audio\s*\(|decodeAudioData|createBufferSource|J90_AUDIO_MANIFEST/.test(soundscape)) add(fail, 'Runtime de áudio ativo detectado no jogo. O jogo deve permanecer totalmente silencioso.');
+if (!/J90_AUDIO_DISABLED\s*=\s*true/.test(soundscape)) add(fail, 'Soundscape não declara J90_AUDIO_DISABLED=true.');
+if (/assets\/audio|audio-import/.test(read('scripts/build.mjs'))) add(fail, 'Pipeline de build ainda referencia/pacoteia assets de áudio.');
+if (existsSync('www/assets/audio')) add(fail, 'Bundle www ainda contém assets/audio.');
+
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
   try {
