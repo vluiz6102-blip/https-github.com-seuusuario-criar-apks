@@ -73,13 +73,13 @@ if (/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'Renderer WebGL legado 
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
 const workflow = read('.github/workflows/build-apk.yml');
-if (/j90-landscape|screen\\.orientation|orientation:landscape/i.test(index + '\\n' + buildScript + '\\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
+if (/j90-landscape|screen\.orientation|orientation:landscape/i.test(index + '\\n' + buildScript + '\\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
 if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android não está fixado em orientação retrato.');
 if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
 const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
 if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');
-if (!/JSON\\.stringify\\(S,j90SaveReplacer\\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
+if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
 
