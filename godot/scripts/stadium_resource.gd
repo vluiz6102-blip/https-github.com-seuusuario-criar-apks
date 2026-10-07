@@ -21,3 +21,11 @@ enum GrassPattern { SOLID, STRIPED, CHECKER, CENTER_WEAR }
 
 func _init() -> void:
     camera_config = CAMERA_CONFIG_SCRIPT.new()
+
+func has_valid_camera_config() -> bool:
+    if camera_config == null:
+        return false
+    for property_name: String in ["zoom", "smooth_damp", "vertical_offset"]:
+        if camera_config.get(property_name) == null:
+            return false
+    return true
