@@ -76,7 +76,7 @@
     /* Canvas 2D is the stable Android path. WebGL remains available only for explicit diagnostics. */
     var c=document.getElementById('j90MatchCanvas'); if(!c) return null;
     c.style.display='block';c.style.visibility='visible';c.style.opacity='1';
-    c.style.width='100%';c.style.height='clamp(260px,42vw,360px)';c.style.minHeight='260px';
+    c.style.width='100%';c.style.height=document.body.classList.contains('j90-match-fullscreen')?'100%':'clamp(260px,42vw,360px)';c.style.minHeight=document.body.classList.contains('j90-match-fullscreen')?'0':'260px';
     var parent=c.parentElement;
     var w=Math.max(280,Math.floor(c.clientWidth||parent&&parent.clientWidth||320));
     var h=Math.max(260,Math.floor(c.clientHeight||300));
@@ -206,7 +206,7 @@
         g.fillStyle=pal[1];g.fillRect(x-r*.48,y+r*.18,r*.96,r*.68);
         g.fillStyle='#fff';g.fillRect(x-r*.34,y+r*.30,r*.68,r*.12);
         g.fillStyle='#1b1b1b';g.fillRect(x-r*.28,y+r*.83,r*.22,r*.38);g.fillRect(x+r*.06,y+r*.83,r*.22,r*.38);
-        var n=String(p.name||'');if(n&&!low){
+        var n=String(p.name||'');if(n&&!low&&active){
           g.font='800 8px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillStyle='rgba(255,255,255,.94)';
           var label=n.length>13?n.slice(0,12)+'…':n;g.fillText(label,x,y-r-10);
         }
