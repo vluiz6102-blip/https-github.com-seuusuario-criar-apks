@@ -37,16 +37,16 @@ jobs:
         run: |
           test -n "$COPILOT_GITHUB_TOKEN"
           echo "ok=true" >> "$GITHUB_OUTPUT"
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Configurar Node
-        uses: actions/setup-node@v6
-        with:
+          - name: Configurar Node
+          uses: actions/setup-node@v6
+          with:
           node-version: 22
-      - name: Contexto da build
-        env:
+          - name: Contexto da build
+          env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ inputs.source_run_id }}
           SOURCE_CONCLUSION: ${{ inputs.source_conclusion }}
@@ -57,10 +57,10 @@ jobs:
           echo "source_conclusion=$SOURCE_CONCLUSION" >> .j90-team/context.txt
           echo "commit=$GITHUB_SHA" >> .j90-team/context.txt
           if [ -n "$RUN_ID" ]; then gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-team/last-build.log 2>&1 || true; fi
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Planejar com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Planejar com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -91,32 +91,32 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-1-prompt.txt" --output-file ".j90-team/plan.md"
           test -s .j90-team/plan.md
-      - name: Upload plan
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload plan
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team/plan.md
           retention-days: 7
 
-  gameplay-ai:
-    name: "IA 2 - Gameplay e Football AI"
-    needs: coordinator
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          gameplay-ai:
+          name: "IA 2 - Gameplay e Football AI"
+          needs: coordinator
+          runs-on: ubuntu-24.04
+          timeout-minutes: 25
+          steps:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar ordem da coordenadora
-        uses: actions/download-artifact@v4
-        with:
+          - name: Baixar ordem da coordenadora
+          uses: actions/download-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Analisar missão com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Analisar missão com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -147,32 +147,32 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-2-prompt.txt" --output-file ".j90-team/gameplay-ai.md"
           test -s .j90-team/gameplay-ai.md
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload report
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-gameplay-ai
           path: .j90-team/gameplay-ai.md
           retention-days: 7
 
-  performance:
-    name: "IA 3 - Performance e estabilidade"
-    needs: coordinator
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          performance:
+          name: "IA 3 - Performance e estabilidade"
+          needs: coordinator
+          runs-on: ubuntu-24.04
+          timeout-minutes: 25
+          steps:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar ordem da coordenadora
-        uses: actions/download-artifact@v4
-        with:
+          - name: Baixar ordem da coordenadora
+          uses: actions/download-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Analisar missão com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Analisar missão com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -203,32 +203,32 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-3-prompt.txt" --output-file ".j90-team/performance.md"
           test -s .j90-team/performance.md
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload report
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-performance
           path: .j90-team/performance.md
           retention-days: 7
 
-  ux:
-    name: "IA 4 - UX mobile e acessibilidade"
-    needs: coordinator
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          ux:
+          name: "IA 4 - UX mobile e acessibilidade"
+          needs: coordinator
+          runs-on: ubuntu-24.04
+          timeout-minutes: 25
+          steps:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar ordem da coordenadora
-        uses: actions/download-artifact@v4
-        with:
+          - name: Baixar ordem da coordenadora
+          uses: actions/download-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Analisar missão com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Analisar missão com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -259,32 +259,32 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-4-prompt.txt" --output-file ".j90-team/ux.md"
           test -s .j90-team/ux.md
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload report
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-ux
           path: .j90-team/ux.md
           retention-days: 7
 
-  manager:
-    name: "IA 5 - Manager, transferências e táticas"
-    needs: coordinator
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          manager:
+          name: "IA 5 - Manager, transferências e táticas"
+          needs: coordinator
+          runs-on: ubuntu-24.04
+          timeout-minutes: 25
+          steps:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar ordem da coordenadora
-        uses: actions/download-artifact@v4
-        with:
+          - name: Baixar ordem da coordenadora
+          uses: actions/download-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Analisar missão com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Analisar missão com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -315,32 +315,32 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-5-prompt.txt" --output-file ".j90-team/manager.md"
           test -s .j90-team/manager.md
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload report
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-manager
           path: .j90-team/manager.md
           retention-days: 7
 
-  match-content:
-    name: "IA 6 - Match, áudio e conteúdo"
-    needs: coordinator
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          match-content:
+          name: "IA 6 - Match, áudio e conteúdo"
+          needs: coordinator
+          runs-on: ubuntu-24.04
+          timeout-minutes: 25
+          steps:
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar ordem da coordenadora
-        uses: actions/download-artifact@v4
-        with:
+          - name: Baixar ordem da coordenadora
+          uses: actions/download-artifact@v4
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Preparar provedores de IA
-        run: npm install -g @google/gemini-cli @github/copilot
-      - name: Analisar missão com pool multi-modelo
-        env:
+          - name: Preparar provedores de IA
+          run: npm install -g @google/gemini-cli @github/copilot
+          - name: Analisar missão com pool multi-modelo
+          env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -371,46 +371,46 @@ jobs:
           PROMPT
           J90_AI_PREFERENCE="gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot" J90_AI_MAX_OUTPUT_TOKENS=12000 node scripts/j90-ai-report.mjs --prompt-file ".j90-team/ai-6-prompt.txt" --output-file ".j90-team/match-content.md"
           test -s .j90-team/match-content.md
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Upload report
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-match-content
           path: .j90-team/match-content.md
           retention-days: 7
 
-  fallback-recovery:
-    name: "IA 8 - Recuperadora de continuidade"
-    needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
-    if: ${{ always() }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - name: Verificar credencial Copilot
-        env:
+          fallback-recovery:
+          name: "IA 8 - Recuperadora de continuidade"
+          needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
+          if: ${{ always() }}
+          runs-on: ubuntu-24.04
+          timeout-minutes: 30
+          steps:
+          - name: Verificar credencial Copilot
+          env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: test -n "$COPILOT_GITHUB_TOKEN"
+          run: test -n "$COPILOT_GITHUB_TOKEN"
 
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
+          - name: Checkout
+          uses: actions/checkout@v5
+          with:
           fetch-depth: 0
 
-      - name: Baixar evidências disponíveis
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
+          - name: Baixar evidências disponíveis
+          uses: actions/download-artifact@v4
+          continue-on-error: true
+          with:
           pattern: j90-team-*
           path: .j90-team
           merge-multiple: true
 
-      - name: Instalar Copilot
-        env:
+          - name: Instalar Copilot
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
+          run: npm install -g @github/copilot
 
-      - name: Recuperar a missão
-        env:
+          - name: Recuperar a missão
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COORDINATOR: ${{ needs.coordinator.result }}
@@ -438,57 +438,57 @@ jobs:
           Aplique contexto em etapas: leia somente arquivos necessários e grave decisões importantes em arquivos para a próxima IA.
           Não faça commit, push ou release. Não reduza testes, não remova funcionalidades e não invente defeitos.
           PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
           test -s .j90-team/fallback-recovery.md
 
-      - name: Publicar relatório de recuperação
-        uses: actions/upload-artifact@v4
-        with:
+          - name: Publicar relatório de recuperação
+          uses: actions/upload-artifact@v4
+          with:
           name: j90-team-fallback-recovery
           path: .j90-team/fallback-recovery.md
           retention-days: 7
 
-  integrator:
-    name: "IA 7 - Integradora e Release Manager"
-    needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
-    if: ${{ always() }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    steps:
-      - name: Auth
-        env:
+          integrator:
+          name: "IA 7 - Integradora e Release Manager"
+          needs: [coordinator, gameplay-ai, performance, ux, manager, match-content]
+          if: ${{ always() }}
+          runs-on: ubuntu-24.04
+          timeout-minutes: 60
+          steps:
+          - name: Auth
+          env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: test -n "$COPILOT_GITHUB_TOKEN"
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
+          run: test -n "$COPILOT_GITHUB_TOKEN"
+          - name: Checkout
+          uses: actions/checkout@v6
+          with:
           fetch-depth: 0
-      - name: Baixar plano
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
+          - name: Baixar plano
+          uses: actions/download-artifact@v4
+          continue-on-error: true
+          with:
           name: j90-team-plan
           path: .j90-team
-      - name: Baixar relatórios
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
+          - name: Baixar relatórios
+          uses: actions/download-artifact@v4
+          continue-on-error: true
+          with:
           pattern: j90-team-*
           path: .j90-team/reports
           merge-multiple: true
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
+          - name: Setup Node
+          uses: actions/setup-node@v6
+          with:
           node-version: 22
-      - name: Instalar dependências
-        run: npm install
-      - name: Instalar Copilot
-        env:
+          - name: Instalar dependências
+          run: npm install
+          - name: Instalar Copilot
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
-      - name: Integrar consenso
-        env:
+          run: npm install -g @github/copilot
+          - name: Integrar consenso
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
@@ -503,9 +503,9 @@ jobs:
           Não faça push nem release dentro da IA. A etapa externa fará isso.
           Somente quando o contrato completo de release estiver comprovado e nenhuma melhoria material segura restar, crie .j90-release-ready.json conforme .github/copilot-instructions.md.
           PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
-      - name: Validar integração
-        env:
+          )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          - name: Validar integração
+          env:
           SOURCE_CONCLUSION: ${{ inputs.source_conclusion }}
         run: |
           set -e
@@ -514,8 +514,8 @@ jobs:
           node scripts/release-readiness.mjs
           if [ -f .j90-release-ready.json ]; then node scripts/release-readiness.mjs --strict; fi
           git diff --check
-      - name: Finalizar ou relançar
-        env:
+          - name: Finalizar ou relançar
+          env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -e
@@ -532,47 +532,47 @@ jobs:
           git push origin HEAD:main
           gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref main
 
-  emergency-integrator:
-    name: "IA 9 - Integrador de emergência"
-    needs: [coordinator, gameplay-ai, performance, ux, manager, match-content, fallback-recovery, integrator]
-    if: ${{ always() }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 70
-    steps:
-      - name: Verificar credencial Copilot
-        env:
+          emergency-integrator:
+          name: "IA 9 - Integrador de emergência"
+          needs: [coordinator, gameplay-ai, performance, ux, manager, match-content, fallback-recovery, integrator]
+          if: ${{ always() }}
+          runs-on: ubuntu-24.04
+          timeout-minutes: 70
+          steps:
+          - name: Verificar credencial Copilot
+          env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: test -n "$COPILOT_GITHUB_TOKEN"
+          run: test -n "$COPILOT_GITHUB_TOKEN"
 
-      - name: Checkout do estado mais recente
-        uses: actions/checkout@v5
-        with:
+          - name: Checkout do estado mais recente
+          uses: actions/checkout@v5
+          with:
           fetch-depth: 0
 
-      - name: Baixar evidências disponíveis
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
+          - name: Baixar evidências disponíveis
+          uses: actions/download-artifact@v4
+          continue-on-error: true
+          with:
           pattern: j90-team-*
           path: .j90-team/reports
           merge-multiple: true
 
-      - name: Configurar Node
-        uses: actions/setup-node@v5
-        with:
+          - name: Configurar Node
+          uses: actions/setup-node@v5
+          with:
           node-version: 22
 
-      - name: Instalar dependências
-        run: npm install
+          - name: Instalar dependências
+          run: npm install
 
-      - name: Instalar Copilot
-        env:
+          - name: Instalar Copilot
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: npm install -g @github/copilot
+          run: npm install -g @github/copilot
 
-      - name: Assumir a continuidade
-        env:
+          - name: Assumir a continuidade
+          env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           IA7: ${{ needs.integrator.result }}
@@ -593,10 +593,10 @@ jobs:
           Não faça uma release manualmente: o pipeline principal fará a publicação.
           Quando houver mudança real e validada, integre a versão atual. Quando o contrato completo estiver comprovado, somente então crie .j90-release-ready.json.
           PROMPT
-)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+          )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
 
-      - name: Validar e continuar ciclo
-        env:
+          - name: Validar e continuar ciclo
+          env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -e
