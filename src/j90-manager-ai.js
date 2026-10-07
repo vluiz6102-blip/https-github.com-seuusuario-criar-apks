@@ -70,7 +70,7 @@ function developmentPlan(){
  var focusLabel={pac:'Velocidade',sho:'Finalização',pas:'Passe',dri:'Drible',def:'Defesa',phy:'Físico'}[best];
  var alert=young.length?'Base prioritária: '+young.map(function(p){return p.name}).join(', '):'Priorize o onze principal e a rotação';
  var out={focus:best,focusLabel:focusLabel,average:Math.round(avg),young:young.map(function(p){return p.id}),message:alert};
- a.development=out;
+ if(a)a.development=out;
  return out;
 }
 
@@ -87,15 +87,15 @@ function opponentAnalysis(){
  var style=plan&&plan.style||'competitive',weak=avg<70?'explorar transições':style==='elite'?'evitar perda curta na saída':'atacar costas dos laterais';
  var tactic=avg<68?'ofensiva':avg>80?'equilibrada':'ofensiva com controle';
  var out={team:opp||'Adversário',average:Math.round(avg),topThreat:attack&&attack.name||'Ataque adversário',creator:mid&&mid.name||'Meio-campo adversário',defender:defense&&defense.name||'Linha defensiva',style:style,weakness:weak,recommendedTactic:tactic};
- a.opponent=out;
+ if(a)a.opponent=out;
  return out;
 }
 function boardAI(){
  var a=ensureState(),inj=roster().filter(function(p){return p&&p.injury}).length,avg=starters().reduce(function(n,p){return n+num(p.ovr,65)},0)/Math.max(1,starters().length),budget=num(S&&S.finance&&S.finance.budget,0),conf=num(S&&S.board&&S.board.confidence,60),last=S&&S.managerHistory&&S.managerHistory[0],trend=last?(last.result==='Vitória'?1:last.result==='Derrota'?-1:0):0;
  var action=inj>=3?'Reduzir carga e proteger o elenco':budget<100?'Controlar gastos e priorizar empréstimos':avg<68?'Buscar reforços de baixo custo':trend<0?'Ajustar tática e recuperar moral':'Manter planejamento e desenvolver jovens';
  var severity=inj>=3||budget<70||conf<35?'alta':inj>=2||trend<0?'média':'baixa';
- a.board={action:action,severity:severity,confidence:conf};
- return a.board;
+ if(a)a.board={action:action,severity:severity,confidence:conf};
+ return a&&a.board?a.board:{action:action,severity:severity,confidence:conf};
 }
 
 function ensureAnalysis(p){
