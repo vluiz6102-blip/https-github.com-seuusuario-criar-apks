@@ -69,6 +69,8 @@
     if(!body)return;
     var live=!!m;
     body.classList.toggle('j90-live-match',live);
+    if(live)body.classList.remove('j90-manager-nav-right');
+    else if(window.S&&S&&S.manager)body.classList.add('j90-manager-nav-right');
     var nav=document.getElementById('j90MgrRightNav');
     if(nav)nav.style.display=live?'none':'';
     var selectors=[
