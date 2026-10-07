@@ -1,15 +1,16 @@
 name: Jornada 90 Autonomous Game Improver
 
 on:
-  workflow_run:
-    workflows: ["Build APK Jornada 90 Manager"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       reason:
-        description: "Reason for starting the autonomous improvement cycle"
+        description: "Why the autonomous improver was started"
         required: false
-        default: "Manual autonomous game improvement"
+        default: "Full build completed"
+      source_run_id:
+        description: "GitHub Actions build run ID to inspect"
+        required: false
+        default: ""
 
 concurrency:
   group: jornada90-autonomous-improver
@@ -22,9 +23,6 @@ permissions:
 
 jobs:
   improve:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.name == 'Build APK Jornada 90 Manager'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
 
@@ -42,7 +40,7 @@ jobs:
       - name: Capture latest build result
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ID: ${{ inputs.source_run_id }}
         run: |
           set -euo pipefail
           mkdir -p .j90-autonomy
