@@ -25,6 +25,8 @@ const aiSource = readFileSync('src/j90-ai2.js', 'utf8');
 const tacticsSource = readFileSync('src/j90-tactics.js', 'utf8');
 const match2dSource = readFileSync('src/j90-match2d-v3.js', 'utf8');
 const squadCardsSource = readFileSync('src/j90-squad-cards.js', 'utf8');
+const webglSource = readFileSync('src/j90-match2d-webgl.js', 'utf8');
+const comfortSource = readFileSync('src/j90-comfort-ui.js', 'utf8');
 const lineupAiSource = readFileSync('src/j90-lineup-ai.js', 'utf8');
 const replaySource = readFileSync('src/j90-match-replay.js', 'utf8');
 const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8');
@@ -39,7 +41,7 @@ const soundscape = soundscapeSource.replace(
 );
 
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource);
 } catch (error) {
   throw new Error('JavaScript syntax validation failed: ' + error.message);
 }
@@ -51,6 +53,8 @@ writeFileSync('www/j90-expansion.js', expansionSource);
 writeFileSync('www/j90-ai2.js', aiSource);
 writeFileSync('www/j90-tactics.js', tacticsSource);
 writeFileSync('www/j90-match2d-v3.js', match2dSource);
+writeFileSync('www/j90-match2d-webgl.js', webglSource);
+writeFileSync('www/j90-comfort-ui.js', comfortSource);
 writeFileSync('www/j90-squad-cards.js', squadCardsSource);
 writeFileSync('www/j90-lineup-ai.js', lineupAiSource);
 writeFileSync('www/j90-match-replay.js', replaySource);
@@ -62,7 +66,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
@@ -72,4 +76,4 @@ if (!generated.includes('src="j90-soundscape.js"')) {
 const totalAssets = Object.values(manifest).reduce((n, list) => n + list.length, 0);
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: fonte validada, áudio totalmente desativado, soundscape compatível sem Web Audio, expansão + IA 2.0 + Match 2D V3 + Squad Cards injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
+console.log('Jornada 90 web build OK: fonte validada, playlist CC0 + fallback offline, soundscape Web Audio/HTMLMedia, expansão + IA 2.0 + Match 2D V3 + WebGL1 + Comfort UI + Squad Cards injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
