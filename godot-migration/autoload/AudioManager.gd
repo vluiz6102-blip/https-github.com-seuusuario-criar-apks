@@ -30,7 +30,7 @@ func _ready() -> void:
     max_sfx_voices = clampi(max_sfx_voices, 4, 24)
     _voice_priority.resize(max_sfx_voices)
 
-    for i in max_sfx_voices:
+    for i in range(max_sfx_voices):
         var player := AudioStreamPlayer.new()
         player.name = "SFXVoice_%02d" % i
         player.bus = &"SFX"
