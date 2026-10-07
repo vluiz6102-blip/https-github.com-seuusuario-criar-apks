@@ -9,7 +9,7 @@ var _cache: Dictionary = {}
 func register(stadium: Resource) -> void:
     if stadium == null:
         return
-    var stadium_id := StringName(str(stadium.get("stadium_id", "")))
+    var stadium_id := StringName(str(stadium.get("stadium_id")))
     if stadium_id == &"":
         return
     _cache[String(stadium_id)] = stadium
@@ -32,11 +32,11 @@ func _apply_camera(camera: Camera2D, config: Resource) -> void:
     if config == null:
         return
 
-    camera.zoom = Vector2.ONE * float(config.get("zoom", 1.0))
-    var smooth_damp := clampf(float(config.get("smooth_damp", 0.18)), 0.0, 1.0)
+    camera.zoom = Vector2.ONE * float(config.get("zoom"))
+    var smooth_damp := clampf(float(config.get("smooth_damp")), 0.0, 1.0)
     camera.position_smoothing_enabled = smooth_damp > 0.0
     camera.position_smoothing_speed = _smoothing_speed(smooth_damp)
-    camera.offset = Vector2(0.0, float(config.get("vertical_offset", 0.0)))
+    camera.offset = Vector2(0.0, float(config.get("vertical_offset")))
 
 func _smoothing_speed(smooth_damp: float) -> float:
     return lerpf(2.0, 18.0, 1.0 - clampf(smooth_damp, 0.0, 1.0))
