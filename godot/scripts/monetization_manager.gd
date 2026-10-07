@@ -17,6 +17,7 @@ var _billing: Object = null
 var _verification_url: String = ""
 var _pending: Dictionary = {}
 var _verified: Dictionary = {}
+# Checkout and verification remain server-authoritative.
 
 func initialize() -> void:
     if _initialized:
