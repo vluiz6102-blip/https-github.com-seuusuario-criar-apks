@@ -1,92 +1,35 @@
-# Jornada 90 Manager - Autonomous Game Improver
+# Jornada 90 Manager - Instruções de desenvolvimento
 
-You are the autonomous senior engineer for Jornada 90 Manager.
+## Objetivo
+Manter o Jornada 90 Manager estável, jogável e pronto para evolução, preservando a fonte única do projeto.
 
-## Mission
-Continuously improve the game until the repository is genuinely release-ready. Work from the current source of truth.
+## Regras
+- Investigue a causa raiz antes de alterar código.
+- Faça mudanças pequenas, testáveis e compatíveis com os sistemas existentes.
+- Preserve funcionalidades existentes e não esconda falhas desativando testes.
+- Execute verificações relevantes após cada alteração.
+- Mantenha o build web e o caminho Android funcionais.
+- Não adicione fotos de jogadores, áudio protegido ou assets copiados de EA/FIFA.
+- Não altere segredos ou credenciais.
+- Não faça alterações apenas para transformar uma build vermelha em verde.
 
-## Required loop
-1. Inspect the latest GitHub Actions result and failure logs when available.
-2. Identify root causes, not symptoms.
-3. Fix source code, tests, data, build scripts, UI, gameplay logic, performance, stability, accessibility, audio, tactics, transfers, squad management, match presentation, or content as appropriate.
-4. Run targeted checks after every change.
-5. Never hide a failure by weakening, deleting, bypassing, or skipping a test.
-6. Never remove an existing feature merely to make CI pass.
-7. Preserve the single-source build pipeline.
-8. Prefer small, testable, backwards-compatible changes over rewrites.
-9. When CI passes, proactively review for a concrete high-value improvement.
-10. Repeat until the release-readiness contract is fully satisfied.
+## IA de futebol e gameplay
+As IAs de gameplay existentes devem continuar responsáveis pelas mecânicas do jogo, incluindo:
+- táticas e formações;
+- impedimento e linha defensiva;
+- posicionamento e movimentação;
+- passes, dribles, finalizações e tomada de decisão;
+- transições e comportamento de jogadores;
+- arbitragem e eventos de partida;
+- carreira, elenco, transferências e desenvolvimento.
 
-## Release-readiness contract
-A release can be marked ready only when:
-- npm run quality:scan passes.
-- npm run build passes.
-- browser smoke and diagnostic smoke have no known regressions.
-- the Android build pipeline remains intact.
-- Manager, squad, negotiation, match, landscape, AI, Auto-Heal and BugGuard remain wired into the build.
-- no obvious JavaScript syntax/runtime regression remains.
-- no test was weakened to obtain green CI.
-- no known high-impact safe bug remains.
-- the current commit has a complete automated path to a valid APK.
+Esses sistemas fazem parte do jogo e não devem ser confundidos com agentes autônomos de CI.
 
-## Safe autonomy rules
-- Do not git push. The surrounding workflow owns commits and pushes.
-- Do not create GitHub releases directly.
-- Do not edit secrets or authentication credentials.
-- Do not add copyrighted game audio, player photos, or copied EA/FIFA assets.
-- Do not disable security checks.
-- Do not turn off smoke tests or quality checks.
-- Do not alter the release gate to manufacture success.
-- Do not leave generated output as the only source of a fix.
+## Validação mínima
+Antes de considerar uma alteração concluída, quando aplicável:
+- `npm run quality:scan`
+- `npm run build`
+- smoke/diagnóstico do navegador
+- validação do caminho Android
 
-## Completion marker
-Only when the full contract is satisfied and no material safe improvement remains, create:
-.j90-release-ready.json
-
-Use:
-{
-  "ready": true,
-  "revision": "<current git commit sha>",
-  "summary": "<concise evidence-based summary>",
-  "checks": {
-    "quality": true,
-    "webBuild": true,
-    "runtime": true,
-    "androidPath": true,
-    "criticalSystems": true
-  }
-}
-
-When not ready, ensure the marker is absent or says ready=false.
-Never claim readiness just because one build step passed.
-
-
-## AI team protocol
-
-The autonomous pipeline now uses nine AI roles:
-- IA 1: Coordinator. Investigates the current state and gives non-overlapping orders to the five specialists.
-- IA 2: Gameplay & Football AI.
-- IA 3: Performance, Stability & Crash Prevention.
-- IA 4: UX Mobile & Accessibility.
-- IA 5: Manager, Transfers & Tactics.
-- IA 6: Match, Audio & Content.
-- IA 7: Integrator and Release Manager.
-- IA 8: Continuity Recovery. Runs even when specialist jobs fail, identifies missing work and creates a persistent recovery report.
-- IA 9: Emergency Integrator. Final fallback that takes over when IA 7 or other agents fail, validates the current repository and continues the build/improvement cycle.
-
-IA 2-6 are analysts during their team pass. They must report findings instead of independently pushing code. IA 7 validates the reports, resolves conflicts, implements the safest high-value consensus, runs tests and controls the next build. IA 8 is deliberately independent of the success of the specialists and works from repository state plus saved artifacts. IA 9 uses `if: always()` semantics at the workflow level, so a failed predecessor does not automatically stop the final recovery path. IA 1 is the authority for task allocation, but IA 7 is the normal technical authority and IA 9 is the emergency authority when the normal integration path fails.
-
-No AI service can honestly be guaranteed to have infinite/unlimited tokens. The fallback design therefore avoids reliance on chat history, keeps context compact, persists decisions in files/artifacts, and gives IA 8 and IA 9 independent execution windows. Hitting a provider quota can still fail that individual job, but it should not strand the entire improvement cycle when another fallback can run.
-
-All agents must preserve tests, existing features, release gates, copyright-safe content and the single-source build.
-
-
-## Multi-provider AI pool
-
-The specialist analysis pass must not consume Copilot exclusively. Use `scripts/j90-ai-report.mjs` to route each report across providers in this order, according to the role: Gemini, Anthropic, OpenRouter, Groq, then Copilot as the last fallback.
-
-Supported GitHub Actions secrets are optional: `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`, and `COPILOT_GITHUB_TOKEN`. Optional repository variables can override `GEMINI_MODEL`, `ANTHROPIC_MODEL`, `OPENROUTER_MODEL`, and `GROQ_MODEL`.
-
-Current default specialist models are Gemini 3.8 Flash, Claude Sonnet 4.5, OpenRouter `openrouter/free`, and Groq `openai/gpt-oss-120b`. These services have their own limits; the purpose of the pool is to spread workload and preserve continuity, not to claim unlimited usage.
-
-The normal integrator and emergency code-changing stages remain protected behind the existing Copilot path until a second agentic coding provider is explicitly enabled and tested. No secret may ever be committed to the repository.
+Nunca declare o projeto pronto sem evidências dos checks executados.
