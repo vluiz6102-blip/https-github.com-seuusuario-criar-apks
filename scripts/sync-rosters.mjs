@@ -399,7 +399,7 @@ const brazilAndLatam=new Set(['Figueirense','Paysandu','Volta Redonda','Ypiranga
 const unresolvedBrazilAndLatam=teams.filter(t=>brazilAndLatam.has(t)&&!findStatic(staticMap,t));
 for(const league of ['bra.1','bra.2','bra.3','arg.1','ecu.1','uru.1','mex.1'])await addEspnLeague(staticMap,league,unresolvedBrazilAndLatam);
 const nationalTeams=new Set(['Brasil','México','Japão','Suíça','Marrocos','Coreia do Sul','Estados Unidos','Senegal','Austrália','Equador','Canadá','Argentina','França','Inglaterra','Espanha','Alemanha','Portugal','Uruguai','Holanda','Itália','Croácia','Bélgica']);
-await addEspnDirectTeams(staticMap,teams.filter(t=>nationalTeams.has(t)&&ESPN_DIRECT_TEAMS[t]));
+await addEspnDirectTeams(staticMap,teams.filter(t=>ESPN_DIRECT_TEAMS[t]));
 await addEspnLeague(staticMap,'fifa.world',teams.filter(t=>nationalTeams.has(t)&&!findStatic(staticMap,t)));
 
 const next={};
