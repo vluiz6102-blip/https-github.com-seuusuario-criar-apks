@@ -205,8 +205,17 @@ function install(){
  if(typeof managerV==='function'&&!managerV.__j90ManagerAI){
    var oldManagerV=managerV;
    var wrapManagerV=function(){
+     if(typeof mgrMarket==='function'&&!mgrMarket.__j90ManagerAI){
+       var marketBase=mgrMarket;
+       var marketWrap=function(){return marketInject(marketBase.apply(this,arguments));};
+       marketWrap.__j90ManagerAI=true;marketWrap.__original=marketBase;
+       mgrMarket=marketWrap;window.mgrMarket=marketWrap;
+     }
      var html=oldManagerV.apply(this,arguments);
      try{
+       if(typeof tab!=='undefined'&&tab==='market'&&!html.includes('j90AIMarketInsight')){
+         html=marketInject(html);
+       }
        if(typeof tab!=='undefined'&&tab==='squad'&&S&&!S.negotiation&&!S.match2d&&!html.includes('j90EliteProfile')){
          var selectedId=window.__J90_SELECTED_PLAYER||(S.lineup&&Array.isArray(S.lineup.slots)&&S.lineup.slots[0]);
          var p=roster().find(function(x){return x&&x.id===selectedId})||starters()[0]||roster()[0]||null;
