@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(J90DisplayRatePlugin.class);
     registerPlugin(J90HapticsPlugin.class);
+    registerPlugin(J90ExternalBrowserPlugin.class);
     super.onCreate(savedInstanceState);
 
     // Explicit hardware acceleration + WebView settings for the 2D/WebGL game surface.
