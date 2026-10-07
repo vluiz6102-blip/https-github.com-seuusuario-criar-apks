@@ -9,7 +9,7 @@ function arg(name, fallback=null) {
 
 const promptFile = arg("--prompt-file");
 const outputFile = arg("--output-file");
-const preference = (process.env.J90_AI_PREFERENCE || "gemini,openrouter,groq,copilot")
+const preference = (process.env.J90_AI_PREFERENCE || "gemini,nvidia,anthropic,openai,aimlapi,kie,openrouter,groq,copilot")
   .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 
 if (!promptFile || !outputFile) {
@@ -207,10 +207,89 @@ async function nvidia() {
   if (!text) throw new Error("NVIDIA não retornou conteúdo.");
   return text;
 }
+async function openai() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error("OPENAI_API_KEY ausente.");
+  const model = process.env.OPENAI_MODEL || "gpt-5.6-sol";
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "authorization": "Bearer " + key
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
+        { role: "user", content: fullPrompt }
+      ],
+      max_tokens: maxOutputTokens
+    })
+  });
+  if (!res.ok) throw new Error("OpenAI HTTP " + res.status + ": " + await res.text());
+  const json = await res.json();
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("OpenAI não retornou conteúdo.");
+  return text;
+}
+
+async function aimlapi() {
+  const key = process.env.AIMLAP_API_KEY || process.env.AIML_API_KEY;
+  if (!key) throw new Error("AIMLAP_API_KEY/AIML_API_KEY ausente.");
+  const model = process.env.AIMLAPI_MODEL || "openai/gpt-5-chat-latest";
+  const res = await fetch("https://api.aimlapi.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "authorization": "Bearer " + key
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
+        { role: "user", content: fullPrompt }
+      ],
+      max_tokens: maxOutputTokens
+    })
+  });
+  if (!res.ok) throw new Error("AIMLAPI HTTP " + res.status + ": " + await res.text());
+  const json = await res.json();
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("AIMLAPI não retornou conteúdo.");
+  return text;
+}
+
+async function kie() {
+  const key = process.env.KIE_AI_TOKEN || process.env.KIE_API_KEY;
+  if (!key) throw new Error("KIE_AI_TOKEN/KIE_API_KEY ausente.");
+  const model = process.env.KIE_MODEL || "gpt-5-2";
+  const res = await fetch(`https://api.kie.ai/${encodeURIComponent(model)}/v1/chat/completions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "authorization": "Bearer " + key
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
+        { role: "user", content: fullPrompt }
+      ],
+      max_tokens: maxOutputTokens
+    })
+  });
+  if (!res.ok) throw new Error("KIE HTTP " + res.status + ": " + await res.text());
+  const json = await res.json();
+  if (json?.code && Number(json.code) !== 200) throw new Error("KIE code " + json.code + ": " + (json.msg || "erro"));
+  const text = json?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("KIE não retornou conteúdo.");
+  return text;
+}
+
 function copilot() {
   const token = process.env.COPILOT_GITHUB_TOKEN;
   if (!token) throw new Error("COPILOT_GITHUB_TOKEN ausente.");
-  const text = execFileSync("copilot", ["-p", prompt, "--no-banner"], {
+  const text = execFileSync("copilot", ["-p", fullPrompt, "--no-banner"], {
     env: { ...process.env, GITHUB_TOKEN: token, COPILOT_GITHUB_TOKEN: token },
     encoding: "utf8",
     maxBuffer: 20 * 1024 * 1024
@@ -219,7 +298,7 @@ function copilot() {
   return text;
 }
 
-const providers = { gemini, anthropic, openrouter, groq, nvidia, copilot };
+const providers = { gemini, nvidia, anthropic, openai, aimlapi, kie, openrouter, groq, copilot };
 const errors = [];
 
 for (const provider of preference) {
