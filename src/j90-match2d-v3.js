@@ -263,5 +263,5 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 
-  window.J90Match2DV3={version:'1.0',draw:draw2D,ensure:ensureCanvas};
+  window.J90Match2DV3={version:'1.1',draw:draw2D,ensure:ensureCanvas};
 })();
