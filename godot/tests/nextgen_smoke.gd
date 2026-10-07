@@ -42,10 +42,35 @@ func _initialize() -> void:
         if main == null:
             failures.append("MAIN_SCENE_INSTANTIATE_FAILED")
         else:
+            root.add_child(main)
             var home := main.get_node_or_null("HomeShell")
             if home == null:
                 failures.append("HOME_SHELL_MISSING")
-            main.free()
+            elif home.get_node_or_null("_play_button") == null:
+                failures.append("HOME_NOT_INITIALIZED")
+            main.queue_free()
+            await process_frame
+    
+    if match_scene != null:
+        var match := match_scene.instantiate()
+        if match == null:
+            failures.append("MATCH_SCENE_INSTANTIATE_FAILED")
+        else:
+            root.add_child(match)
+            var simulation := match.get_node_or_null("Simulation")
+            if simulation == null:
+                failures.append("MATCH_SIMULATION_MISSING")
+            else:
+                simulation.start({"duration_seconds": 90.0, "home_team": &"Smoke Home", "away_team": &"Smoke Away", "seed": 90})
+                var snapshot: Dictionary = simulation.get_snapshot()
+                if snapshot.get("players", []).size() != 11:
+                    failures.append("MATCH_HOME_PLAYER_COUNT_INVALID")
+                if snapshot.get("opp_players", []).size() != 11:
+                    failures.append("MATCH_AWAY_PLAYER_COUNT_INVALID")
+                if not snapshot.has("duration_seconds"):
+                    failures.append("MATCH_DURATION_MISSING")
+            match.queue_free()
+            await process_frame
 
     if failures.is_empty():
         print("J90_NEXTGEN_SMOKE=OK")
