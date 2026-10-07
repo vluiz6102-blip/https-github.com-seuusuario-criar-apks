@@ -131,6 +131,8 @@ if (await play.count() === 1) {
   if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized.');
   if (await page.locator('#j90EventOverlayCanvas').count() !== 1) throw new Error('Match event overlay was not created.');
   if (!(await page.evaluate(() => !!window.J90MatchEvents?.state?.()))) throw new Error('Match event system did not initialize.');
+  const refereeAI = await page.evaluate(() => window.J90MatchEvents?.state?.()?.refereeAI || null);
+  if (!refereeAI || typeof refereeAI.pressure !== 'number' || typeof refereeAI.varReviews !== 'number') throw new Error('Improved referee AI did not initialize.');
   if (rendererCheck.audioMode !== 'remote-cc0') throw new Error('Unexpected audio mode: ' + rendererCheck.audioMode);
   if (rendererCheck.musicTracks < 20) throw new Error('CC0 playlist has fewer than 20 tracks: ' + rendererCheck.musicTracks);
 
