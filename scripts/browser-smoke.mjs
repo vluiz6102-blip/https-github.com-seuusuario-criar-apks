@@ -271,6 +271,9 @@ if (await play.count() === 1) {
       v3Frames: Number(m?._j90v3Frames||0),
       v3Mode: String(m?._j90v3Mode||window.J90Match2DV3?.mode||''),
       v3RenderMsAvg: Number(m?._j90v3RenderMsAvg||0),
+      animationProfile: String(m?._j90AnimationProfile||window.J90Match2DV3?.animationProfile||''),
+      ai2: !!window.J90AI2,
+      ai2Version: String(window.J90AI2?.version||''),
       pixelated: getComputedStyle(c||document.body).imageRendering || '',
       canvasSample: (() => {
         try {
@@ -290,6 +293,8 @@ if (await play.count() === 1) {
   if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized: ' + JSON.stringify(rendererCheck));
   if (!rendererCheck.v3Loaded) throw new Error('Jornada 90 2D renderer V3 did not load: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.v3Mode !== 'pixel-topdown') throw new Error('2D renderer is not using the lightweight pixel top-down mode: ' + JSON.stringify(rendererCheck));
+  if (!/action-aware-8dir/i.test(rendererCheck.animationProfile)) throw new Error('2D renderer lost action-aware animation profile: ' + JSON.stringify(rendererCheck));
+  if (!rendererCheck.ai2 || !/^2\\./.test(rendererCheck.ai2Version)) throw new Error('Enhanced match AI runtime did not initialize: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.v3Frames < 5) throw new Error('2D renderer initialized but did not paint frames: ' + JSON.stringify(rendererCheck));
   if (!/pixelated/i.test(rendererCheck.pixelated)) throw new Error('2D canvas lost pixel-art rendering mode: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.canvasSample <= 0) throw new Error('2D canvas appears blank: ' + JSON.stringify(rendererCheck));
