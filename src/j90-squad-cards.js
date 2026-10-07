@@ -30,6 +30,9 @@
     var out=[];
     try{
       var r=S&&Array.isArray(S.roster)?S.roster:[];
+      var club=S&&S.managerClub||'Clube';
+      var plan=window.J90_LINEUP_AI&&r.length?window.J90_LINEUP_AI.get(club,r,S&&S.tacticPlan&&S.tacticPlan.formation):null;
+      if(plan&&Array.isArray(plan.players)&&plan.players.length>=11)return plan.players.slice(0,11);
       var ids=S&&S.lineup&&Array.isArray(S.lineup.slots)?S.lineup.slots:[];
       for(var i=0;i<ids.length;i++){var p=r.find(function(x){return x.id===ids[i]});if(p)out.push(p)}
     }catch(e){}
