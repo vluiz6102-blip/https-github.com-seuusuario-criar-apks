@@ -147,6 +147,35 @@ jobs:
           if [ ! -d android ]; then npx cap add android; fi
           npx cap sync android
 
+      - name: Habilitar rotação segura e paisagem nas partidas
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text(encoding="utf-8")
+          import re
+          activity=re.search(r'<activity\b[^>]+android:name="[^"]*MainActivity"[^>]*>',s)
+          if not activity:
+              activity=re.search(r'<activity\b[^>]+android:name="[^"]+\.MainActivity"[^>]*>',s)
+          if not activity:
+              raise SystemExit("MainActivity not found in generated AndroidManifest.xml")
+          tag=activity.group(0)
+          def attr(name,value,tag=tag):
+              nonlocal_tag=tag
+              pat=r'\sandroid:'+re.escape(name)+r'="[^"]*"'
+              repl=' android:'+name+'="'+value+'"'
+              if re.search(pat,nonlocal_tag):
+                  return re.sub(pat,repl,nonlocal_tag)
+              return nonlocal_tag[:-1]+repl+'>'
+          tag=attr("screenOrientation","fullSensor",tag)
+          tag=attr("configChanges","orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout",tag)
+          s=s[:activity.start()]+tag+s[activity.end():]
+          p.write_text(s,encoding="utf-8")
+          assert 'android:screenOrientation="fullSensor"' in s
+          assert 'android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"' in s
+          print("ANDROID_ROTATION=OK")
+          PY
+
       - name: Conferir conteúdo copiado para Android
         run: |
           src="www/assets/j90-content"
