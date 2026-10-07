@@ -16,7 +16,6 @@ function supported(){return !!(screen&&screen.orientation&&typeof screen.orienta
 function matchActive(){try{return !!(window.S&&S.match2d)}catch(e){return false}}
 function syncLayout(){
   document.body.classList.toggle('j90-landscape-match',active&&matchActive());
-  try{window.dispatchEvent(new Event('resize'))}catch(e){}
   try{
     var m=window.S&&S.match2d;
     if(m){m._cw=0;m._ch=0;m._j90v3Field=null}
