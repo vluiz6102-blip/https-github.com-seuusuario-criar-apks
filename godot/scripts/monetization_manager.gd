@@ -189,6 +189,14 @@ func _verify_server_side(product_id: StringName, purchase_data: Dictionary) -> v
     http.request_completed.connect(
         Callable(self, "_on_verification_completed").bind(product_id, purchase_data, http)
     )
+    var request_body := JSON.stringify(purchase_data)
+    var request_headers := PackedStringArray(["Content-Type: application/json"])
+    var request_error := http.request(_verification_url, request_headers, HTTPClient.METHOD_POST, request_body)
+    if request_error != OK:
+        http.queue_free()
+        _cache_pending(product_id, purchase_data)
+        purchase_failed.emit(product_id, &"verification_request_failed")
+        return
 
 func _on_verification_completed(
     result: int,
