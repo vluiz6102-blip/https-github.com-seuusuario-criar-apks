@@ -26,6 +26,8 @@ const startup = await page.evaluate(() => ({
 }));
 if (startup.bodyText < 50) throw new Error('Startup rendered an unexpectedly empty UI.');
 if (startup.perf && startup.perf.frames < 5) throw new Error('Shared animation loop did not produce enough frames after startup.');
+const resilience = await page.evaluate(() => ({ autoHeal: !!window.J90AutoHealAI, bugGuard: !!window.J90BugGuard, autoHealVersion: window.J90AutoHealAI?.version || '', bugGuardVersion: window.J90BugGuard?.version || '' }));
+if (!resilience.autoHeal || !resilience.bugGuard) throw new Error('Runtime Auto-Heal AI / BugGuard did not initialize: ' + JSON.stringify(resilience));
 
 // Exercise the primary career flow.
 const start = page.getByRole('button', { name: /Começar carreira|Continuar carreira/i }).first();
