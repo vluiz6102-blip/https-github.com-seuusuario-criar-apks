@@ -52,7 +52,7 @@ jobs:
           required = [
               'handheld/orientation=1',
               'stretch/scale_mode="integer"',
-              'rendering/renderer/rendering_method="mobile"',
+              'renderer/rendering_method="mobile"',
               'rendering/rendering_device/driver.android="vulkan"',
               'rendering/rendering_device/fallback_to_opengl3=true',
               'textures/vram_compression/import_etc2_astc=true',
