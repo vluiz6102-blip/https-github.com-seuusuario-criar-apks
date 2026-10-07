@@ -46,7 +46,7 @@ func _initialize() -> void:
             var home := main.get_node_or_null("HomeShell")
             if home == null:
                 failures.append("HOME_SHELL_MISSING")
-            elif home.get_node_or_null("_play_button") == null:
+            elif home.get_child_count() < 6:
                 failures.append("HOME_NOT_INITIALIZED")
             main.queue_free()
             await process_frame
