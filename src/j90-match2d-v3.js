@@ -83,35 +83,63 @@
 
   function playerVisual(p,side,m){
     var pal=palette(side==='home'?m.home:m.away);
-    var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||''));
-    return {pal:pal,isGK:isGK};
+    var isGK=/GOL|GK|GOAL/i.test(String(p.position||p.role||p.aiRole||''));
+    var id=String(p.id||p.name||'player'),hash=0;
+    for(var i=0;i<id.length;i++)hash=(hash*31+id.charCodeAt(i))>>>0;
+    var skins=['#7a4b32','#9b6546','#c48762','#d39a76','#f0b38f'];
+    var hairs=['#171717','#3b2417','#6b4328','#a87942','#d8d8d8'];
+    return {pal:pal,isGK:isGK,skin:skins[hash%skins.length],hair:hairs[(hash>>>3)%hairs.length],leg:hash%2?'#171717':'#202020',height:.92+(hash%13)/100,lean:((hash>>>5)%9-4)/100};
   }
 
   function drawPlayer(g,p,side,m,w,h,now,low){
     var v=playerVisual(p,side,m),pal=v.pal;
     var x=clamp2(Number(p.x)||.5,.02,.98)*w;
     var y=clamp2(Number(p.y)||.5,.04,.96)*h;
-    var r=low?6.5:8.2;
+    var s=low?0.72:1, scale=Math.max(1,Math.min(w,h)/260)*s;
     var active=(m.possessionTeam===side&&m.possessionPlayerId===p.id);
-    g.save();
-    if(active){
+    var vx=Number(p.vx)||0,vy=Number(p.vy)||0,run=Math.sin(now/95+(Number(p.id)||0))*Math.min(2.5,Math.abs(vx)+Math.abs(vy)*.5);
+    var dir=vx!==0?Math.sign(vx):((side==='home')?1:-1);
+    g.save();g.translate(x,y);g.rotate(v.lean);
+    if(active&&!low){
       g.globalAlpha=.18+.08*Math.sin(now/100);
-      g.fillStyle=pal[0];g.beginPath();g.arc(x,y,r+8,0,Math.PI*2);g.fill();
-      g.globalAlpha=1;g.strokeStyle='#fff';g.lineWidth=1.6;g.beginPath();g.arc(x,y,r+6,0,Math.PI*2);g.stroke();
+      g.fillStyle=pal[0];g.beginPath();g.ellipse(0,5,19*scale,24*scale,0,0,Math.PI*2);g.fill();
+      g.globalAlpha=1;g.strokeStyle='#fff';g.lineWidth=1.4*scale;g.beginPath();g.ellipse(0,5,21*scale,26*scale,0,0,Math.PI*2);g.stroke();
     }
-    g.fillStyle='rgba(0,0,0,.30)';g.beginPath();g.ellipse(x,y+r*.72,r*1.05,r*.35,0,0,Math.PI*2);g.fill();
-    g.fillStyle=pal[0];g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
-    g.strokeStyle=pal[2];g.lineWidth=1;g.stroke();
+    g.fillStyle='rgba(0,0,0,.34)';g.beginPath();g.ellipse(0,20*scale,12*scale,4*scale,0,0,Math.PI*2);g.fill();
+
+    // Pernas articuladas, em vez da antiga bolinha.
+    var stride=Math.sin(now/105+(Number(p.id)||0))*4*scale;
+    g.strokeStyle=v.leg;g.lineWidth=4.5*scale;g.lineCap='round';
+    g.beginPath();g.moveTo(-3*scale,9*scale);g.lineTo((-6+stride)*scale,18*scale);g.lineTo((-10+stride)*scale,22*scale);g.stroke();
+    g.beginPath();g.moveTo(3*scale,9*scale);g.lineTo((6-stride)*scale,18*scale);g.lineTo((10-stride)*scale,22*scale);g.stroke();
+    g.strokeStyle='#fff';g.lineWidth=2.3*scale;
+    g.beginPath();g.moveTo((-10+stride)*scale,22*scale);g.lineTo((-14+stride)*scale,22*scale);g.stroke();
+    g.beginPath();g.moveTo((10-stride)*scale,22*scale);g.lineTo((14-stride)*scale,22*scale);g.stroke();
+
+    // Tronco, camisa e shorts.
+    g.fillStyle=pal[1]||'#143d28';
+    g.beginPath();g.moveTo(-8*scale,-8*scale);g.lineTo(8*scale,-8*scale);g.lineTo(9*scale,8*scale);g.lineTo(5*scale,12*scale);g.lineTo(-5*scale,12*scale);g.lineTo(-9*scale,8*scale);g.closePath();g.fill();
+    g.fillStyle=pal[0]||'#25a45b';g.fillRect(-8*scale,-8*scale,16*scale,6*scale);
+    g.fillStyle='rgba(255,255,255,.88)';g.fillRect(-1*scale,-7*scale,2*scale,15*scale);
+    g.fillStyle=pal[0]||'#25a45b';g.fillRect(-7*scale,7*scale,14*scale,5*scale);
+
+    // Braços e cabeça.
+    g.strokeStyle=v.skin;g.lineWidth=3.4*scale;g.lineCap='round';
+    var arm=Math.sin(now/125+(Number(p.id)||0))*2.5;
+    g.beginPath();g.moveTo(-8*scale,-5*scale);g.lineTo((-13-arm)*scale,3*scale);g.stroke();
+    g.beginPath();g.moveTo(8*scale,-5*scale);g.lineTo((13+arm)*scale,3*scale);g.stroke();
+    g.fillStyle=v.skin;g.beginPath();g.arc(0,-14*scale,6.2*scale,0,Math.PI*2);g.fill();
+    g.fillStyle=v.hair;g.beginPath();g.arc(0,-16*scale,6*scale,Math.PI,Math.PI*2);g.fill();
+    if(v.isGK){
+      g.strokeStyle='#ffd45b';g.lineWidth=2*scale;g.beginPath();g.arc(0,0,16*scale,0,Math.PI*2);g.stroke();
+      g.fillStyle='#ffd45b';g.fillRect(-3*scale,-1*scale,6*scale,4*scale);
+    }
+
     if(!low){
-      g.fillStyle=pal[1];g.beginPath();g.arc(x,y+2,r*.62,0,Math.PI*2);g.fill();
-      g.fillStyle='#c9946d';g.beginPath();g.arc(x,y-2,r*.45,0,Math.PI*2);g.fill();
-      g.fillStyle='#171717';g.beginPath();g.arc(x,y-5,r*.42,Math.PI,Math.PI*2);g.fill();
-      if(v.isGK){g.strokeStyle='#ffd45b';g.lineWidth=1.5;g.beginPath();g.arc(x,y,r+2,0,Math.PI*2);g.stroke();}
-      g.fillStyle='#fff';g.font='800 8px system-ui';g.textAlign='center';g.textBaseline='middle';
-      g.strokeStyle='rgba(0,0,0,.9)';g.lineWidth=3;g.strokeText(String(p.number||''),x,y+1);g.fillText(String(p.number||''),x,y+1);
       var name=String(p.name||'Jogador').split(' ').slice(-1)[0].toUpperCase().slice(0,12);
-      g.font='800 8px system-ui';g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.92)';
-      g.strokeText(name,x,y+r+10);g.fillText(name,x,y+r+10);
+      g.font='800 8px system-ui';g.textAlign='center';g.textBaseline='middle';
+      g.strokeStyle='rgba(0,0,0,.92)';g.lineWidth=3;g.strokeText(name,0,32*scale);g.fillStyle='#fff';g.fillText(name,0,32*scale);
+      g.font='900 7px system-ui';g.strokeText(String(p.number||''),0,1*scale);g.fillText(String(p.number||''),0,1*scale);
     }
     g.restore();
   }
