@@ -2707,6 +2707,7 @@ function mgrMatchTick(frameNow){
  if((m._perfCounter=(m._perfCounter||0)+1)%8===0)j90PerfSample(dt);
  m._simAcc=(m._simAcc||0)+dt;
  m.elapsed=(Date.now()-m.startedAt)/1000;var local=m.elapsed;
+ var durableNow=Date.now();if(durableNow-(m._j90LastDurableSave||0)>=5000){m._j90LastDurableSave=durableNow;try{save()}catch(e){}}
  if(local>=m.duration){if(m.half===1){m.half=2;m.elapsed=0;m.startedAt=Date.now();m._simClock=0;m.paused=true;mgrMatchEvent('Intervalo: ajuste a tática ou faça substituições.');render(1);return}mgrMatchFinish();return}
  var stepMs=p.low?50:33.333;
  while(m._simAcc>=stepMs){
