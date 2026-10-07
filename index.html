@@ -2809,6 +2809,31 @@ render();
 .j90ContractActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .j90ContractActions button:last-child{grid-column:1/-1}
 @media(max-width:390px){.j90PitchBoard{min-height:340px}.j90EditorGrid,.j90OfferGrid,.j90ContractActions{grid-template-columns:1fr}.j90ContractActions button:last-child{grid-column:auto}.j90NegotiationHero{grid-template-columns:58px minmax(0,1fr)}.j90NegOVR{font-size:32px}}
+
+/* J90 PERFORMANCE + ANDROID INPUT GUARD 1.0 */
+/* A interface é nossa: o Android não deve abrir o menu nativo de seleção em textos do jogo. */
+*{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
+/* Movimento leve: preserva o pôr-do-sol e o estádio, mas elimina loops agressivos e reduz filtros caros. */
+.stadiumScene .sky{animation:j90LiteSky 14s ease-in-out infinite!important}
+.stadiumScene .stands{animation:j90LiteStands 11s ease-in-out infinite!important}
+.stadiumScene .ring{animation:j90LiteRing 13s ease-in-out infinite!important}
+.ambientBg .sky{animation:j90LiteSky 18s ease-in-out infinite!important}
+.ambientBg .sunset{animation:j90LiteSun 16s ease-in-out infinite!important;filter:blur(4px)!important}
+.ambientBg .horizon{animation:j90LiteHorizon 22s ease-in-out infinite!important}
+.ambientBg .clouds i,.ambientBg .cloud{animation-duration:34s!important;filter:blur(4px)!important}
+.ambientBg .beam{animation-duration:16s!important;filter:blur(2px)!important}
+.ambientBg .dust,.ambientBg .leaf{animation-duration:20s!important}
+.ambientBg .floodlights i:after{filter:blur(3px)!important}
+.j90Cloud{animation-duration:42s!important;filter:blur(7px)!important;will-change:auto!important}
+@keyframes j90LiteSky{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}
+@keyframes j90LiteStands{0%,100%{opacity:.92}50%{opacity:.97}}
+@keyframes j90LiteRing{0%,100%{opacity:.7}50%{opacity:.82}}
+@keyframes j90LiteSun{0%,100%{opacity:.88}50%{opacity:1}}
+@keyframes j90LiteHorizon{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-1px,0)}}
+/* Evita criação excessiva de camadas GPU. */
+*{will-change:auto!important}
+.j90Cloud,.j90Sun{will-change:transform!important}
 </style><script id="j90-transfer-fifa19-fc27-runtime">
 (function(){
 "use strict";
@@ -2925,5 +2950,14 @@ addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.d
 addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=performance.now();const primary=b.matches('.menuBtn.primary,.btn.go,.offerCard');if(primary){if(b===busyTarget&&n<busyUntil){e.preventDefault();e.stopImmediatePropagation();return}busyTarget=b;busyUntil=n+260;if(b.id!=='startConfirm'){b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280)} }},true);
 function patchRender(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const before=screenKey();old.apply(this,arguments);const after=screenKey();if(!still&&!reduced()&&before!==after){const next=document.querySelector('#app');if(next){next.classList.remove('j90-enter');void next.offsetWidth;next.classList.add('j90-enter');setTimeout(()=>next.classList.remove('j90-enter'),280)}}};wrap.__j90Polished=true;window.render=wrap}
 function init(){j90CinematicIntro();patchRender()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.warn('J90 runtime guard:',e.error)}catch(_){}});})();</script></body>
+window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.warn('J90 runtime guard:',e.error)}catch(_){}});})();</script>
+<script>
+(function(){
+  'use strict';
+  function allowTextSelection(el){return !!(el&&el.closest&&el.closest('input,textarea,select,[contenteditable="true"],[contenteditable=""]'));}
+  document.addEventListener('selectstart',function(e){if(!allowTextSelection(e.target))e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){if(!allowTextSelection(e.target))e.preventDefault();});
+})();
+</script>
+</body>
 </html>
