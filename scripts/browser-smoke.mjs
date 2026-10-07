@@ -325,13 +325,19 @@ if (await play.count() === 1) {
       liveClass: document.body.classList.contains('j90-live-match'),
       navHidden: !nav || getComputedStyle(nav).display==='none',
       managerHeaderHidden: !document.querySelector('#j90-manager-head') || getComputedStyle(document.querySelector('#j90-manager-head')).display==='none',
+      managerRightNavClass: !document.body.classList.contains('j90-manager-nav-right'),
+      visibleManagerLeaks: ['#j90Expansion','#j90ComfortButton','.j90ManagerTabs','.j90ManagerShell > header'].filter(sel=>{
+        const el=document.querySelector(sel); if(!el) return false;
+        const s=getComputedStyle(el),r=el.getBoundingClientRect();
+        return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&r.width>0&&r.height>0;
+      }),
       elapsed: Number(m?.elapsed||0),
       paused: !!m?.paused
     };
   });
   if (liveScene.orientation !== 'portrait') throw new Error('Live match opened in landscape.');
   if (liveScene.overflow) throw new Error('Portrait live match overflowed the viewport: '+JSON.stringify(liveScene));
-  if (!liveScene.canvas || !liveScene.liveClass || !liveScene.navHidden || !liveScene.managerHeaderHidden) {
+  if (!liveScene.canvas || !liveScene.liveClass || !liveScene.navHidden || !liveScene.managerHeaderHidden || !liveScene.managerRightNavClass || liveScene.visibleManagerLeaks.length) {
     throw new Error('Live match scene isolation failed: '+JSON.stringify(liveScene));
   }
 
