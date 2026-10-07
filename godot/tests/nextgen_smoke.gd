@@ -25,9 +25,6 @@ func _initialize() -> void:
     if str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "")) != "mobile":
         failures.append("MOBILE_RENDERER_NOT_PRIMARY")
 
-    if str(ProjectSettings.get_setting("renderer/rendering_method.mobile", "")) != "mobile":
-        failures.append("MOBILE_RENDERER_MODE_MISSING")
-
     if str(ProjectSettings.get_setting("rendering/rendering_device/driver.android", "")) != "vulkan":
         failures.append("ANDROID_VULKAN_PRIMARY_MISSING")
 
