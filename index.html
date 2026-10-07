@@ -1689,7 +1689,7 @@ function creditsView(){
  return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Créditos</h1><p class="mu">Jornada 90 Manager · simulador de carreira de técnico e diretor técnico</p>'+
  '<div class="creditsBlock"><b>Direção e desenvolvimento</b><span>Victor Maia</span></div>'+
  '<div class="creditsBlock"><b>Produzido por</b><span>Victor Luiz</span></div>'+
- '<div class="creditsBlock"><b>Tecnologias usadas</b><span>Capacitor · Android WebView · HTML · CSS · JavaScript · Canvas 2D · Web Audio API · LocalStorage</span></div>'+
+ '<div class="creditsBlock"><b>Tecnologias usadas</b><span>Capacitor · Web Audio API · Android WebView · HTML · CSS · JavaScript · Canvas 2D · LocalStorage</span></div>'+
  '<div class="creditsBlock"><b>IA e simulação</b><span>Motor de inteligência tática, simulação de partidas e comportamento adaptativo executados localmente.</span></div>'+
  '<div class="creditsBlock"><b>Áudio e interface</b><span>Soundscape com assets reais · HRTF · interface responsiva · otimização para 60–120 FPS</span></div>'+
  '<div class="creditsBlock"><b>Versão</b><span>Build independente para Android e navegador</span></div>'+
@@ -3193,7 +3193,7 @@ function screenKey(){return [typeof menuScreen==='string'?menuScreen:'',typeof i
 addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;b.classList.add('j90-press');setTimeout(()=>b.classList.remove('j90-press'),120);const n=performance.now();if(n-lastFeedback<140)return;lastFeedback=n;try{if(typeof haptic==='function')haptic('click')}catch(e){}},{passive:true});
 addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=performance.now();const primary=b.matches('.menuBtn.primary,.btn.go,.offerCard');if(primary){if(b===busyTarget&&n<busyUntil){e.preventDefault();e.stopImmediatePropagation();return}busyTarget=b;busyUntil=n+260;if(b.id!=='startConfirm'){b.classList.add('j90-disabled');setTimeout(()=>b.classList.remove('j90-disabled'),280)} }},true);
 function patchRender(){if(typeof render!=='function'||render.__j90Polished)return;const old=render;const wrap=function(still){const before=screenKey();old.apply(this,arguments);const after=screenKey();if(!still&&!reduced()&&before!==after){const next=document.querySelector('#app');if(next){next.classList.remove('j90-enter');void next.offsetWidth;next.classList.add('j90-enter');setTimeout(()=>next.classList.remove('j90-enter'),280)}}};wrap.__j90Polished=true;window.render=wrap}
-function init(){j90CinematicIntro();patchRender()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+function j90PolishInit(){j90CinematicIntro();patchRender()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.addEventListener('error',function(e){try{if(!e||!e.error)return;console.warn('J90 runtime guard:',e.error)}catch(_){}});})();</script>
 <script>
 (function(){
