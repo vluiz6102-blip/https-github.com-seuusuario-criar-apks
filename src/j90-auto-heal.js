@@ -96,6 +96,7 @@ function repairManagerState(){
 }
 
 function repairDOM(){
+  if(hasManager()&&window.S&&S.match2d)return false;
   var app=document.getElementById('app');
   if(!app)return false;
   var changed=false;
@@ -120,6 +121,7 @@ function repairDOM(){
 
 function health(){
   if(!hasManager())return;
+  if(window.S&&S.match2d){return;}
   repairManagerState();
   repairManagerAI();
   repairSquad();
@@ -149,10 +151,12 @@ window.addEventListener('unhandledrejection',function(e){recoverError(e&&e.reaso
 
 function start(){
   health();
-  var timer=setInterval(function(){
-    if(attempts++>=MAX_ATTEMPTS){clearInterval(timer);return}
+  function cycle(){
+    if(attempts++>=MAX_ATTEMPTS)return;
     health();
-  },300);
+    setTimeout(cycle,300);
+  }
+  setTimeout(cycle,300);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 
