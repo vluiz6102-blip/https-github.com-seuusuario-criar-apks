@@ -39,6 +39,7 @@ const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 const ai2 = read('src/j90-ai2.js');
 const managerAi = read('src/j90-manager-ai.js');
+const landscape = read('src/j90-landscape.js');
 checkSyntax('Manager AI 2.0', managerAi);
 if (!/window\.J90ManagerAI/.test(managerAi) || !/transferAI/.test(managerAi) || !/developmentPlan/.test(managerAi) || !/opponentAnalysis/.test(managerAi)) add(fail, 'Manager AI 2.0 incompleta.');
 if (!/j90EliteProfile/.test(managerAi) || !/j90Radar/.test(managerAi) || !/j90MiniPitch/.test(managerAi) || !/input\[type=["']range["']\]/.test(managerAi)) add(fail, 'UI premium de elenco/negociação incompleta.');
@@ -71,6 +72,14 @@ if (!/j90-ai2\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota
 if (!/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota renderer WebGL.');
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
+checkSyntax('Landscape Match', landscape);
+if (!/window\.J90Landscape/.test(landscape) || !/screen\.orientation/.test(landscape)) add(fail, 'Runtime de paisagem incompleto.');
+if (!/j90-landscape\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota o runtime de paisagem.');
+if (!/j90-landscape-match-style/.test(index) || !/orientation:landscape/.test(index)) add(fail, 'CSS responsivo de partida em paisagem ausente.');
+const workflow = read('.github/workflows/build-apk.yml');
+if (!/android:screenOrientation="fullSensor"|screenOrientation.*fullSensor/.test(workflow)) add(fail, 'Android sem suporte sensor para rotação/paisagem.');
+if (!/android:configChanges="orientation\|screenSize\|keyboardHidden\|smallestScreenSize\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante rotação.');
+
 
 const tacticsSourceForScan = read('src/j90-tactics.js');
 checkSyntax('Tactical Studio', tacticsSourceForScan);
