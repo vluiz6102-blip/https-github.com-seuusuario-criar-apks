@@ -39,6 +39,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Configurar Node.js
+        if: steps.copilot_auth.outputs.available == 'true'
         uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -409,9 +410,23 @@ jobs:
     permissions:
       contents: write
       actions: write
-      copilot-requests: write
     steps:
+      - name: Verificar credencial da IA
+        id: copilot_auth
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          if [ -n "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "COPILOT_AI_AUTH=AVAILABLE"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "COPILOT_AI_AUTH=NOT_CONFIGURED"
+            echo "Adicione o secret COPILOT_GITHUB_TOKEN para ativar a IA autônoma neste repositório pessoal."
+          fi
+
       - name: Checkout da versão atual
+        if: steps.copilot_auth.outputs.available == 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -422,6 +437,7 @@ jobs:
           node-version: 22
 
       - name: Coletar evidências da build anterior
+        if: steps.copilot_auth.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -434,12 +450,15 @@ jobs:
           gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,headSha,event,name,url > .j90-autonomy/last-build.json || true
 
       - name: Instalar dependências do projeto
+        if: steps.copilot_auth.outputs.available == 'true'
         run: npm install
 
       - name: Instalar GitHub Copilot CLI
+        if: steps.copilot_auth.outputs.available == 'true'
         run: npm install -g @github/copilot
 
       - name: Rodar IA de desenvolvimento autônomo
+        if: steps.copilot_auth.outputs.available == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GH_TOKEN: ${{ github.token }}
@@ -471,6 +490,7 @@ PROMPT
 )" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
 
       - name: Validar melhoria
+        if: steps.copilot_auth.outputs.available == 'true'
         run: |
           set -euo pipefail
           npm run build
