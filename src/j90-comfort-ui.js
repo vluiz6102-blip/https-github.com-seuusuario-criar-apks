@@ -1,4 +1,4 @@
-/* Jornada 90 Comfort UI 1.0
+/* Jornada 90 Comfort UI 1.1
  * Readability, touch sizing, overflow protection and adjustable UI scale.
  * No extra animation loop.
  */
@@ -43,31 +43,12 @@
       '.j90SquadCards{padding:14px!important;}',
       '.j90SquadHead{font-size:calc(14px * var(--j90-ui-scale))!important;}',
       '.j90SquadCanvasWrap{min-height:540px!important;}',
-      '#j90ComfortButton{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:2147483000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0!important;border-radius:16px;border:1px solid rgba(255,255,255,.20);background:rgba(8,17,12,.94);color:#fff;font:900 18px system-ui;box-shadow:0 8px 24px rgba(0,0,0,.28);}',
-      '#j90ComfortPanel{position:fixed;right:12px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:2147482999;width:min(320px,calc(100vw - 24px));padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(8,17,12,.97);color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.38);display:none;}',
-      '#j90ComfortPanel.open{display:block;}',
-      '#j90ComfortPanel h3{margin:0 0 8px;font-size:calc(16px * var(--j90-ui-scale));}',
-      '#j90ComfortPanel p{margin:0 0 12px;color:#b8c6bd;font-size:calc(11px * var(--j90-ui-scale));}',
-      '.j90ComfortRow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;}',
-      '.j90ComfortRow button{min-height:48px;min-width:48px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#12261a;color:#fff;}',
-      '#j90ComfortValue{text-align:center;font:900 13px system-ui;}',
       '@media(max-width:390px){.j90RosterTabs{gap:6px!important}.j90RosterTabs button{padding:8px!important}.j90SquadCanvasWrap{min-height:500px!important;height:500px!important;}}',
       '@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:0.001ms!important;animation-duration:0.001ms!important;}}'
     ].join('');
     document.head.appendChild(s);
   }
-  function mount(){
-    addStyle();applyScale(loadScale());
-    if(document.getElementById('j90ComfortButton'))return;
-    var b=document.createElement('button');b.id='j90ComfortButton';b.type='button';b.textContent='Aa';b.setAttribute('aria-label','Ajustar conforto visual');
-    var p=document.createElement('section');p.id='j90ComfortPanel';p.setAttribute('aria-label','Conforto visual');
-    p.innerHTML='<h3>Conforto visual</h3><p>Aumente o texto sem deixar informações escaparem das caixas.</p><div class="j90ComfortRow"><button type="button" id="j90ComfortDown">A−</button><strong id="j90ComfortValue">110%</strong><button type="button" id="j90ComfortUp">A+</button></div><div class="j90ComfortRow" style="margin-top:8px"><button type="button" id="j90ComfortReset" style="grid-column:1/-1">Restaurar padrão</button></div>';
-    document.body.appendChild(b);document.body.appendChild(p);
-    b.addEventListener('click',function(){p.classList.toggle('open');});
-    document.getElementById('j90ComfortDown').addEventListener('click',function(){applyScale(loadScale()-.06);});
-    document.getElementById('j90ComfortUp').addEventListener('click',function(){applyScale(loadScale()+.06);});
-    document.getElementById('j90ComfortReset').addEventListener('click',function(){applyScale(1.10);});
-  }
+  function mount(){addStyle();applyScale(1.10);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
-  window.J90Comfort={version:'1.0',getScale:loadScale,setScale:applyScale};
+  window.J90Comfort={version:'1.1',getScale:loadScale,setScale:applyScale};
 })();
