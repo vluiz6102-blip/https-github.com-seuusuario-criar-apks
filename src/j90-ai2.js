@@ -1032,66 +1032,6 @@
     wrapped.__j90ai2=true;wrapped.__original=old;mgrMatchHud=wrapped;
   }
 
-  function patchDraw(){
-    if(typeof mgrDraw2D!=='function'||mgrDraw2D.__j90ai2)return;
-    var old=mgrDraw2D;
-    function wrapped(){
-      var m=S&&S.match2d;if(!m){old.apply(this,arguments);return}
-      ensureMatch(m);
-      var p=window.__J90_PERF||j90PerfState(),d=m._dom||{},c=d.canvas;
-      if(!c){old.apply(this,arguments);return}
-      var w=m._cw||c.clientWidth,h=m._ch||c.clientHeight,g=m._ctx||(c.getContext('2d',{alpha:false}));
-      if(!w||!h||!g){old.apply(this,arguments);return}
-      // Custom field + players. The old atlas remains an atmospheric layer only.
-      if(!m._fieldCacheAI||m._fieldCacheAI.width!==Math.round(w)||m._fieldCacheAI.height!==Math.round(h)){
-        var bg=document.createElement('canvas');bg.width=Math.round(w);bg.height=Math.round(h);var b=bg.getContext('2d');
-        b.fillStyle='#124529';b.fillRect(0,0,w,h);
-        for(var stripe=0;stripe<12;stripe++){b.fillStyle=stripe%2?'rgba(255,255,255,.018)':'rgba(0,0,0,.018)';b.fillRect(stripe*w/12,0,w/12,h)}
-        b.strokeStyle='rgba(255,255,255,.52)';b.lineWidth=1.2;b.strokeRect(7,7,w-14,h-14);
-        b.beginPath();b.moveTo(w/2,7);b.lineTo(w/2,h-7);b.stroke();b.beginPath();b.arc(w/2,h/2,Math.min(w,h)*.13,0,Math.PI*2);b.stroke();b.beginPath();b.arc(w/2,h/2,2,0,Math.PI*2);b.fillStyle='rgba(255,255,255,.5)';b.fill();
-        function box(x1,x2){var bw=Math.abs(x2-x1);b.strokeRect(Math.min(x1,x2),h*.30,bw,h*.40);b.strokeRect(Math.min(x1,x2),h*.405,bw*.46,h*.19)}
-        b.lineWidth=1;b.strokeStyle='rgba(255,255,255,.42)';box(7,w*.20);box(w*.80,w-7);
-        b.beginPath();b.arc(w*.20,h*.5,Math.min(w,h)*.065, -Math.PI*.28,Math.PI*.28);b.stroke();b.beginPath();b.arc(w*.80,h*.5,Math.min(w,h)*.065,Math.PI*.72,Math.PI*1.28);b.stroke();
-        m._fieldCacheAI=bg;
-      }
-      g.drawImage(m._fieldCacheAI,0,0,w,h);
-      var camX=(.5-m.ball.x)*w*.16,camY=(.5-m.ball.y)*h*.10;g.save();g.translate(camX,camY);
-      var pscale=p.low?.84:1;
-      function drawPlayer(q,side){
-        var pal=m.palette[side],isPoss=(m.possessionTeam===side&&m.possessionPlayerId===q.id);
-        var x=q.x*w,y=q.y*h,r=p.low?5.5:7.3;
-        g.save();
-        if(isPoss){
-          g.globalAlpha=.28+.08*Math.sin(performance.now()/120);
-          g.fillStyle=pal[0];g.beginPath();g.arc(x,y,r+7,0,Math.PI*2);g.fill();
-          g.globalAlpha=1;g.strokeStyle=pal[2];g.lineWidth=2;g.beginPath();g.arc(x,y,r+5,0,Math.PI*2);g.stroke();
-        }
-        g.fillStyle='rgba(0,0,0,.28)';g.beginPath();g.ellipse(x,y+r*.7,r*.9,r*.32,0,0,Math.PI*2);g.fill();
-        g.fillStyle=pal[0];g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
-        if(!p.low){
-          var v=q.visual||{};g.fillStyle=v.skin||'#9b6a4a';g.beginPath();g.arc(x,y-1.5,r*.55,0,Math.PI*2);g.fill();
-          g.fillStyle=v.hair||'#171717';g.beginPath();g.arc(x,y-4,r*.5,Math.PI,Math.PI*2);g.fill();
-          g.fillStyle=pal[1];g.fillRect(x-r*.28,y+2,r*.56,r*.78);
-          if(isPoss){g.fillStyle='#fff';g.font='700 7px system-ui';g.textAlign='center';g.fillText('●',x,y-r-10)}
-          if(!p.low&&q.number!=null){g.fillStyle=pal[2];g.font='700 6px system-ui';g.textAlign='center';g.fillText(String(q.number),x,y+2)}
-          g.fillStyle='#e9eef0';g.font='600 7px system-ui';g.textAlign='center';g.globalAlpha=isPoss?1:.72;g.fillText(String(q.name||'').slice(0,13),x,y+r+11);g.globalAlpha=1;
-        }
-        g.restore();
-      }
-      for(var i=0;i<m.players.length;i++)drawPlayer(m.players[i],'home');
-      for(var j=0;j<m.oppPlayers.length;j++)drawPlayer(m.oppPlayers[j],'away');
-      // Ball is deliberately drawn last so possession is unambiguous.
-      var owner=getPlayer(m,m.possessionTeam,m.possessionPlayerId);
-      var bx=m.ball.x*w,by=m.ball.y*h;
-      if(owner&&!m.ball.flight){bx=owner.x*w+(m.possessionTeam==='home'?4:-4);by=owner.y*h-2}
-      g.fillStyle='rgba(255,255,255,.96)';g.beginPath();g.arc(bx,by,p.low?2.8:3.6,0,Math.PI*2);g.fill();
-      if(!p.low){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1;g.beginPath();g.arc(bx,by,7,0,Math.PI*2);g.stroke()}
-      g.restore();
-      if(m._possTransition){m._possTransition=false}
-    }
-    wrapped.__j90ai2=true;wrapped.__original=old;mgrDraw2D=wrapped;
-  }
-
   function patchTick(){
     if(typeof mgrMatchTick!=='function'||mgrMatchTick.__j90ai2)return;
     mgrMatchTick.__original=mgrMatchTick;mgrMatchTick=tick;mgrMatchTick.__j90ai2=true;
@@ -1143,7 +1083,7 @@
 
   function primeCurrent(){
     addMatchCss();
-    try{patchView();patchHud();patchDraw();patchTick();patchStart();patchTactic();patchSub();patchFinish()}catch(e){console.warn('J90 AI 2.0 patch:',e)}
+    try{patchView();patchHud();patchTick();patchStart();patchTactic();patchSub();patchFinish()}catch(e){console.warn('J90 AI 2.0 patch:',e)}
   }
 
   window.J90AI2={
