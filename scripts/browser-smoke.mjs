@@ -267,6 +267,16 @@ if (await play.count() === 1) {
       cssHeight: rect?.height || 0,
       webgl: !!(m && m._j90gl && m._j90gl.ready),
       canvas2d: !!(m && m._ctx),
+      v3Loaded: !!window.J90Match2DV3 && typeof window.J90Match2DV3.draw === 'function',
+      v3Frames: Number(m?._j90v3Frames||0),
+      canvasSample: (() => {
+        try {
+          if (!c || !m?._ctx) return 0;
+          const x=Math.max(0,Math.floor((c.width||1)/2)), y=Math.max(0,Math.floor((c.height||1)/2));
+          const px=m._ctx.getImageData(x,y,1,1).data;
+          return Number(px[0])+Number(px[1])+Number(px[2])+Number(px[3]);
+        } catch(e) { return 0; }
+      })(),
       audioMode: window.J90_AUDIO_MODE || '',
       musicTracks: window.J90Ambience?.getTracks?.().length || 0
     };
@@ -274,7 +284,10 @@ if (await play.count() === 1) {
   if (rendererCheck.canvasWidth < 200 || rendererCheck.canvasHeight < 150 || rendererCheck.cssWidth < 200 || rendererCheck.cssHeight < 180) {
     throw new Error('Match canvas has invalid dimensions: ' + JSON.stringify(rendererCheck));
   }
-  if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized.');
+  if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized: ' + JSON.stringify(rendererCheck));
+  if (!rendererCheck.v3Loaded) throw new Error('Jornada 90 2D renderer V3 did not load: ' + JSON.stringify(rendererCheck));
+  if (rendererCheck.v3Frames < 5) throw new Error('2D renderer initialized but did not paint frames: ' + JSON.stringify(rendererCheck));
+  if (rendererCheck.canvasSample <= 0) throw new Error('2D canvas appears blank: ' + JSON.stringify(rendererCheck));
   if (await page.locator('#j90EventOverlayCanvas').count() !== 1) throw new Error('Match event overlay was not created.');
   if (!(await page.evaluate(() => !!window.J90MatchEvents?.state?.()))) throw new Error('Match event system did not initialize.');
   const refereeAI = await page.evaluate(() => window.J90MatchEvents?.state?.()?.refereeAI || null);
