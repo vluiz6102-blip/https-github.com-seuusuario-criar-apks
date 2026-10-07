@@ -107,7 +107,7 @@
     var m=window.S&&S.match2d;if(!m)return;
     var kind=shotKind(ev&&ev.t);if(!kind)return;
     if(m._replayBusy)return;
-    m._replayBusy=true;m.paused=true;m._replayStartedAt=performance.now();
+    m._replayBusy=true;m.paused=true;m._replayStartedAt=performance.now();m._replayResumeElapsed=Number(m.elapsed)||0;
     var o=ensure(),c=document.getElementById('j90ReplayCanvas'),ctx=c.getContext('2d');
     o.classList.add('on');
     var home=/home|seu|marca/i.test(String(ev.t||''))&&!/adversario/i.test(String(ev.t||''));
@@ -140,7 +140,7 @@
     var m=window.S&&S.match2d,o=document.getElementById('j90ReplayOverlay');
     if(o)o.classList.remove('on');
     if(!m)return;
-    m._replayBusy=false;m.paused=false;m.startedAt=Date.now();m._lastTick=performance.now();m._simAcc=0;
+    var resumeElapsed=Number(m._replayResumeElapsed);if(!Number.isFinite(resumeElapsed))resumeElapsed=Number(m.elapsed)||0;delete m._replayResumeElapsed;m._replayBusy=false;m.paused=false;m.elapsed=resumeElapsed;m.startedAt=Date.now()-resumeElapsed*1000;m._lastTick=performance.now();m._simAcc=0;
     try{if(typeof render==='function')render(1)}catch(e){}
   }
 
