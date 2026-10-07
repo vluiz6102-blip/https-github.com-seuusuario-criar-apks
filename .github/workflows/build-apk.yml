@@ -112,8 +112,9 @@ jobs:
           echo "WEB_SCENE_FILES=$scene_files"
           test "$scene_files" -ge 1
           test ! -d www/assets/audio
-          if grep -R -n -E 'AudioContext|webkitAudioContext|decodeAudioData|createBufferSource|new[[:space:]]+Audio[[:space:]]*\(' www --exclude='*.map'; then echo 'RUNTIME_AUDIO_DETECTED'; exit 1; fi
-          echo 'AUDIO_RUNTIME=DISABLED'
+          if grep -R -n -E 'decodeAudioData|J90_AUDIO_MANIFEST|assets/audio|audio-import' www --exclude='*.map'; then echo 'IMPORTED_AUDIO_DETECTED'; exit 1; fi
+          grep -R -n 'J90_AUDIO_MODE=.procedural-original.' www/j90-soundscape.js >/dev/null
+          echo 'AUDIO_RUNTIME=PROCEDURAL_ORIGINAL_WITH_STADIUM_CROWD'
 
       - name: Teste real de inicialização e fluxo no Chromium
         run: |
