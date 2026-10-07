@@ -1722,6 +1722,7 @@ function creditsView(){
  '<div class="creditsBlock"><b>IA e simulação</b><span>Motor de inteligência tática, simulação de partidas e comportamento adaptativo executados localmente.</span></div>'+
  '<div class="creditsBlock"><b>Áudio e interface</b><span>Soundscape com assets reais · HRTF · interface responsiva · otimização para 60–120 FPS</span></div>'+
  '<div class="creditsBlock"><b>Versão</b><span>Build independente para Android e navegador</span></div>'+
+ '<div class="creditsBlock j90Cafe90"><b>☕ Café 90</b><span>Apoie o desenvolvimento. O botão abre exclusivamente o domínio oficial Buy Me a Coffee por HTTPS.</span><button class="btn go" onclick="j90OpenCafe90()">Apoiar com um café</button></div>'+
  '<button class="btn" onclick="mainMenu()">Voltar</button></div>'
 }const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
@@ -2856,6 +2857,22 @@ function j90SaveReplacer(k,v){
   if(typeof ResizeObserver!=='undefined'&&v instanceof ResizeObserver)return undefined;
  }catch(e){}
  return v;
+}
+const J90_CAFE90_URL='https://www.buymeacoffee.com/';
+function j90OpenCafe90(){
+ const u=J90_CAFE90_URL;
+ try{
+  const parsed=new URL(u);
+  if(parsed.protocol!=='https:'||!/^([a-z0-9-]+\\.)*buymeacoffee\\.com$/i.test(parsed.hostname)||parsed.username||parsed.password)throw new Error('URL externa bloqueada');
+ }catch(e){toast('Link indisponível','O endereço de apoio foi bloqueado por segurança.');return false}
+ if(!confirm('Você será levado ao site oficial Buy Me a Coffee para apoiar o Jornada 90. Continuar?'))return false;
+ try{
+  const browser=window.Capacitor?.Plugins?.J90ExternalBrowser;
+  if(browser?.open){browser.open({url:u});return true}
+ }catch(e){}
+ try{
+  const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener noreferrer';a.referrerPolicy='no-referrer';document.body.appendChild(a);a.click();a.remove();return true;
+ }catch(e){return false}
 }
 function save(){
  if(!S)return false;
