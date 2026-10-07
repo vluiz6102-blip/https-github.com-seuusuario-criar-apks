@@ -86,8 +86,11 @@ for (const m of index.matchAll(/(?:src|href)\s*=\s*["']([^"'#?]+)["']/gi)) {
 for (const p of refs) if (!existsSync(p) && !existsSync(join('www', p))) add(warn, 'Referência de asset não encontrada no repositório: ' + p);
 
 if (!/J90_AUDIO_MODE=['\"]remote-cc0['\"]/.test(soundscape)) add(fail, 'Soundscape não está no modo remoto CC0.');
-const cc0Tracks=(soundscape.match(/\['[^']+','[^']+','(?:Songs|A Soundtrack)'\]/g)||[]).length;
-if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas.');
+const trackStart=soundscape.indexOf('const tracks=[');
+const trackEnd=soundscape.indexOf('].map((t,i)',trackStart);
+const trackBlock=trackStart>=0&&trackEnd>trackStart?soundscape.slice(trackStart,trackEnd):'';
+const cc0Tracks=(trackBlock.match(/^\s*\[/gm)||[]).length;
+if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas: '+cc0Tracks);
 if (!/crowd_shouting\.ogg/.test(soundscape) || !/cheers\.ogg/.test(soundscape)) add(fail, 'Sons CC0 de torcida/evento ausentes.');
 if (/decodeAudioData/.test(soundscape)) add(fail, 'decodeAudioData inesperado no Soundscape.');
 
