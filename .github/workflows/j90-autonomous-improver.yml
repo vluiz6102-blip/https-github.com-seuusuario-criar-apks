@@ -1,0 +1,148 @@
+name: Jornada 90 Autonomous Game Improver
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why the autonomous improver was started"
+        required: false
+        default: "Full build completed"
+      source_run_id:
+        description: "GitHub Actions build run ID to inspect"
+        required: false
+        default: ""
+
+concurrency:
+  group: jornada90-autonomous-improver
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  improve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Verificar credencial da IA
+        id: copilot_auth
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          if [ -n "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "COPILOT_AI_AUTH=AVAILABLE"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "COPILOT_AI_AUTH=NOT_CONFIGURED"
+            echo "Adicione o secret COPILOT_GITHUB_TOKEN para ativar a IA autônoma neste repositório pessoal."
+          fi
+
+      - name: Checkout da versão atual
+        if: steps.copilot_auth.outputs.available == 'true'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        if: steps.copilot_auth.outputs.available == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Coletar evidências da build anterior
+        if: steps.copilot_auth.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p .j90-autonomy
+          echo "source_run_id=${RUN_ID:-manual}" > .j90-autonomy/context.txt
+          echo "commit=$GITHUB_SHA" >> .j90-autonomy/context.txt
+          if [ -n "${RUN_ID:-}" ]; then
+            gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-autonomy/last-build.log 2>&1 || true
+            gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,headSha,event,name,url > .j90-autonomy/last-build.json || true
+          fi
+
+      - name: Instalar dependências do projeto
+        if: steps.copilot_auth.outputs.available == 'true'
+        run: npm install
+
+      - name: Instalar GitHub Copilot CLI
+        if: steps.copilot_auth.outputs.available == 'true'
+        run: npm install -g @github/copilot
+
+      - name: Rodar IA de desenvolvimento autônomo
+        if: steps.copilot_auth.outputs.available == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -f .j90-release-ready.json
+          copilot -p "$(cat <<'PROMPT'
+You are the autonomous senior developer and game-improvement AI for Jornada 90 Manager.
+
+Read .github/copilot-instructions.md first.
+Inspect .j90-autonomy/context.txt and the latest build log files when they exist.
+
+Mission:
+1. If the previous build failed, identify and fix the root cause.
+2. If it passed, inspect the actual game and implement the next concrete, high-value improvement.
+3. Test every change.
+4. Never weaken, remove, bypass, or disable tests.
+5. Never fake readiness.
+6. Preserve all existing systems and the single-source build.
+7. Never modify secrets.
+8. Never git push or create releases.
+
+Prioritize gameplay realism, football AI, tactical intelligence, manager/squad/transfers/contracts, match events/refereeing/atmosphere/audio, 60-120 FPS performance, mobile UX, crash resistance, and roster/content reliability.
+
+Do not create cosmetic churn. Prefer evidence-based, safe changes over rewrites.
+Only when the complete release-readiness contract is satisfied and no material safe improvement remains, create .j90-release-ready.json exactly as specified in .github/copilot-instructions.md.
+Otherwise do not create a ready marker.
+
+At the end, briefly report what changed and what you tested.
+PROMPT
+)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+
+      - name: Validar melhoria
+        if: steps.copilot_auth.outputs.available == 'true'
+        run: |
+          set -euo pipefail
+          npm run build
+          node scripts/release-readiness.mjs
+          if [ -f .j90-release-ready.json ]; then
+            node scripts/release-readiness.mjs --strict
+          fi
+          git diff --check
+
+      - name: Commitar melhoria e relançar build
+        if: steps.copilot_auth.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -f .j90-release-ready.json ] && node -e "process.exit(JSON.parse(require('fs').readFileSync('.j90-release-ready.json','utf8')).ready===true?0:1)"; then
+            echo "JORNADA90_AUTONOMY=RELEASE_READY"
+            exit 0
+          fi
+          git config user.name "Jornada 90 Autonomous Improver"
+          git config user.email "actions@github.com"
+          rm -rf .j90-autonomy
+          git add -A
+          if git diff --cached --quiet; then
+            echo "A IA não produziu alteração e não comprovou prontidão."
+            exit 1
+          fi
+          git commit -m "autonomy: improve Jornada 90"
+          git push origin HEAD:main
+          gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+      - name: IA não configurada
+        if: steps.copilot_auth.outputs.available != 'true'
+        run: |
+          echo "Autonomous AI is inactive until COPILOT_GITHUB_TOKEN is configured in repository Actions secrets."
