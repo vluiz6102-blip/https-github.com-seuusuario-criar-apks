@@ -11,6 +11,10 @@ on:
         description: "GitHub Actions build run ID to inspect"
         required: false
         default: ""
+      source_conclusion:
+        description: "Result of the full build that requested this improvement cycle"
+        required: false
+        default: "success"
 
 concurrency:
   group: jornada90-autonomous-improver
@@ -56,11 +60,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_CONCLUSION: ${{ inputs.source_conclusion }}
         run: |
           set -euo pipefail
           mkdir -p .j90-autonomy
           echo "source_run_id=${RUN_ID:-manual}" > .j90-autonomy/context.txt
           echo "commit=$GITHUB_SHA" >> .j90-autonomy/context.txt
+          echo "source_conclusion=${SOURCE_CONCLUSION:-unknown}" >> .j90-autonomy/context.txt
           if [ -n "${RUN_ID:-}" ]; then
             gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-autonomy/last-build.log 2>&1 || true
             gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,headSha,event,name,url > .j90-autonomy/last-build.json || true
@@ -83,6 +89,9 @@ jobs:
         run: |
           set -euo pipefail
           rm -f .j90-release-ready.json
+          if [ "${SOURCE_CONCLUSION:-success}" != "success" ]; then
+            echo "Previous full build failed; readiness marker is forbidden in this cycle."
+          fi
           copilot -p "$(cat <<'PROMPT'
 You are the autonomous senior developer and game-improvement AI for Jornada 90 Manager.
 
@@ -111,8 +120,11 @@ PROMPT
 
       - name: Validar melhoria
         if: steps.copilot_auth.outputs.available == 'true'
+        env:
+          SOURCE_CONCLUSION: ${{ inputs.source_conclusion }}
         run: |
           set -euo pipefail
+          if [ "${SOURCE_CONCLUSION:-success}" != "success" ]; then rm -f .j90-release-ready.json; fi
           npm run build
           node scripts/release-readiness.mjs
           if [ -f .j90-release-ready.json ]; then
