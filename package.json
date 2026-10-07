@@ -14,7 +14,8 @@
     "data:rosters": "node scripts/sync-rosters.mjs",
     "quality:scan": "node scripts/quality-scan.mjs",
     "content:build": "python3 scripts/generate-content-pack.py",
-    "diag:smoke": "node scripts/diag-smoke.mjs"
+    "diag:smoke": "node scripts/diag-smoke.mjs",
+    "release:gate": "node scripts/release-readiness.mjs --strict"
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
