@@ -71,6 +71,7 @@ jobs:
         run: echo "J90_VALIDATED_SHA=$GITHUB_SHA"
 
       - name: Parse and load every Godot class
+
         run: |
           set -euo pipefail
           /tmp/godot/Godot_v4.7.2-stable_linux.x86_64             --headless             --path godot             --script res://tests/architecture_smoke.gd
