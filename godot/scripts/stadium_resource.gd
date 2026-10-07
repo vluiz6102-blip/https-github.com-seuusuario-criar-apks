@@ -1,6 +1,8 @@
 class_name J90StadiumResource
 extends Resource
 
+const CAMERA_CONFIG_SCRIPT: Script = preload("res://scripts/stadium_camera_config.gd")
+
 enum GrassPattern { SOLID, STRIPED, CHECKER, CENTER_WEAR }
 
 @export var stadium_id: StringName = &"default"
@@ -15,4 +17,7 @@ enum GrassPattern { SOLID, STRIPED, CHECKER, CENTER_WEAR }
 @export_range(0.0, 1.0, 0.01) var smoke_density: float = 0.0
 @export_range(0.0, 1.0, 0.01) var fog_density: float = 0.0
 @export var night_lighting: bool = false
-@export var camera_config: J90StadiumCameraConfig = J90StadiumCameraConfig.new()
+@export var camera_config: Resource = null
+
+func _init() -> void:
+    camera_config = CAMERA_CONFIG_SCRIPT.new()
