@@ -59,7 +59,9 @@
     m._simAcc=0;
     try{
       if(typeof window.render==='function')window.render(1);
-      if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,40);
+    }catch(e){}
+    try{
+      if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,60);
     }catch(e){}
     return true;
   }
@@ -160,7 +162,7 @@
   if(typeof oldRender==='function'&&!oldRender.__j90Lifecycle){
     var wrapped=function(){
       var out=oldRender.apply(this,arguments);
-      try{syncScene();if(match())ensureRecoveredMatch()}catch(e){}
+      try{syncScene()}catch(e){}
       return out;
     };
     wrapped.__j90Lifecycle=true;wrapped.__original=oldRender;
