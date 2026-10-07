@@ -101,6 +101,9 @@ PROMPT
           set -euo pipefail
           npm run build
           node scripts/release-readiness.mjs
+          if [ -f .j90-release-ready.json ]; then
+            node scripts/release-readiness.mjs --strict
+          fi
 
       - name: Commit and request next full build
         if: success()
