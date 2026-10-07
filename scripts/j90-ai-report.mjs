@@ -67,7 +67,17 @@ function collectRepositoryContext() {
 }
 
 const repositoryContext = collectRepositoryContext();
-const fullPrompt = prompt + "\n\n=== SNAPSHOT DO REPOSITÓRIO ===\n" + repositoryContext;
+function collectTeamContext() {
+  try {
+    if (!fs.existsSync(".j90-team")) return "";
+    return fs.readdirSync(".j90-team").filter(name => /\\.(md|txt|log)$/i.test(name)).map(name => {
+      try { return `### .j90-team/${name}\\n${fs.readFileSync(`.j90-team/${name}`, "utf8").slice(0, 120000)}`; }
+      catch { return ""; }
+    }).filter(Boolean).join("\\n\\n");
+  } catch { return ""; }
+}
+const teamContext = collectTeamContext();
+const fullPrompt = prompt + "\n\n=== SNAPSHOT DO REPOSITÓRIO ===\n" + repositoryContext + "\n\n=== CONTEXTO PERSISTIDO DA EQUIPE ===\n" + teamContext;
 
 async function gemini() {
   const key = process.env.GEMINI_API_KEY;
@@ -134,7 +144,7 @@ async function openrouter() {
       model,
       messages: [
         { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
-        { role: "user", content: prompt }
+        { role: "user", content: fullPrompt }
       ],
       max_tokens: maxOutputTokens
     })
