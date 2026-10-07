@@ -9,26 +9,25 @@
 
   const CC0='https://opengameart.org/sites/default/files/';
   const tracks=[
-    ['Mythica','mythica.mp3','OpenGameArt CC0'],
-    ['Chill Loopable','chillloopable.mp3','OpenGameArt CC0'],
-    ['In the Middle of Nowhere · guitar','unknown_space_bassed.mp3','OpenGameArt CC0'],
-    ['In the Middle of Nowhere · ambience','unknown_space_ambience.mp3','OpenGameArt CC0'],
-    ['MindStream','DST-MindStream.mp3','OpenGameArt CC0'],
-    ['Classical Pop · instrumental','ClassicalPop (Instrumental).mp3','OpenGameArt CC0'],
-    ['A Chill Fever','a_chill_fever.mp3','OpenGameArt CC0'],
-    ['Calm Music','song_2.mp3','OpenGameArt CC0'],
-    ['Perces','perces1.mp3','OpenGameArt CC0'],
-    ['Once Upon a Time · loop','once_upon_a_time_loop.mp3','OpenGameArt CC0'],
-    ['Pointless Loop','pointless_loop.mp3','OpenGameArt CC0'],
     ['A Cup of Tea','A cup of tea.mp3','OpenGameArt CC0'],
-    ['Cue','Cue.mp3','OpenGameArt CC0'],
-    ['Cat Caffe','Cat caffe.mp3','OpenGameArt CC0'],
+    ['Calm Music','song_2.mp3','OpenGameArt CC0'],
     ['Rainy Forest','Rainy Forest.mp3','OpenGameArt CC0'],
+    ['Morning Rain','Morning rain.mp3','OpenGameArt CC0'],
     ['Countryside','Countryside.mp3','OpenGameArt CC0'],
     ['Oceanside','Oceanside.mp3','OpenGameArt CC0'],
-    ['Joyfully · loop','joyfully_loop_bpm170.mp3','OpenGameArt CC0'],
+    ['Cat Caffe','Cat caffe.mp3','OpenGameArt CC0'],
     ['Florist','Florist.mp3','OpenGameArt CC0'],
-    ['Morning Rain','Morning rain.mp3','OpenGameArt CC0'],
+    ['Chill Loopable','chillloopable.mp3','OpenGameArt CC0'],
+    ['A Chill Fever','a_chill_fever.mp3','OpenGameArt CC0'],
+    ['Once Upon a Time · loop','once_upon_a_time_loop.mp3','OpenGameArt CC0'],
+    ['Pointless Loop','pointless_loop.mp3','OpenGameArt CC0'],
+    ['In the Middle of Nowhere · ambience','unknown_space_ambience.mp3','OpenGameArt CC0'],
+    ['In the Middle of Nowhere · guitar','unknown_space_bassed.mp3','OpenGameArt CC0'],
+    ['Perces','perces1.mp3','OpenGameArt CC0'],
+    ['MindStream','DST-MindStream.mp3','OpenGameArt CC0'],
+    ['Classical Pop · instrumental','ClassicalPop (Instrumental).mp3','OpenGameArt CC0'],
+    ['Mythica','mythica.mp3','OpenGameArt CC0'],
+    ['Joyfully · loop','joyfully_loop_bpm170.mp3','OpenGameArt CC0'],
     ['Our Expanse · loop','our_expanse_-_loop-version-.mp3','OpenGameArt CC0']
   ].map((t,i)=>({id:i,title:t[0],file:t[1],collection:t[2],url:CC0+encodeURIComponent(t[1]),license:'CC0'}));
 
@@ -52,7 +51,7 @@
     if(!musicEnabled)return false;
     index=((index%tracks.length)+tracks.length)%tracks.length;activeTrack=index;
     if(musicEl){musicEl.pause();musicEl.removeAttribute('src');try{musicEl.load()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.022:.045;a.src=tracks[index].url;
+    const a=new Audio();a.preload='metadata';a.loop=false;a.volume=matchAudio?.018:.040;a.src=tracks[index].url;
     a.addEventListener('ended',()=>playTrack(index+1),{once:true});
     a.addEventListener('error',()=>{pendingPlay=false;playOffline();showState();},{once:true});
     musicEl=a;pendingPlay=true;const promise=a.play();if(promise&&promise.catch)promise.catch(()=>{pendingPlay=true;});
@@ -60,14 +59,14 @@
   }
   function ensureCrowd(){
     if(!crowdEnabled||!matchAudio||crowdEl)return;
-    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.035;a.src=CC0+'crowd_shouting.ogg';
+    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.020;a.src=CC0+'crowd_shouting.ogg';
     a.addEventListener('error',()=>{try{a.pause()}catch(e){}},{once:true});crowdEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
   }
   function goal(){
     if(!crowdEnabled||!matchAudio)return;
     ensureCrowd();if(goalEl){try{goalEl.pause()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.volume=.075;a.src=CC0+'cheers.ogg';goalEl=a;
+    const a=new Audio();a.preload='metadata';a.volume=.060;a.src=CC0+'cheers.ogg';goalEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
   }
   function whistle(){
