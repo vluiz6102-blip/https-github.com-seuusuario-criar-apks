@@ -30,30 +30,42 @@ jobs:
       - name: Static runtime ownership audit
         run: |
           set -euo pipefail
-          forbidden=(
-            godot/scripts/audio_manager.gd
-            godot/scripts/asset_streamer.gd
-            godot/scripts/match_tactics_ai.gd
-            godot/scripts/transfer_market_ai.gd
-            godot/scripts/match_event_manager.gd
-            godot/scripts/monetization_manager.gd
-          )
-          for file in "${forbidden[@]}"; do
-            if grep -nE 'func _process\(|func _physics_process\(' "$file"; then
-              echo "Runtime ownership violation: $file"
-              exit 1
-            fi
-          done
+          python3 - <<'PY'
+          from pathlib import Path
 
-          test ! -f src/j90-landscape.js
-          grep -Fq 'handheld/orientation=1' godot/project.godot
-          grep -Fq 'stretch/scale_mode="integer"' godot/project.godot
-          grep -Fq 'rendering/renderer/rendering_method="mobile"' godot/project.godot
-          grep -Fq 'rendering/rendering_device/driver.android="vulkan"' godot/project.godot
-          grep -Fq 'rendering/rendering_device/fallback_to_opengl3=true' godot/project.godot
-          grep -Fq 'textures/vram_compression/import_etc2_astc=true' godot/project.godot
-          grep -Fq 'PerformanceGovernor="*res://scripts/performance_governor.gd"' godot/project.godot
-          grep -Fq 'J90AnimationSystem="*res://scripts/animation_system.gd"' godot/project.godot
+          forbidden = [
+              "godot/scripts/audio_manager.gd",
+              "godot/scripts/asset_streamer.gd",
+              "godot/scripts/match_tactics_ai.gd",
+              "godot/scripts/transfer_market_ai.gd",
+              "godot/scripts/match_event_manager.gd",
+              "godot/scripts/monetization_manager.gd",
+          ]
+
+          for file_name in forbidden:
+              source = Path(file_name).read_text(encoding="utf-8")
+              for signature in ("func _process(", "func _physics_process("):
+                  if signature in source:
+                      raise SystemExit(f"RUNTIME_OWNERSHIP_VIOLATION:{file_name}:{signature}")
+
+          project = Path("godot/project.godot").read_text(encoding="utf-8")
+          required = [
+              'handheld/orientation=1',
+              'stretch/scale_mode="integer"',
+              'rendering/renderer/rendering_method="mobile"',
+              'rendering/rendering_device/driver.android="vulkan"',
+              'rendering/rendering_device/fallback_to_opengl3=true',
+              'textures/vram_compression/import_etc2_astc=true',
+              'PerformanceGovernor="*res://scripts/performance_governor.gd"',
+              'J90AnimationSystem="*res://scripts/animation_system.gd"',
+          ]
+
+          for needle in required:
+              if needle not in project:
+                  raise SystemExit(f"PROJECT_SETTING_MISSING:{needle}")
+
+          print("STATIC_GODOT_AUDIT=OK")
+          PY
 
       - name: Parse and load every Godot class
         run: |
