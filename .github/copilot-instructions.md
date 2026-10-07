@@ -59,3 +59,19 @@ Use:
 
 When not ready, ensure the marker is absent or says ready=false.
 Never claim readiness just because one build step passed.
+
+
+## AI team protocol
+
+The autonomous pipeline now uses seven AI roles:
+- IA 1: Coordinator. Investigates the current state and gives non-overlapping orders to the five specialists.
+- IA 2: Gameplay & Football AI.
+- IA 3: Performance, Stability & Crash Prevention.
+- IA 4: UX Mobile & Accessibility.
+- IA 5: Manager, Transfers & Tactics.
+- IA 6: Match, Audio & Content.
+- IA 7: Integrator and Release Manager.
+
+IA 2-6 are analysts during their team pass. They must report findings instead of independently pushing code. IA 7 validates the reports, resolves conflicts, implements the safest high-value consensus, runs tests and controls the next build. IA 1 is the authority for task allocation, but IA 7 is the final technical authority when reports conflict.
+
+All agents must preserve tests, existing features, release gates, copyright-safe content and the single-source build.
