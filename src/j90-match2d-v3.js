@@ -185,7 +185,7 @@
   }
 
   function draw2D(){
-    var m=window.S&&S.match2d;
+    var m=(typeof S!=='undefined'&&S)?S:null;
     if(!m)return;
     var c=ensureCanvas(m);
     if(!c||!m._ctx)return;
