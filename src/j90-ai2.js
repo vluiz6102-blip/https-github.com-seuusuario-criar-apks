@@ -290,7 +290,7 @@
   }
 
   function formationAnchor(m,side,index){
-    var form=side==='home'?S.lineup.formation:(m._awayFormation||'4-3-3');
+    var form=side==='home'?(m._formationOverride||m.tactic||(S&&S.lineup&&S.lineup.formation)):(m._awayFormation||'4-3-3');
     var slots=(typeof MGR_FORMATIONS!=='undefined'&&MGR_FORMATIONS[form])||[
       {x:10,y:50},{x:25,y:22},{x:25,y:40},{x:25,y:60},{x:25,y:78},
       {x:45,y:30},{x:45,y:50},{x:45,y:70},{x:68,y:24},{x:70,y:50},{x:68,y:76}
@@ -339,6 +339,36 @@
     if(out.n){out.dribble/=out.n;out.cross/=out.n;out.through/=out.n;out.oneTwo/=out.n;out.shot/=out.n}
     return out;
   }
+
+  function teamStyleProfile(team){
+    var n=String(team||'').toLowerCase(),p={tempo:0,press:0,risk:0,width:0,directness:0,buildUp:0,transition:0};
+    if(/barcelona|barça|manchester city|arsenal/.test(n)){p.tempo=.05;p.buildUp=.13;p.width=.04;p.directness=-.08}
+    else if(/real madrid|psg|paris saint|inter|benfica/.test(n)){p.transition=.12;p.directness=.08;p.risk=.05}
+    else if(/liverpool|bayern|dortmund/.test(n)){p.tempo=.08;p.press=.13;p.transition=.06}
+    else if(/atl[eé]tico de madrid|juventus|roma|lazio/.test(n)){p.press=.05;p.risk=-.08;p.buildUp=.06}
+    else if(/sporting|porto|braga/.test(n)){p.width=.08;p.buildUp=.05;p.transition=.05}
+    return p;
+  }
+  function applyLiveInstruction(m,side,brain){
+    if(side!=='home'||!m.management)return brain;
+    var i=String(m.management.instruction||'balance');
+    if(i==='press'){brain.press=clamp(brain.press+.12,.2,.99);brain.tempo=clamp(brain.tempo+.05,.2,.99);brain.risk=clamp(brain.risk+.04,.08,.98)}
+    else if(i==='hold'){brain.press=clamp(brain.press-.06,.2,.99);brain.tempo=clamp(brain.tempo-.12,.2,.99);brain.risk=clamp(brain.risk-.10,.08,.98)}
+    else if(i==='counter'){brain.transition=clamp(brain.transition+.15,.2,.99);brain.directness=clamp(brain.directness+.10,.2,.95);brain.risk=clamp(brain.risk+.08,.08,.98)}
+    else if(i==='wide'){brain.width=clamp(brain.width+.18,.25,.95);brain.directness=clamp(brain.directness+.02,.2,.95)}
+    return brain;
+  }
+  function realignFormation(m,side){
+    var arr=getTeamPlayers(m,side)||[];
+    arr.forEach(function(p,index){
+      if(!p||((p.id===m.possessionPlayerId)&&(side===m.possessionTeam)))return;
+      var a=formationAnchor(m,side,index),role=playerRole(p),shift=role==='ATT'?.10:role==='DEF'?.06:.08;
+      p.baseX=lerp(num(p.baseX,a.x),a.x,.08);p.baseY=lerp(num(p.baseY,a.y),a.y,.08);
+      p.tx=clamp(lerp(num(p.tx,p.x),p.baseX,shift),.035,.965);
+      p.ty=clamp(lerp(num(p.ty,p.y),p.baseY,shift),.045,.955);
+    });
+  }
+
   function teamBrainEnhanced(m,side){
     var base=side==='home'?m._homeBrain:m._awayBrain;
     var mem=side==='home'?m.learning.home:m.learning.away;
@@ -351,24 +381,23 @@
     var quality=clamp(num(base&&base.quality,.6)+mem.reward/(Math.max(4,mem.matches)*120),.3,1);
     var chase=diff<0?1:diff>0?-1:0;
     var late=minute>=72?1:0;
-    var adaptation=num(base&&base.adapt,.6);
+    var adaptation=num(base&&base.adapt,.6),style=teamStyleProfile(side==='home'?m.home:m.away);
     var homeBoost=side==='home'?(num(base&&base.external&&base.external.attributes&&base.external.attributes.homeBoost,5)/100):0;
     var risk=clamp(num(base&&base.risk,.5)+chase*.17+late*chase*.12+mem.styleBias.risk||0,.08,.98);
-    return {
+    var brain={
       quality:quality,attack:clamp(num(base&&base.attack,.6)+cp.goal*(quality-.6)*.16+homeBoost,.3,.99),
       defense:clamp(num(base&&base.defense,.6)+((energy-70)/500),.3,.99),
-      press:clamp(num(base&&base.press,.55)*cp.press+chase*.14+late*chase*.08+oppTrend.dribble*.10+oppTrend.through*.07,.2,.99),
-      tempo:clamp(num(base&&base.tempo,.55)*cp.tempo+chase*.13+late*chase*.08,.2,.99),
-      risk:clamp(risk*num(cp.risk,1),.08,.98),
-      width:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.width,58)/100,.25,.95),
-      directness:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.directness,50)/100,.2,.95),
-      buildUp:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.buildUp,55)/100,.2,.97),
-      transition:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.transition,58)/100,.2,.98),
-      adaptability:clamp(adaptation,.2,.98),
-      fatigue:clamp((100-energy)/100,.05,.8),
-      memory:mem,opponentTendency:oppTrend,
+      press:clamp(num(base&&base.press,.55)*cp.press+chase*.14+late*chase*.08+oppTrend.dribble*.10+oppTrend.through*.07+style.press,.2,.99),
+      tempo:clamp(num(base&&base.tempo,.55)*cp.tempo+chase*.13+late*chase*.08+style.tempo,.2,.99),
+      risk:clamp(risk*num(cp.risk,1)+style.risk,.08,.98),
+      width:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.width,58)/100+style.width,.25,.95),
+      directness:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.directness,50)/100+style.directness,.2,.95),
+      buildUp:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.buildUp,55)/100+style.buildUp,.2,.97),
+      transition:clamp(num(base&&base.external&&base.external.attributes&&base.external.attributes.transition,58)/100+style.transition,.2,.98),
+      adaptability:clamp(adaptation,.2,.98),fatigue:clamp((100-energy)/100,.05,.8),memory:mem,opponentTendency:oppTrend,
       phase:diff<0?'chase':diff>0?'protect':'balanced'
     };
+    return applyLiveInstruction(m,side,brain);
   }
 
   function actionScore(m,side,p,action,brain){
@@ -939,6 +968,7 @@
       m._ai2={home:hb,away:ab};
 
       updateOffBall(m,'home',hb);updateOffBall(m,'away',ab);
+      realignFormation(m,'home');realignFormation(m,'away');
       updateGoalkeeperAI(m,'home',hb,stepMs/1000);updateGoalkeeperAI(m,'away',ab,stepMs/1000);
       updateDefenseAI(m,'home',hb);updateDefenseAI(m,'away',ab);
       updateMidfieldAI(m,'home',hb);updateMidfieldAI(m,'away',ab);
@@ -1101,7 +1131,7 @@
     var old=mgrMatchTactic;
     function wrapped(t){
       var out=old.apply(this,arguments);
-      if(S&&S.match2d){ensureMatch(S.match2d);S.match2d.tactic=t;S.match2d._manualTacticAt=S.match2d._simClock||0;S.match2d._manualTactic=t}
+      if(S&&S.match2d){ensureMatch(S.match2d);S.match2d.tactic=t;S.match2d._formationOverride=t;S.match2d._manualTacticAt=S.match2d._simClock||0;S.match2d._manualTactic=t}
       return out;
     }
     wrapped.__j90ai2=true;wrapped.__original=old;mgrMatchTactic=wrapped;
