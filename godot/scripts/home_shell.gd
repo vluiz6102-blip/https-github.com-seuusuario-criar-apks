@@ -149,12 +149,16 @@ func _on_play_pressed() -> void:
     if not MatchSceneController.is_match_active():
         _status_label.text = "Carregando partida..."
         J90AnimationSystem.press(_play_button)
-        MatchSceneController.enter_match({
+        var err: Error = MatchSceneController.enter_match({
             "duration_seconds": 90.0,
             "home_team": &"Jornada FC",
             "away_team": &"Aurora FC",
             "seed": 902026
         })
+        if err != OK:
+            _status_label.text = "Falha ao abrir partida: %s" % error_string(err)
+            return
+        _status_label.text = "Partida carregando..."
 
 func _toast(title_value: String, body: String) -> void:
     _status_label.text = "%s: %s" % [title_value, body]
