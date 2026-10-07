@@ -39,7 +39,6 @@ const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 const ai2 = read('src/j90-ai2.js');
 const managerAi = read('src/j90-manager-ai.js');
-const landscape = read('src/j90-landscape.js');
 checkSyntax('Manager AI 2.0', managerAi);
 if (!/window\.J90ManagerAI/.test(managerAi) || !/transferAI/.test(managerAi) || !/developmentPlan/.test(managerAi) || !/opponentAnalysis/.test(managerAi)) add(fail, 'Manager AI 2.0 incompleta.');
 if (!/j90EliteProfile/.test(managerAi) || !/j90Radar/.test(managerAi) || !/j90MiniPitch/.test(managerAi) || !/input\[type\s*=\s*["']?range["']?\]/.test(managerAi)) add(fail, 'UI premium de elenco/negociação incompleta.');
@@ -73,13 +72,14 @@ if (!/j90-match2d-v3\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não e
 if (/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'Renderer WebGL legado ainda está no pipeline.');
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
-checkSyntax('Landscape Match', landscape);
-if (!/window\.J90Landscape/.test(landscape) || !/screen\.orientation/.test(landscape)) add(fail, 'Runtime de paisagem incompleto.');
-if (!/j90-landscape\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota o runtime de paisagem.');
-if (!/j90-landscape-match-style/.test(index) || !/orientation:landscape/.test(index)) add(fail, 'CSS responsivo de partida em paisagem ausente.');
 const workflow = read('.github/workflows/build-apk.yml');
-if (!/android:screenOrientation="fullSensor"|screenOrientation.*fullSensor/.test(workflow)) add(fail, 'Android sem suporte sensor para rotação/paisagem.');
-if (!/android:configChanges="orientation\|screenSize\|keyboardHidden\|smallestScreenSize\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante rotação.');
+if (/j90-landscape|screen\\.orientation|orientation:landscape/i.test(index + '\\n' + buildScript + '\\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
+if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android não está fixado em orientação retrato.');
+if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
+const lifecycle = read('src/j90-match-lifecycle.js');
+checkSyntax('Match Lifecycle Guard', lifecycle);
+if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');
+if (!/JSON\\.stringify\\(S,j90SaveReplacer\\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
 
 
 const tacticsSourceForScan = read('src/j90-tactics.js');
@@ -118,6 +118,8 @@ if (!/fitText\(/.test(read('src/j90-squad-cards.js')) || !/\.clip\(\)/.test(read
 if (!/var\(--j90-ui-scale\)/.test(read('src/j90-comfort-ui.js'))) add(fail, 'Comfort UI sem escala tipográfica.');
 if (!/J90MatchEvents/.test(read('src/j90-match-events.js')) || !/offsideCheck/.test(read('src/j90-match-events.js')) || !/discipline/.test(read('src/j90-match-events.js')) || !/injuryCheck/.test(read('src/j90-match-events.js')) || !/pitchInvader/.test(read('src/j90-match-events.js'))) add(fail, 'Sistema de eventos de partida incompleto.');
 if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos de partida não estão no pipeline de build.');
+if (!/j90-match-lifecycle\.js/.test(read('scripts/build.mjs'))) add(fail, 'Match Lifecycle Guard não está no pipeline de build.');
+if (/j90-landscape\.js/.test(read('scripts/build.mjs'))) add(fail, 'Runtime de paisagem ainda está no pipeline de build.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'Manager AI 2.0 não está no pipeline de build.');
 
 
