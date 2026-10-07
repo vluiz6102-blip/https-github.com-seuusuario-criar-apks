@@ -27,6 +27,7 @@ const teamTacticalAiSource = readFileSync('src/j90-team-tactical-ai.js', 'utf8')
 const managerStatsSource = readFileSync('src/j90-manager-stats.js', 'utf8');
 const copaBrasilSource = readFileSync('src/j90-copa-do-brasil.js', 'utf8');
 const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
+const landscapeSource = readFileSync('src/j90-landscape.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -35,7 +36,7 @@ try { contentManifest = JSON.parse(readFileSync(contentManifestPath, 'utf8')); }
 
 const soundscape = soundscapeSource.replace('__J90_AUDIO_MANIFEST__', JSON.stringify(manifest));
 try {
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + landscapeSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
@@ -54,6 +55,7 @@ writeFileSync('www/j90-match-replay.js', replaySource);
 writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
+writeFileSync('www/j90-landscape.js', landscapeSource);
 
 if (existsSync(contentRoot)) {
   mkdirSync('www/assets', { recursive: true });
@@ -61,7 +63,7 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script><script src="j90-manager-stats.js"></script><script src="j90-copa-do-brasil.js"></script><script src="j90-manager-ai.js"></script>';
+const injection = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script><script src="j90-soundscape.js"></script><script src="j90-expansion.js"></script><script src="j90-ai2.js"></script><script src="j90-tactics.js"></script><script src="j90-match2d-v3.js"></script><script src="j90-match2d-webgl.js"></script><script src="j90-comfort-ui.js"></script><script src="j90-lineup-ai.js"></script><script src="j90-team-tactical-ai.js"></script><script src="j90-match-replay.js"></script><script src="j90-squad-cards.js"></script><script src="j90-match-events.js"></script><script src="j90-manager-stats.js"></script><script src="j90-copa-do-brasil.js"></script><script src="j90-manager-ai.js"></script><script src="j90-landscape.js"></script>';
 if (!generated.includes('src="j90-soundscape.js"')) {
   const patched = generated.replace('</body>', injection + '</body>');
   if (patched === generated) throw new Error('Could not inject the asset-based soundscape runtime.');
@@ -70,4 +72,4 @@ if (!generated.includes('src="j90-soundscape.js"')) {
 
 const rosterTeams=Object.keys(rosters||{}).length;
 const rosterPlayers=Object.values(rosters||{}).reduce((n,t)=>n+(Array.isArray(t?.players)?t.players.length:0),0);
-console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D + WebGL1 + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
+console.log('Jornada 90 web build OK: soundscape + expansão + IA 2.0 + Match 2D + WebGL1 + Comfort UI + Squad Cards + Match Events + Manager Stats + regras CBF Copa do Brasil + Manager AI 2.0 + modo paisagem de partida injetados, ' + rosterTeams + ' elencos / ' + rosterPlayers + ' jogadores, ' + (contentManifest.sceneCount || 0) + ' cenas / ' + Math.round((contentManifest.generatedBytes || 0) / 1024 / 1024) + ' MiB de conteúdo.');
