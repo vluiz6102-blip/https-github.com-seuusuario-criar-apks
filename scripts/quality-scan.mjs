@@ -80,6 +80,7 @@ const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
 if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');
 if (!/JSON\\.stringify\\(S,j90SaveReplacer\\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
+if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
 
 const tacticsSourceForScan = read('src/j90-tactics.js');
