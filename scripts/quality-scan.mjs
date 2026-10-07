@@ -94,7 +94,7 @@ if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas: '+cc0Tracks);
 if (!/crowd_shouting\.ogg/.test(soundscape) || !/cheers\.ogg/.test(soundscape)) add(fail, 'Sons CC0 de torcida/evento ausentes.');
 if (/externalMusic|amazonMusic|spotify|appleMusic/i.test(soundscape)) add(fail, 'Integração externa Spotify/Apple/Amazon ainda presente.');
 if (/j90ComfortButton|textContent='Aa'/.test(comfort)) add(fail, 'Botão Aa do Comfort UI ainda presente.');
-if (!/j90MatchOnlyPage/.test(index) || !/j90MatchOpenPanel/.test(index) || !/mgrMatchInstruction/.test(index)) add(fail, 'Fluxo fullscreen de gestão ao vivo incompleto.');
+if (!/j90MatchOnlyPage/.test(index) || !/j90MatchOpenPanel/.test(index) || !/j90MatchInstruction/.test(index)) add(fail, 'Fluxo fullscreen de gestão ao vivo incompleto.');
 if (!/function\s+mgrPosShort\s*\(/.test(index)) add(fail, 'Abreviações de posição do Manager ausentes.');
 if (/decodeAudioData/.test(soundscape)) add(fail, 'decodeAudioData inesperado no Soundscape.');
 if (!/fitText\(/.test(read('src/j90-squad-cards.js')) || !/\.clip\(\)/.test(read('src/j90-squad-cards.js'))) add(fail, 'Cards sem proteção contra texto saindo da carta.');
