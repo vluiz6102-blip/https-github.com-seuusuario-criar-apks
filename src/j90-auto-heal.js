@@ -49,7 +49,7 @@ function repairManagerAI(){
 }
 
 function repairSquad(){
-  if(!hasManager() || typeof window.tab!=='string' || window.tab!=='squad')return false;
+  if(!hasManager())return false;
   repairManagerAI();
   var profile=document.querySelector('.j90EliteProfile');
   if(profile)return true;
