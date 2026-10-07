@@ -83,6 +83,13 @@ func request_cafe_donation(amount_brl: float, uniform: Dictionary) -> Error:
         Callable(self, "_on_custom_checkout_completed").bind(http)
     )
     purchase_pending.emit(PRODUCT_CAFE_PREFIX)
+    var request_body := JSON.stringify(intent)
+    var request_headers := PackedStringArray(["Content-Type: application/json"])
+    var request_error := http.request(checkout_url, request_headers, HTTPClient.METHOD_POST, request_body)
+    if request_error != OK:
+        http.queue_free()
+        purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"checkout_request_failed")
+        return request_error
     return OK
 
 func _on_custom_checkout_completed(
