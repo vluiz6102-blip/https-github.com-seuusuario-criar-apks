@@ -79,24 +79,27 @@ func request_cafe_donation(amount_brl: float, uniform: Dictionary) -> Error:
     var http := HTTPRequest.new()
     add_child(http)
     http.request_completed.connect(
-        func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-            http.queue_free()
-            if result != HTTPRequest.RESULT_SUCCESS or response_code < 200 or response_code >= 300:
-                purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"checkout_unavailable")
-                return
-            var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
-            if parsed is Dictionary:
-                purchase_verified.emit(PRODUCT_CAFE_PREFIX, parsed)
-            else:
-                purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"invalid_checkout_response")
-        },
-        "POST",
-        checkout_url,
-        PackedStringArray(["Content-Type: application/json"]),
-        JSON.stringify(intent)
+        Callable(self, "_on_custom_checkout_completed").bind(http)
     )
     purchase_pending.emit(PRODUCT_CAFE_PREFIX)
     return OK
+
+func _on_custom_checkout_completed(
+    result: int,
+    response_code: int,
+    _headers: PackedStringArray,
+    body: PackedByteArray,
+    http: HTTPRequest
+) -> void:
+    http.queue_free()
+    if result != HTTPRequest.RESULT_SUCCESS or response_code < 200 or response_code >= 300:
+        purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"checkout_unavailable")
+        return
+    var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+    if parsed is Dictionary and bool((parsed as Dictionary).get("verified", false)):
+        purchase_verified.emit(PRODUCT_CAFE_PREFIX, parsed)
+    else:
+        purchase_failed.emit(PRODUCT_CAFE_PREFIX, &"invalid_checkout_response")
 
 func purchase_custom_uniform(uniform: Dictionary) -> Error:
     return _purchase_product(PRODUCT_UNIFORM_CUSTOM, {
@@ -176,36 +179,42 @@ func _verify_server_side(product_id: StringName, purchase_data: Dictionary) -> v
     var http := HTTPRequest.new()
     add_child(http)
     http.request_completed.connect(
-        func(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
-            http.queue_free()
-
-            if result != HTTPRequest.RESULT_SUCCESS or response_code < 200 or response_code >= 300:
-                _cache_pending(product_id, purchase_data)
-                purchase_failed.emit(product_id, &"verification_unavailable")
-                return
-
-            var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
-            if not (parsed is Dictionary) or not bool(parsed.get("verified", false)):
-                purchase_failed.emit(product_id, &"verification_rejected")
-                return
-
-            var verified: Dictionary = (parsed as Dictionary).duplicate(true)
-            _verified[String(product_id)] = verified
-            _cache_verified(product_id, verified)
-
-            var pending: Dictionary = _pending.get(String(product_id), {})
-            var metadata: Dictionary = pending.get("metadata", {})
-            if metadata.size() > 0:
-                verified["j90_metadata"] = metadata.duplicate(true)
-            _acknowledge_purchase(purchase_data, bool(pending.get("consumable", false)))
-            purchase_verified.emit(product_id, verified)
-            _pending.erase(String(product_id))
-        },
-        "POST",
-        _verification_url,
-        PackedStringArray(["Content-Type: application/json"]),
-        JSON.stringify(purchase_data)
+        Callable(self, "_on_verification_completed").bind(product_id, purchase_data, http)
     )
+
+func _on_verification_completed(
+    result: int,
+    response_code: int,
+    _headers: PackedStringArray,
+    body: PackedByteArray,
+    product_id: StringName,
+    purchase_data: Dictionary,
+    http: HTTPRequest
+) -> void:
+    http.queue_free()
+
+    if result != HTTPRequest.RESULT_SUCCESS or response_code < 200 or response_code >= 300:
+        _cache_pending(product_id, purchase_data)
+        purchase_failed.emit(product_id, &"verification_unavailable")
+        return
+
+    var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+    if not (parsed is Dictionary) or not bool(parsed.get("verified", false)):
+        purchase_failed.emit(product_id, &"verification_rejected")
+        return
+
+    var verified: Dictionary = (parsed as Dictionary).duplicate(true)
+    _verified[String(product_id)] = verified
+    _cache_verified(product_id, verified)
+
+    var pending: Dictionary = _pending.get(String(product_id), {})
+    var metadata: Dictionary = pending.get("metadata", {})
+    if metadata.size() > 0:
+        verified["j90_metadata"] = metadata.duplicate(true)
+
+    _acknowledge_purchase(purchase_data, bool(pending.get("consumable", false)))
+    purchase_verified.emit(product_id, verified)
+    _pending.erase(String(product_id))
 
 func _acknowledge_purchase(purchase_data: Dictionary, consumable: bool) -> void:
     if _billing == null:
