@@ -64,6 +64,7 @@ try {
 
 mkdirSync('www', { recursive: true });
 copyFileSync('index.html', 'www/index.html');
+if (existsSync('diag.html')) copyFileSync('diag.html', 'www/diag.html');
 writeFileSync('www/j90-soundscape.js', soundscape);
 writeFileSync('www/j90-expansion.js', expansionSource);
 writeFileSync('www/j90-ai2.js', aiSource);
