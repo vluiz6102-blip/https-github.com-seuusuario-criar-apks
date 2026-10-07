@@ -35,7 +35,30 @@ let contentManifest;
 try { contentManifest = JSON.parse(readFileSync(contentManifestPath, 'utf8')); } catch (error) { throw new Error('content-manifest.json inválido: ' + error.message); }
 
 const soundscape = soundscapeSource.replace('__J90_AUDIO_MANIFEST__', JSON.stringify(manifest));
+const syntaxUnits = [
+  ['index-inline-scripts', scripts],
+  ['j90-soundscape.js', soundscape],
+  ['j90-expansion.js', expansionSource],
+  ['j90-ai2.js', aiSource],
+  ['j90-tactics.js', tacticsSource],
+  ['j90-match2d-v3.js', match2dSource],
+  ['j90-match2d-webgl.js', webglSource],
+  ['j90-comfort-ui.js', comfortSource],
+  ['j90-match-events.js', matchEventsSource],
+  ['j90-squad-cards.js', squadCardsSource],
+  ['j90-lineup-ai.js', lineupAiSource],
+  ['j90-match-replay.js', replaySource],
+  ['j90-team-tactical-ai.js', teamTacticalAiSource],
+  ['j90-manager-stats.js', managerStatsSource],
+  ['j90-copa-do-brasil.js', copaBrasilSource],
+  ['j90-manager-ai.js', managerAiSource],
+  ['j90-landscape.js', landscapeSource]
+];
 try {
+  for (const [name, code] of syntaxUnits) {
+    try { new Function(code); }
+    catch (error) { throw new Error(name + ': ' + error.message); }
+  }
   new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + webglSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + landscapeSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
