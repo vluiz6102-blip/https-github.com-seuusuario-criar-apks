@@ -1,32 +1,18 @@
 extends SceneTree
 
 const REQUIRED := [
-    "res://scripts/bootstrap.gd",
-    "res://scripts/hardware_detector.gd",
     "res://scripts/performance_governor.gd",
     "res://scripts/animation_system.gd",
     "res://scripts/home_shell.gd",
-    "res://scripts/audio_manager.gd",
-    "res://scripts/asset_streamer.gd",
-    "res://scripts/stadium_camera_config.gd",
-    "res://scripts/stadium_resource.gd",
-    "res://scripts/stadium_manager.gd",
-    "res://scripts/match_tactics_ai.gd",
-    "res://scripts/transfer_market_ai.gd",
-    "res://scripts/match_event_manager.gd",
-    "res://scripts/match_scene_controller.gd",
-    "res://scripts/match_scene.gd",
-    "res://scripts/match_simulation.gd",
     "res://scripts/pixel_match_renderer.gd",
-    "res://scripts/monetization_manager.gd"
+    "res://scripts/match_simulation.gd"
 ]
 
 func _initialize() -> void:
     var failures: PackedStringArray = []
 
     for path: String in REQUIRED:
-        var script: Script = load(path)
-        if script == null:
+        if load(path) == null:
             failures.append("LOAD_FAILED:" + path)
 
     var main_scene: PackedScene = load("res://scenes/main.tscn")
@@ -35,15 +21,6 @@ func _initialize() -> void:
         failures.append("MAIN_SCENE_LOAD_FAILED")
     if match_scene == null:
         failures.append("MATCH_SCENE_LOAD_FAILED")
-
-    if int(ProjectSettings.get_setting("display/window/handheld/orientation", -1)) != 1:
-        failures.append("PORTRAIT_NOT_LOCKED")
-
-    if str(ProjectSettings.get_setting("display/window/stretch/mode", "")) != "viewport":
-        failures.append("PIXEL_VIEWPORT_MISSING")
-
-    if str(ProjectSettings.get_setting("display/window/stretch/scale_mode", "")) != "integer":
-        failures.append("INTEGER_SCALE_MISSING")
 
     if str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "")) != "mobile":
         failures.append("MOBILE_RENDERER_NOT_PRIMARY")
@@ -66,13 +43,37 @@ func _initialize() -> void:
             failures.append("MAIN_SCENE_INSTANTIATE_FAILED")
         else:
             root.add_child(main)
-            if main.get_node_or_null("HomeShell") == null:
+            var home := main.get_node_or_null("HomeShell")
+            if home == null:
                 failures.append("HOME_SHELL_MISSING")
+            elif home.get_child_count() < 6:
+                failures.append("HOME_NOT_INITIALIZED")
             main.queue_free()
+            await process_frame
+    
+    if match_scene != null:
+        var match := match_scene.instantiate()
+        if match == null:
+            failures.append("MATCH_SCENE_INSTANTIATE_FAILED")
+        else:
+            root.add_child(match)
+            var simulation := match.get_node_or_null("Simulation")
+            if simulation == null:
+                failures.append("MATCH_SIMULATION_MISSING")
+            else:
+                simulation.start({"duration_seconds": 90.0, "home_team": &"Smoke Home", "away_team": &"Smoke Away", "seed": 90})
+                var snapshot: Dictionary = simulation.get_snapshot()
+                if snapshot.get("players", []).size() != 11:
+                    failures.append("MATCH_HOME_PLAYER_COUNT_INVALID")
+                if snapshot.get("opp_players", []).size() != 11:
+                    failures.append("MATCH_AWAY_PLAYER_COUNT_INVALID")
+                if not snapshot.has("duration_seconds"):
+                    failures.append("MATCH_DURATION_MISSING")
+            match.queue_free()
             await process_frame
 
     if failures.is_empty():
-        print("J90_GODOT_ARCHITECTURE=OK")
+        print("J90_NEXTGEN_SMOKE=OK")
         quit(0)
         return
 

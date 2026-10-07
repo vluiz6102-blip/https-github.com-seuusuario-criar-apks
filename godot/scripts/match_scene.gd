@@ -1,7 +1,7 @@
 extends Node2D
 
-@onready var simulation: J90MatchSimulation = $Simulation
-@onready var renderer: J90PixelMatchRenderer = $PixelRenderer
+@onready var simulation: Node = $Simulation
+@onready var renderer: Node2D = $PixelRenderer
 
 func _ready() -> void:
     simulation.snapshot_ready.connect(renderer.apply_snapshot)
