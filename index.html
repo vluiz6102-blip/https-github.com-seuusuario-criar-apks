@@ -1374,7 +1374,30 @@ body.j90-manager-nav-right #app{padding-right:70px}
 @media(max-width:420px){.j90MgrRightNav{width:54px;padding:6px 5px;border-radius:19px;gap:5px}.j90MgrRightNav button{width:44px;height:47px;border-radius:13px}.j90MgrRightNav button .j90NavIcon{font-size:17px}.j90MgrRightNav button small{font-size:7px}.j90MgrRightNav .j90NavLabel{right:51px}}
 @media(orientation:landscape) and (max-height:620px){.j90MgrRightNav{top:auto;bottom:8px;right:8px;transform:none;flex-direction:row;width:auto}.j90MgrRightNav .j90NavLabel{top:auto;bottom:55px;right:0;transform:none}.body.j90-manager-nav-right #app{padding-right:0}}
 @media(prefers-reduced-motion:reduce){.j90MgrRightNav,.j90MgrRightNav button{animation:none!important;transition:none!important}}
-</style></head>
+</style>
+<style id="j90-visual-stability">
+/* Visual stability pass: prevent mobile clipping, horizontal bleed and render flicker. */
+html,body,#app{max-width:100%;min-width:0}
+body{overflow-x:hidden}
+#app{overflow-x:clip}
+img,svg,video,canvas{max-width:100%}
+button,input,select,textarea{max-width:100%;min-width:0}
+table{max-width:100%;overflow:hidden}
+pre,code{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+.j90ManagerShell,.j90ManagerShell *{min-width:0}
+.j90ManagerShell{width:100%;max-width:100%;overflow-x:clip}
+.j90ManagerShell .j90MgrCard,.j90ManagerShell .j90xCard{max-width:100%;overflow:hidden}
+.j90ManagerShell .btn,.j90ManagerShell button{overflow-wrap:anywhere;word-break:break-word}
+.j90ManagerShell .btn{animation:none!important}
+@media(max-width:390px){
+  .j90ManagerShell{font-size:15px}
+  .j90ManagerShell .j90MgrCard,.j90ManagerShell .j90xCard{border-radius:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .j90ManagerShell *{scroll-behavior:auto!important}
+}
+</style>
+</head>
 <body>
 <div id="j90-world" aria-hidden="true"></div><div id="app"></div>
 <script>
