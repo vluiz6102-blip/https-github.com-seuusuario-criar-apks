@@ -173,11 +173,14 @@ function injectStyles(){
 function marketInject(html){
  var all=[],top=[];
  try{
-   all=typeof mgrMarketFiltered==='function'?mgrMarketFiltered():[];
-   if(!all.length&&typeof mgrMarketPool==='function')all=mgrMarketPool();
-   if(!all.length&&typeof roster==='function')all=roster().map(function(p){return Object.assign({},p,{club:p.club||S.managerClub||'Clube'})});
-   top=all.filter(Boolean).map(function(p){var x=analyseTransfer(p);return {p:p,a:x}}).sort(function(a,b){return b.a.score-a.a.score}).slice(0,3);
- }catch(e){return html}
+   if(typeof mgrMarketFiltered==='function')all=mgrMarketFiltered()||[];
+   if(!all.length&&typeof mgrMarketPool==='function')all=mgrMarketPool()||[];
+   if(!all.length&&typeof roster==='function')all=roster()||[];
+   all=all.filter(Boolean).map(function(p){return Object.assign({},p,{club:p.club||S.managerClub||'Clube'});});
+   top=all.map(function(p){
+     try{return {p:p,a:analyseTransfer(p)};}catch(e){return null;}
+   }).filter(Boolean).sort(function(a,b){return b.a.score-a.a.score}).slice(0,3);
+ }catch(e){top=[];}
  if(!top.length)return html;
  var cards=top.map(function(x){return '<span><strong>'+esc(x.p.name)+'</strong> · '+role(x.p)+' · '+Math.round(x.a.score)+'% ajuste</span>'}).join('');
  var lead=top[0],desc=lead.a.recommendation+' · valor justo R$ '+money(lead.a.fairValue)+' · interesse '+lead.a.interest+'%.';
