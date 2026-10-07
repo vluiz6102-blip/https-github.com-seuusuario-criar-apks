@@ -398,7 +398,8 @@ jobs:
           set -euo pipefail
           gh workflow run j90-autonomous-improver.yml --repo "$GITHUB_REPOSITORY" --ref main \
             -f reason="Full build run $GITHUB_RUN_NUMBER finished with status: ${{ job.status }}" \
-            -f source_run_id="$GITHUB_RUN_ID"
+            -f source_run_id="$GITHUB_RUN_ID" \
+            -f source_conclusion="${{ job.status }}"
       - name: Publicar relatório do build
         uses: actions/upload-artifact@v7
         with:
