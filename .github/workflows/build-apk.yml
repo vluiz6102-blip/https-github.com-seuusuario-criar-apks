@@ -39,7 +39,6 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Configurar Node.js
-        if: steps.copilot_auth.outputs.available == 'true'
         uses: actions/setup-node@v5
         with:
           node-version: 22
