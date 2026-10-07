@@ -77,6 +77,7 @@ writeFileSync('www/j90-lineup-ai.js', lineupAiSource);
 writeFileSync('www/j90-match-replay.js', replaySource);
 writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
+writeFileSync('www/j90-copa-do-brasil.js', copaBrasilSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
 writeFileSync('www/j90-landscape.js', landscapeSource);
 writeFileSync('www/j90-auto-heal.js', autoHealSource);
@@ -95,13 +96,21 @@ const runtimeFiles = [
 ];
 const additions = [];
 if (!generated.includes('window.J90_AUDIO_MANIFEST=')) additions.push(bootstrap);
+
+// O HTML final é o contrato do runtime: cada script precisa existir fisicamente
+// e aparecer como uma tag externa real, não apenas como texto em código inline.
 for (const file of runtimeFiles) {
   const tag = '<script src="' + file + '"></script>';
   if (!generated.includes(tag)) additions.push(tag);
 }
+if (!generated.includes('</body>')) throw new Error('Generated index.html has no </body> boundary.');
 const patched = additions.length ? generated.replace('</body>', additions.join('') + '</body>') : generated;
-if (!patched.includes('<script src="j90-manager-ai.js"></script>') || !patched.includes('<script src="j90-auto-heal.js"></script>')) {
-  throw new Error('Critical runtime scripts were not injected into www/index.html.');
+
+const criticalRuntime = ['j90-manager-ai.js','j90-auto-heal.js'];
+for (const file of criticalRuntime) {
+  const tag = '<script src="' + file + '"></script>';
+  if (!patched.includes(tag)) throw new Error('Critical runtime script not injected: ' + file);
+  if (!existsSync(join('www', file))) throw new Error('Critical runtime file missing from www: ' + file);
 }
 writeFileSync('www/index.html', patched);
 
