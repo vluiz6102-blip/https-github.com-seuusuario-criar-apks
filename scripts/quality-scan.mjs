@@ -29,12 +29,12 @@ if (!/Capacitor.*Web Audio.*Android/i.test(index)) add(warn, 'Tecnologias princi
 checkSyntax('JavaScript inline', inlineScripts);
 const soundscape = read('src/j90-soundscape.js');
 checkSyntax('Soundscape', soundscape.replace('__J90_AUDIO_MANIFEST__', '{}'));
-const webgl = read('src/j90-match2d-webgl.js');
-checkSyntax('Match 2D WebGL', webgl);
+const match2d = read('src/j90-match2d-v3.js');
+checkSyntax('Match 2D Canvas', match2d);
 const comfort = read('src/j90-comfort-ui.js');
 checkSyntax('Comfort UI', comfort);
-if (!/getContext\(['\"]webgl['\"]/.test(webgl)) add(fail, 'Renderer WebGL1 ausente.');
-if (!/webglcontextlost/.test(webgl) || !/webglcontextrestored/.test(webgl)) add(fail, 'Renderer WebGL sem recuperação de contexto.');
+if (!/getContext\(['\"]2d['\"]/.test(match2d)) add(fail, 'Renderer Canvas 2D ausente.');
+if (!/fieldCache\(/.test(match2d)) add(fail, 'Canvas 2D sem pré-renderização do campo.');
 const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
 const ai2 = read('src/j90-ai2.js');
@@ -69,7 +69,8 @@ if ((index.match(/requestAnimationFrame\s*\(/g) || []).length > 5) add(warn, 'Mu
 if (/startJ90MatchLoop\s*=|function\s+startJ90MatchLoop|\bj90MatchFrame\b/.test(index)) add(fail, 'Loop de partida legado/duplicado detectado. A partida deve usar somente o RAF compartilhado.');
 const buildScript=read('scripts/build.mjs');
 if (!/j90-ai2\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota j90-ai2.js.');
-if (!/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota renderer WebGL.');
+if (!/j90-match2d-v3\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota renderer Canvas 2D.');
+if (/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'Renderer WebGL legado ainda está no pipeline.');
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
 checkSyntax('Landscape Match', landscape);
