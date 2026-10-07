@@ -59,7 +59,7 @@ try {
     try { new Function(code); }
     catch (error) { throw new Error(name + ': ' + error.message); }
   }
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + landscapeSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + landscapeSource + '\n' + autoHealSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
@@ -88,29 +88,61 @@ if (existsSync(contentRoot)) {
 }
 
 const generated = readFileSync('www/index.html', 'utf8');
-const bootstrap = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script>';
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
   'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-landscape.js','j90-auto-heal.js'
 ];
-const additions = [];
-if (!generated.includes('window.J90_AUDIO_MANIFEST=')) additions.push(bootstrap);
 
-// O HTML final é o contrato do runtime: cada script precisa existir fisicamente
-// e aparecer como uma tag externa real, não apenas como texto em código inline.
+function assertBalancedTagPair(html, name) {
+  const opens = (html.match(new RegExp('<' + name + '\\b', 'gi')) || []).length;
+  const closes = (html.match(new RegExp('</' + name + '>', 'gi')) || []).length;
+  if (opens !== closes) throw new Error('Generated index.html has unbalanced <' + name + '> tags: ' + opens + '/' + closes);
+}
+
+function assertNoNestedStyleTags(html) {
+  const token = /<style\b[^>]*>|<\/style>/gi;
+  let depth = 0;
+  let match;
+  while ((match = token.exec(html))) {
+    if (/^<style/i.test(match[0])) {
+      if (depth > 0) throw new Error('Generated index.html contains nested <style> tags. Close the current style block before opening another.');
+      depth++;
+    } else {
+      if (depth === 0) throw new Error('Generated index.html contains an unexpected </style>.');
+      depth--;
+    }
+  }
+  if (depth !== 0) throw new Error('Generated index.html has an unclosed <style> block.');
+}
+
+assertBalancedTagPair(generated, 'style');
+assertBalancedTagPair(generated, 'script');
+assertNoNestedStyleTags(generated);
+
+const bootstrap = '<script>window.J90_AUDIO_MANIFEST=' + JSON.stringify(manifest) + ';window.J90_ROSTERS=' + JSON.stringify(rosters) + ';window.J90_CONTENT=' + JSON.stringify(contentManifest) + ';</script>';
+
+// Runtime scripts are owned by the build output. Remove any existing canonical
+// tags first, then inject exactly one copy immediately before </body>.
+let generatedWithoutRuntime = generated;
 for (const file of runtimeFiles) {
   const tag = '<script src="' + file + '"></script>';
-  if (!generated.includes(tag)) additions.push(tag);
+  generatedWithoutRuntime = generatedWithoutRuntime.split(tag).join('');
 }
-if (!generated.includes('</body>')) throw new Error('Generated index.html has no </body> boundary.');
-const patched = additions.length ? generated.replace('</body>', additions.join('') + '</body>') : generated;
+const additions = [];
+if (!generatedWithoutRuntime.includes('window.J90_AUDIO_MANIFEST=')) additions.push(bootstrap);
+for (const file of runtimeFiles) additions.push('<script src="' + file + '"></script>');
+if (!generatedWithoutRuntime.includes('</body>')) throw new Error('Generated index.html has no </body> boundary.');
+const patched = generatedWithoutRuntime.replace('</body>', additions.join('') + '</body>');
 
-const criticalRuntime = ['j90-manager-ai.js','j90-auto-heal.js'];
-for (const file of criticalRuntime) {
+assertBalancedTagPair(patched, 'style');
+assertBalancedTagPair(patched, 'script');
+assertNoNestedStyleTags(patched);
+
+for (const file of runtimeFiles) {
   const tag = '<script src="' + file + '"></script>';
-  if (!patched.includes(tag)) throw new Error('Critical runtime script not injected: ' + file);
-  if (!existsSync(join('www', file))) throw new Error('Critical runtime file missing from www: ' + file);
+  if (!patched.includes(tag)) throw new Error('Runtime script tag missing after build: ' + file);
+  if (!existsSync(join('www', file))) throw new Error('Runtime file missing from www: ' + file);
 }
 writeFileSync('www/index.html', patched);
 
