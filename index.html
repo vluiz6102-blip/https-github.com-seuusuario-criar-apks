@@ -1535,15 +1535,15 @@ function menuV(){
  return '<main class="j90Home" aria-label="Tela inicial Jornada 90 Manager">'+
    '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Crowd"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
    '<div class="j90HomeContent">'+
-     '<div class="j90Topline"><span>CARREIRA DE FUTEBOL</span><span class="j90LiveDot">JORNADA 90</span></div>'+
+     '<div class="j90Topline"><span>PRODUZIDO POR VICTOR</span><span class="j90LiveDot">JORNADA 90</span></div>'+
      '<section class="j90BrandBlock"><div class="j90Badge">90</div><div class="j90Brand">JORNADA <b>90</b></div><p>A carreira é sua. A história também.</p></section>'+
      j90ClubIdentity()+
      '<section class="j90Actions">'+
        (hasSave?
-         '<button class="j90Action j90Primary" onclick="resumeGame()"><span class="j90ActionIcon">▶</span><span><b>Continuar carreira</b><small>'+S.name+' · '+POSN[S.pos]+' · '+S.club.n+'</small></span><em>›</em></button>'+
+         '<button class="j90Action j90Primary" onclick="resumeGame()"><span class="j90ActionIcon">▶</span><span><b>Continuar carreira</b><small>'+esc(S.managerName||S.name||'Manager')+' · Manager · '+esc(S.managerClub||S.club?.n||'Clube')+'</small></span><em>›</em></button>'+
          '<button class="j90Action" onclick="newGame()"><span class="j90ActionIcon">＋</span><span><b>Nova carreira</b><small>Comece uma nova história</small></span><em>›</em></button>':
-         '<button class="j90Action j90Primary" onclick="newGame()"><span class="j90ActionIcon">▶</span><span><b>Começar carreira</b><small>Crie seu jogador e escolha seu primeiro clube</small></span><em>›</em></button>')+
-       '<div class="j90UtilityGrid"><button class="j90Utility" onclick="j90MenuNavigate(\'settings\')"><span>⚙</span><b>Configurações</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'howto\')"><span>?</span><b>Como jogar</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'credits\')"><span>i</span><b>Créditos</b></button></div>'+
+         '<button class="j90Action j90Primary" onclick="newGame()"><span class="j90ActionIcon">▶</span><span><b>Começar carreira</b><small>Crie seu perfil de Manager e escolha seu primeiro clube</small></span><em>›</em></button>')+
+       '<div class="j90UtilityGrid"><button class="j90Utility" onclick="j90MenuNavigate(\'settings\')"><span>⚙</span><b>Configurações</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'howto\')"><span>?</span><b>Como jogar</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'credits\')"><span>i</span><b>Créditos &amp; tecnologia</b></button></div>'+
      '</section>'+
      '<footer class="j90HomeFooter"><span>PRODUÇÃO INDEPENDENTE</span><span>ANDROID · WEB AUDIO</span></footer>'+
    '</div>'+
@@ -1561,9 +1561,10 @@ function howToView(){
 function creditsView(){
  return '<div class="card menu infoScreen"><button class="chip" onclick="mainMenu()">← Menu principal</button><div class="logoMark">90</div><h1>Créditos</h1><p class="mu">Jornada 90 Manager · simulador de carreira de técnico e diretor técnico</p>'+
  '<div class="creditsBlock"><b>Direção e desenvolvimento</b><span>Victor Maia</span></div>'+
- '<div class="creditsBlock"><b>Tecnologia</b><span>Capacitor · Web Audio · Android</span></div>'+
- '<div class="creditsBlock"><b>Áudio imersivo</b><span>Espacialização HRTF e sistema de áudio adaptativo</span></div>'+
- '<div class="creditsBlock"><b>Versão</b><span>Build independente para Android e navegador</span></div>'+
+ '<div class="creditsBlock"><b>Produzido por</b><span>Victor Luiz</span></div>'+
+ '<div class="creditsBlock"><b>Tecnologias usadas</b><span>Capacitor · Android WebView · HTML · CSS · JavaScript · Canvas 2D · Web Audio API · LocalStorage</span></div>'+
+ '<div class="creditsBlock"><b>IA e simulação</b><span>Motor de inteligência tática, simulação de partidas e comportamento adaptativo executados localmente.</span></div>'+
+ '<div class="creditsBlock"><b>Áudio e interface</b><span>Soundscape com assets reais · HRTF · interface responsiva · otimização para 60–120 FPS</span></div>'+<div class="creditsBlock"><b>Versão</b><span>Build independente para Android e navegador</span></div>'+
  '<button class="btn" onclick="mainMenu()">Voltar</button></div>'
 }const R=(a,b)=>a+Math.random()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1)),cl=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const LG=[
@@ -2834,6 +2835,8 @@ input,textarea,select,[contenteditable="true"],[contenteditable=""]{-webkit-user
 /* Evita criação excessiva de camadas GPU. */
 *{will-change:auto!important}
 .j90Cloud,.j90Sun{will-change:transform!important}
+
+.j90Topline span:first-child{font-size:10px!important;letter-spacing:1.35px!important;opacity:.72!important}
 </style><script id="j90-transfer-fifa19-fc27-runtime">
 (function(){
 "use strict";
