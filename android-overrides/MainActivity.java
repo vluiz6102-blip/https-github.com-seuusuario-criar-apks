@@ -8,6 +8,8 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -16,6 +18,19 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(J90DisplayRatePlugin.class);
     registerPlugin(J90HapticsPlugin.class);
     super.onCreate(savedInstanceState);
+
+    // Explicit hardware acceleration + WebView settings for the 2D/WebGL game surface.
+    getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+    WebView webView = getBridge().getWebView();
+    if (webView != null) {
+      WebSettings settings = webView.getSettings();
+      settings.setJavaScriptEnabled(true);
+      settings.setDomStorageEnabled(true);
+      settings.setDatabaseEnabled(true);
+      settings.setMediaPlaybackRequiresUserGesture(false);
+      webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+      webView.setBackgroundColor(Color.BLACK);
+    }
 
     // Game-style edge-to-edge + immersive bars. The WebView occupies the complete display.
     getWindow().setStatusBarColor(Color.TRANSPARENT);
