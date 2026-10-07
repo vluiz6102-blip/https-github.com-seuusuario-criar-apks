@@ -389,16 +389,6 @@ jobs:
           compression-level: 0
           retention-days: 30
 
-      - name: Acionar IA autônoma para o próximo ciclo
-        if: always() && !cancelled()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh workflow run j90-autonomous-improver.yml --repo "$GITHUB_REPOSITORY" --ref main \
-            -f reason="Full build run ${GITHUB_RUN_NUMBER} finished with status: ${{ job.status }}" \
-            -f source_run_id="$GITHUB_RUN_ID"
-
       - name: Publicar relatório do build
         uses: actions/upload-artifact@v7
         with:
@@ -408,3 +398,106 @@ jobs:
             android/Jornada-90-Manager-release.txt
           if-no-files-found: error
           compression-level: 9
+
+
+  autonomous-improver:
+    name: IA autônoma - melhorar, corrigir e relançar
+    needs: build
+    if: always() && !cancelled()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: write
+      copilot-requests: write
+    steps:
+      - name: Checkout da versão atual
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Coletar evidências da build anterior
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .j90-autonomy
+          echo "run_id=$GITHUB_RUN_ID" > .j90-autonomy/context.txt
+          echo "build_job_result=${{ needs.build.result }}" >> .j90-autonomy/context.txt
+          echo "commit=$GITHUB_SHA" >> .j90-autonomy/context.txt
+          gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-autonomy/last-build.log 2>&1 || true
+          gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,headSha,event,name,url > .j90-autonomy/last-build.json || true
+
+      - name: Instalar dependências do projeto
+        run: npm install
+
+      - name: Instalar GitHub Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Rodar IA de desenvolvimento autônomo
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          rm -f .j90-release-ready.json
+          copilot -p "$(cat <<'PROMPT'
+You are the autonomous senior developer and game-improvement AI for Jornada 90 Manager.
+
+Read .github/copilot-instructions.md first.
+Inspect .j90-autonomy/context.txt and the latest build log files.
+
+Mission:
+1. If the previous build failed, fix the root cause.
+2. If it passed, inspect the actual game and implement the next concrete high-value improvement.
+3. Test changes.
+4. Never weaken, remove, bypass, or disable tests.
+5. Never fake readiness.
+6. Preserve existing systems and the single-source build.
+7. Never modify secrets.
+8. Never git push or create releases.
+
+Prioritize gameplay realism, football AI, tactical intelligence, manager/squad/transfers/contracts, match events/refereeing/atmosphere/audio, 60-120 FPS performance, mobile UX, crash resistance, and roster/content reliability.
+
+Do not make cosmetic churn. Prefer evidence-based safe changes.
+Only when the complete release-readiness contract is satisfied and no material safe improvement remains, create .j90-release-ready.json exactly as specified in .github/copilot-instructions.md.
+Otherwise leave no ready marker.
+PROMPT
+)" --no-banner --allow-tool='read,write,shell' --deny-tool='shell(git push)' --deny-tool='shell(git commit)' --deny-tool='shell(gh workflow)' --deny-tool='shell(gh release)' --deny-tool='shell(gh secret)'
+
+      - name: Validar melhoria
+        run: |
+          set -euo pipefail
+          npm run build
+          node scripts/release-readiness.mjs
+          if [ -f .j90-release-ready.json ]; then
+            node scripts/release-readiness.mjs --strict
+          fi
+          git diff --check
+
+      - name: Commitar melhoria e relançar build
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -f .j90-release-ready.json ] && node -e "process.exit(JSON.parse(require('fs').readFileSync('.j90-release-ready.json','utf8')).ready===true?0:1)"; then
+            echo "JORNADA90_AUTONOMY=RELEASE_READY"
+            exit 0
+          fi
+          git config user.name "Jornada 90 Autonomous Improver"
+          git config user.email "actions@github.com"
+          rm -rf .j90-autonomy
+          git add -A
+          if git diff --cached --quiet; then
+            echo "A IA não produziu alteração e não comprovou prontidão."
+            exit 1
+          fi
+          git commit -m "autonomy: improve Jornada 90"
+          git push origin HEAD:main
+          gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref main
