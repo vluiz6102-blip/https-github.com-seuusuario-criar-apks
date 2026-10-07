@@ -212,7 +212,7 @@ if (await play.count() === 1) {
   if (!landscape.ok || landscape.overflow) throw new Error('Landscape match overflowed the viewport: '+JSON.stringify(landscape));
   if (landscape.stageWidth < 300 || landscape.stageHeight < 130) throw new Error('Landscape match stage is too small: '+JSON.stringify(landscape));
   if (landscape.canvasWidth < 280 || landscape.canvasHeight < 120) throw new Error('Landscape canvas dimensions are invalid: '+JSON.stringify(landscape));
-  if (!landscape.actionGrid || !landscape.actionGrid.includes('1fr')) throw new Error('Landscape action bar did not reflow.');
+  if (!landscape.actionGrid || landscape.actionGrid.trim().split(/\s+/).length !== 2) throw new Error('Landscape action bar did not reflow to two columns: '+landscape.actionGrid);
   if (!landscape.matchClock || !landscape.score) throw new Error('Landscape HUD lost match state.');
   if (landscape.elapsed <= Number(beforeLiveElapsed||0)) throw new Error('Landscape rotation reset or stopped the match clock.');
   await page.setViewportSize(portraitViewport);
