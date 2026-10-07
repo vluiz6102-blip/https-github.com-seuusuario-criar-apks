@@ -147,8 +147,7 @@ async function openrouter() {
         { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
         { role: "user", content: fullPrompt }
       ],
-      max_completion_tokens: maxOutputTokens,
-      reasoning_effort: "medium"
+      max_tokens: maxOutputTokens
     })
   });
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}: ${await res.text()}`);
@@ -224,7 +223,8 @@ async function openai() {
         { role: "system", content: "Você é um engenheiro sênior. Gere somente o relatório solicitado, baseado em evidências. Não invente defeitos." },
         { role: "user", content: fullPrompt }
       ],
-      max_tokens: maxOutputTokens
+      max_completion_tokens: maxOutputTokens,
+      reasoning_effort: "medium"
     })
   });
   if (!res.ok) throw new Error("OpenAI HTTP " + res.status + ": " + await res.text());
