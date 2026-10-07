@@ -2,6 +2,7 @@ package com.jornada90.manager;
 
 import android.os.Bundle;
 import android.os.Build;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.view.View;
 import android.view.WindowInsets;
@@ -39,6 +40,20 @@ public class MainActivity extends BridgeActivity {
 
     // Ask Android for a high refresh rate when the device has enough CPU headroom.
     getWindow().setAttributes(withPreferredRefreshRate(getWindow().getAttributes(), chooseStartupRefreshRate()));
+  }
+
+  @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    applyImmersiveMode();
+    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView != null) webView.requestLayout();
+  }
+
+  @Override
+  public void onWindowFocusChanged(boolean hasFocus) {
+    super.onWindowFocusChanged(hasFocus);
+    if (hasFocus) applyImmersiveMode();
   }
 
   private WindowManager.LayoutParams withPreferredRefreshRate(WindowManager.LayoutParams lp, float hz) {
