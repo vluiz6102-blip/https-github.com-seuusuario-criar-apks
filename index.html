@@ -3053,11 +3053,11 @@ render();
 .j90DealSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.j90DealSummary span{padding:9px;background:#0d0d0d;border:1px solid #202020;border-radius:9px;text-align:center}.j90DealSummary b,.j90DealSummary small{display:block}.j90DealSummary small{color:#888;font-size:10px;margin-top:2px}
 .j90ContractActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .j90ContractActions button:last-child{grid-column:1/-1}
-.j90RosterList{grid-template-columns:minmax(0,1fr)!important;row-gap:10px!important}
-.j90RosterRow{min-height:66px!important;padding:9px 10px!important;gap:11px!important}
+.j90RosterList{display:flex!important;flex-direction:column!important;gap:12px!important;max-height:none!important;overflow:visible!important}
+.j90RosterRow{flex:0 0 auto!important;min-height:70px!important;height:auto!important;padding:9px 10px!important;gap:11px!important}
 .j90RosterRow>span{min-width:0!important;display:block!important}
-.j90XIGrid{row-gap:10px!important}
-.j90XIPlayer{min-height:64px!important;padding:10px!important}
+.j90XIGrid{display:flex!important;flex-direction:column!important;gap:12px!important}
+.j90XIPlayer{flex:0 0 auto!important;min-height:66px!important;height:auto!important;padding:10px!important}
 @media(max-width:390px){.j90PitchBoard{min-height:340px}.j90EditorGrid,.j90OfferGrid,.j90ContractActions{grid-template-columns:1fr}.j90ContractActions button:last-child{grid-column:auto}.j90NegotiationHero{grid-template-columns:58px minmax(0,1fr)}.j90NegOVR{font-size:32px}}
 
 /* J90 PERFORMANCE + ANDROID INPUT GUARD 1.0 */
