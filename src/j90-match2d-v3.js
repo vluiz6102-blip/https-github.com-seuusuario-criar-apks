@@ -9,6 +9,7 @@
 
   var W=320,H=180,PW=24,PH=28;
   var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+  var lerp=function(a,b,t){return a+(b-a)*t};
   function state(){
     try{if(typeof S!=='undefined'&&S)return S}catch(e){}
     try{return window.J90ManagerBridge&&window.J90ManagerBridge.getState?window.J90ManagerBridge.getState():null}catch(e){return null}
