@@ -18,7 +18,7 @@
     _replayBusy:1,_replayStartedAt:1,_lastPassContext:1,_j90EventState:1
   };
 
-  function getState(){try{return window.S&&S}catch(e){return null}}
+  function getState(){try{if(typeof S!=='undefined'&&S)return S}catch(e){}try{return window.S||null}catch(e){return null}}
   function match(){var s=getState();return s&&s.match2d?s.match2d:null}
   function safeSave(){
     var s=getState();if(!s)return false;
@@ -45,7 +45,7 @@
     m.elapsed=elapsed;
     m.paused=true;
     m.__j90LifecyclePaused=true;
-    m.__j90ResumeOnRestore=true;
+    m.j90ResumeOnRestore=true;
     safeSave();
     return true;
   }
@@ -82,8 +82,8 @@
             el.dataset.j90MatchHidden='1';
             el.dataset.j90MatchPrevDisplay=el.style.display||'';
           }
-          el.style.display='none';
-          el.setAttribute('aria-hidden','true');
+          if(el.style.display!=='none')el.style.display='none';
+          if(el.getAttribute('aria-hidden')!=='true')el.setAttribute('aria-hidden','true');
         }else if(el.dataset.j90MatchHidden==='1'){
           el.style.display=el.dataset.j90MatchPrevDisplay||'';
           delete el.dataset.j90MatchHidden;
@@ -109,8 +109,9 @@
     m.ball.y=Number.isFinite(+m.ball.y)?+m.ball.y:.5;
     m.ball.tx=Number.isFinite(+m.ball.tx)?+m.ball.tx:m.ball.x;
     m.ball.ty=Number.isFinite(+m.ball.ty)?+m.ball.ty:m.ball.y;
-    if(m.__j90ResumeOnRestore){
-      delete m.__j90ResumeOnRestore;
+    var needsRender=false;
+    if(m.j90ResumeOnRestore){
+      delete m.j90ResumeOnRestore;
       m.paused=false;
       m.startedAt=Date.now()-m.elapsed*1000;
       m._lastTick=performance.now();
@@ -122,8 +123,9 @@
     if(!m.startedAt)m.startedAt=Date.now()-m.elapsed*1000;
     if(!m._simAcc)m._simAcc=0;
     if(!m._simClock)m._simClock=0;
-    if(m&&m.home&&m.away){try{if(typeof introStep!=='undefined'&&introStep===0){introStep=1;menuScreen='game';tab='game'}}catch(e){}}
+    if(m&&m.home&&m.away){try{if(typeof introStep!=='undefined'&&introStep===0){introStep=1;menuScreen='game';tab='game';needsRender=true}}catch(e){}}
     syncScene();
+    if(needsRender){try{if(typeof window.render==='function')window.render(1)}catch(e){}}
     if(document.visibilityState==='visible'&&!m.paused){
       try{if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,80)}catch(e){}
     }
@@ -148,7 +150,7 @@
   if(window.MutationObserver){
     try{
       var mo=new MutationObserver(function(){syncScene()});
-      mo.observe(document.documentElement,{childList:true,subtree:true});
+      mo.observe(document.body,{childList:true});
     }catch(e){}
   }
 
