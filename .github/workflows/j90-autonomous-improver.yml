@@ -41,14 +41,14 @@ jobs:
 
       - name: Capture latest build result
         env:
-          GH_TOKEN: \${{ github.token }}
-          RUN_ID: \${{ github.event.workflow_run.id }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           set -euo pipefail
           mkdir -p .j90-autonomy
-          echo "run_id=\${RUN_ID:-manual}" | tee .j90-autonomy/context.txt
-          echo "commit=\${GITHUB_SHA}" | tee -a .j90-autonomy/context.txt
-          if [ -n "\${RUN_ID:-}" ]; then
+          echo "run_id=${RUN_ID:-manual}" | tee .j90-autonomy/context.txt
+          echo "commit=${GITHUB_SHA}" | tee -a .j90-autonomy/context.txt
+          if [ -n "${RUN_ID:-}" ]; then
             gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed > .j90-autonomy/last-build.log 2>&1 || true
             gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,headSha,event,name,url > .j90-autonomy/last-build.json
           fi
@@ -61,8 +61,8 @@ jobs:
 
       - name: Autonomous engineering pass
         env:
-          GITHUB_TOKEN: \${{ github.token }}
-          GH_TOKEN: \${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           rm -f .j90-release-ready.json
@@ -105,7 +105,7 @@ PROMPT
       - name: Commit and request next full build
         if: success()
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [ -f .j90-release-ready.json ] && node -e "process.exit(JSON.parse(require('fs').readFileSync('.j90-release-ready.json','utf8')).ready===true?0:1)"; then
