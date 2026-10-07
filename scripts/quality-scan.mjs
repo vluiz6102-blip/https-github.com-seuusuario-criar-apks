@@ -70,6 +70,8 @@ const buildScript=read('scripts/build.mjs');
 if (!/j90-ai2\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota j90-ai2.js.');
 if (!/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota renderer WebGL.');
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
+if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
+
 const tacticsSourceForScan = read('src/j90-tactics.js');
 checkSyntax('Tactical Studio', tacticsSourceForScan);
 if (!/window\.J90TACT\s*=/.test(tacticsSourceForScan)) add(fail, 'Tactical Studio não exporta window.J90TACT.');
