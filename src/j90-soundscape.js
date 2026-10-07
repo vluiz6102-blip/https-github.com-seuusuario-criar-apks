@@ -59,14 +59,22 @@
   }
   function ensureCrowd(){
     if(!crowdEnabled||!matchAudio||crowdEl)return;
-    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.020;a.src=CC0+'crowd_shouting.ogg';
+    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=.035;a.src=CC0+'crowd_shouting.ogg';
     a.addEventListener('error',()=>{try{a.pause()}catch(e){}},{once:true});crowdEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
+  }
+  function setCrowdLevel(level){
+    level=Math.max(0,Math.min(1,Number(level)||0));
+    if(crowdEl)crowdEl.volume=matchAudio?(0.010+level*0.055):0;
+  }
+  function setGoalLevel(level){
+    level=Math.max(0,Math.min(1,Number(level)||0));
+    if(goalEl)goalEl.volume=matchAudio?(0.025+level*0.075):0;
   }
   function goal(){
     if(!crowdEnabled||!matchAudio)return;
     ensureCrowd();if(goalEl){try{goalEl.pause()}catch(e){}}
-    const a=new Audio();a.preload='metadata';a.volume=.060;a.src=CC0+'cheers.ogg';goalEl=a;
+    const a=new Audio();a.preload='metadata';a.volume=.075;a.src=CC0+'cheers.ogg';goalEl=a;
     const p=a.play();if(p&&p.catch)p.catch(()=>{});
   }
   function whistle(){
@@ -100,7 +108,7 @@
   }
 
   window.addEventListener('pointerdown',()=>{if(pendingPlay&&musicEl){const p=musicEl.play();if(p&&p.catch)p.catch(()=>{});}}, {once:false,passive:true});
-  window.J90Ambience={start:startSoundscape,stop,pause,resume,setWeather,debugScenario,snapshot,state,setMusicEnabled,setCrowdEnabled,nextTrack,getTracks,goal,whistle};
+  window.J90Ambience={start:startSoundscape,stop,pause,resume,setWeather,debugScenario,snapshot,state,setMusicEnabled,setCrowdEnabled,nextTrack,getTracks,goal,whistle,setCrowdLevel,setGoalLevel};
   window.J90Perf=window.J90Perf||{};window.J90Perf.snapshot=snapshot;
   window.j90SoundscapeStart=startSoundscape;window.j90SoundscapeStop=stop;window.j90SyncSoundscape=sync;window.updateJ90MenuEnvironment=syncVisualEnvironment;
   window.J90_AUDIO_DISABLED=false;window.J90_AUDIO_MODE='remote-cc0';window.J90_AUDIO_PROFILE='quiet-match-2.1';
