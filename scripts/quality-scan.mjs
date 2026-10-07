@@ -101,6 +101,7 @@ if (!/fitText\(/.test(read('src/j90-squad-cards.js')) || !/\.clip\(\)/.test(read
 if (!/var\(--j90-ui-scale\)/.test(read('src/j90-comfort-ui.js'))) add(fail, 'Comfort UI sem escala tipográfica.');
 if (!/J90MatchEvents/.test(read('src/j90-match-events.js')) || !/offsideCheck/.test(read('src/j90-match-events.js')) || !/discipline/.test(read('src/j90-match-events.js')) || !/injuryCheck/.test(read('src/j90-match-events.js')) || !/pitchInvader/.test(read('src/j90-match-events.js'))) add(fail, 'Sistema de eventos de partida incompleto.');
 if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos de partida não estão no pipeline de build.');
+if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'Manager AI 2.0 não está no pipeline de build.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
