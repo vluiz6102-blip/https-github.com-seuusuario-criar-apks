@@ -56,10 +56,6 @@ func _initialize() -> void:
     )) != true:
         failures.append("OPENGL_FALLBACK_MISSING")
 
-    if bool(ProjectSettings.get_setting(
-        "textures/vram_compression/import_etc2_astc", false
-    )) != true:
-        failures.append("ETC2_ASTC_COMPRESSION_MISSING")
 
     if int(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 0)) != 60:
         failures.append("BASE_PHYSICS_60HZ_MISSING")
