@@ -460,7 +460,8 @@ jobs:
       - name: Rodar IA de desenvolvimento autônomo
         if: steps.copilot_auth.outputs.available == 'true'
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -501,7 +502,7 @@ PROMPT
           git diff --check
 
       - name: Commitar melhoria e relançar build
-        if: success()
+        if: success() && steps.copilot_auth.outputs.available == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
