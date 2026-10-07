@@ -25,7 +25,7 @@ func _initialize() -> void:
     if str(ProjectSettings.get_setting("rendering/renderer/rendering_method", "")) != "mobile":
         failures.append("MOBILE_RENDERER_NOT_PRIMARY")
 
-    if str(ProjectSettings.get_setting("rendering/renderer/rendering_method.mobile", "")) != "mobile":
+    if str(ProjectSettings.get_setting("renderer/rendering_method.mobile", "")) != "mobile":
         failures.append("MOBILE_RENDERER_MODE_MISSING")
 
     if str(ProjectSettings.get_setting("rendering/rendering_device/driver.android", "")) != "vulkan":
@@ -35,6 +35,11 @@ func _initialize() -> void:
         "rendering/rendering_device/fallback_to_opengl3", false
     )) != true:
         failures.append("OPENGL_FALLBACK_MISSING")
+
+    if bool(ProjectSettings.get_setting(
+        "textures/vram_compression/import_etc2_astc", false
+    )) != true:
+        failures.append("ETC2_ASTC_COMPRESSION_MISSING")
 
     if int(ProjectSettings.get_setting("physics/common/physics_ticks_per_second", 0)) != 60:
         failures.append("BASE_PHYSICS_60HZ_MISSING")
