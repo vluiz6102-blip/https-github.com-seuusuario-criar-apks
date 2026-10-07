@@ -136,7 +136,9 @@ function playerProfile(p){
 
 function negotiationAIView(){
  var n=S&&S.negotiation;if(!n)return '';
- var p=n.renewal?(roster().find(function(x){return x.id===n.playerId})||{}):(typeof j90ContractPlayer==='function'?j90ContractPlayer(n):null)||{};
+ var p=n.renewal?(roster().find(function(x){return x.id===n.playerId})||{}):(typeof j90ContractPlayer==='function'?j90ContractPlayer(n):null);
+ if((!p||!p.name)&&typeof mgrMarketPool==='function'){try{p=(mgrMarketPool()||[]).find(function(x){return x&&x.id===n.playerId||x&&x.name===n.player})||p||{};}catch(e){}}
+ p=p||{};
  var a=analyseTransfer(p),interest=playerInterest(p),tension=clamp(num(n.tension,18),0,100),total=num(n.fee,0)+num(n.signing,0)+num(n.bonus,0),maxFee=Math.max(num(n.fee,a.fairValue),a.fairValue*1.45,10),maxSalary=Math.max(num(n.salary,a.wage),a.wage*1.8,10);
  var failed=n.stage==='failed',renew=!!n.renewal;
  n.interest=clamp(Math.round((num(n.interest,45)*.45+interest.interest*.55)),8,96);
