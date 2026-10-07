@@ -89,10 +89,12 @@ if (!/J90_AUDIO_MODE=['\"]remote-cc0['\"]/.test(soundscape)) add(fail, 'Soundsca
 const trackStart=soundscape.indexOf('const tracks=[');
 const trackEnd=soundscape.indexOf('].map((t,i)',trackStart);
 const trackBlock=trackStart>=0&&trackEnd>trackStart?soundscape.slice(trackStart,trackEnd):'';
-const cc0Tracks=(trackBlock.match(/^\s*\[/gm)||[]).length;
+const cc0Tracks=(trackBlock.match(/\[[^\]]+\]/g)||[]).length;
 if (cc0Tracks < 20) add(fail, 'Playlist CC0 abaixo de 20 faixas: '+cc0Tracks);
 if (!/crowd_shouting\.ogg/.test(soundscape) || !/cheers\.ogg/.test(soundscape)) add(fail, 'Sons CC0 de torcida/evento ausentes.');
 if (/decodeAudioData/.test(soundscape)) add(fail, 'decodeAudioData inesperado no Soundscape.');
+if (!/fitText\(/.test(read('src/j90-squad-cards.js')) || !/\.clip\(\)/.test(read('src/j90-squad-cards.js'))) add(fail, 'Cards sem proteção contra texto saindo da carta.');
+if (!/var(--j90-ui-scale)/.test(read('src/j90-comfort-ui.js'))) add(fail, 'Comfort UI sem escala tipográfica.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {

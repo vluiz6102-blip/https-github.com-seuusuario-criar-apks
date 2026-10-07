@@ -57,6 +57,40 @@ if (await page.locator('.j90ManagerShell').count() !== 1) {
   throw new Error('Manager screen did not open after club confirmation. ' + JSON.stringify({ errors, diagnostic }));
 }
 
+
+async function assertReadableLayout(page){
+  const result=await page.evaluate(() => {
+    const selector='h1,h2,h3,h4,p,small,label,button,.mu,.hint,.sub,.j90V3Hint,.j90SquadHint';
+    const nodes=[...document.querySelectorAll(selector)].filter(el=>{
+      const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+      return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';
+    });
+    const nested=(a,b)=>a.contains(b)||b.contains(a);
+    const problems=[];
+    for(let i=0;i<nodes.length;i++){
+      const a=nodes[i],ra=a.getBoundingClientRect();
+      if(ra.width<8||ra.height<8)continue;
+      for(let j=i+1;j<nodes.length;j++){
+        const b=nodes[j];if(nested(a,b))continue;
+        const rb=b.getBoundingClientRect();
+        const ix=Math.max(0,Math.min(ra.right,rb.right)-Math.max(ra.left,rb.left));
+        const iy=Math.max(0,Math.min(ra.bottom,rb.bottom)-Math.max(ra.top,rb.top));
+        if(ix>3&&iy>3) problems.push({a:a.tagName+'.'+String(a.className||''),b:b.tagName+'.'+String(b.className||''),ix:Math.round(ix),iy:Math.round(iy)});
+        if(problems.length>=10)break;
+      }
+      if(problems.length>=10)break;
+    }
+    const overflow=[...document.querySelectorAll('.j90MgrCard,.j90xCard,.j90RosterRow,.j90MgrMarketRow,.j90XIPlayer')].filter(el=>{
+      const r=el.getBoundingClientRect();
+      return r.width>0&&r.height>0&&(el.scrollWidth-el.clientWidth>3||el.scrollHeight-el.clientHeight>3);
+    }).slice(0,10).map(el=>String(el.className||el.tagName));
+    return {problems,overflow};
+  });
+  if(result.problems.length) throw new Error('Text overlap detected: '+JSON.stringify(result.problems));
+  if(result.overflow.length) throw new Error('Text/container overflow detected: '+JSON.stringify(result.overflow));
+}
+await assertReadableLayout(page);
+
 // Exercise the 2D match renderer for several frames.
 const play = page.getByRole('button', { name: /^Jogar$/ }).first();
 if (await play.count() === 1) {

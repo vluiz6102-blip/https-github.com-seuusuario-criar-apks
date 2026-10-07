@@ -14,7 +14,7 @@
     ['Beatnik','beatnik.mp3','Songs'],['Moments','moments.mp3','Songs'],['Too','too.mp3','Songs'],['Fakie Dakie','fakie_dakie.mp3','Songs'],
     ['Hard','hard.mp3','Songs'],['Rush 2','rush_2.mp3','Songs'],['A Song','a song_0.ogg','A Soundtrack'],['Castle 2','castle 2_0.ogg','A Soundtrack'],
     ['Final or Regular Boss Theme','Final or Regular Boss Theme_0.ogg','A Soundtrack'],
-    ['Into Depths','Into Depths! Keep in mind, it's forced_0.ogg','A Soundtrack'],
+    ['Into Depths','Into Depths! Keep in mind, it is forced_0.ogg','A Soundtrack'],
     ['Sad Village',"sad village with claps 'n shit at the end_0.ogg",'A Soundtrack'],["Stooge's Story","Stooge's Story_0.ogg",'A Soundtrack']
   ].map((t,i)=>({id:i,title:t[0],file:t[1],collection:t[2],url:CC0+encodeURIComponent(t[1]),license:'CC0'}));
 
