@@ -64,6 +64,28 @@ if (await play.count() === 1) {
   await page.waitForTimeout(1200);
   if (await page.locator('#j90MatchCanvas').count() !== 1) throw new Error('Match canvas did not open.');
   if (await page.locator('#j90MatchPoss').count() !== 1) throw new Error('Possession HUD did not open.');
+  const rendererCheck = await page.evaluate(() => {
+    const c = document.querySelector('#j90MatchCanvas');
+    const m = window.S?.match2d;
+    const rect = c?.getBoundingClientRect();
+    return {
+      canvasWidth: c?.width || 0,
+      canvasHeight: c?.height || 0,
+      cssWidth: rect?.width || 0,
+      cssHeight: rect?.height || 0,
+      webgl: !!m?._j90gl?.ready,
+      canvas2d: !!m?._ctx,
+      audioMode: window.J90_AUDIO_MODE || '',
+      musicTracks: window.J90Ambience?.getTracks?.().length || 0
+    };
+  });
+  if (rendererCheck.canvasWidth < 200 || rendererCheck.canvasHeight < 150 || rendererCheck.cssWidth < 200 || rendererCheck.cssHeight < 180) {
+    throw new Error('Match canvas has invalid dimensions: ' + JSON.stringify(rendererCheck));
+  }
+  if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized.');
+  if (rendererCheck.audioMode !== 'remote-cc0') throw new Error('Unexpected audio mode: ' + rendererCheck.audioMode);
+  if (rendererCheck.musicTracks < 20) throw new Error('CC0 playlist has fewer than 20 tracks: ' + rendererCheck.musicTracks);
+
   const before = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', frames: window.J90FrameStats?.().frames || 0 }));
   await page.waitForTimeout(1000);
   const after = await page.evaluate(() => ({ clock: document.querySelector('#j90MatchClock')?.textContent || '', possession: document.querySelector('#j90MatchPoss')?.textContent || '', frames: window.J90FrameStats?.().frames || 0, perf: window.J90Perf?.snapshot?.() || null }));
