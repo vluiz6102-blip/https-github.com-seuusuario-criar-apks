@@ -16,6 +16,8 @@ on:
       - 'src/**'
       - 'scripts/generate-content-pack.py'
       - 'scripts/browser-smoke.mjs'
+      - 'scripts/diag-smoke.mjs'
+      - 'diag.html'
       - 'scripts/quality-scan.mjs'
       - 'package.json'
       - 'capacitor.config.ts'
@@ -141,6 +143,7 @@ jobs:
           trap 'kill $server_pid 2>/dev/null || true' EXIT
           sleep 1
           J90_SMOKE_URL=http://127.0.0.1:4173/ node scripts/browser-smoke.mjs
+          J90_DIAG_URL=http://127.0.0.1:4173/diag.html node scripts/diag-smoke.mjs
 
       - name: Preparar Android
         run: |
