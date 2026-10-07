@@ -670,6 +670,7 @@
       m.ball.tx=clamp(tx,.06,.94);m.ball.ty=clamp(ty,.08,.92);
       m.ball.x=owner.x;m.ball.y=owner.y;
       m.ball.flight={from:[owner.x,owner.y],to:[m.ball.tx,m.ball.ty],until:num(m._simClock,0)+.34};
+      m._lastPassContext={team:side,kind:kind,passer:owner.id,receiver:receiver.id,passerX:Number(owner.x),receiverX:Number(receiver.x),clock:num(m._simClock,0)};
       setPossession(m,side,receiver,false);
       if(kind==='through_ball')m.stats.throughBalls++;
       if(kind==='switch')m.stats.switches++;
