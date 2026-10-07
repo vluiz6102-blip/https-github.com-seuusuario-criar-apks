@@ -76,9 +76,10 @@ for (const m of index.matchAll(/(?:src|href)\s*=\s*["']([^"'#?]+)["']/gi)) {
 }
 for (const p of refs) if (!existsSync(p) && !existsSync(join('www', p))) add(warn, 'Referência de asset não encontrada no repositório: ' + p);
 
-if (/AudioContext|webkitAudioContext|new\s+Audio\s*\(|decodeAudioData|createBufferSource|J90_AUDIO_MANIFEST/.test(soundscape)) add(fail, 'Runtime de áudio ativo detectado no jogo. O jogo deve permanecer totalmente silencioso.');
+if (/decodeAudioData|J90_AUDIO_MANIFEST|assets\/audio|audio-import/.test(soundscape)) add(fail, 'Pipeline antigo de áudio importado detectado no Soundscape.');
+if (!/J90_AUDIO_MODE=['\"]procedural-original['\"]/.test(soundscape)) add(fail, 'Soundscape não está no modo de áudio procedural original.');
 if (!/J90_AUDIO_DISABLED\s*=\s*true/.test(soundscape)) add(fail, 'Soundscape não declara J90_AUDIO_DISABLED=true.');
-if (/assets\/audio|audio-import/.test(read('scripts/build.mjs'))) add(fail, 'Pipeline de build ainda referencia/pacoteia assets de áudio.');
+if (/assets\/audio|audio-import/.test(read('scripts/build.mjs'))) add(fail, 'Pipeline de build ainda referencia/pacoteia assets de áudio importado.');
 if (existsSync('www/assets/audio')) add(fail, 'Bundle www ainda contém assets/audio.');
 
 
