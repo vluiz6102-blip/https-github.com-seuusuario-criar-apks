@@ -2546,9 +2546,25 @@ function mgrStartNegotiation(i){
  if(S.window!=='open'){toast('Janela fechada','Abra a janela para iniciar uma negociação.');return}
  var q=mgrMarketFiltered()[i];if(!q)return;
  var base=Math.max(8,Math.round(q.ovr*3.1*(1+(q.age<23?.12:q.age>30?-0.08:0))));
- S.transferDesk={playerId:q.id,player:q.name,club:q.club,stage:'inquiry',interest:mgrTransferInterest(q),asking:base,offer:Math.round(base*.9),wage:Math.max(1,Math.round(q.salary*1.12)),years:4,role:q.ovr>=82?'Titular importante':'Rotação',tension:24,startedRound:S.managerRound};
- mgrNews('Sondagem enviada','O clube recebeu uma consulta por '+q.name+'.');
- render(1);
+ if(typeof j90OpenContract==='function'){
+   j90OpenContract(q,base);
+   S.negotiation.interest=mgrTransferInterest(q);
+   S.negotiation.tension=24;
+   S.negotiation.stage='club';
+   S.negotiation.playerId=q.id;
+   S.negotiation.player=q.name;
+   S.negotiation.club=q.club||'Clube';
+   S.negotiation.fee=base;
+   S.negotiation.salary=Math.max(1,Math.round(q.salary*1.12));
+   S.negotiation.years=4;
+   S.negotiation.role=q.ovr>=82?'Titular importante':'Rotação';
+   mgrNews('Sondagem enviada','O clube recebeu uma consulta por '+q.name+'.');
+   render(1);
+   return;
+ }
+ var interest=mgrTransferInterest(q);
+ S.transferDesk={playerId:q.id,player:q.name,club:q.club,stage:'inquiry',interest:interest,asking:base,offer:Math.round(base*.9),wage:Math.max(1,Math.round(q.salary*1.12)),years:4,role:q.ovr>=82?'Titular importante':'Rotação',tension:24,startedRound:S.managerRound};
+ mgrNews('Sondagem enviada','O clube recebeu uma consulta por '+q.name+'.');render(1);
 }
 function mgrTransferAdvance(action){
  var d=S.transferDesk;if(!d)return;
