@@ -31,11 +31,11 @@ ROOT = Path("assets/j90-content")
 STADIUMS = ROOT / "stadiums"
 OPENFOOTBALL = ROOT / "openfootball"
 ROSTERS = Path("data/rosters.json")
-TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "1150"))
+TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "96"))
 TARGET_BYTES = TARGET_MB * 1024 * 1024
-TECH_TARGET_BYTES = 500 * 1024 * 1024
-STADIUM_TARGET_BYTES = max(200 * 1024 * 1024, TARGET_BYTES - TECH_TARGET_BYTES)
-WIDTH, HEIGHT = 2048, 1152
+TECH_TARGET_BYTES = 24 * 1024 * 1024
+STADIUM_TARGET_BYTES = max(72 * 1024 * 1024, TARGET_BYTES - TECH_TARGET_BYTES)
+WIDTH, HEIGHT = 1024, 576
 MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "2400"))
 
 
@@ -562,8 +562,8 @@ def download_openfootball() -> list[dict]:
     return sources
 
 def main() -> None:
-    if TARGET_BYTES < 500 * 1024 * 1024:
-        raise SystemExit("J90_PACK_TARGET_MB precisa ser >= 500")
+    if TARGET_BYTES < 64 * 1024 * 1024:
+        raise SystemExit("J90_PACK_TARGET_MB precisa ser >= 64")
 
     if ROOT.exists():
         shutil.rmtree(ROOT)
@@ -588,7 +588,7 @@ def main() -> None:
             filename = f"{team_index:03d}_{slug(team)}_{variant_index:02d}_{variant_name}.jpg"
             path = STADIUMS / filename
             img = draw_scene(team, variant_name, variant_index, scene_seed)
-            img.save(path, "JPEG", quality=95, subsampling=0, optimize=False)
+            img.save(path, "JPEG", quality=84, subsampling=0, optimize=True)
             size = path.stat().st_size
             total += size
             scenes.append({
@@ -600,8 +600,8 @@ def main() -> None:
         if total >= STADIUM_TARGET_BYTES or len(scenes) >= MAX_SCENES:
             break
 
-    # Fill the remaining byte budget with more genuine visual variants, not
-    # empty/random binary padding.
+    # Fill the remaining byte budget with genuine visual variants only when needed.
+    # The launch package intentionally stays compact so download/install remain reliable.
     bonus_index = 0
     while total < STADIUM_TARGET_BYTES and len(scenes) < MAX_SCENES:
         team = teams[bonus_index % len(teams)]
