@@ -80,6 +80,9 @@ jobs:
       - name: Self-Healing: guardião arquitetural
         run: node scripts/self-healing.mjs --phase architecture --max-rounds 3 -- npm run guard:architecture
 
+      - name: Autoteste do self-healing
+        run: node scripts/self-healing.mjs --self-test
+
       - name: Preflight de código
         run: |
           bash -n scripts/audit-apk.sh
@@ -410,7 +413,7 @@ jobs:
 
       - name: Gerar APK debug
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: node ../scripts/self-healing.mjs --phase android-gradle --max-rounds 2 -- ./gradlew assembleDebug --no-daemon
 
       - name: Renomear APK
         working-directory: android
@@ -418,7 +421,7 @@ jobs:
 
       - name: Auditoria pesada do APK e integridade da instalação
         working-directory: android
-        run: bash ../scripts/audit-apk.sh
+        run: node ../scripts/self-healing.mjs --phase apk-audit --max-rounds 2 -- bash ../scripts/audit-apk.sh
 
       - name: Habilitar KVM para teste do Android Emulator
         run: |
