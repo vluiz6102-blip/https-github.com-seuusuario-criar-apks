@@ -2719,8 +2719,10 @@ function mgrMatchEvent(t){
 }
 function j90EnsureMatchRuntime(m){
  if(!m)return false;
- try{if(window.J90MatchLifecycle&&typeof window.J90MatchLifecycle.rebuildRuntime==='function')window.J90MatchLifecycle.rebuildRuntime(m)}catch(e){}
  m.management=m.management&&typeof m.management==='object'?m.management:{talk:'direto',morale:0,subs:[],instruction:'balance'};
+ var rebuild=!m._homeBrain||!m._awayBrain||!m._ai||!m._ai.home||!m._ai.away;
+ if(rebuild&&window.J90MatchLifecycle&&typeof window.J90MatchLifecycle.rebuildRuntime==='function'){try{window.J90MatchLifecycle.rebuildRuntime(m)}catch(e){}}
+
  m.players=Array.isArray(m.players)?m.players:[];m.oppPlayers=Array.isArray(m.oppPlayers)?m.oppPlayers:[];
  if(!m._homeBrain){try{m._homeBrain=typeof j90TeamBrain==='function'?j90TeamBrain(m.home||S.managerClub,m.players,m.tactic||S.tactic):null}catch(e){m._homeBrain=null}}
  if(!m._awayBrain){try{m._awayBrain=typeof j90TeamBrain==='function'?j90TeamBrain(m.away||'Adversário',m.oppPlayers,'equilibrada'):null}catch(e){m._awayBrain=null}}
