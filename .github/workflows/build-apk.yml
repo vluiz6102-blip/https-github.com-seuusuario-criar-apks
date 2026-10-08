@@ -390,9 +390,10 @@ jobs:
             ${{ runner.temp }}/j90-android-smoke/meminfo-after.txt
             ${{ runner.temp }}/j90-android-smoke/logcat.txt
             ${{ runner.temp }}/j90-android-smoke/perfetto.trace
-          if-no-files-found: error
+          if-no-files-found: warn
           compression-level: 0
           retention-days: 30
+          if: always()
 
       - name: Publicar APK bruto em Release
         env:

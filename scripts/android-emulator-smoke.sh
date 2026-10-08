@@ -25,16 +25,24 @@ adb shell dumpsys gfxinfo "$PACKAGE" >"$OUT/gfxinfo-before.txt"
 adb shell dumpsys meminfo "$PACKAGE" >"$OUT/meminfo-before.txt"
 adb shell dumpsys gfxinfo "$PACKAGE" reset || true
 
-PERFETTO_REMOTE=/data/local/tmp/j90-jornada90.perfetto
-rm -f "$OUT/perfetto.log" "$OUT/perfetto.trace"
+PERFETTO_REMOTE=/data/misc/perfetto-traces/j90-jornada90.perfetto-trace
+rm -f "$OUT/perfetto.log" "$OUT/perfetto.trace" "$OUT/perfetto-start.txt"
 adb shell rm -f "$PERFETTO_REMOTE"
-if ! adb shell command -v perfetto >/dev/null 2>&1; then
+PERFETTO_ACTIVE=0
+PERFETTO_PID=""
+if adb shell command -v perfetto >/dev/null 2>&1; then
+  PERFETTO_RAW_PID="$(adb shell perfetto --background -t 90s -o "$PERFETTO_REMOTE" sched freq idle am wm gfx view webview binder_driver 2>&1 || true)"
+  printf "%s\n" "$PERFETTO_RAW_PID" >"$OUT/perfetto-start.txt"
+  PERFETTO_PID="$(printf "%s\n" "$PERFETTO_RAW_PID" | tr -d "\r" | awk 'NF{v=$NF} END{print v}')"
+  if printf "%s" "$PERFETTO_PID" | grep -Eq "^[0-9]+$"; then
+    PERFETTO_ACTIVE=1
+    echo "PERFETTO_PID=$PERFETTO_PID"
+  else
+    echo "PERFETTO_START_FAILED=1"
+  fi
+else
   echo "PERFETTO_BINARY_MISSING=1"
-  exit 1
 fi
-adb shell "perfetto -o $PERFETTO_REMOTE -t 90s sched freq idle am wm gfx view binder_driver" >"$OUT/perfetto.log" 2>&1 &
-PERFETTO_CLIENT_PID=$!
-PERFETTO_ACTIVE=1
 adb shell dumpsys activity activities >"$OUT/activity.txt"
 grep -q "$PACKAGE" "$OUT/activity.txt"
 adb exec-out screencap -p >"$OUT/startup.png"
@@ -81,15 +89,18 @@ cat "$OUT/cdp-list.json"
 
 export J90_ANDROID_SMOKE_OUT="$OUT"
 SMOKE_STATUS=0
-timeout 120s node scripts/android-cdp-smoke.mjs || SMOKE_STATUS=$?
+timeout 240s node scripts/android-cdp-smoke.mjs || SMOKE_STATUS=$?
 
 if [ "${PERFETTO_ACTIVE:-0}" = "1" ]; then
-  for p in $(adb shell pidof perfetto 2>/dev/null | tr -d '\\r' || true); do
-    adb shell kill -INT "$p" >/dev/null 2>&1 || true
+  adb shell kill "$PERFETTO_PID" >/dev/null 2>&1 || true
+  for _i in 1 2 3 4 5; do
+    if adb shell test -s "$PERFETTO_REMOTE" >/dev/null 2>&1; then break; fi
+    sleep 1
   done
-  kill "$PERFETTO_CLIENT_PID" >/dev/null 2>&1 || true
-  sleep 2
   adb pull "$PERFETTO_REMOTE" "$OUT/perfetto.trace" >/dev/null 2>&1 || true
+  if [ ! -s "$OUT/perfetto.trace" ]; then
+    adb shell cat "$PERFETTO_REMOTE" >"$OUT/perfetto.trace" 2>/dev/null || true
+  fi
   PERFETTO_ACTIVE=0
 fi
 

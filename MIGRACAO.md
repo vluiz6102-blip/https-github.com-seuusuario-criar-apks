@@ -37,9 +37,9 @@ Os valores abaixo serão preenchidos com a execução real desta fase. Nenhum n�
 | meminfo/PSS | a medir |
 
 ### Tentativa 1 · 2026-10-08
-A primeira execução confirmou o pacote `com.jornada90.manager`, mas o smoke parou porque `_j90v3Frames` não chegou a 8 em 15 s. O `dumpsys gfxinfo` registrou 9/9 frames janky na janela observada e o logcat apresentou 5 avisos `tile memory limits exceeded`. O Perfetto ficou com 0 bytes nessa tentativa e, portanto, não é evidência de baseline.
+A primeira execução confirmou o pacote `com.jornada90.manager`, mas o smoke parou porque `_j90v3Frames` não chegou a 8 em 15 s. A segunda execução confirmou uma causa anterior no fluxo: o canvas ainda não havia sido criado dentro da janela padrão, porque a inicialização da partida aguarda o carregamento assíncrono do pacote de animação. O `dumpsys gfxinfo` registrou 9/9 frames janky na janela observada e o logcat apresentou 5 avisos `tile memory limits exceeded`. O Perfetto ficou com 0 bytes nas tentativas anteriores e, portanto, ainda não é evidência de baseline.
 
-**Decisão:** manter o gate funcional, adicionar diagnóstico de timeout, habilitar `J90Perf` durante o smoke Android, ampliar o limite funcional para 45 s e usar um perfil 1080-class no emulador. A validação de performance final continua obrigatoriamente no aparelho físico de referência. O aviso de tile memory segue sendo contabilizado e não é ocultado.
+**Decisão:** manter o gate funcional, adicionar diagnóstico de timeout, habilitar `J90Perf` durante o smoke Android, ampliar a criação do canvas para 45 s, ampliar o timeout externo para 240 s, capturar Perfetto com `perfetto --background` e PID explícito e usar um perfil 1080-class no emulador. A validação de performance final continua obrigatoriamente no aparelho físico de referência. O aviso de tile memory segue sendo contabilizado e não é ocultado.
 
 ### Gate F0
 - [ ] monitor compila/carrega

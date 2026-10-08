@@ -77,7 +77,7 @@ await c.eval("window.J90ManagerBridge.setTab('game')");
 await sleep(250);
 await wait(c,"[...document.querySelectorAll('button')].some(x=>/^Iniciar partida$/.test((x.innerText||'').trim()))");
 await c.eval("(()=>{const b=[...document.querySelectorAll('button')].find(x=>/^Iniciar partida$/.test((x.innerText||'').trim()));if(!b)throw Error('Iniciar partida missing');b.click()})()");
-await wait(c,"!!document.querySelector('#j90MatchCanvas')");
+await wait(c,"!!document.querySelector('#j90MatchCanvas')",45000);
 await wait(c,"window.J90Match2DV3?.version==='4.0'&&window.J90Match2DV3?.mode==='broadcast-tv'");
 try {
   await wait(c,"Number(window.S?.match2d?._j90v3Frames||0)>=8",45000);
