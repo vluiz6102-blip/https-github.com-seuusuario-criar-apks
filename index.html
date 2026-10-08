@@ -788,6 +788,21 @@ body.j90-cinematic-pulse .j90Sky:after{animation:j90Flash .9s ease-out both}
 #app:not(:has(.j90Home)) h1,#app:not(:has(.j90Home)) h2{letter-spacing:-.02em}
 @keyframes j90CardIn{from{opacity:.7;transform:translate3d(0,4px,0)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){#app:not(:has(.j90Home)) .card{animation:none!important}}
+
+/* Jornada 90 Home v2: mobile-first manager dashboard inspired by open-source manager UX research (Touchline/OpenFoot), original implementation. */
+.j90ManagerHome{min-height:100dvh;width:100%;max-width:620px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 14px max(22px,env(safe-area-inset-bottom));background:#050708;color:#f4f5f6;overflow:auto}
+.j90MHHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.j90MHEyebrow{font-size:10px;letter-spacing:.18em;color:#f5b942}.j90MHHeader h1{font:800 27px/1.08 system-ui,sans-serif;letter-spacing:-.03em;margin-top:3px}.j90MHSettings{width:42px;height:42px;border:1px solid #292d2f;border-radius:12px;background:#0b0d0e;color:#f5b942;font-size:19px}
+.j90MHClub{border:1px solid #292d2f;border-radius:18px;background:linear-gradient(145deg,#101719,#090b0c);padding:16px;margin-bottom:11px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.j90MHClubTop{display:flex;align-items:center;justify-content:space-between;gap:12px}.j90MHClubTop small{display:block;color:#777f82;font-size:9px;letter-spacing:.13em}.j90MHClubTop strong{display:block;font-size:20px;margin-top:3px}.j90MHClubTop span{display:block;color:#92999b;font-size:12px;margin-top:3px}.j90MHMark{flex:0 0 54px;height:54px;border-radius:15px;display:grid;place-items:center;background:#171c1e;border:1px solid #343a3d;color:#f5b942;font-weight:900;font-size:18px}
+.j90MHClubStats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:15px;padding-top:12px;border-top:1px solid #202527}.j90MHClubStats span{min-width:0}.j90MHClubStats b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.j90MHClubStats small{display:block;color:#6f777a;font-size:8px;letter-spacing:.1em;margin-top:3px}
+.j90MHPrimary{display:grid;gap:8px;margin-bottom:18px}.j90MHStart,.j90MHSecondary{width:100%;border-radius:15px;display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:10px;align-items:center;text-align:left;padding:13px 14px;touch-action:manipulation}.j90MHStart{min-height:68px;border:1px solid #4eaf72;background:linear-gradient(135deg,#17472e,#10291f);color:#f4fff7}.j90MHSecondary{min-height:58px;border:1px solid #292d2f;background:#0b0d0e;color:#f4f5f6}.j90MHStart>span,.j90MHSecondary>span{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.08);color:#f5c14a;font-weight:900}.j90MHStart b,.j90MHSecondary b{display:block;font-size:15px}.j90MHStart small,.j90MHSecondary small{display:block;color:#a5b0aa;font-size:11px;margin-top:3px}.j90MHStart em,.j90MHSecondary em{font-style:normal;font-size:25px;color:#7d8982}
+.j90MHSection{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 8px}.j90MHSection>span{font-size:10px;letter-spacing:.16em;color:#f5b942;font-weight:800}.j90MHSection small{font-size:10px;color:#656d70}
+.j90MHGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.j90MHGrid button{position:relative;min-height:88px;border:1px solid #24292b;border-radius:15px;background:#0a0c0d;color:#f1f2f2;text-align:left;padding:13px;touch-action:manipulation}.j90MHGrid b{display:block;font-size:14px}.j90MHGrid small{display:block;color:#737b7e;font-size:10px;margin-top:4px;padding-right:24px}.j90MHGrid i{position:absolute;right:12px;bottom:11px;font-style:normal;font-size:18px;color:#f5b942}
+.j90MHNews{margin-top:13px;border:1px solid #24292b;border-radius:15px;background:#090b0c;overflow:hidden}.j90MHNewsHead{display:flex;justify-content:space-between;padding:11px 13px;border-bottom:1px solid #202426}.j90MHNewsHead b{font-size:10px;letter-spacing:.12em}.j90MHNewsHead span{font-size:10px;color:#f5b942}.j90MHNewsRow{display:grid;grid-template-columns:20px minmax(0,1fr) 18px;gap:8px;align-items:center;padding:13px}.j90MHNewsRow>i{font-style:normal;color:#42d77d;font-size:9px}.j90MHNewsRow b{display:block;font-size:12px}.j90MHNewsRow small{display:block;color:#737b7e;font-size:10px;margin-top:3px}.j90MHNewsRow>strong{color:#747d80;font-size:22px}
+.j90MHBottom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.j90MHBottom button{min-height:58px;border:1px solid #24292b;border-radius:14px;background:#090b0c;color:#e8eaeb;text-align:left;padding:10px 12px}.j90MHBottom b{display:block;font-size:12px}.j90MHBottom small{display:block;color:#70787b;font-size:10px;margin-top:3px}.j90MHFooter{display:flex;justify-content:space-between;gap:10px;margin-top:17px;color:#555e61;font-size:8px;letter-spacing:.12em}.j90MHFooter b{color:#aeb5b7}
+.j90ManagerHome button{transition:transform .12s,border-color .12s,background .12s}.j90ManagerHome button:active{transform:scale(.985);border-color:#f5b942}.j90ManagerHome button:focus-visible{outline:2px solid #f5b942;outline-offset:2px}
+@media(max-width:390px){.j90ManagerHome{padding-left:9px;padding-right:9px}.j90MHHeader h1{font-size:24px}.j90MHClub{padding:13px}.j90MHGrid button{min-height:82px}.j90MHFooter{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.j90ManagerHome button{transition:none!important}}
 </style><style id="j90-manager-mode">
 body.j90-manager-screen{height:100dvh;min-height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);overflow:hidden;overscroll-behavior:none;background:#0a1015}
 body.j90-manager-screen #j90-world{display:none!important}
@@ -1696,22 +1711,36 @@ function menuV(){
  if(menuScreen==='howto')return howToView();
  if(menuScreen==='credits')return creditsView();
  const hasSave=!!S;
- const leaves=Array.from({length:10},(_,i)=>'<i style="--x:'+((i*11)%104)+'%;--d:'+((i%5)*.9)+'s;--t:'+(8+(i%4)*1.7)+'s"></i>').join('');
- return '<main class="j90Home" aria-label="Tela inicial Jornada 90 Manager">'+
-   '<div class="j90Sky" aria-hidden="true"><div class="j90Sun"></div><div class="j90Cloud c1"></div><div class="j90Cloud c2"></div><div class="j90Horizon"></div><div class="j90Stadium"></div><div class="j90Crowd"></div><div class="j90Lights"></div><div class="j90Leaves">'+leaves+'</div></div>'+
-   '<div class="j90HomeContent">'+
-     '<div class="j90Topline"><span>PRODUZIDO POR VICTOR</span><span class="j90LiveDot">JORNADA 90</span></div>'+
-     '<section class="j90BrandBlock"><div class="j90Badge">90</div><div class="j90Brand">JORNADA <b>90</b></div><p>A carreira é sua. A história também.</p></section>'+
-     j90ClubIdentity()+
-     '<section class="j90Actions">'+
-       (hasSave?
-         '<button class="j90Action j90Primary" onclick="resumeGame()"><span class="j90ActionIcon">▶</span><span><b>Continuar carreira</b><small>'+esc(S.managerName||S.name||'Manager')+' · Manager · '+esc(S.managerClub||S.club?.n||'Clube')+'</small></span><em>›</em></button>'+
-         '<button class="j90Action" onclick="newGame()"><span class="j90ActionIcon">＋</span><span><b>Nova carreira</b><small>Comece uma nova história</small></span><em>›</em></button>':
-         '<button class="j90Action j90Primary" onclick="newGame()"><span class="j90ActionIcon">▶</span><span><b>Começar carreira</b><small>Crie seu perfil de Manager e escolha seu primeiro clube</small></span><em>›</em></button>')+
-       '<div class="j90UtilityGrid"><button class="j90Utility" onclick="j90MenuNavigate(\'settings\')"><span>⚙</span><b>Configurações</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'howto\')"><span>?</span><b>Como jogar</b></button><button class="j90Utility" onclick="j90MenuNavigate(\'credits\')"><span>i</span><b>Créditos &amp; tecnologia</b></button></div>'+
-     '</section>'+
-     '<footer class="j90HomeFooter"><span>PRODUÇÃO INDEPENDENTE</span><span>ANDROID · WEB AUDIO</span></footer>'+
-   '</div>'+
+ const club=hasSave?(S.managerClub||S.club?.n||'Clube sem nome'):'Nenhum clube selecionado';
+ const manager=hasSave?(S.managerName||S.name||'Manager'):'Novo Manager';
+ const round=hasSave?Number(S.managerRound||1):1;
+ const budget=hasSave&&S.finance&&Number.isFinite(Number(S.finance.budget))?'R$ '+fm(S.finance.budget):'Configure sua carreira';
+ const next=hasSave?(round%3===0?'Dia de jogo':'Preparação da rodada'):'Pronto para começar';
+ return '<main class="j90ManagerHome" aria-label="Tela inicial Jornada 90 Manager">'+
+   '<header class="j90MHHeader"><div><span class="j90MHEyebrow">JORNADA 90</span><h1>Central do Manager</h1></div><button class="j90MHSettings" onclick="j90MenuNavigate(\\'settings\\')" aria-label="Configurações">⚙</button></header>'+
+   '<section class="j90MHClub">'+
+     '<div class="j90MHClubTop"><div><small>CARREIRA ATUAL</small><strong>'+esc(club)+'</strong><span>'+esc(manager)+' · R'+round+'/18</span></div><div class="j90MHMark">'+esc(String(club).slice(0,3).toUpperCase())+'</div></div>'+
+     '<div class="j90MHClubStats"><span><b>'+esc(budget)+'</b><small>CAIXA</small></span><span><b>'+esc(next)+'</b><small>STATUS</small></span><span><b>'+ (hasSave?'ATIVA':'NOVA') +'</b><small>CARREIRA</small></span></div>'+
+   '</section>'+
+   '<section class="j90MHPrimary">'+
+     (hasSave?
+       '<button class="j90MHStart" onclick="resumeGame()"><span>▶</span><div><b>Continuar carreira</b><small>Voltar exatamente de onde parou</small></div><em>›</em></button>':
+       '<button class="j90MHStart" onclick="newGame()"><span>▶</span><div><b>Começar carreira</b><small>Crie seu Manager e escolha o primeiro clube</small></div><em>›</em></button>')+
+     '<button class="j90MHSecondary" onclick="newGame()"><span>＋</span><div><b>Nova carreira</b><small>Começar uma nova história</small></div><em>›</em></button>'+
+   '</section>'+
+   '<div class="j90MHSection"><span>PAINEL RÁPIDO</span><small>Gestão mobile</small></div>'+
+   '<section class="j90MHGrid">'+
+     '<button onclick="'+(hasSave?'window.J90ManagerBridge.setTab("game")':'newGame()')+'"><b>Visão geral</b><small>Resumo da carreira</small><i>⌂</i></button>'+
+     '<button onclick="'+(hasSave?'window.J90ManagerBridge.setTab("lineup")':'newGame()')+'"><b>Prancheta</b><small>Escalação e tática</small><i>◈</i></button>'+
+     '<button onclick="'+(hasSave?'window.J90ManagerBridge.setTab("squad")':'newGame()')+'"><b>Elenco</b><small>Jogadores e forma</small><i>♙</i></button>'+
+     '<button onclick="'+(hasSave?'window.J90ManagerBridge.setTab("market")':'newGame()')+'"><b>Mercado</b><small>Transferências</small><i>↔</i></button>'+
+   '</section>'+
+   '<section class="j90MHNews"><div class="j90MHNewsHead"><b>AGENDA</b><span>'+esc(next)+'</span></div><div class="j90MHNewsRow"><i>●</i><div><b>'+ (hasSave?'Próximo compromisso':'Primeiro passo') +'</b><small>'+ (hasSave?'Prepare a equipe e defina sua estratégia.':'Monte seu perfil e assuma um clube.') +'</small></div><strong>›</strong></div></section>'+
+   '<section class="j90MHBottom">'+
+     '<button onclick="j90MenuNavigate(\\'howto\\')"><b>Como jogar</b><small>Aprenda o fluxo</small></button>'+
+     '<button onclick="j90MenuNavigate(\\'credits\\')"><b>Créditos</b><small>Victor Luiz</small></button>'+
+   '</section>'+
+   '<footer class="j90MHFooter"><span>CRIADO POR <b>VICTOR LUIZ</b></span><span>ANDROID · WEBVIEW</span></footer>'+
  '</main>';
 }
 function howToView(){
