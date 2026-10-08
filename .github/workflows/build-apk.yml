@@ -62,7 +62,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: gradle
+          # O Android é gerado por "npx cap add android" depois deste passo.
+          # Não usar cache Gradle aqui, pois o setup-java exige arquivos Gradle
+          # presentes no checkout para calcular a chave do cache.
+          cache: ''
 
       - name: Validar e instalar dependências
         run: |
