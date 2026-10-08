@@ -1025,8 +1025,7 @@
       if(op&&(!m.ball.flight||m.ball.flight.until<=m._simClock)){m.ball.x=op.x+(m.possessionTeam==='home'?.012:-.012);m.ball.y=op.y+.006}
     }
 
-    if(typeof mgrMatchHud==='function')mgrMatchHud();
-    if(typeof mgrDraw2D==='function')mgrDraw2D();
+    return true;
   }
 
   function adaptFinish(m){
@@ -1111,8 +1110,9 @@
   }
 
   function patchTick(){
-    if(typeof mgrMatchTick!=='function'||mgrMatchTick.__j90ai2)return;
-    mgrMatchTick.__original=mgrMatchTick;mgrMatchTick=tick;mgrMatchTick.__j90ai2=true;
+    // O loop de partida é soberano no index.html. O AI 2.0 expõe tick()
+    // sem substituir/multiplicar o loop global.
+    return typeof mgrMatchTick==='function';
   }
 
   function patchStart(){
@@ -1171,7 +1171,8 @@
     reset:function(){try{localStorage.removeItem(STORE)}catch(e){}LEARN={version:VERSION,matches:0,teams:{},global:{},updatedAt:0};return true},
     teamProfile:function(team){return teamMemory(team)},
     palette:teamPalette,
-    competition:function(){return competitionName()}
+    competition:function(){return competitionName()},
+    tick:tick
   };
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',primeCurrent,{once:true});
