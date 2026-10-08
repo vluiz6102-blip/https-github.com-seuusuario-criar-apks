@@ -12,6 +12,13 @@ function checkSyntax(label, source) {
   try { new Function(source); }
   catch (e) { add(fail, label + ': ' + e.message); }
 }
+function checkNodeSyntax(label, file) {
+  const result=spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+  if (result.status !== 0) {
+    const detail = String(result.stderr || result.stdout || '').trim().replace(/\\s+/g, ' ');
+    add(fail, label + (detail ? ': ' + detail : ': node --check falhou'));
+  }
+}
 
 const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
 if (!/function\s+startCareer\s*\(/.test(index)) add(fail, 'Fluxo crítico de início de carreira sem startCareer().');
@@ -100,12 +107,23 @@ if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global 
 
 
 
-// Full source syntax gate: catch regressions in any first-party JavaScript before packaging.
-const sourceFilesForScan = readdirSync('src', { withFileTypes: true }).filter(e => e.isFile() && /\\.(?:js|mjs)$/i.test(e.name)).map(e => join('src', e.name));
+// Full source syntax gate: Node parses every first-party JS/MJS file before packaging.
+const sourceFilesForScan = readdirSync('src', { withFileTypes: true })
+  .filter(e => e.isFile() && /\.(?:js|mjs)$/i.test(e.name))
+  .map(e => join('src', e.name));
 for (const file of sourceFilesForScan) {
-  const source = read(file);
-  checkSyntax('Source ' + file, source);
+  if (!existsSync(file)) { add(fail, 'Arquivo de origem ausente: ' + file); continue; }
+  checkNodeSyntax('Source ' + file, file);
 }
+
+const androidSmokeSource = read('scripts/android-cdp-smoke.mjs');
+checkSyntax('Android CDP Smoke', androidSmokeSource);
+if (!/function webViewRafHeartbeat\(c,durationMs=1200\)/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem heartbeat independente de requestAnimationFrame.');
+if (!/matchIdentity/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem controle de identidade da instância de match.');
+if (!/renderer-commit-stalled-webview-responsive/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de renderer travado com WebView responsiva.');
+if (!/renderer-did-not-commit-enough-frames/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de commits insuficientes.');
+if (!/pidof.*com\.jornada90\.manager/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura do processo Android em caso de falha.');
+if (!/timeoutMs=45000/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke ainda usa janela longa de timeout para detectar renderer travado.');
 const indexSourceForScan = read('index.html');
 if (!/function menuV\(\)[\s\S]*j90ManagerHome[\s\S]*CRIADO POR[\s\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
 if (!/j90MHClub[\s\S]*j90MHGrid[\s\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
