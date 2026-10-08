@@ -16,7 +16,7 @@ async function target(){
   return p;
 }
 class CDP{
-  constructor(url){this.ws=new WebSocket(url);this.id=0;this.pending=new Map()}
+  constructor(url){this.ws=new WebSocket(url);this.id=0;this.pending=new Map();this.events=[]}
   connect(){
     return new Promise((resolve,reject)=>{
       let settled=false;
@@ -31,6 +31,9 @@ class CDP{
             const p=this.pending.get(m.id);
             this.pending.delete(m.id);
             m.error?p.reject(Error(m.error.message||'CDP error')):p.resolve(m.result);
+          }else if(m.method){
+            this.events.push(m);
+            if(this.events.length>500)this.events.shift();
           }
         }catch(err){errors.push('cdp-message: '+err.message)}
       });
@@ -53,7 +56,7 @@ class CDP{
   async shot(path){const r=await this.call('Page.captureScreenshot',{format:'png',fromSurface:true});fs.writeFileSync(path,Buffer.from(r.data,'base64'))}
   close(){try{this.ws.close()}catch{}}
 }
-async function connect(){const t=await target();const c=new CDP(t.webSocketDebuggerUrl);await c.connect();await c.call('Runtime.enable');await c.call('Page.enable');return c}
+async function connect(){const t=await target();const c=new CDP(t.webSocketDebuggerUrl);await c.connect();await c.call('Runtime.enable');await c.call('Page.enable');try{await c.call('Log.enable')}catch(e){}return c}
 async function wait(c,expr,ms=15000){const end=Date.now()+ms;while(Date.now()<end){try{if(await c.eval(expr))return}catch{}await sleep(250)}throw Error('Timeout: '+expr)}
 
 async function rendererDiag(c){
@@ -74,13 +77,13 @@ function filteredAndroidLogcat(limit=180){
   }
 }
 async function captureRendererFailure(c,error){
-  const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));
+  const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));\n  const cdpEvents=c.events.filter(e=>/^(Runtime\\.exceptionThrown|Runtime\\.consoleAPICalled|Log\\.entryAdded|Page\\.crash|Inspector\\.detached)$/.test(String(e.method||''))).slice(-200);
   let processInfo='';
   try{processInfo=adb(['shell','pidof','com.jornada90.manager']).trim()}catch(e){processInfo='pidof failed: '+(e?.message||String(e))}
   try{fs.writeFileSync(out+'/android-runtime-process.txt',processInfo+'\\n')}catch{}
   try{await c.shot(out+'/android-frame-timeout.png')}catch(e){fs.writeFileSync(out+'/android-frame-timeout-screenshot-error.txt',String(e?.message||e))}
   fs.writeFileSync(out+'/android-frame-timeout-logcat.txt',filteredAndroidLogcat());
-  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),classification:error?.classification||'',diag,processInfo},null,2));
+  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),classification:error?.classification||'',diag,processInfo,cdpEvents},null,2));\n  fs.writeFileSync(out+'/android-cdp-events.json',JSON.stringify(cdpEvents,null,2));
   return diag;
 }
 async function waitForRendererFrames(c,target=8,timeoutMs=45000){
@@ -189,7 +192,7 @@ if(!foreground.match||!foreground.canvas||foreground.paused)throw Error('Android
 await c.shot(out+'/android-2d-after-resume.png');
 const perf=await c.eval("window.J90Perf?.snapshot?.()||null");
 
-fs.writeFileSync(out+'/android-result.json',JSON.stringify({resilience,check,before,after,camBefore,camAfter,savedElapsed,resumed,restored,foreground,perf,errors},null,2));
+fs.writeFileSync(out+'/android-result.json',JSON.stringify({resilience,check,before,after,camBefore,camAfter,savedElapsed,resumed,restored,foreground,perf,errors,cdpEventCount:c.events.length,cdpErrorEvents:c.events.filter(e=>/^(Runtime\\.exceptionThrown|Page\\.crash|Inspector\\.detached)$/.test(String(e.method||''))).length},null,2));
 if(errors.length)throw Error('Android runtime errors:\n'+errors.slice(0,20).join('\n'));
 console.log('ANDROID_WEBVIEW_SMOKE=OK');
 console.log('ANDROID_2D='+JSON.stringify({check,before,after,resumed,restored,foreground}));
