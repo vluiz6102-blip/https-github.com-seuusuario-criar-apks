@@ -185,7 +185,7 @@
     }else if(pos<42){
       t.mentality='Positive';t.tempo='Fast';reason='Recuperação do controle territorial';
     }
-    state.tactics=t; return {changed:JSON.stringify(t)!==JSON.stringify(state.tactics),tactics:t,reason,urgency:clamp(Math.abs(diff)*.25+(oppSot-sot)*.08,0,1)};
+    state.tactics=t; return {changed:JSON.stringify(t)!==before,tactics:t,reason,urgency:clamp(Math.abs(diff)*.25+(oppSot-sot)*.08,0,1)};
   }
 
   function simulateMatch(home=state.club.name,away='Adversário',homeCA=70,awayCA=70,opts={}){
