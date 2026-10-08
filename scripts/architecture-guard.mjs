@@ -46,6 +46,12 @@ check(!/\b(?:window\.)?mgrMatchTick\s*=\s*[^=]/.test(ai), 'AI 2.0 does not repla
 
 const match2d = read('src/j90-match2d-v3.js');
 check(!/requestAnimationFrame\s*\(|cancelAnimationFrame\s*\(|setInterval\s*\(/.test(match2d), 'Match 2D has no private loop');
+check(/version:'4\.1'/.test(match2d), 'Match 2D circular renderer version 4.1 is present');
+check(/Math\.max\(\.90,low\?\.90:1\)/.test(match2d), 'Adaptive 2D quality never drops below DPR 0.90');
+check(/var dpr=Math\.min\(1\.5,Math\.max\(\.90,Number\(m\._j90Dpr\)\|\|1\)\)/.test(match2d), 'Android 2D backing DPR floor is 0.90');
+check(/var cssH=Math\.max\(180,/.test(match2d), 'Android 2D CSS height floor is 180px');
+check(/function drawCircularPlayer\(/.test(match2d), '2D renderer uses circular player presentation');
+check(/BOLINHAS/.test(match2d), '2D renderer exposes comfortable circular-match presentation');
 
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
