@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 
-var VERSION='1.0';
+var VERSION='1.1';
 
 // Boot contract: os dois globais existem imediatamente, sem depender do DOM.
 if(!window.J90AutoHealAI){
@@ -19,7 +19,34 @@ var MAX_ATTEMPTS=24;
 var attempts=0;
 var repairing=false;
 var lastError='';
-var stats={repairs:0,errors:0,ui:0,state:0,loadedManagerAI:0};
+var stats={repairs:0,errors:0,ui:0,state:0,loadedManagerAI:0,guardScans:0,guardFaults:0,guardLastScanAt:0,guardLastFault:'',guardLastFaultAt:0};
+var guardState={rendererFrames:0,lastRendererFrame:0,lastTick:0,lastTickAt:0,lastElapsed:0,lastElapsedAt:0,canvasW:0,canvasH:0,heartbeat:0};
+function guardScan(){
+  stats.guardScans++;
+  stats.guardLastScanAt=Date.now();
+  var faults=[];
+  safe(function(){
+    var m=window.S&&S.match2d;
+    var canvas=document.getElementById('j90MatchCanvas');
+    guardState.heartbeat=Number(window._j90v3Frames||window._j90RenderFrames||0)||0;
+    guardState.lastRendererFrame=Number(window._j90v3LastFrame||0)||0;
+    guardState.lastTick=Number(m&&m._j90TickCount||0)||0;
+    guardState.lastTickAt=Number(m&&m._j90LastTickAt||0)||0;
+    guardState.lastElapsed=Number(m&&m.elapsed||0)||0;
+    guardState.lastElapsedAt=Number(m&&m._j90LastTickAt||0)||0;
+    guardState.canvasW=Number(canvas&&canvas.width||0)||0;
+    guardState.canvasH=Number(canvas&&canvas.height||0)||0;
+    if(window.__J90_RENDERER_ERROR__)faults.push('renderer-error');
+    if(m&&m._j90RuntimeError)faults.push('match-runtime-error');
+    if(m&&m.paused!==true&&m.startedAt&&guardState.lastTickAt&&performance.now()-guardState.lastTickAt>3500)faults.push('match-tick-stalled');
+    if(m&&m.paused!==true&&m.startedAt&&Number.isFinite(m.elapsed)&&guardState.lastElapsedAt&&performance.now()-guardState.lastElapsedAt>3500)faults.push('match-clock-stalled');
+    if(m&&canvas&&(guardState.canvasW<200||guardState.canvasH<100))faults.push('match-canvas-invalid');
+    if(document.visibilityState==='visible'&&m&&m.paused!==true&&guardState.heartbeat>0&&guardState.lastRendererFrame&&performance.now()-guardState.lastRendererFrame>3500)faults.push('renderer-frame-stalled');
+  });
+  if(faults.length){stats.guardFaults++;stats.guardLastFault=faults.join(',');stats.guardLastFaultAt=Date.now();}
+  return {ok:faults.length===0,faults:faults,telemetry:Object.assign({},guardState)};
+}
+
 
 function safe(fn){try{return fn()}catch(e){lastError=String(e&&e.message||e);return null}}
 function hasManager(){return safe(function(){return !!(window.S&&window.S.manager)})}
@@ -172,7 +199,8 @@ window.J90AutoHealAI={
 };
 window.J90BugGuard={
   version:VERSION,
-  scan:health,
-  stats:window.J90AutoHealAI.stats
+  scan:guardScan,
+  stats:function(){return Object.assign({},stats,{attempts:attempts,lastError:lastError,guardState:Object.assign({},guardState)})},
+  last:function(){return Object.assign({},guardState)}
 };
 })();
