@@ -147,23 +147,42 @@
     m._pitch=o;return o;
   }
 
-  function worldPoint(x,y,cameraX,mode){
+  function worldPoint(x,y,cameraX,cameraY,mode,zoom){
     x=clamp(Number(x)||.5,0,1);y=clamp(Number(y)||.5,0,1);
-    var depth=.05+.95*y,left=lerp(220,78,depth),right=lerp(740,882,depth),py=247+depth*260,px=lerp(left,right,x);
-    var pan=cameraX*80*(.35+.65*y);
-    if(mode==='close')pan*=1.45;
-    if(mode==='tactical')pan*=.72;
-    return {x:px-pan,y:py};
+    var depth=.05+.95*y;
+    var left=lerp(220,78,depth),right=lerp(740,882,depth),py=247+depth*260,px=lerp(left,right,x);
+    var panX=cameraX*80*(.35+.65*y);
+    var panY=cameraY*30*(.25+.75*y);
+    if(mode==='close'){panX*=1.35;panY*=1.15}
+    if(mode==='tactical'){panX*=.72;panY*=.65}
+    var z=clamp(Number(zoom)||1,.88,1.14);
+    px=480+(px-panX-480)*z;
+    py=390+(py-panY-390)*z;
+    return {x:px,y:py};
   }
 
   function cameraState(m){
     var bx=Number(m.ball&&m.ball.x),by=Number(m.ball&&m.ball.y);
     if(!Number.isFinite(bx))bx=.5;if(!Number.isFinite(by))by=.5;
-    var desired=clamp((bx-.5)*.72,-.16,.16);
-    if(!Number.isFinite(m._cameraX))m._cameraX=desired;
-    var smooth=m.cameraMode==='close'?.16:m.cameraMode==='tactical'?.08:.11;
-    m._cameraX=lerp(m._cameraX,desired,smooth);
-    return {x:m._cameraX,mode:m.cameraMode||'tv'};
+    var dangerHome=Number(m.danger&&m.danger.home)||.5,dangerAway=Number(m.danger&&m.danger.away)||.5;
+    var totalDanger=dangerHome+dangerAway;
+    var activeDanger=totalDanger>0?Math.max(dangerHome,dangerAway)/totalDanger:.5;
+    var desiredX=clamp((bx-.5)*.86,-.22,.22);
+    var desiredY=clamp((by-.5)*.56,-.22,.22);
+    var attacking=String(m.action&&m.action.name||'').toLowerCase();
+    var eventZoom=/shot|chute|goal|cross|corner|free|penalty|final/.test(attacking)?1.10:(activeDanger>.62?1.06:.98);
+    var mode=m.cameraMode||'tv';
+    if(mode==='close')eventZoom=Math.max(eventZoom,1.10);
+    if(mode==='tactical')eventZoom=.94;
+    if(!Number.isFinite(m._cameraX))m._cameraX=desiredX;
+    if(!Number.isFinite(m._cameraY))m._cameraY=desiredY;
+    if(!Number.isFinite(m._cameraZoom))m._cameraZoom=1;
+    var smooth=mode==='close'?.16:mode==='tactical'?.075:.12;
+    var verticalSmooth=mode==='close'?.13:mode==='tactical'?.06:.085;
+    m._cameraX=lerp(m._cameraX,desiredX,smooth);
+    m._cameraY=lerp(m._cameraY,desiredY,verticalSmooth);
+    m._cameraZoom=lerp(m._cameraZoom,eventZoom,.10);
+    return {x:m._cameraX,y:m._cameraY,zoom:m._cameraZoom,mode:mode};
   }
 
   function actionFor(p,m,now,low){
@@ -178,7 +197,7 @@
   }
 
   function drawPlayer(g,p,side,m,now,low,cam){
-    var pos=worldPoint(p&&p.x,p&&p.y,cam.x,cam.mode),id=String(p&&p.id||p&&p.name||'player'),num=String(p&&p.number!=null?p.number:'');
+    var pos=worldPoint(p&&p.x,p&&p.y,cam.x,cam.y,cam.mode,cam.zoom),id=String(p&&p.id||p&&p.name||'player'),num=String(p&&p.number!=null?p.number:'');
     var h=hash(id),pc=colors(side==='home'?m.home:m.away),role=String(p&&p.position||p&&p.role||'').toUpperCase();
     var keeper=/GOL|GK|KEEP/.test(role),depth=clamp(Number(p&&p.y)||.5,.05,.95),s=(.63+.62*depth)*(cam.mode==='close'?1.08:cam.mode==='tactical'?.94:1);
     var x=pos.x,y=pos.y;
@@ -214,7 +233,7 @@
   }
 
   function drawBall(g,m,low,cam){
-    var p=worldPoint(m.ball&&m.ball.x,m.ball&&m.ball.y,cam.x,cam.mode),r=3.8+(Number(m.ball&&m.ball.z)||0)*2;
+    var p=worldPoint(m.ball&&m.ball.x,m.ball&&m.ball.y,cam.x,cam.y,cam.mode,cam.zoom),r=3.8+(Number(m.ball&&m.ball.z)||0)*2;
     g.fillStyle='rgba(0,0,0,.36)';g.beginPath();g.ellipse(p.x,p.y+4,7,2.5,0,0,Math.PI*2);g.fill();
     if(m.ball&&m.ball.flight&&!low){
       var f=m.ball.flight;g.strokeStyle='rgba(255,255,255,.25)';g.lineWidth=2;g.beginPath();g.moveTo(p.x,p.y);
