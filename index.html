@@ -2812,10 +2812,19 @@ function j90NearestPlayer(m,x,y){
 }
 function mgrMatchTick(frameNow){
  var m=S&&S.match2d;if(!m||m.paused)return;
- j90EnsureMatchRuntime(m);j90EnsureMatchFormation(m);
  var now=Number.isFinite(frameNow)?frameNow:performance.now(),prev=Number(m._lastTick)||now,dt=Math.max(1,Math.min(50,now-prev));m._lastTick=now;
+ var wallStarted=Number(m.startedAt);
+ if(!Number.isFinite(wallStarted)||wallStarted<=0){m.startedAt=Date.now();wallStarted=m.startedAt}
+ m.elapsed=(Date.now()-wallStarted)/1000;
+ m._j90TickCount=Number(m._j90TickCount||0)+1;
+ m._j90LastTickAt=performance.now();
+ try{j90EnsureMatchRuntime(m);j90EnsureMatchFormation(m)}catch(e){
+  m._j90RuntimeError=String(e?.message||e||'match runtime error');
+  m._j90RuntimeErrorStack=String(e?.stack||'');
+  return;
+ }
  var p=window.__J90_PERF||j90PerfState();if((m._perfCounter=(m._perfCounter||0)+1)%8===0)j90PerfSample(dt);
- m._simAcc=(m._simAcc||0)+dt;m.elapsed=(Date.now()-(Number(m.startedAt)||Date.now()))/1000;var local=Math.max(0,Number(m.elapsed)||0);
+ m._simAcc=(m._simAcc||0)+dt;var local=Math.max(0,Number(m.elapsed)||0);
  if(local>=m.duration){
   if(m.half===1){m.half=2;m.elapsed=0;m.startedAt=Date.now();m._simClock=0;m.paused=true;mgrMatchEvent('Intervalo: ajuste a tática ou faça substituições.');try{save()}catch(e){}render(1);return}
   mgrMatchFinish();return;
