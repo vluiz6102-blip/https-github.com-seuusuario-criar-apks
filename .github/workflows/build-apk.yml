@@ -421,8 +421,12 @@ jobs:
           profile: pixel_5
           ram-size: 4096M
           heap-size: 576M
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          # O smoke precisa de um AVD limpo. Não reutilizar um AVD potencialmente
+          # corrompido pelo runner anterior evita falhas em "Configure emulator".
+          force-avd-creation: true
+          emulator-boot-timeout: 900
+          # Sem snapshots: o teste começa sempre de um estado frio e determinístico.
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: bash scripts/android-emulator-smoke.sh
 
