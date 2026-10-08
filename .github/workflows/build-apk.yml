@@ -55,6 +55,7 @@ jobs:
       - name: Preflight de código
         run: |
           bash -n scripts/audit-apk.sh
+          bash -n scripts/publish-release.sh
           python3 -m py_compile scripts/generate-content-pack.py
           node --check scripts/browser-smoke.mjs
           node - <<'NODE'
@@ -355,87 +356,7 @@ jobs:
       - name: Publicar APK bruto em Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          apk="android/app/build/outputs/apk/debug/Jornada-90-Manager.apk"
-          sha_file="android/Jornada-90-Manager.apk.sha256"
-          info_file="android/Jornada-90-Manager-release.txt"
-          bytes=$(stat -c%s "$apk")
-          local_sha=$(cut -d' ' -f1 "$sha_file")
-          tag="jornada-90-build-${GITHUB_RUN_NUMBER}"
-
-          # Cria a Release diretamente pela API REST para evitar a referência
-          # 'untagged' observada com gh release create nesta execução.
-          payload=$(jq -n \
-            --arg tag "$tag" \
-            --arg target "$GITHUB_SHA" \
-            --arg name "Jornada 90 Manager build ${GITHUB_RUN_NUMBER}" \
-            --arg body "Build validada automaticamente. O APK foi auditado e terá tamanho/SHA-256 conferidos após o upload." \
-            '{tag_name:$tag,target_commitish:$target,name:$name,body:$body,draft:true,prerelease:false}')
-          release_json=$(curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: application/json" \
-            --data "$payload" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases")
-          release_id=$(printf '%s' "$release_json" | jq -r '.id // empty')
-          upload_url=$(printf '%s' "$release_json" | jq -r '.upload_url // empty' | sed 's/{.*//')
-          test -n "$release_id"
-          test -n "$upload_url"
-          echo "RELEASE_ID=${release_id}"
-          echo "RELEASE_TAG=${tag}"
-
-          # Upload via GitHub CLI para arquivos grandes.
-          # Evita curl --data-binary, que pode carregar o APK inteiro na RAM.
-          gh release upload "${tag}" "${apk}" "${sha_file}" "${info_file}" --clobber --repo "${GITHUB_REPOSITORY}"
-
-          # Conferência autoritativa do asset recebido pelo GitHub.
-          assets_json=$(curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}")
-          remote_size=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .size')
-          remote_digest=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .digest')
-          remote_state=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .state')
-          test "$remote_state" = "uploaded"
-          test "$remote_size" -eq "$bytes"
-          test "$remote_digest" = "sha256:${local_sha}"
-          echo "RELEASE_APK_STATE=uploaded"
-          echo "RELEASE_APK_SIZE_MATCH=OK"
-          echo "RELEASE_APK_SHA256_MATCH=OK"
-
-          # A Release ainda é draft neste ponto, então browser_download_url pode
-          # retornar 404. Baixe o asset pelo endpoint autenticado de assets,
-          # valide tamanho/SHA-256/CRC e só depois publique a Release.
-          asset_api_url=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .url')
-          test -n "$asset_api_url"
-          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/octet-stream" \
-            -o /tmp/Jornada-90-Manager-downloaded.apk "$asset_api_url"
-          downloaded_size=$(stat -c%s /tmp/Jornada-90-Manager-downloaded.apk)
-          downloaded_sha=$(sha256sum /tmp/Jornada-90-Manager-downloaded.apk | cut -d' ' -f1)
-          test "$downloaded_size" -eq "$bytes"
-          test "$downloaded_sha" = "$local_sha"
-          unzip -t /tmp/Jornada-90-Manager-downloaded.apk >/tmp/j90-release-download-crc.txt
-          echo "RELEASE_DRAFT_DOWNLOAD_SIZE_MATCH=OK"
-          echo "RELEASE_DRAFT_DOWNLOAD_SHA256_MATCH=OK"
-          echo "RELEASE_DRAFT_DOWNLOAD_CRC=OK"
-
-          # Só depois da conferência a Release deixa de ser rascunho e vira a
-          # versão pública/última.
-          publish_payload='{"draft":false,"prerelease":false,"make_latest":true}'
-          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors \
-            -X PATCH \
-            -H "Authorization: Bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            -H "Content-Type: application/json" \
-            --data "$publish_payload" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}" >/dev/null
-          echo "RELEASE_PUBLISHED=OK"
+        run: bash scripts/publish-release.sh
 
       # Disponibiliza o instalável também no Artifacts. O download do
       # artifact é um ZIP externo do GitHub Actions, então o APK precisa ser
