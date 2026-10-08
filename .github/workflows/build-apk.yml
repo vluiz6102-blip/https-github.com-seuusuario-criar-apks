@@ -451,6 +451,20 @@ jobs:
           echo "RELEASE_APK_SIZE_MATCH=OK"
           echo "RELEASE_APK_SHA256_MATCH=OK"
 
+          # Teste real do download público: baixa o mesmo asset pela URL final,
+          # confere tamanho/SHA-256 e executa teste de CRC do APK baixado.
+          download_url=$(printf '%s' "$assets_json" | jq -r '.assets[] | select(.name=="Jornada-90-Manager.apk") | .browser_download_url')
+          test -n "$download_url"
+          curl --fail --show-error --silent --location --http1.1 --retry 5 --retry-all-errors             -o /tmp/Jornada-90-Manager-downloaded.apk "$download_url"
+          downloaded_size=$(stat -c%s /tmp/Jornada-90-Manager-downloaded.apk)
+          downloaded_sha=$(sha256sum /tmp/Jornada-90-Manager-downloaded.apk | cut -d' ' -f1)
+          test "$downloaded_size" -eq "$bytes"
+          test "$downloaded_sha" = "$local_sha"
+          unzip -t /tmp/Jornada-90-Manager-downloaded.apk >/tmp/j90-release-download-crc.txt
+          echo "RELEASE_DOWNLOAD_SIZE_MATCH=OK"
+          echo "RELEASE_DOWNLOAD_SHA256_MATCH=OK"
+          echo "RELEASE_DOWNLOAD_CRC=OK"
+
           # Só depois da conferência a Release deixa de ser rascunho e vira a
           # versão pública/última.
           publish_payload='{"draft":false,"prerelease":false,"make_latest":true}'
