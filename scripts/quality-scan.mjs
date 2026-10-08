@@ -136,7 +136,7 @@ if (!/matchIdentity/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem 
 if (!/renderer-commit-stalled-webview-responsive/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de renderer travado com WebView responsiva.');
 if (!/renderer-did-not-commit-enough-frames/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de commits insuficientes.');
 if (!/pidof.*com\.jornada90\.manager/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura do processo Android em caso de falha.');
-if (!/this\.events=\[\]/.test(androidSmokeSource) || !/Runtime\.exceptionThrown/.test(androidSmokeSource) || !/Log\.entryAdded/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura de exceções/erros do runtime via CDP.');
+if (!androidSmokeSource.includes('this.events=[]') || !androidSmokeSource.includes('Runtime\\.exceptionThrown') || !androidSmokeSource.includes('Log\\.entryAdded')) add(fail, 'Android CDP Smoke sem captura de exceções/erros do runtime via CDP.');
 if (!/timeoutMs=45000/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke ainda usa janela longa de timeout para detectar renderer travado.');
 if (!/function menuV\(\)[\s\S]*j90ManagerHome[\s\S]*CRIADO POR[\s\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
 if (!/j90MHClub[\s\S]*j90MHGrid[\s\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
