@@ -260,6 +260,23 @@ if (await play.count() === 1) {
   if (await page.locator('#j90MatchCanvas').count() !== 1) throw new Error('Match canvas did not open.');
   if (await page.locator('.j90ManagerTabs').count() !== 0) throw new Error('Manager navigation leaked into fullscreen match.');
   if (await page.locator('.j90MatchActionBar').count() !== 1) throw new Error('Live match action bar did not open.');
+  if (await page.locator('#j90FusionDock').count() !== 1) throw new Error('Fusion Match Center did not open with the live 2D match.');
+  const fusionContract = await page.evaluate(() => ({
+    version: String(window.J90Fusion?.version || ''),
+    dock: !!document.querySelector('#j90FusionDock'),
+    controls: document.querySelectorAll('#j90FusionDock button[data-j90f]').length,
+    state: window.J90Fusion?.state?.() || null
+  }));
+  if (fusionContract.version !== '1.0' || fusionContract.controls < 6) {
+    throw new Error('Fusion Match Center runtime contract failed: ' + JSON.stringify(fusionContract));
+  }
+  await page.locator('#j90FusionDock button[data-j90f="lab"]').click();
+  if (await page.locator('#j90FusionDock.open .j90FS').count() < 4) {
+    throw new Error('Fusion Match Center analysis panel did not open.');
+  }
+  await page.locator('#j90FusionDock button[data-j90f="pressao-alta"]').click();
+  const fusionTactic = await page.evaluate(() => window.J90Fusion?.state?.() || null);
+  if (fusionTactic?.tactic !== 'pressao-alta') throw new Error('Fusion tactical preset was not applied: ' + JSON.stringify(fusionTactic));
   const beforeLiveElapsed = await page.evaluate(() => Number(window.S?.match2d?.elapsed || 0));
   await page.getByRole('button', { name: /^Tática/ }).click();
   if (await page.locator('#j90MatchPanel.open .j90MatchPane[data-pane="tactics"]').count() !== 1) throw new Error('Live tactics panel did not open.');
