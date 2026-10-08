@@ -30,6 +30,7 @@ public class MainActivity extends BridgeActivity {
       settings.setDomStorageEnabled(true);
       settings.setDatabaseEnabled(true);
       settings.setMediaPlaybackRequiresUserGesture(false);
+      if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true);
       webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
       webView.setBackgroundColor(Color.BLACK);
     }
