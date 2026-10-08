@@ -15,7 +15,7 @@
     _j90v3LastFrame:1,_j90AnimationProfile:1,_cw:1,_ch:1,_dpr:1,
     _fieldCache:1,_fieldCacheAI:1,_perfCounter:1,_lastTick:1,_simAcc:1,
     _simClock:1,_hudCounter:1,_hudLastScore:1,_hudLastHalf:1,
-    _cameraX:1,_j90RenderSamples:1,_j90BroadcastReady:1,_j90CameraMode:1,
+    _cameraX:1,_j90RenderSamples:1,_j90BroadcastReady:1,_j90CameraMode:1,_j90MatchLoopReady:1,_j90TickCount:1,_j90LastTickAt:1,
     _j90RenderError:1,_j90AutoLow:1,_j90EventState:1,_replayBusy:1,
     _replayStartedAt:1,_lastPassContext:1,_j90FrameLastAt:1,_j90FrameIntervals:1,_j90FrameP95:1,_j90Fps:1,_j90Dpr:1,_j90CanvasScaleX:1,_j90CanvasScaleY:1,_j90RenderErrorStack:1,_j90RenderErrorStage:1
   };

@@ -314,7 +314,7 @@ if (await play.count() === 1) {
   if (rendererCheck.v3Frames < 5) throw new Error('2D renderer initialized but did not paint frames: ' + JSON.stringify(rendererCheck));
   if (/pixelated/i.test(rendererCheck.pixelated)) throw new Error('2D canvas is still forcing pixel-art rendering instead of broadcast smoothing: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.canvasSample <= 0) throw new Error('2D canvas appears blank: ' + JSON.stringify(rendererCheck));
-  if (await page.locator('#j90EventOverlayCanvas').count() !== 1) throw new Error('Match event overlay was not created.');
+  if (await page.locator('#j90EventOverlayCanvas').count() !== 0) throw new Error('Legacy match event overlay canvas leaked into the live match.');
   if (!(await page.evaluate(() => !!window.J90MatchEvents?.state?.()))) throw new Error('Match event system did not initialize.');
   const refereeAI = await page.evaluate(() => window.J90MatchEvents?.state?.()?.refereeAI || null);
   if (!refereeAI || typeof refereeAI.pressure !== 'number' || typeof refereeAI.varReviews !== 'number') throw new Error('Improved referee AI did not initialize.');

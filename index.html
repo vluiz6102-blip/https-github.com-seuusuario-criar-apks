@@ -2686,6 +2686,7 @@ function mgrPlay(){mgrStartMatch()}
 function mgrMatchStartTimer(){
  if(!S||!S.match2d)return;
  var m=S.match2d,c=document.getElementById('j90MatchCanvas');
+ var alreadyReady=!!m._j90MatchLoopReady;
  if(!c)return;
  c.style.display='block';c.style.visibility='visible';c.style.opacity='1';
  if(!c.clientHeight)c.style.height='220px';
@@ -2694,7 +2695,7 @@ function mgrMatchStartTimer(){
  var ch=Math.max(180,Math.round(c.clientHeight||220));
  m._cw=cw;m._ch=ch;m._ctx=c.getContext('2d',{alpha:false});
  c.width=cw;c.height=ch;
- m._simAcc=0;m._perfCounter=0;m._lastTick=performance.now();m._j90RuntimeError='';m._j90RuntimeErrorStack='';
+ if(!alreadyReady){m._simAcc=0;m._perfCounter=0;m._lastTick=performance.now();m._j90RuntimeError='';m._j90RuntimeErrorStack='';}
  if(m._resizeObserver)try{m._resizeObserver.disconnect()}catch(e){}
  if(typeof ResizeObserver!=='undefined'){
    m._resizeObserver=new ResizeObserver(function(){
@@ -2704,8 +2705,7 @@ function mgrMatchStartTimer(){
    });
    m._resizeObserver.observe(c);
  }
- if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}
- j90AtmoStarted=false;startJ90Atmosphere();
+ startJ90Atmosphere();m._j90MatchLoopReady=true;
  try{if(typeof mgrDraw2D==='function')mgrDraw2D()}catch(e){console.warn('J90 2D initial draw:',e)}
 }
 
@@ -2773,6 +2773,7 @@ function j90NearestPlayer(m,x,y){
 }
 function mgrMatchTick(frameNow){
  var m=S&&S.match2d;if(!m||m.paused)return;
+ m._j90TickCount=(m._j90TickCount||0)+1;m._j90LastTickAt=Number(frameNow)||performance.now();
  if(window.J90AI2&&typeof window.J90AI2.tick==='function'){
   try{window.J90AI2.tick(m,frameNow)}
   catch(e){m._j90RuntimeError=String(e&&e.message||e);m._j90RuntimeErrorStack=String(e&&e.stack||'').slice(0,4000);try{console.warn('[J90 AI 2.0 Runtime]',m._j90RuntimeError)}catch(_){}} 
@@ -3021,7 +3022,7 @@ function render(still){
  var A=$('app');A.className=still?'still':'';
  if(!S){A.innerHTML=intro();if(!j90IntroActive){startJ90Atmosphere();j90SyncSoundscape()}return}
  if(introStep===0){A.innerHTML=menuV();refreshJ90AtmosphereNodes();startJ90Atmosphere();j90SyncSoundscape();return}
- if(S.manager){if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}j90AtmoStarted=false;renderManagerPartial(still);j90SyncSoundscape();return}
+ if(S.manager){renderManagerPartial(still);startJ90Atmosphere();j90SyncSoundscape();return}
  var h=head()+tabs()+(tab==='game'?gameV():tab==='tbl'?tblV():tab==='news'?newsV():tab==='ply'?playerV():careerV());
  A.innerHTML=h;startJ90Atmosphere();save();j90SyncSoundscape();if(!still)window.scrollTo(0,0)
 }
