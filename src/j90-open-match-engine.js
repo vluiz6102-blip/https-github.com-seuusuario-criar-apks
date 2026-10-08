@@ -8,7 +8,7 @@
  * Only the MIT-compatible concepts/algorithms selected for this layer are used.
  * The original projects and licenses are documented in docs/THIRD_PARTY_NOTICES.md.
  *
- * No second canvas, no second requestAnimationFrame and no interval loop.
+ * Reuses the existing visual loop and match canvas.
  */
 (function(){
   'use strict';
