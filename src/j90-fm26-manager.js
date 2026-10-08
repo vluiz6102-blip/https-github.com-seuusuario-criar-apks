@@ -84,9 +84,10 @@
   seedSquad();
 
   function allPlayers(){
-    const roster=Array.isArray(window.J90_ROSTERS)?window.J90_ROSTERS:[];
+    const roster=window.J90_ROSTERS;
+    const teams=Array.isArray(roster)?roster:Object.values(roster||{});
     const arr=[];
-    if(Array.isArray(roster))for(const t of roster)for(const p of (t.players||[]))arr.push(normalizePlayer(p,arr.length));
+    for(const t of teams)for(const p of ((t&&t.players)||[]))arr.push(normalizePlayer(p,arr.length));
     return state.squad.concat(arr);
   }
 
@@ -221,15 +222,17 @@
   }
 
   const api={
-    version:VERSION,state,save,summary,player,searchPlayers,recordFinance,canSpend,
+    version:VERSION,save,summary,player,searchPlayers,recordFinance,canSpend,
     listPlayer,submitBid,trainWeek,aiTacticalAdjustment,simulateMatch,advanceWeek,
     addScoutingTarget,
+    getState:()=>state,
     getSquad:()=>state.squad.slice(),
     getMarket:()=>state.market.slice(),
     getFinance:()=>Object.assign({},state.finance),
     getCompetitions:()=>state.competitions,
     reset:()=>{state=defaultState();seedSquad();save();emit();return summary();}
   };
+  Object.defineProperty(api,'state',{enumerable:true,get:()=>state});
   window.J90FM26=api;
   window.J90ManagerCore=api;
   save();
