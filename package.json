@@ -5,6 +5,8 @@
   "description": "Jornada 90 Manager - simulador de carreira de técnico e diretor técnico",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "prebuild": "npm run guard:architecture",
+    "guard:architecture": "node scripts/architecture-guard.mjs",
     "cap": "npx cap sync",
     "android:add": "npx cap add android",
     "android:open": "npx cap open android",
