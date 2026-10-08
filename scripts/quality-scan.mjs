@@ -99,6 +99,10 @@ if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento p
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
 
+const match2dSourceForScan = read('src/j90-match2d-v3.js');
+checkSyntax('Match 2D broadcast camera', match2dSourceForScan);
+if (!/function cameraState\(m\)[\\s\\S]*_cameraY[\\s\\S]*_cameraZoom/.test(match2dSourceForScan)) add(fail, 'Câmera broadcast não possui follow de profundidade e zoom dinâmico.');
+if (!/function worldPoint\(x,y,cameraX,cameraY,mode,zoom\)/.test(match2dSourceForScan)) add(fail, 'Projeção da câmera broadcast não recebe Y/zoom.');
 const fusionSourceForScan = read('src/j90-fusion.js');
 checkSyntax('Fusion Match Center', fusionSourceForScan);
 if (!/window\.J90Fusion\s*=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não exporta window.J90Fusion.');
