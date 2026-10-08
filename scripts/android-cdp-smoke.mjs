@@ -19,12 +19,22 @@ class CDP{
   constructor(url){this.ws=new WebSocket(url);this.id=0;this.pending=new Map()}
   connect(){
     return new Promise((resolve,reject)=>{
-      const t=setTimeout(()=>reject(Error('CDP open timeout')),8000);
-      this.ws.onopen=()=>{clearTimeout(t);resolve()};
-      this.ws.onerror=()=>{clearTimeout(t);reject(Error('CDP websocket error'))};
-      this.ws.onmessage=e=>{
-        try{const m=JSON.parse(String(e.data));if(m.id&&this.pending.has(m.id)){const p=this.pending.get(m.id);this.pending.delete(m.id);m.error?p.reject(Error(m.error.message||'CDP error')):p.resolve(m.result)}}catch(err){errors.push('cdp-message: '+err.message)}
-      };
+      let settled=false;
+      const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(t);fn(value)};
+      const t=setTimeout(()=>finish(reject,Error('CDP open timeout')),8000);
+      this.ws.once('open',()=>finish(resolve));
+      this.ws.once('error',err=>finish(reject,Error('CDP websocket error: '+err.message)));
+      this.ws.on('message',data=>{
+        try{
+          const m=JSON.parse(data.toString());
+          if(m.id&&this.pending.has(m.id)){
+            const p=this.pending.get(m.id);
+            this.pending.delete(m.id);
+            m.error?p.reject(Error(m.error.message||'CDP error')):p.resolve(m.result);
+          }
+        }catch(err){errors.push('cdp-message: '+err.message)}
+      });
+      this.ws.on('close',()=>{if(!settled)finish(reject,Error('CDP websocket closed before open'))});
     });
   }
   call(method,params={}){
