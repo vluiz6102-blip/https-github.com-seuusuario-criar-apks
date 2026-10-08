@@ -109,7 +109,7 @@ async function assertReadableLayout(page){
     const selector='h1,h2,h3,h4,p,small,label,button,.mu,.hint,.sub,.j90V3Hint,.j90SquadHint';
     const nodes=[...document.querySelectorAll(selector)].filter(el=>{
       const r=el.getBoundingClientRect(),s=getComputedStyle(el);
-      return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden';
+      return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&s.pointerEvents!=='none'&&!el.closest('[aria-hidden="true"]');
     });
     const problems=[];
     const independentParent=(a,b)=>{
