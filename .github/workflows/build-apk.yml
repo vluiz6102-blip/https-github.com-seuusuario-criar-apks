@@ -88,6 +88,7 @@ jobs:
           node --check src/j90-match2d-v3.js
           node --check src/j90-match-events.js
           node --check src/j90-match-lifecycle.js
+          node --check src/j90-commentary.js
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
@@ -155,11 +156,13 @@ jobs:
           set -euo pipefail
           test -s www/index.html
           test -s www/j90-manager-ai.js
+          test -s www/j90-commentary.js
           test -s www/j90-match-lifecycle.js
           test -s www/j90-auto-heal.js
           test -s www/j90-perf.js
           grep -Fq '<script src="j90-match-lifecycle.js"></script>' www/index.html
           grep -F -n '<script src="j90-manager-ai.js"></script>' www/index.html >/dev/null
+          grep -F -n '<script src="j90-commentary.js"></script>' www/index.html >/dev/null
           grep -F -n '<script src="j90-auto-heal.js"></script>' www/index.html >/dev/null
           grep -F -n '<script src="j90-perf.js"></script>' www/index.html >/dev/null
           test -s www/assets/j90-content/content-manifest.json
