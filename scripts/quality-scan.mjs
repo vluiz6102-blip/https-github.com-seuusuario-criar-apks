@@ -103,6 +103,7 @@ const fusionSourceForScan = read('src/j90-fusion.js');
 checkSyntax('Fusion Match Center', fusionSourceForScan);
 if (!/window\.J90Fusion\s*=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não exporta window.J90Fusion.');
 if (!/j90FusionDock/.test(fusionSourceForScan) || !/data-j90f=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center sem dock/controles.');
+if (!/data-j90f-opp/.test(fusionSourceForScan) || !/data-j90f-scout/.test(fusionSourceForScan)) add(fail, 'Leitura de adversário ausente no Fusion Match Center.');
 if (!/J90TACT\.apply/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não integra o Tactical Studio existente.');
 if (/requestAnimationFrame|setInterval/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center criou loop visual próprio; deve reutilizar o loop da partida.');
 
