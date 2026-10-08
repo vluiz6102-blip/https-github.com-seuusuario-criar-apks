@@ -57,6 +57,7 @@ for (const code of onclicks) {
   for (const m of code.matchAll(/(^|[^.A-Za-z0-9_$])([A-Za-z_$][\w$]*)\s*\(/g)) calls.add(m[2]);
 }
 const globals = new Set(['alert','confirm','prompt','setTimeout','clearTimeout','setInterval','clearInterval','requestAnimationFrame','cancelAnimationFrame','parseInt','parseFloat','Number','String','Boolean','Math','Date','JSON','Object','Array','console','window','document','navigator','localStorage','location','performance','fetch','URL','Audio','setProperty']);
+const externalRuntimeBindings = new Set(['j90MatchCameraCycle']);
 for (const name of calls) if (!globals.has(name) && !fnNames.includes(name) && !inlineScripts.includes('window.' + name)) add(fail, 'onclick chama função ausente: ' + name);
 
 const ids = [...index.matchAll(/\bid\s*=\s*["']([^"']+)["']/gi)].map(m => m[1]);
