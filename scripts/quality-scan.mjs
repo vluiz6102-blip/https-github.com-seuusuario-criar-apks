@@ -116,9 +116,19 @@ for (const file of sourceFilesForScan) {
   checkNodeSyntax('Source ' + file, file);
 }
 
+const indexSourceForScan = read('index.html');
 if (/function startJ90Atmosphere\(\)[\s\S]*if\(!j90AtmoNodes\.length\)return;/.test(indexSourceForScan)) add(fail, 'Loop compartilhado da partida depende indevidamente de Canvas de atmosfera e pode parar no modo ao vivo.');
 if (!/j90AtmoFrame=requestAnimationFrame\(frame\)/.test(indexSourceForScan)) add(fail, 'Loop compartilhado J90 sem agendamento de requestAnimationFrame.');
 if (!/typeof S!=='undefined'&&S&&S\.manager&&S\.match2d/.test(indexSourceForScan)) add(fail, 'Loop compartilhado não possui ramo explícito para partida ao vivo.');
+
+// Full first-party script syntax gate: protect CI scripts from escaped-source corruption.
+const scriptFilesForScan = readdirSync('scripts', { withFileTypes: true })
+  .filter(e => e.isFile() && /.(?:js|mjs)$/i.test(e.name))
+  .map(e => join('scripts', e.name));
+for (const file of scriptFilesForScan) {
+  checkNodeSyntax('Script ' + file, file);
+}
+
 const androidSmokeSource = read('scripts/android-cdp-smoke.mjs');
 checkSyntax('Android CDP Smoke', androidSmokeSource);
 if (!/function webViewRafHeartbeat\(c,durationMs=1200\)/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem heartbeat independente de requestAnimationFrame.');
@@ -128,7 +138,6 @@ if (!/renderer-did-not-commit-enough-frames/.test(androidSmokeSource)) add(fail,
 if (!/pidof.*com\.jornada90\.manager/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura do processo Android em caso de falha.');
 if (!/this\.events=\[\]/.test(androidSmokeSource) || !/Runtime\\.exceptionThrown/.test(androidSmokeSource) || !/Log\\.entryAdded/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura de exceções/erros do runtime via CDP.');
 if (!/timeoutMs=45000/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke ainda usa janela longa de timeout para detectar renderer travado.');
-const indexSourceForScan = read('index.html');
 if (!/function menuV\(\)[\s\S]*j90ManagerHome[\s\S]*CRIADO POR[\s\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
 if (!/j90MHClub[\s\S]*j90MHGrid[\s\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
 const match2dSourceForScan = read('src/j90-match2d-v3.js');
