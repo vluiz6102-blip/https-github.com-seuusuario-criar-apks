@@ -64,7 +64,7 @@
     var cssW=Math.max(240,Math.round(rect.width||c.clientWidth||m._cw||360));
     var cssH=Math.max(180,Math.round(rect.height||c.clientHeight||m._ch||210));
     var targetW=Math.max(240,Math.round(cssW*dpr));
-    var targetH=Math.max(150,Math.round(cssH*dpr));
+    var targetH=Math.max(180,Math.round(cssH*dpr));
     if(c.width!==targetW||c.height!==targetH||!m._ctx){
       c.width=targetW;c.height=targetH;
       try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
@@ -94,7 +94,7 @@
     return palettes[h%palettes.length];
   }
 
-  function buildPitch(m){
+  function fieldCache(m){
     if(m._j90TopDownPitch)return m._j90TopDownPitch;
     var o=document.createElement('canvas');o.width=W;o.height=H;
     var g=o.getContext('2d',{alpha:false});
@@ -239,7 +239,7 @@
       var c=ensure(m,now,true);if(!c)return false;
       var g=m._ctx;if(!g){m._j90RenderError='Canvas 2D unavailable';m._j90RenderErrorStage='context';return false}
       var t0=performance.now(),low=!!m._j90AutoLow||!!(window.__J90_PERF&&window.__J90_PERF.low);
-      stage='field';g.setTransform(m._j90CanvasScaleX||1,0,0,m._j90CanvasScaleY||1,0,0);g.clearRect(0,0,W,H);g.drawImage(buildPitch(m),0,0);
+      stage='field';g.setTransform(m._j90CanvasScaleX||1,0,0,m._j90CanvasScaleY||1,0,0);g.clearRect(0,0,W,H);g.drawImage(fieldCache(m),0,0);
       stage='players';
       var home=m.players||[],away=m.oppPlayers||[],selectedId=String(window.__J90_SELECTED_PLAYER||'');
       for(var i=0;i<home.length;i++)drawCircularPlayer(g,home[i],'home',m,now,low,String(home[i].id||'')===selectedId);
