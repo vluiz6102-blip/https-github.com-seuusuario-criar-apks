@@ -99,6 +99,13 @@ if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento p
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
 
+const fusionSourceForScan = read('src/j90-fusion.js');
+checkSyntax('Fusion Match Center', fusionSourceForScan);
+if (!/window\.J90Fusion\s*=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não exporta window.J90Fusion.');
+if (!/j90FusionDock/.test(fusionSourceForScan) || !/data-j90f=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center sem dock/controles.');
+if (!/J90TACT\.apply/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não integra o Tactical Studio existente.');
+if (/requestAnimationFrame|setInterval/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center criou loop visual próprio; deve reutilizar o loop da partida.');
+
 const tacticsSourceForScan = read('src/j90-tactics.js');
 checkSyntax('Tactical Studio', tacticsSourceForScan);
 if (!/window\.J90TACT\s*=/.test(tacticsSourceForScan)) add(fail, 'Tactical Studio não exporta window.J90TACT.');
@@ -138,6 +145,7 @@ if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos 
 if (!/j90-match-lifecycle\.js/.test(read('scripts/build.mjs'))) add(fail, 'Match Lifecycle Guard não está no pipeline de build.');
 if (/j90-landscape\.js/.test(read('scripts/build.mjs'))) add(fail, 'Runtime de paisagem ainda está no pipeline de build.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'Manager AI 2.0 não está no pipeline de build.');
+if (!/j90-fusion\.js/.test(buildScript)) add(fail, 'Fusion Match Center não está no pipeline de build.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
