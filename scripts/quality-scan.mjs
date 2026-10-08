@@ -40,7 +40,7 @@ checkSyntax('Jornada 90 Plus', expansion);
 const matchEvents = read('src/j90-match-events.js');
 checkSyntax('Match Events', matchEvents);
 if (/createElement\(['"]canvas['"]\)/.test(matchEvents) && /j90EventOverlayCanvas/.test(matchEvents)) add(fail, 'Match Events voltou a criar um Canvas de overlay separado; use o Canvas principal.');
-if (!/getElementById\(['"]j90MatchCanvas['"]\)/.test(matchEvents) || !/function\\s+renderOverlay\\s*\\(/.test(matchEvents)) add(fail, 'Match Events não renderiza overlays no Canvas principal.');
+if (!/getElementById\(['"]j90MatchCanvas['"]\)/.test(matchEvents) || !/function\s+renderOverlay\s*\(/.test(matchEvents)) add(fail, 'Match Events não renderiza overlays no Canvas principal.');
 const ai2 = read('src/j90-ai2.js');
 const managerAi = read('src/j90-manager-ai.js');
 checkSyntax('Manager AI 2.0', managerAi);
