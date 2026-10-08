@@ -1568,7 +1568,7 @@ function worldFx(){
 }
 
 /* Atmosfera J90: Canvas leve, referências de tela atualizadas e repintura limitada. */
-let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoParticles=[],j90AtmoNodes=[],j90AtmoSceneNodes=[];
+let j90AtmoStarted=false,j90AtmoFrame=0,j90AtmoResize=null,j90AtmoLoop=null,j90AtmoParticles=[],j90AtmoNodes=[],j90AtmoSceneNodes=[];
 let menuTime=0,j90AtmoLowPower=false;
 function j90MenuPhaseWeight(t,center,width){
  let d=Math.abs(t-center);d=Math.min(d,1-d);const x=Math.max(0,1-d/width);return x*x*(3-2*x)
@@ -1606,11 +1606,10 @@ function refreshJ90AtmosphereNodes(){
  if(j90AtmoResize)j90AtmoResize();
 }
 function startJ90Atmosphere(){
- if(j90AtmoStarted&&j90AtmoNodes.length)return;
+ if(j90AtmoStarted&&j90AtmoFrame)return;
  if(j90AtmoResize){try{removeEventListener('resize',j90AtmoResize)}catch(e){}j90AtmoResize=null}
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
  j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
- if(!j90AtmoNodes.length)return;
  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const pstate=typeof j90PerfState==='function'?j90PerfState():(window.J90Perf?.snapshot?.()||{tier:'balanced',low:false});
  const atmoRate=pstate.low?45:(pstate.tier==='high'?120:60);
@@ -1626,7 +1625,8 @@ function startJ90Atmosphere(){
    if(ctx){ctx.setTransform(d,0,0,d,0,0);canvas._j90Gradient=ctx.createLinearGradient(0,h*.42,0,h);canvas._j90Gradient.addColorStop(0,'rgba(220,235,227,.004)');canvas._j90Gradient.addColorStop(.6,'rgba(110,155,127,.014)');canvas._j90Gradient.addColorStop(1,'rgba(12,42,24,.05)')}
   });
  };
- j90AtmoResize=resize;resize();
+ j90AtmoResize=resize;
+ if(j90AtmoNodes.length)resize();
  const draw=canvas=>{
   const w=canvas._j90W||canvas.clientWidth||1,h=canvas._j90H||canvas.clientHeight||1,ctx=canvas._j90Ctx;if(!ctx)return;
   ctx.clearRect(0,0,w,h);
@@ -1634,29 +1634,39 @@ function startJ90Atmosphere(){
   for(const q of j90AtmoParticles){const x=q.x*w+Math.sin(q.p)*Math.min(5,w*.009),y=q.y*h;ctx.globalAlpha=q.a*(.6+.4*Math.sin(q.p));ctx.fillStyle='#dce9dc';ctx.beginPath();ctx.arc(x,y,q.r,0,Math.PI*2);ctx.fill()}
   ctx.globalAlpha=1;
  };
- if(!j90AtmoStarted){
-  j90AtmoStarted=true;addEventListener('resize',resize,{passive:true});
-  const frame=t=>{
-   if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
-   if(typeof S!=='undefined'&&S&&S.manager&&S.match2d){try{mgrMatchTick(t)}catch(e){try{console.warn('[J90 Match Runtime]',e&&e.message||e)}catch(_e){}try{window.J90MatchLifecycle&&window.J90MatchLifecycle.rebuildRuntime&&window.J90MatchLifecycle.rebuildRuntime(S.match2d);mgrMatchHud(true);mgrDraw2D()}catch(_e2){}}}
-   else{
-    menuTime=(t/18000)%1;updateJ90MenuEnvironment();
-    if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
-     const dt=Math.min(70,t-(frame.last||t));frame.last=t;j90FrameStatsState.frames++;
-     let fi=dt;
-     if(j90FrameStatsState.last){fi=t-j90FrameStatsState.last;j90FrameStatsState.intervals.push(Math.min(250,fi));if(j90FrameStatsState.intervals.length>240)j90FrameStatsState.intervals.shift();if(fi>25)j90FrameStatsState.slowFrames++}
-     j90FrameStatsState.last=t;j90FrameStatsState.elapsed+=dt;
-     const live=typeof j90PerfSample==='function'?j90PerfSample(fi):null;
-     const targetParticles=live?.low?8:(live?.tier==='high'?14:11);
-     if(frame.particleTarget!==targetParticles){frame.particleTarget=targetParticles;while(j90AtmoParticles.length>targetParticles)j90AtmoParticles.pop();while(j90AtmoParticles.length<targetParticles)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*.95,s:.000045+Math.random()*.00007,a:.028+Math.random()*.075,p:Math.random()*6.28})}
-     for(const q of j90AtmoParticles){q.x+=q.s*dt;q.y-=q.s*.12*dt;q.p+=.0008*dt;if(q.x>1.04||q.y<.45){q.x=-.03;q.y=.56+Math.random()*.38}}
-     j90AtmoNodes.forEach(draw);
-    }
+ const frame=t=>{
+  if(document.hidden){j90AtmoFrame=requestAnimationFrame(frame);return}
+  if(typeof S!=='undefined'&&S&&S.manager&&S.match2d){
+   try{mgrMatchTick(t)}
+   catch(e){
+    try{console.warn('[J90 Match Runtime]',e&&e.message||e)}catch(_e){}
+    try{window.J90MatchLifecycle&&window.J90MatchLifecycle.rebuildRuntime&&window.J90MatchLifecycle.rebuildRuntime(S.match2d);mgrMatchHud(true);mgrDraw2D()}
+    catch(_e2){try{console.error('[J90 Match Runtime Recovery]',_e2&&_e2.message||_e2)}catch(_e3){}}
    }
-   j90AtmoFrame=requestAnimationFrame(frame);
-  };
-  if(reduced){menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw)}else j90AtmoFrame=requestAnimationFrame(frame);
- }else if(reduced){menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw)}
+  }else{
+   menuTime=(t/18000)%1;updateJ90MenuEnvironment();
+   if(!reduced&&t-(frame.last||0)>=1000/atmoRate){
+    const dt=Math.min(70,t-(frame.last||t));frame.last=t;j90FrameStatsState.frames++;
+    let fi=dt;
+    if(j90FrameStatsState.last){fi=t-j90FrameStatsState.last;j90FrameStatsState.intervals.push(Math.min(250,fi));if(j90FrameStatsState.intervals.length>240)j90FrameStatsState.intervals.shift();if(fi>25)j90FrameStatsState.slowFrames++}
+    j90FrameStatsState.last=t;j90FrameStatsState.elapsed+=dt;
+    const live=typeof j90PerfSample==='function'?j90PerfSample(fi):null;
+    const targetParticles=live?.low?8:(live?.tier==='high'?14:11);
+    if(frame.particleTarget!==targetParticles){frame.particleTarget=targetParticles;while(j90AtmoParticles.length>targetParticles)j90AtmoParticles.pop();while(j90AtmoParticles.length<targetParticles)j90AtmoParticles.push({x:Math.random(),y:.5+Math.random()*.45,r:.45+Math.random()*.95,s:.000045+Math.random()*.00007,a:.028+Math.random()*.075,p:Math.random()*6.28})}
+    for(const q of j90AtmoParticles){q.x+=q.s*dt;q.y-=q.s*.12*dt;q.p+=.0008*dt;if(q.x>1.04||q.y<.45){q.x=-.03;q.y=.56+Math.random()*.38}}
+    j90AtmoNodes.forEach(draw);
+   }
+  }
+  j90AtmoFrame=requestAnimationFrame(frame);
+ };
+ j90AtmoLoop=frame;
+ j90AtmoStarted=true;
+ if(j90AtmoNodes.length)addEventListener('resize',resize,{passive:true});
+ if(reduced&&!(typeof S!=='undefined'&&S&&S.match2d)){
+  menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw);
+ }else if(!j90AtmoFrame){
+  j90AtmoFrame=requestAnimationFrame(frame);
+ }
 }
 const j90FrameStatsState={frames:0,elapsed:0,last:0,intervals:[],slowFrames:0,longTasks:0};
 function J90FrameStats(reset=false){
