@@ -22,6 +22,7 @@ check(hits(index, /function\s+startJ90Atmosphere\s*\(/g) === 1, 'single canonica
 check(!/cancelAnimationFrame\s*\(/.test(index), 'main HTML loop does not cancel RAF');
 check(!/setInterval\s*\(/.test(index), 'main HTML loop does not use setInterval');
 check(/j90AtmoFrame\s*=\s*requestAnimationFrame\s*\(frame\)/.test(index), 'shared RAF reschedules itself');
+check(/if\(reduced\)\{[^}]*\}\s*j90AtmoFrame\s*=\s*requestAnimationFrame\s*\(frame\)/s.test(index), 'reduced-motion mode cannot disable the shared match RAF');
 check(/_j90MatchLoopReady/.test(index), 'match loop has one-time readiness guard');
 check(/m\._j90TickCount/.test(index), 'match loop heartbeat exists');
 check(!/if\s*\(\s*!j90AtmoNodes\.length\s*\)\s*return\s*;/.test(index), 'atmosphere nodes do not gate the shared RAF');
