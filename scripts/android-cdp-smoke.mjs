@@ -57,7 +57,12 @@ async function connect(){const t=await target();const c=new CDP(t.webSocketDebug
 async function wait(c,expr,ms=15000){const end=Date.now()+ms;while(Date.now()<end){try{if(await c.eval(expr))return}catch{}await sleep(250)}throw Error('Timeout: '+expr)}
 
 async function rendererDiag(c){
-  return c.eval("(()=>{const m=window.S?.match2d,canvas=document.querySelector('#j90MatchCanvas'),r=canvas?.getBoundingClientRect();const life=window.J90MatchLifecycle;return{match:!!m,canvas:!!canvas,frames:Number(m?._j90v3Frames||0),renderError:String(m?._j90RenderError||''),renderErrorStage:String(m?._j90RenderErrorStage||''),renderErrorStack:String(m?._j90RenderErrorStack||''),canvas2d:!!(m&&m._ctx),renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,visibilityState:String(document.visibilityState),hidden:!!document.hidden,readyState:String(document.readyState),lifecycle:life?{version:String(life.version||''),isLive:!!life.isLive?.(),paused:!!m?.paused,lifecyclePaused:!!m?.__j90LifecyclePaused,resumeOnRestore:!!m?.j90ResumeOnRestore}:null,canvasRenderDpr:Number(m?._j90Dpr||0),frameP95:Number(m?._j90FrameP95||0),rendererFps:Number(m?._j90Fps||0),canvasCss:{width:Number(r?.width||0),height:Number(r?.height||0)},canvasCount:document.querySelectorAll('canvas').length,canvases:[...document.querySelectorAll('canvas')].map(x=>({id:x.id||'',className:String(x.className||''),width:x.width,height:x.height,cssWidth:Number(x.getBoundingClientRect().width||0),cssHeight:Number(x.getBoundingClientRect().height||0)})),perf:window.J90Perf?.snapshot?.()||null}})()");
+  return c.eval("(()=>{const m=window.S?.match2d,canvas=document.querySelector('#j90MatchCanvas'),r=canvas?.getBoundingClientRect(),now=performance.now();const life=window.J90MatchLifecycle;const probe=window.__J90_ANDROID_SMOKE__||(window.__J90_ANDROID_SMOKE__={nextId:0,ref:null,identity:0});if(probe.ref!==m){probe.ref=m;probe.identity=++probe.nextId}const frames=Number(m?._j90v3Frames||0),lastFrame=Number(m?._j90v3LastFrame||0);return{match:!!m,matchIdentity:Number(probe.identity||0),canvas:!!canvas,frames:frames,renderSamples:Number(m?._j90RenderSamples||0),broadcastReady:!!(m&&m._j90BroadcastReady),lastFrameAt:lastFrame,frameAgeMs:lastFrame?Math.max(0,now-lastFrame):null,renderAvgMs:Number(m?._j90v3RenderMsAvg||0),renderError:String(m?._j90RenderError||''),renderErrorStage:String(m?._j90RenderErrorStage||''),renderErrorStack:String(m?._j90RenderErrorStack||''),canvas2d:!!(m&&m._ctx),renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,visibilityState:String(document.visibilityState),hidden:!!document.hidden,readyState:String(document.readyState),lifecycle:life?{version:String(life.version||''),isLive:!!life.isLive?.(),paused:!!m?.paused,lifecyclePaused:!!m?.__j90LifecyclePaused,resumeOnRestore:!!m?.j90ResumeOnRestore}:null,canvasRenderDpr:Number(m?._j90Dpr||0),frameP95:Number(m?._j90FrameP95||0),rendererFps:Number(m?._j90Fps||0),canvasCss:{width:Number(r?.width||0),height:Number(r?.height||0)},canvasCount:document.querySelectorAll('canvas').length,canvases:[...document.querySelectorAll('canvas')].map(x=>({id:x.id||'',className:String(x.className||''),width:x.width,height:x.height,cssWidth:Number(x.getBoundingClientRect().width||0),cssHeight:Number(x.getBoundingClientRect().height||0)})),perf:window.J90Perf?.snapshot?.()||null}})()");
+}
+async function webViewRafHeartbeat(c,durationMs=1200){
+  const duration=Math.max(250,Math.round(durationMs));
+  const expression="(async()=>{const start=performance.now();let frames=0,last=start,maxGap=0;await new Promise(resolve=>{const tick=t=>{frames++;maxGap=Math.max(maxGap,t-last);last=t;if(t-start>=DURATION_MS)resolve();else requestAnimationFrame(tick)};requestAnimationFrame(tick)});return{frames,elapsedMs:performance.now()-start,avgIntervalMs:frames>1?(performance.now()-start)/(frames-1):0,maxGapMs:maxGap}})()".replace('DURATION_MS',String(duration));
+  return c.eval(expression);
 }
 function filteredAndroidLogcat(limit=180){
   try{
@@ -70,26 +75,49 @@ function filteredAndroidLogcat(limit=180){
 }
 async function captureRendererFailure(c,error){
   const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));
+  let processInfo='';
+  try{processInfo=adb(['shell','pidof','com.jornada90.manager']).trim()}catch(e){processInfo='pidof failed: '+(e?.message||String(e))}
+  try{fs.writeFileSync(out+'/android-runtime-process.txt',processInfo+'\\n')}catch{}
   try{await c.shot(out+'/android-frame-timeout.png')}catch(e){fs.writeFileSync(out+'/android-frame-timeout-screenshot-error.txt',String(e?.message||e))}
   fs.writeFileSync(out+'/android-frame-timeout-logcat.txt',filteredAndroidLogcat());
-  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),diag},null,2));
+  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),classification:error?.classification||'',diag,processInfo},null,2));
   return diag;
 }
-async function waitForRendererFrames(c,target=8,timeoutMs=90000){
-  const started=Date.now();let last=null;
+async function waitForRendererFrames(c,target=8,timeoutMs=45000){
+  const started=Date.now();let last=null,lastFrames=-1,lastIdentity=-1,lastProgressAt=started,stallProbeAt=-1;
   while(Date.now()-started<timeoutMs){
     try{
       last=await rendererDiag(c);
-      if(Number(last?.frames||0)>=target)return last;
+      const frames=Number(last?.frames||0),identity=Number(last?.matchIdentity||0);
+      if(identity!==lastIdentity){lastIdentity=identity;lastFrames=frames;lastProgressAt=Date.now()}
+      else if(frames>lastFrames){lastFrames=frames;lastProgressAt=Date.now()}
+      if(frames>=target&&Number(last?.renderSamples||0)>=target&&last?.broadcastReady)return last;
+      const stalledFor=Date.now()-lastProgressAt;
+      const readyFor=Date.now()-started;
+      if(readyFor>=4000&&stalledFor>=3000&&stallProbeAt!==lastFrames){
+        stallProbeAt=lastFrames;
+        const heartbeat=await webViewRafHeartbeat(c,1200).catch(e=>({error:e?.message||String(e),frames:0}));
+        last.webViewHeartbeat=heartbeat;
+        const webViewAlive=Number(heartbeat?.frames||0)>=4;
+        const rendererStalled=frames<target&&webViewAlive&&!last?.hidden&&!last?.lifecycle?.paused&&Number(last?.frameAgeMs||Infinity)>=2500;
+        if(rendererStalled){
+          const failure=new Error('Renderer commit stalled while WebView animation callbacks remained alive');
+          failure.lastDiag=last;
+          failure.classification='renderer-commit-stalled-webview-responsive';
+          throw failure;
+        }
+      }
     }catch(e){
-      last={evalError:e?.message||String(e)};
+      if(e?.classification)throw e;
+      last={...(last||{}),evalError:e?.message||String(e)};
     }
     const remaining=timeoutMs-(Date.now()-started);
     if(remaining<=0)break;
-    await sleep(Math.min(1000,remaining));
+    await sleep(Math.min(750,remaining));
   }
   const failure=new Error('Renderer frame timeout after '+(Date.now()-started)+'ms');
   failure.lastDiag=last;
+  failure.classification=Number(last?.webViewHeartbeat?.frames||0)>=4?'renderer-did-not-commit-enough-frames':'webview-or-renderer-unresponsive';
   throw failure;
 }
 
@@ -120,7 +148,7 @@ try {
   await waitForRendererFrames(c,8,90000);
 } catch (firstFrameError) {
   const diag=await captureRendererFailure(c,firstFrameError);
-  throw Error('Android renderer did not reach 8 frames: '+JSON.stringify(diag));
+  throw Error('Android renderer health gate failed ['+(firstFrameError.classification||'unknown')+']: '+JSON.stringify(diag));
 }
 
 const check=await c.eval("(()=>{const e=document.querySelector('#j90MatchCanvas'),m=window.S?.match2d,r=e?.getBoundingClientRect();let s=0;try{const p=m?._ctx?.getImageData(Math.floor(e.width/2),Math.floor(e.height/2),1,1).data;s=p?Number(p[0])+Number(p[1])+Number(p[2])+Number(p[3]):0}catch{}return{canvas:!!e,live:document.body.classList.contains('j90-live-match'),visibilityState:String(document.visibilityState),hidden:!!document.hidden,lifecyclePaused:!!m?.__j90LifecyclePaused,resumeOnRestore:!!m?.j90ResumeOnRestore,canvasCount:document.querySelectorAll('canvas').length,renderDpr:Number(m?._j90Dpr||0),frameP95:Number(m?._j90FrameP95||0),rendererFps:Number(m?._j90Fps||0),width:e?.width||0,height:e?.height||0,cssWidth:r?.width||0,cssHeight:r?.height||0,renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,camera:typeof window.j90MatchCameraCycle==='function',cameraMode:m?.cameraMode||'',frames:Number(m?._j90v3Frames||0),elapsed:Number(m?.elapsed||0),paused:!!m?.paused,sample:s}})()");
