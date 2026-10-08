@@ -67,6 +67,9 @@ jobs:
           node --check scripts/browser-smoke.mjs
           node --check scripts/android-cdp-smoke.mjs
           node --check src/j90-perf.js
+          node --check src/j90-match2d-v3.js
+          node --check src/j90-match-events.js
+          node --check src/j90-match-lifecycle.js
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
@@ -340,6 +343,9 @@ jobs:
           for name in J90HapticsPlugin.java J90DisplayRatePlugin.java J90ExternalBrowserPlugin.java MainActivity.java; do
             test -s "android/app/src/main/java/com/jornada90/manager/$name"
             ! grep -Fq 'com.getcapacitor.annotation.PluginMethod' "android/app/src/main/java/com/jornada90/manager/$name"
+          done
+          for name in J90HapticsPlugin.java J90DisplayRatePlugin.java J90ExternalBrowserPlugin.java; do
+            grep -Fq 'import com.getcapacitor.PluginMethod;' "android/app/src/main/java/com/jornada90/manager/$name"
           done
 
       - name: Aplicar identidade e ícone Jornada 90 Manager
