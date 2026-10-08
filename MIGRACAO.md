@@ -5,7 +5,7 @@ Cada fase é executada isoladamente: implementar → testar → medir → regist
 
 ## Fase 0 · Baseline
 
-**Estado:** instrumentação implementada; aguardando a medição CI antes de iniciar a Fase 1.
+**Estado:** instrumentação implementada; primeira tentativa falhou no Android Emulator e foi corrigida antes da nova medição.
 
 ### Instrumentação
 - `window.J90Perf` v1.0, desligado por padrão e ativável explicitamente por CDP ou `?j90perf=1`.
@@ -35,6 +35,11 @@ Os valores abaixo serão preenchidos com a execução real desta fase. Nenhum n�
 | Perfetto trace | a medir |
 | gfxinfo | a medir |
 | meminfo/PSS | a medir |
+
+### Tentativa 1 · 2026-10-08
+A primeira execução confirmou o pacote `com.jornada90.manager`, mas o smoke parou porque `_j90v3Frames` não chegou a 8 em 15 s. O `dumpsys gfxinfo` registrou 9/9 frames janky na janela observada e o logcat apresentou 5 avisos `tile memory limits exceeded`. O Perfetto ficou com 0 bytes nessa tentativa e, portanto, não é evidência de baseline.
+
+**Decisão:** manter o gate funcional, adicionar diagnóstico de timeout, habilitar `J90Perf` durante o smoke Android, ampliar o limite funcional para 45 s e usar um perfil 1080-class no emulador. A validação de performance final continua obrigatoriamente no aparelho físico de referência. O aviso de tile memory segue sendo contabilizado e não é ocultado.
 
 ### Gate F0
 - [ ] monitor compila/carrega

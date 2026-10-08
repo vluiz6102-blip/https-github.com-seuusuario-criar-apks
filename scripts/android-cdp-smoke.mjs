@@ -58,6 +58,8 @@ async function wait(c,expr,ms=15000){const end=Date.now()+ms;while(Date.now()<en
 
 let c=await connect();
 await wait(c,"!!document.body");
+await wait(c,"!!window.J90Perf",10000);
+await c.eval("window.J90Perf.enable()");
 if(await c.eval("!!document.getElementById('j90CinematicIntro')"))await c.eval("document.getElementById('j90CinematicIntro').click()");
 await wait(c,"!!window.J90AutoHealAI&&!!window.J90BugGuard");
 const resilience=await c.eval("({autoHeal:!!window.J90AutoHealAI,bugGuard:!!window.J90BugGuard,autoHealVersion:window.J90AutoHealAI?.version||'',bugGuardVersion:window.J90BugGuard?.version||''})");
@@ -77,7 +79,13 @@ await wait(c,"[...document.querySelectorAll('button')].some(x=>/^Iniciar partida
 await c.eval("(()=>{const b=[...document.querySelectorAll('button')].find(x=>/^Iniciar partida$/.test((x.innerText||'').trim()));if(!b)throw Error('Iniciar partida missing');b.click()})()");
 await wait(c,"!!document.querySelector('#j90MatchCanvas')");
 await wait(c,"window.J90Match2DV3?.version==='4.0'&&window.J90Match2DV3?.mode==='broadcast-tv'");
-await wait(c,"Number(window.S?.match2d?._j90v3Frames||0)>=8");
+try {
+  await wait(c,"Number(window.S?.match2d?._j90v3Frames||0)>=8",45000);
+} catch (firstFrameError) {
+  const diag=await c.eval("(()=>{const m=window.S?.match2d,e=document.querySelector('#j90MatchCanvas');return{match:!!m,canvas:!!e,frames:Number(m?._j90v3Frames||0),renderError:String(m?._j90RenderError||''),canvas2d:!!(m&&m._ctx),renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode}:null,perf:window.J90Perf?.snapshot?.()||null}})()");
+  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:firstFrameError.message,diag},null,2));
+  throw Error('Android renderer did not reach 8 frames: '+JSON.stringify(diag));
+}
 
 const check=await c.eval("(()=>{const e=document.querySelector('#j90MatchCanvas'),m=window.S?.match2d,r=e?.getBoundingClientRect();let s=0;try{const p=m?._ctx?.getImageData(Math.floor(e.width/2),Math.floor(e.height/2),1,1).data;s=p?Number(p[0])+Number(p[1])+Number(p[2])+Number(p[3]):0}catch{}return{canvas:!!e,live:document.body.classList.contains('j90-live-match'),width:e?.width||0,height:e?.height||0,cssWidth:r?.width||0,cssHeight:r?.height||0,renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,camera:typeof window.j90MatchCameraCycle==='function',cameraMode:m?.cameraMode||'',frames:Number(m?._j90v3Frames||0),elapsed:Number(m?.elapsed||0),paused:!!m?.paused,sample:s}})()");
 await c.shot(out+'/android-2d.png');
@@ -115,8 +123,9 @@ await wait(c,"!!window.S?.match2d",20000);await wait(c,"!!document.querySelector
 const foreground=await c.eval("({match:!!window.S?.match2d,canvas:!!document.querySelector('#j90MatchCanvas'),elapsed:Number(window.S?.match2d?.elapsed||0),paused:!!window.S?.match2d?.paused,frames:Number(window.S?.match2d?._j90v3Frames||0)})");
 if(!foreground.match||!foreground.canvas||foreground.paused)throw Error('Android background/foreground recovery failed: '+JSON.stringify(foreground));
 await c.shot(out+'/android-2d-after-resume.png');
+const perf=await c.eval("window.J90Perf?.snapshot?.()||null");
 
-fs.writeFileSync(out+'/android-result.json',JSON.stringify({resilience,check,before,after,camBefore,camAfter,savedElapsed,resumed,restored,foreground,errors},null,2));
+fs.writeFileSync(out+'/android-result.json',JSON.stringify({resilience,check,before,after,camBefore,camAfter,savedElapsed,resumed,restored,foreground,perf,errors},null,2));
 if(errors.length)throw Error('Android runtime errors:\n'+errors.slice(0,20).join('\n'));
 console.log('ANDROID_WEBVIEW_SMOKE=OK');
 console.log('ANDROID_2D='+JSON.stringify({check,before,after,resumed,restored,foreground}));
