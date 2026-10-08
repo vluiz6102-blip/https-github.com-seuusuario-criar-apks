@@ -89,6 +89,7 @@ writeFileSync('www/j90-match-lifecycle.js', lifecycleSource);
 writeFileSync('www/j90-auto-heal.js', autoHealSource);
 writeFileSync('www/j90-perf.js', perfSource);
 writeFileSync('www/j90-fusion.js', fusionSource);
+writeFileSync('www/j90-fm26-manager.js', fm26ManagerSource);
 
 if (existsSync(contentRoot)) {
   mkdirSync('www/assets', { recursive: true });
