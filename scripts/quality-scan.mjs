@@ -191,7 +191,12 @@ if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos 
 if (!/j90-match-lifecycle\.js/.test(read('scripts/build.mjs'))) add(fail, 'Match Lifecycle Guard não está no pipeline de build.');
 if (/j90-landscape\.js/.test(read('scripts/build.mjs'))) add(fail, 'Runtime de paisagem ainda está no pipeline de build.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'Manager AI 2.0 não está no pipeline de build.');
-if (!/j90-fusion\.js/.test(buildScript)) add(fail, 'Fusion Match Center não está no pipeline de build.');
+if (!/j90-fusion\.js/.test(buildScript)) add(fail, 'Fusion Match Center não está no pipeline de build.');\nif (!/j90-auto-heal\.js/.test(buildScript)) add(fail, 'J90 Auto-Heal/BugGuard não está no pipeline de build.');
+const autoHealSource = read('src/j90-auto-heal.js');
+if (!/window\.J90BugGuard\s*=/.test(autoHealSource) || !/guardScan/.test(autoHealSource)) add(fail, 'J90 BugGuard sem scanner passivo de saúde.');
+if (!/guardLastFault|guardFaults/.test(autoHealSource)) add(fail, 'J90 BugGuard sem telemetria de falhas.');
+if (!/match-tick-stalled|match-clock-stalled|renderer-frame-stalled/.test(autoHealSource)) add(fail, 'J90 BugGuard sem proteção dos sinais críticos do runtime.');
+if (!/J90AutoHealAI/.test(autoHealSource)) add(fail, 'J90 Auto-Heal ausente.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
