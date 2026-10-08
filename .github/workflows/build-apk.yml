@@ -47,6 +47,11 @@ jobs:
       - name: Baixar projeto
         uses: actions/checkout@v7
 
+      - name: Validar o próprio Self-Healing
+        run: |
+          node --check scripts/self-healing.mjs
+          node scripts/self-healing.mjs --self-test
+
       - name: Configurar Node.js
         uses: actions/setup-node@v7
         with:
@@ -95,6 +100,7 @@ jobs:
           node --check src/j90-match-events.js
           node --check src/j90-match-lifecycle.js
           node --check src/j90-commentary.js
+          node --check scripts/self-healing.mjs
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
