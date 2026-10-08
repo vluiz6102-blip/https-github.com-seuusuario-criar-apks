@@ -199,6 +199,29 @@ if (!/guardLastFault|guardFaults/.test(autoHealSource)) add(fail, 'J90 BugGuard 
 if (!/match-tick-stalled|match-clock-stalled|renderer-frame-stalled/.test(autoHealSource)) add(fail, 'J90 BugGuard sem proteção dos sinais críticos do runtime.');
 if (!/J90AutoHealAI/.test(autoHealSource)) add(fail, 'J90 Auto-Heal ausente.');
 
+const fm26ManagerSource = read('src/j90-fm26-manager.js');
+checkSyntax('FM26 Manager Mobile Core', fm26ManagerSource);
+if (!/window\.J90FM26=api/.test(fm26ManagerSource)) add(fail, 'FM26 Manager Mobile não exporta sua API.');
+for (const gate of ['searchPlayers','submitBid','trainWeek','offerContract','hireStaff','financeSnapshot','recordLeagueResult','scoutPlayer','generateYouthIntake','saveSlot','loadSlot']) {
+  if (!new RegExp('\\b' + gate + '\\s*[:(]').test(fm26ManagerSource)) add(fail, 'FM26 Manager Mobile sem função obrigatória: ' + gate);
+}
+if (!/Object\.defineProperty\(api,'state'/.test(fm26ManagerSource)) add(fail, 'FM26 Manager Mobile não expõe estado vivo após reset/load.');
+if (!/Object\.values\(roster\|\|\{\}\)/.test(fm26ManagerSource)) add(fail, 'FM26 Manager Mobile não suporta rosters em objeto.');
+
+if (!/j90-fm26-manager\.js/.test(buildScript)) add(fail, 'FM26 Manager Mobile não está no pipeline de build.');
+if (!/j90-open-match-engine\.js/.test(buildScript)) add(fail, 'Open Match Engine Plus não está no pipeline de build.');
+
+const openMatchEngineSource = read('src/j90-open-match-engine.js');
+checkSyntax('Open Match Engine Plus', openMatchEngineSource);
+if (!/window\.J90OpenMatchEngine=/.test(openMatchEngineSource)) add(fail, 'Open Match Engine Plus não exporta API.');
+for (const gate of ['applyMarking','chooseSafePass','firstTouch','restartFromEvent','simulateDeterministic']) {
+  if (!new RegExp('\\b' + gate + '\\s*[:(]').test(openMatchEngineSource)) add(fail, 'Open Match Engine Plus sem componente obrigatório: ' + gate);
+}
+if (/requestAnimationFrame|setInterval/.test(openMatchEngineSource)) add(fail, 'Open Match Engine Plus criou loop próprio.');
+if (/getContext\(['"]2d['"]/.test(openMatchEngineSource)) add(fail, 'Open Match Engine Plus não deve criar um segundo Canvas.');
+if (!/J90OpenMatchEngine\.tick/.test(index)) add(fail, 'Partida ao vivo não integra o Open Match Engine Plus.');
+
+
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {
   try {
