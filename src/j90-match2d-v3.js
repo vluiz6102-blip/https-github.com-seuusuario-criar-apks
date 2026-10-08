@@ -10,6 +10,30 @@
   var W=960,H=540;
   var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
   var lerp=function(a,b,t){return a+(b-a)*t};
+  function percentile95(values){
+    if(!values.length)return 0;
+    var a=values.slice().sort(function(x,y){return x-y}),idx=Math.max(0,Math.ceil(a.length*.95)-1);
+    return Number(a[idx]||0);
+  }
+  function updateFrameQuality(m,now){
+    var list=m._j90FrameIntervals||(m._j90FrameIntervals=[]),prev=Number(m._j90FrameLastAt)||0;
+    if(prev>0){
+      var delta=Math.max(0,Math.min(250,now-prev));
+      list.push(delta);if(list.length>60)list.shift();
+    }
+    m._j90FrameLastAt=now;
+    if(list.length>=8){
+      var sum=0;for(var i=0;i<list.length;i++)sum+=list[i];
+      var avg=sum/list.length,p95=percentile95(list),fps=avg>0?1000/avg:0;
+      m._j90FrameP95=p95;m._j90Fps=fps;
+      var externalLow=!!(window.__J90_PERF&&window.__J90_PERF.low);
+      if(p95>50||fps<20)m._j90AutoLow=true;
+      else if(p95<40&&fps>24&&!externalLow)m._j90AutoLow=false;
+    }
+    var low=!!m._j90AutoLow||!!(window.__J90_PERF&&window.__J90_PERF.low);
+    m._j90Dpr=Math.min(1.5,Math.max(.75,low?.75:1));
+    return low;
+  }
 
   function state(){
     try{if(typeof S!=='undefined'&&S)return S}catch(e){}
@@ -34,17 +58,22 @@
     var palettes=[['#2f7edb','#f2f4f5','#15385e'],['#e05252','#f4f4f4','#5e1d1d'],['#38a56a','#f3f1dd','#16492f'],['#8d5bd1','#f4f0ff','#39255d'],['#e58b32','#f4f0e6','#6a3d14']];
     return palettes[h%palettes.length];
   }
-  function ensure(m){
+  function ensure(m,now,recordFrame){
     var c=document.getElementById('j90MatchCanvas');if(!m||!c)return null;
+    if(recordFrame)updateFrameQuality(m,Number.isFinite(now)?now:performance.now());
+    var dpr=Math.min(1.5,Math.max(.75,Number(m._j90Dpr)||1));
     c.style.display='block';c.style.visibility='visible';c.style.opacity='1';
     c.style.width='100%';c.style.height='100%';c.style.minHeight='0';
     c.style.imageRendering='auto';
-    if(c.width!==W||c.height!==H||!m._ctx){
-      c.width=W;c.height=H;
+    var rect=c.getBoundingClientRect(),cssW=Math.max(240,Math.round(rect.width||c.clientWidth||m._cw||360)),cssH=Math.max(180,Math.round(rect.height||c.clientHeight||m._ch||220));
+    var targetW=Math.max(1,Math.round(cssW*dpr)),targetH=Math.max(1,Math.round(cssH*dpr));
+    if(c.width!==targetW||c.height!==targetH||!m._ctx){
+      c.width=targetW;c.height=targetH;
       try{m._ctx=c.getContext('2d',{alpha:false,desynchronized:true})||c.getContext('2d',{alpha:false})||c.getContext('2d')}catch(e){try{m._ctx=c.getContext('2d')}catch(_){m._ctx=null}}
     }
-    if(m._ctx)m._ctx.imageSmoothingEnabled=true;
-    m._cw=W;m._ch=H;m._dpr=1;
+    if(m._ctx)m._ctx.imageSmoothingEnabled=!((window.__J90_PERF&&window.__J90_PERF.low)||m._j90AutoLow);
+    m._cw=cssW;m._ch=cssH;m._dpr=dpr;
+    m._j90CanvasScaleX=dpr*cssW/W;m._j90CanvasScaleY=dpr*cssH/H;
     m._dom=m._dom||{};m._dom.canvas=c;
     if(!m.cameraMode)m.cameraMode='tv';
     return c;
@@ -130,7 +159,7 @@
   function cameraState(m){
     var bx=Number(m.ball&&m.ball.x),by=Number(m.ball&&m.ball.y);
     if(!Number.isFinite(bx))bx=.5;if(!Number.isFinite(by))by=.5;
-    var desired=cl((bx-.5)*.72,-.16,.16);
+    var desired=clamp((bx-.5)*.72,-.16,.16);
     if(!Number.isFinite(m._cameraX))m._cameraX=desired;
     var smooth=m.cameraMode==='close'?.16:m.cameraMode==='tactical'?.08:.11;
     m._cameraX=lerp(m._cameraX,desired,smooth);
@@ -212,26 +241,41 @@
   }
 
   function draw(){
-    var st=state(),m=st&&st.match2d;if(!m)return;
-    var c=ensure(m);if(!c||!m._ctx)return;
-    var g=m._ctx,now=performance.now(),t0=now;if(!g){m._j90RenderError='Canvas 2D unavailable';return}
-    var low=!!(window.__J90_PERF&&window.__J90_PERF.low)||!!m._j90AutoLow,cam=cameraState(m);
-    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);g.drawImage(fieldCache(m),0,0);
-    var home=m.players||[],away=m.oppPlayers||[];
-    for(var i=0;i<home.length;i++)drawPlayer(g,home[i],'home',m,now,low,cam);
-    for(var j=0;j<away.length;j++)drawPlayer(g,away[j],'away',m,now,low,cam);
-    drawBall(g,m,low,cam);
-    if(!low){
-      var sweep=(now/3600)%1;g.fillStyle='rgba(255,255,255,.045)';g.fillRect(sweep*W-260,238,150,4);
-      var vg=g.createRadialGradient(W/2,310,170,W/2,310,520);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+    var st=state(),m=st&&st.match2d;if(!m)return false;
+    var now=performance.now(),stage='ensure';
+    try{
+      var c=ensure(m,now,true);if(!c)return false;
+      var g=m._ctx;if(!g){m._j90RenderError='Canvas 2D unavailable';m._j90RenderErrorStage='context';return false}
+      var t0=now,low=!!m._j90AutoLow||!!(window.__J90_PERF&&window.__J90_PERF.low),cam;
+      stage='camera';cam=cameraState(m);
+      stage='canvas-state';g.setTransform(m._j90CanvasScaleX||1,0,0,m._j90CanvasScaleY||1,0,0);g.clearRect(0,0,W,H);g.drawImage(fieldCache(m),0,0,W,H);
+      stage='players';
+      var home=m.players||[],away=m.oppPlayers||[];
+      for(var i=0;i<home.length;i++)drawPlayer(g,home[i],'home',m,now,low,cam);
+      for(var j=0;j<away.length;j++)drawPlayer(g,away[j],'away',m,now,low,cam);
+      stage='ball';drawBall(g,m,low,cam);
+      stage='presentation';
+      if(!low){
+        var sweep=(now/3600)%1;g.fillStyle='rgba(255,255,255,.045)';g.fillRect(sweep*W-260,238,150,4);
+        var vg=g.createRadialGradient(W/2,310,170,W/2,310,520);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+      }
+      drawTVOverlay(g,m,cam);
+      stage='commit';
+      m._j90v3Frames=(m._j90v3Frames||0)+1;
+      var cost=performance.now()-t0;
+      m._j90v3RenderMsAvg=m._j90v3RenderMsAvg?m._j90v3RenderMsAvg*.9+cost*.1:cost;
+      m._j90RenderSamples=(m._j90RenderSamples||0)+1;
+      m._j90RenderError='';m._j90RenderErrorStage='';m._j90RenderErrorStack='';
+      m._j90v3Mode='broadcast-tv';m._j90v3LastFrame=now;m._j90AnimationProfile='broadcast-smooth';m._j90BroadcastReady=true;m._j90CameraMode=cam.mode;
+      var label=document.getElementById('j90MatchCameraLabel');if(label)label.textContent=cam.mode==='tv'?'TV':cam.mode==='close'?'Próxima':'Tática';
+      return true;
+    }catch(e){
+      m._j90RenderError=String(e&&e.message||e);
+      m._j90RenderErrorStage=stage;
+      m._j90RenderErrorStack=String(e&&e.stack||'').slice(0,4000);
+      try{console.warn('[J90 Match Renderer]',stage,m._j90RenderError)}catch(_){}
+      return false;
     }
-    drawTVOverlay(g,m,cam);
-    m._j90v3Frames=(m._j90v3Frames||0)+1;
-    var cost=performance.now()-t0;m._j90v3RenderMsAvg=m._j90v3RenderMsAvg?m._j90v3RenderMsAvg*.9+cost*.1:cost;
-    m._j90RenderSamples=(m._j90RenderSamples||0)+1;
-    if(m._j90RenderSamples%24===0)m._j90AutoLow=Number(m._j90v3RenderMsAvg||0)>12;
-    m._j90v3Mode='broadcast-tv';m._j90v3LastFrame=now;m._j90AnimationProfile='broadcast-smooth';m._j90BroadcastReady=true;m._j90CameraMode=cam.mode;
-    var label=document.getElementById('j90MatchCameraLabel');if(label)label.textContent=cam.mode==='tv'?'TV':cam.mode==='close'?'Próxima':'Tática';
   }
 
   function cycleCamera(){
@@ -245,7 +289,7 @@
       var old=window.mgrDraw2D,wrapped=function(){draw()};wrapped.__j90broadcast=true;wrapped.__original=old;window.mgrDraw2D=wrapped;try{mgrDraw2D=wrapped}catch(e){}
     }else if(typeof window.mgrDraw2D!=='function')window.mgrDraw2D=draw;
     var c=document.getElementById('j90MatchCanvas');
-    if(c&&!c.__j90BroadcastResize){c.__j90BroadcastResize=true;if(window.ResizeObserver){var ro=new ResizeObserver(function(){var st=state(),m=st&&st.match2d;if(m){m._pitch=null;ensure(m);draw()}});ro.observe(c)}}
+    if(c&&!c.__j90BroadcastResize){c.__j90BroadcastResize=true;if(window.ResizeObserver){var ro=new ResizeObserver(function(){var st=state(),m=st&&st.match2d;if(m){m._pitch=null;ensure(m,performance.now(),false);draw()}});ro.observe(c)}}
   }
 
   window.j90MatchCameraCycle=cycleCamera;
