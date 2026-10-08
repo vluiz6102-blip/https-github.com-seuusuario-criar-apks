@@ -1641,7 +1641,9 @@ function startJ90Atmosphere(){
    }
    j90AtmoFrame=requestAnimationFrame(frame);
   };
-  if(reduced){menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw)}else j90AtmoFrame=requestAnimationFrame(frame);
+  // O modo de movimento reduzido desativa apenas efeitos decorativos. A partida continua precisando do RAF para simulação e renderização.
+  if(reduced){menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw)}
+  j90AtmoFrame=requestAnimationFrame(frame);
  }else if(reduced){menuTime=0;updateJ90MenuEnvironment(true);j90AtmoNodes.forEach(draw)}
 }
 const j90FrameStatsState={frames:0,elapsed:0,last:0,intervals:[],slowFrames:0,longTasks:0};
