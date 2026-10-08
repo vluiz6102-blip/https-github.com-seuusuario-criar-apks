@@ -27,6 +27,7 @@ const managerStatsSource = readFileSync('src/j90-manager-stats.js', 'utf8');
 const copaBrasilSource = readFileSync('src/j90-copa-do-brasil.js', 'utf8');
 const managerAiSource = readFileSync('src/j90-manager-ai.js', 'utf8');
 const lifecycleSource = readFileSync('src/j90-match-lifecycle.js', 'utf8');
+const commentarySource = readFileSync('src/j90-commentary.js', 'utf8');
 const autoHealSource = readFileSync('src/j90-auto-heal.js', 'utf8');
 const perfSource = readFileSync('src/j90-perf.js', 'utf8');
 const contentRoot = 'assets/j90-content';
@@ -52,6 +53,7 @@ const syntaxUnits = [
   ['j90-manager-stats.js', managerStatsSource],
   ['j90-copa-do-brasil.js', copaBrasilSource],
   ['j90-manager-ai.js', managerAiSource],
+  ['j90-commentary.js', commentarySource],
   ['j90-match-lifecycle.js', lifecycleSource],
   ['j90-auto-heal.js', autoHealSource],
   ['j90-perf.js', perfSource]
@@ -94,7 +96,7 @@ const generated = readFileSync('www/index.html', 'utf8');
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
-  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js'
+  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-commentary.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js'
 ];
 
 function assertBalancedTagPair(html, name) {
