@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import WebSocket from 'ws';
 
 const out=process.env.J90_ANDROID_SMOKE_OUT||'/tmp/j90-android-smoke';
 const errors=[];
