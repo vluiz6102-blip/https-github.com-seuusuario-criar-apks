@@ -16,6 +16,8 @@ on:
       - 'src/**'
       - 'scripts/generate-content-pack.py'
       - 'scripts/browser-smoke.mjs'
+      - 'scripts/android-emulator-smoke.sh'
+      - 'scripts/android-cdp-smoke.mjs'
       - 'scripts/diag-smoke.mjs'
       - 'diag.html'
       - 'scripts/quality-scan.mjs'
