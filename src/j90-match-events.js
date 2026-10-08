@@ -473,7 +473,7 @@
       if(m)renderOverlay(m);
     };
     wrapped.__j90Events=true;wrapped.__original=old;
-    window.mgrDraw2D=wrapped;
+    window.mgrDraw2D=wrapped;try{mgrDraw2D=wrapped}catch(e){}
   }
 
   function boot(){
