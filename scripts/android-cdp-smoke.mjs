@@ -8,12 +8,19 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const adb=args=>execFileSync('adb',args,{encoding:'utf8',stdio:['ignore','pipe','pipe']});
 
 async function target(){
-  const r=await fetch('http://127.0.0.1:9222/json/list');
-  if(!r.ok)throw new Error('CDP /json/list HTTP '+r.status);
-  const list=await r.json();
-  const p=list.find(x=>x.type==='page'&&/https:\/\/localhost|jornada-90/i.test(String(x.url||'')))||list.find(x=>x.type==='page');
-  if(!p)throw new Error('Android WebView page target not found');
-  return p;
+  const end=Date.now()+15000;
+  let lastList=[];
+  while(Date.now()<end){
+    const r=await fetch('http://127.0.0.1:9222/json/list');
+    if(!r.ok)throw new Error('CDP /json/list HTTP '+r.status);
+    const list=await r.json();
+    lastList=list;
+    const p=list.find(x=>x.type==='page'&&/(com\.jornada90\.manager|jornada-90|https:\/\/localhost|capacitor:\/\/)/i.test(String(x.url||'')+' '+String(x.title||'')));
+    if(p?.webSocketDebuggerUrl)return p;
+    await sleep(250);
+  }
+  const pages=lastList.filter(x=>x.type==='page').map(x=>({url:x.url||'',title:x.title||'',ws:!!x.webSocketDebuggerUrl}));
+  throw new Error('Android WebView page target not found: '+JSON.stringify(pages));
 }
 class CDP{
   constructor(url){this.ws=new WebSocket(url);this.id=0;this.pending=new Map()}
