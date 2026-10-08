@@ -4,7 +4,7 @@ name: Build APK Jornada 90 Manager
 
 concurrency:
   group: jornada90-apk-build
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
