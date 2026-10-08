@@ -77,7 +77,7 @@ jobs:
           test -f package-lock.json
           node -e "const p=require('./package-lock.json'); if(!p.packages || !p.packages['']) process.exit(1); console.log('package-lock.json gerado:', p.lockfileVersion)"
 
-      - name: Self-Healing: guardião arquitetural
+      - name: 'Self-Healing: guardião arquitetural'
         run: node scripts/self-healing.mjs --phase architecture --max-rounds 3 -- npm run guard:architecture
 
       - name: Autoteste do self-healing
@@ -216,7 +216,7 @@ jobs:
           sleep 1
           J90_SMOKE_URL=http://127.0.0.1:4173/ node scripts/self-healing.mjs --phase visual-scan --max-rounds 2 -- node scripts/visual-scan.mjs
 
-      - name: Self-Healing: validar o workspace antes do Android
+      - name: 'Self-Healing: validar o workspace antes do Android'
         run: |
           git diff --check
           node --check scripts/self-healing.mjs
