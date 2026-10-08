@@ -66,10 +66,18 @@ for attempt in $(seq 1 30); do
       continue
     fi
     if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "http://127.0.0.1:$PORT/json/version" -o "$OUT/cdp-version.json"; then
-      SELECTED_SOCKET="$socket"
-      echo "WEBVIEW_CDP_SOCKET_SELECTED=$socket"
-      cat "$OUT/cdp-version.json"
-      break 2
+      # /json/version alone can belong to another debuggable WebView process
+      # (for example Google Quick Search). Only accept a socket whose target
+      # list actually contains the Jornada 90 page.
+      if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "http://127.0.0.1:$PORT/json/list" -o "$OUT/cdp-list.json" &&
+         grep -Eiq 'com\.jornada90\.manager|jornada-90|https://localhost|capacitor://' "$OUT/cdp-list.json"; then
+        SELECTED_SOCKET="$socket"
+        echo "WEBVIEW_CDP_SOCKET_SELECTED=$socket"
+        cat "$OUT/cdp-version.json"
+        cat "$OUT/cdp-list.json"
+        break 2
+      fi
+      echo "WEBVIEW_CDP_WRONG_PROCESS=$socket"
     fi
     echo "WEBVIEW_CDP_PROBE_FAILED=$socket"
   done <<< "$SOCKET_LIST"
@@ -77,7 +85,7 @@ for attempt in $(seq 1 30); do
 done
 
 test -n "$SELECTED_SOCKET" || {
-  echo "No WebView DevTools socket answered /json/version after 30s."
+  echo "No Jornada 90 WebView DevTools socket answered /json/list after 30s."
   adb shell dumpsys webviewupdate || true
   adb logcat -d -v time >"$OUT/logcat.txt"
   grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView|DevTools' "$OUT/logcat.txt" | tail -250 || true
