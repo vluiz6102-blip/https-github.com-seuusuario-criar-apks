@@ -691,10 +691,34 @@ def main() -> None:
     (ROOT / "CONTENT-LICENSES.txt").write_text(licenses, encoding="utf-8")
 
     total_generated = total + tech["generatedBytes"]
+
+    # Validate the same invariants enforced by CI before the generator exits.
+    # This turns a later cryptic AssertionError into a precise build-time error.
+    if tech["animationBytes"] < 20 * 1024 * 1024:
+        raise SystemExit("Pacote de animação abaixo do mínimo de 20 MiB.")
+    if tech["generatedBytes"] < 64 * 1024 * 1024:
+        raise SystemExit("Pacote de tecnologia abaixo do contrato de 64 MiB.")
+    if total_generated > 180 * 1024 * 1024:
+        raise SystemExit(
+            f"Conteúdo total excede o limite de 180 MiB: {total_generated / 1024 / 1024:.1f} MiB"
+        )
     if total_generated < TARGET_BYTES:
         raise SystemExit(
             f"Conteúdo total abaixo da meta: {total_generated / 1024 / 1024:.1f} MiB < {TARGET_MB} MiB"
         )
+
+    required_paths = [
+        ROOT / "content-manifest.json",
+        ROOT / "technology" / "animation-manifest.json",
+        ROOT / "technology" / "ai" / "team-intelligence.json",
+    ]
+    missing = [str(p) for p in required_paths if not p.is_file() or p.stat().st_size == 0]
+    if not (ROOT / "technology" / "animations").is_dir():
+        missing.append(str(ROOT / "technology" / "animations"))
+    if (ROOT / "players").exists():
+        raise SystemExit("Diretório proibido assets/j90-content/players detectado.")
+    if missing:
+        raise SystemExit("Artefatos obrigatórios ausentes/vazios: " + ", ".join(missing))
 
     print(
         "Conteúdo Jornada 90 OK:",
