@@ -116,6 +116,9 @@ for (const file of sourceFilesForScan) {
   checkNodeSyntax('Source ' + file, file);
 }
 
+if (/function startJ90Atmosphere\(\)[\s\S]*if\(!j90AtmoNodes\.length\)return;/.test(indexSourceForScan)) add(fail, 'Loop compartilhado da partida depende indevidamente de Canvas de atmosfera e pode parar no modo ao vivo.');
+if (!/j90AtmoFrame=requestAnimationFrame\(frame\)/.test(indexSourceForScan)) add(fail, 'Loop compartilhado J90 sem agendamento de requestAnimationFrame.');
+if (!/typeof S!=='undefined'&&S&&S\.manager&&S\.match2d/.test(indexSourceForScan)) add(fail, 'Loop compartilhado não possui ramo explícito para partida ao vivo.');
 const androidSmokeSource = read('scripts/android-cdp-smoke.mjs');
 checkSyntax('Android CDP Smoke', androidSmokeSource);
 if (!/function webViewRafHeartbeat\(c,durationMs=1200\)/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem heartbeat independente de requestAnimationFrame.');
