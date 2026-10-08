@@ -15,6 +15,7 @@ page.on('requestfailed', req => {
 });
 
 await page.goto(base, { waitUntil: 'domcontentloaded' });
+await page.evaluate(() => window.J90Perf?.enable?.());
 
 const runtimeContract = await page.evaluate(() => {
   const expected = ['j90-manager-ai.js', 'j90-auto-heal.js'];
@@ -431,6 +432,8 @@ if (errors.length) {
   throw new Error('Browser smoke errors:\n' + errors.slice(0, 20).join('\n'));
 }
 
+const finalPerf = await page.evaluate(() => window.J90Perf?.snapshot?.() || null);
+console.log('BROWSER_PERF=' + JSON.stringify(finalPerf));
 console.log('BROWSER_SMOKE=OK');
 console.log('STARTUP=' + JSON.stringify(startup));
 await browser.close();

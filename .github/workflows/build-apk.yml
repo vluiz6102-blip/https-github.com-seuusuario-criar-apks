@@ -61,6 +61,7 @@ jobs:
           python3 -m py_compile scripts/generate-content-pack.py
           node --check scripts/browser-smoke.mjs
           node --check scripts/android-cdp-smoke.mjs
+          node --check src/j90-perf.js
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
@@ -133,9 +134,11 @@ jobs:
           test -s www/j90-manager-ai.js
           test -s www/j90-match-lifecycle.js
           test -s www/j90-auto-heal.js
+          test -s www/j90-perf.js
           grep -Fq '<script src="j90-match-lifecycle.js"></script>' www/index.html
           grep -F -n '<script src="j90-manager-ai.js"></script>' www/index.html >/dev/null
           grep -F -n '<script src="j90-auto-heal.js"></script>' www/index.html >/dev/null
+          grep -F -n '<script src="j90-perf.js"></script>' www/index.html >/dev/null
           test -s www/assets/j90-content/content-manifest.json
           test -d www/assets/j90-content/stadiums
           scene_files=$(find www/assets/j90-content/stadiums -type f -name '*.jpg' | wc -l)
@@ -373,6 +376,23 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: bash scripts/android-emulator-smoke.sh
+
+      - name: Publicar baseline Fase 0 de performance
+        uses: actions/upload-artifact@v7
+        with:
+          name: j90-phase0-baseline
+          path: |
+            ${{ runner.temp }}/j90-android-smoke/android-result.json
+            ${{ runner.temp }}/j90-android-smoke/android-platform-metrics.json
+            ${{ runner.temp }}/j90-android-smoke/gfxinfo-before.txt
+            ${{ runner.temp }}/j90-android-smoke/gfxinfo-after.txt
+            ${{ runner.temp }}/j90-android-smoke/meminfo-before.txt
+            ${{ runner.temp }}/j90-android-smoke/meminfo-after.txt
+            ${{ runner.temp }}/j90-android-smoke/logcat.txt
+            ${{ runner.temp }}/j90-android-smoke/perfetto.trace
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
 
       - name: Publicar APK bruto em Release
         env:
