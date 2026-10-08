@@ -45,8 +45,12 @@ check(/window\.J90AI2\s*=/.test(ai), 'AI 2.0 export exists');
 check(!/\b(?:window\.)?mgrMatchTick\s*=\s*[^=]/.test(ai), 'AI 2.0 does not replace mgrMatchTick');
 
 const match2d = read('src/j90-match2d-v3.js');
+const commentary = read('src/j90-commentary.js');
 check(!/requestAnimationFrame\s*\(|cancelAnimationFrame\s*\(|setInterval\s*\(/.test(match2d), 'Match 2D has no private loop');
 check(/version:'4\.1'/.test(match2d), 'Match 2D circular renderer version 4.1 is present');
+check(/function\s+fieldCache\s*\(/.test(match2d), 'Match 2D pre-renders the field into a cache canvas');
+check(/function\s+buildPitch\s*\(/.test(match2d)===false, 'Legacy per-frame buildPitch renderer is absent');
+check(/window\.J90Commentary/.test(commentary)&&/sourceArchitecture:'Global Soccer Manager'/.test(commentary), 'Global Soccer Manager-inspired offline commentary is present');
 check(/Math\.max\(\.90,low\?\.90:1\)/.test(match2d), 'Adaptive 2D quality never drops below DPR 0.90');
 check(/var dpr=Math\.min\(1\.5,Math\.max\(\.90,Number\(m\._j90Dpr\)\|\|1\)\)/.test(match2d), 'Android 2D backing DPR floor is 0.90');
 check(/var cssH=Math\.max\(180,/.test(match2d), 'Android 2D CSS height floor is 180px');
@@ -57,7 +61,7 @@ check(readFileSync(join(root, 'third_party/gball-NOTICE.md'), 'utf8').includes('
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
-  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js'
+  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-commentary.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js'
 ];
 for (const file of runtimeFiles) {
   check(index.split('<script src="' + file + '"></script>').length - 1 <= 1, 'runtime tag is not duplicated: ' + file);
