@@ -306,11 +306,12 @@ if (await play.count() === 1) {
   }
   if (!rendererCheck.webgl && !rendererCheck.canvas2d) throw new Error('No WebGL or Canvas2D renderer initialized: ' + JSON.stringify(rendererCheck));
   if (!rendererCheck.v3Loaded) throw new Error('Jornada 90 2D renderer V3 did not load: ' + JSON.stringify(rendererCheck));
-  if (rendererCheck.v3Mode !== 'pixel-topdown') throw new Error('2D renderer is not using the lightweight pixel top-down mode: ' + JSON.stringify(rendererCheck));
-  if (!/action-aware-8dir/i.test(rendererCheck.animationProfile)) throw new Error('2D renderer lost action-aware animation profile: ' + JSON.stringify(rendererCheck));
+  if (rendererCheck.v3Mode !== 'broadcast-tv') throw new Error('2D renderer is not using broadcast-TV mode: ' + JSON.stringify(rendererCheck));
+  if (!/broadcast-smooth/i.test(rendererCheck.animationProfile)) throw new Error('2D renderer lost broadcast-smooth animation profile: ' + JSON.stringify(rendererCheck));
+  if (typeof window.j90MatchCameraCycle !== 'function') throw new Error('Broadcast camera control is unavailable.');
   if (!rendererCheck.ai2 || !/^2\\./.test(rendererCheck.ai2Version)) throw new Error('Enhanced match AI runtime did not initialize: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.v3Frames < 5) throw new Error('2D renderer initialized but did not paint frames: ' + JSON.stringify(rendererCheck));
-  if (!/pixelated/i.test(rendererCheck.pixelated)) throw new Error('2D canvas lost pixel-art rendering mode: ' + JSON.stringify(rendererCheck));
+  if (/pixelated/i.test(rendererCheck.pixelated)) throw new Error('2D canvas is still forcing pixel-art rendering instead of broadcast smoothing: ' + JSON.stringify(rendererCheck));
   if (rendererCheck.canvasSample <= 0) throw new Error('2D canvas appears blank: ' + JSON.stringify(rendererCheck));
   if (await page.locator('#j90EventOverlayCanvas').count() !== 1) throw new Error('Match event overlay was not created.');
   if (!(await page.evaluate(() => !!window.J90MatchEvents?.state?.()))) throw new Error('Match event system did not initialize.');
