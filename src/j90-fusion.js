@@ -85,13 +85,15 @@
             '<div class="j90FS"><b>FINALIZAÇÕES</b><strong data-j90f-shots>0 / 0</strong></div>'+
             '<div class="j90FS"><b>NO ALVO</b><strong data-j90f-target>0 / 0</strong></div>'+
             '<div class="j90FS"><b>PASSES</b><strong data-j90f-pass>0</strong></div>'+
-            '<div class="j90FS"><b>DRIBLES</b><strong data-j90f-dribble>0</strong></div>'+
+            '<div class="j90FS"><b>DRIBLES</b><strong data-j90f-dribble>0</strong></div>'+ 
+            '<div class="j90FS"><b>ADVERSÁRIO</b><strong data-j90f-opp>4-3-3</strong></div>'+ 
           '</div>'+
           '<div class="j90FM">'+
             '<div class="j90FMHead"><span>Pressão atual</span><span data-j90f-danger>50 / 50</span></div>'+
             '<div class="j90FBar"><i data-j90f-bar></i></div>'+
           '</div>'+
-          '<div class="j90FTip" data-j90f-tip>Escolha um plano rápido. A tática é aplicada pelo Tactical Studio existente.</div>'+
+          '<div class="j90FTip" data-j90f-tip>Escolha um plano rápido. A tática é aplicada pelo Tactical Studio existente.</div>'+ 
+          '<div class="j90FTip" data-j90f-scout>Leitura do adversário: equilibrar o risco.</div>'+
         '</div>'+
       '</div>';
     document.body.appendChild(dock);
@@ -194,6 +196,12 @@
     s=dock.querySelector('[data-j90f-target]');if(s)s.textContent=fmt(stat(m,'shotsOnTarget'))+' total';
     s=dock.querySelector('[data-j90f-pass]');if(s)s.textContent=fmt(stat(m,'passes'));
     s=dock.querySelector('[data-j90f-dribble]');if(s)s.textContent=fmt(stat(m,'dribbles'));
+    s=dock.querySelector('[data-j90f-opp]');if(s)s.textContent=String(m._awayFormation||'4-3-3');
+    s=dock.querySelector('[data-j90f-scout]');
+    if(s){
+      var rec=da>dh+.08?'Reduzir risco e proteger a transição.':homePos<.45?'Controlar a posse e sair da pressão.':dh>da+.10?'Acelerar e atacar o espaço.':'Equilibrar risco e circulação.';
+      s.textContent='Leitura do adversário: '+rec;
+    }
     s=dock.querySelector('[data-j90f-danger]');if(s)s.textContent=Math.round(homePressure*100)+' / '+Math.round((1-homePressure)*100);
     s=dock.querySelector('[data-j90f-bar]');if(s)s.style.width=Math.round(homePressure*100)+'%';
     s=dock.querySelector('[data-j90f-status]');if(s)s.textContent=teamStatus+' • '+clock+' • '+phase.replace(/_/g,' ');
