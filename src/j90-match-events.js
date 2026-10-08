@@ -162,13 +162,12 @@
     else if(/barcelona|barça/.test(n))p={style:'senyera',colors:['#a50044','#004d98','#edbb00'],title:'MÉS QUE UN CLUB',intensity:.82};
     return p;
   }
-  function drawMosaic(m){
+  function drawMosaic(g,m,w,h){
     try{
       var st=m&&m._j90EventState;if(!st||!st.mosaic||!st.mosaic.active)return;
-      var c=document.getElementById('j90EventOverlayCanvas');if(!c)return;var g=c.getContext('2d');if(!g)return;
-      var w=c.clientWidth||c.width,h=c.clientHeight||c.height;if(!w||!h)return;
       var q=st.mosaic,p=q.profile||mosaicProfile(m,q.occasion),t=Math.max(0,Math.min(1,(Number(q.t)||0))),cols=p.colors;
-      g.save();g.globalAlpha=.82*(1-Math.abs(t-.55)*.12);g.clearRect(0,0,w,h);
+      g.save();g.globalAlpha=.82*(1-Math.abs(t-.55)*.12);
+      g.fillStyle='rgba(3,8,11,.88)';g.fillRect(0,0,w,h*.33);
       var top=h*.06,bottom=h*.31,left=w*.04,right=w*.96,rows=7,columns=48,cw=(right-left)/columns,ch=(bottom-top)/rows;
       for(var y=0;y<rows;y++)for(var x=0;x<columns;x++){
         var nx=x/columns,ny=y/rows,sel=0;
@@ -199,7 +198,6 @@
     if(st.mosaic){
       if(score!==st.mosaic.score){st.mosaic.score=score;st.mosaic.active=false;st.mosaic.celebrationUntil=now+5;}
       if(st.mosaic.active)st.mosaic.t=cl((now-st.mosaic.start)/4,0,1);
-      drawMosaic(m);
     }
   }
 
@@ -425,27 +423,16 @@
     g.restore();
   }
 
-  function ensureOverlay(c){
-    if(!c||!c.parentElement)return null;
-    var o=document.getElementById('j90EventOverlayCanvas');
-    if(!o){
-      if(getComputedStyle(c.parentElement).position==='static')c.parentElement.style.position='relative';
-      o=document.createElement('canvas');o.id='j90EventOverlayCanvas';
-      o.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;';
-      c.parentElement.appendChild(o);
-    }
-    var w=Math.max(1,c.clientWidth||320),h=Math.max(1,c.clientHeight||220),dpr=Math.min(2,window.devicePixelRatio||1);
-    if(o.width!==Math.round(w*dpr)||o.height!==Math.round(h*dpr)){o.width=Math.round(w*dpr);o.height=Math.round(h*dpr)}
-    o.style.width=w+'px';o.style.height=h+'px';
-    return {canvas:o,ctx:o.getContext('2d'),w:w,h:h,dpr:dpr};
-  }
-
   function renderOverlay(m){
-    var c=document.getElementById('j90MatchCanvas'),box=ensureOverlay(c);
-    if(!box||!box.ctx)return;
-    var g=box.ctx,w=box.w,h=box.h,dpr=box.dpr;
-    g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
-    drawCrowd(g,m,w,h);drawOverlay(g,m,w,h);
+    var c=document.getElementById('j90MatchCanvas');if(!c)return;
+    var legacy=document.getElementById('j90EventOverlayCanvas');if(legacy)legacy.remove();
+    var g=c.getContext('2d');if(!g)return;
+    var w=Math.max(1,c.clientWidth||c.getBoundingClientRect().width||376),h=Math.max(1,c.clientHeight||c.getBoundingClientRect().height||211);
+    var sx=Number(m._j90CanvasScaleX);if(!Number.isFinite(sx)||sx<=0)sx=c.width/Math.max(1,w);
+    var sy=Number(m._j90CanvasScaleY);if(!Number.isFinite(sy)||sy<=0)sy=c.height/Math.max(1,h);
+    g.save();g.setTransform(sx,0,0,sy,0,0);
+    drawMosaic(g,m,w,h);drawCrowd(g,m,w,h);drawOverlay(g,m,w,h);
+    g.restore();
   }
 
   function drawOverlay(g,m,w,h){
