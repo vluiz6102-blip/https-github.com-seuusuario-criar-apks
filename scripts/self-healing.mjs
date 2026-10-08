@@ -10,9 +10,8 @@ const sep=args.indexOf('--');
 const phase=phaseIndex>=0?String(args[phaseIndex+1]||'build'):'build';
 const maxRounds=Math.max(1,Math.min(3,Number(roundsIndex>=0?args[roundsIndex+1]:3)||3));
 const command=sep>=0?args.slice(sep+1).join(' '):'';
-if(!command)throw new Error('Self-healing runner requires a command after --.');
-
 const selfTest=args.includes('--self-test');
+if(!selfTest&&!command)throw new Error('Self-healing runner requires a command after --.');
 if(selfTest){
   const fixture='/tmp/j90-self-heal-fixture.js';
   writeFileSync(fixture,'function buildPitch(m){return m;}\n');
