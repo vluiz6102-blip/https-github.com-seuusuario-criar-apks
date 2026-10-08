@@ -52,7 +52,7 @@ const runtimeFiles = [
   'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js'
 ];
 for (const file of runtimeFiles) {
-  check(hits(index, new RegExp('<script src="' + file.replace('.', '\\.js') + '"></script>', 'g')) === 1, 'single runtime tag: ' + file);
+  check(index.split('<script src="' + file + '"></script>').length - 1 === 1, 'single runtime tag: ' + file);
 }
 
 if (fail.length) {
