@@ -96,11 +96,11 @@
     for(var r=0;r<13;r++){
       var y=95+r*11;
       for(var x=0;x<64;x++){
-        var px=7+x*15+(r%2)*4,py=y+((x*7+r*13)%5);
+        var seatX=7+x*15+(r%2)*4,py=y+((x*7+r*13)%5);
         var h=hash(x+'|'+r+'|'+String(m.home||''))+x+r*11;
         g.fillStyle=rowColors[(h>>>0)%rowColors.length];
-        g.fillRect(px,py,6,5);
-        if((h%11)===0){g.fillStyle='#d8bf63';g.fillRect(px,py,6,2)}
+        g.fillRect(seatX,py,6,5);
+        if((h%11)===0){g.fillStyle='#d8bf63';g.fillRect(seatX,py,6,2)}
       }
     }
 
