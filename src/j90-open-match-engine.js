@@ -103,8 +103,8 @@
         var cp=coverPoint(best,side);
         var blend=.26+markerFitness(marker)*.18;
         var tx=n(marker.tx,n(marker.x,.5)),ty=n(marker.ty,n(marker.y,.5));
-        marker.tx=cl(tx*(1-blend)+cp.x*blend,.04,.96);
-        marker.ty=cl(ty*(1-blend)+cp.y*blend,.06,.94);
+        marker.tx=clamp(tx*(1-blend)+cp.x*blend,.04,.96);
+        marker.ty=clamp(ty*(1-blend)+cp.y*blend,.06,.94);
         marker._j90MarkId=best.id;
         marker._j90MarkRole=pos(best);
         s.markingMap[side][marker.id]=best.id;
@@ -197,7 +197,7 @@
     if(s.acc<.08)return;
     s.acc=0;
     var now=n(m._simClock,n(m.elapsed,0));
-    var minute=(m.half===2?45:0)+Math.floor(45*cl(n(m.elapsed,0)/Math.max(1,n(m.duration,540)),0,1));
+    var minute=(m.half===2?45:0)+Math.floor(45*clamp(n(m.elapsed,0)/Math.max(1,n(m.duration,540)),0,1));
     var carrierId=m.possessionPlayerId||null;
     var carrier=(m.possessionTeam==='away'?(m.oppPlayers||[]):(m.players||[])).find(function(p){return p&&p.id===carrierId})||null;
     if(firstTouch(m,carrier,s.lastCarrierId)){m._j90PlusLastEvent='Primeiro toque pesado, posse perdida.'}
@@ -239,7 +239,7 @@
     var seed=Number.isFinite(Number(opts.seed))?Number(opts.seed)>>>0:hashSeed((opts.home||'HOME')+'|'+(opts.away||'AWAY'));
     var r=rngFromSeed(seed);
     var homeCA=Math.max(1,n(opts.homeCA,70)),awayCA=Math.max(1,n(opts.awayCA,70)),minutes=Math.max(1,n(opts.minutes,90));
-    var hExp=cl(1.25*(homeCA/(homeCA+awayCA))*2.4,.12,4.2),aExp=cl(1.25*(awayCA/(homeCA+awayCA))*2.1,.12,4.2);
+    var hExp=clamp(1.25*(homeCA/(homeCA+awayCA))*2.4,.12,4.2),aExp=clamp(1.25*(awayCA/(homeCA+awayCA))*2.1,.12,4.2);
     function poisson(lambda){
       var p=1,k=0,L=Math.exp(-lambda);
       do{k++;p*=r()}while(p>L);
@@ -255,8 +255,8 @@
     return {
       seed:seed>>>0,homeTeam:opts.home||'HOME',awayTeam:opts.away||'AWAY',
       homeScore:home,awayScore:away,events:events,
-      possessionHome:cl(Math.round(50+(homeCA-awayCA)*.12),25,75),
-      possessionAway:100-cl(Math.round(50+(homeCA-awayCA)*.12),25,75)
+      possessionHome:clamp(Math.round(50+(homeCA-awayCA)*.12),25,75),
+      possessionAway:100-clamp(Math.round(50+(homeCA-awayCA)*.12),25,75)
     };
   }
 
