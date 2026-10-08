@@ -96,7 +96,7 @@
     if(!m._ai||!m._ai.home||!m._ai.away)m._ai={home:think(m._homeBrain,0,0),away:think(m._awayBrain,0,0)};
     if(!Number.isFinite(+m._simAcc))m._simAcc=0;
     if(!Number.isFinite(+m._simClock))m._simClock=Math.max(0,Number(m.elapsed)||0);
-    m._lastTick=performance.now();
+    if(!Number.isFinite(+m._lastTick))m._lastTick=performance.now();
     if(!m.cameraMode)m.cameraMode='tv';
     if(!m.possessionTeam)m.possessionTeam='home';
     if(!m.possessionPlayerId&&m.players[0])m.possessionPlayerId=m.players[0].id;
