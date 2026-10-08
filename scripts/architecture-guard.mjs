@@ -52,6 +52,7 @@ check(/var dpr=Math\.min\(1\.5,Math\.max\(\.90,Number\(m\._j90Dpr\)\|\|1\)\)/.te
 check(/var cssH=Math\.max\(180,/.test(match2d), 'Android 2D CSS height floor is 180px');
 check(/function drawCircularPlayer\(/.test(match2d), '2D renderer uses circular player presentation');
 check(/BOLINHAS/.test(match2d), '2D renderer exposes comfortable circular-match presentation');
+check(readFileSync(join(root, 'third_party/gball-NOTICE.md'), 'utf8').includes('davidgomes/gball'), 'Third-party 2D attribution notice is present');
 
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
