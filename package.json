@@ -17,7 +17,8 @@
     "quality:scan": "node scripts/quality-scan.mjs",
     "content:build": "python3 scripts/generate-content-pack.py",
     "diag:smoke": "node scripts/diag-smoke.mjs",
-    "visual:scan": "node scripts/visual-scan.mjs"
+    "visual:scan": "node scripts/visual-scan.mjs",
+    "self-heal": "node scripts/self-healing.mjs"
   },
   "dependencies": {
     "@capacitor/core": "7.4.3",
