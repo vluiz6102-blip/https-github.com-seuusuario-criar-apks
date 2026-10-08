@@ -99,14 +99,15 @@ jobs:
           test -s assets/j90-content/technology/ai/team-intelligence.json
           animation_bytes=$(du -sb assets/j90-content/technology/animations | awk '{print $1}')
           echo "ANIMATION_BYTES=$animation_bytes"
-          test "$animation_bytes" -ge 480000000
+          test "$animation_bytes" -ge 20000000
           python3 - <<'PY'
           import json
           from pathlib import Path
           m=json.loads(Path("assets/j90-content/content-manifest.json").read_text(encoding="utf-8"))
           tech=m.get("technology",{})
-          assert int(tech.get("animationBytes",0)) >= 480000000
-          assert int(tech.get("generatedBytes",0)) >= 480000000
+          assert int(tech.get("animationBytes",0)) >= 20000000
+          assert int(tech.get("generatedBytes",0)) >= 64000000
+          assert int(m.get("generatedBytes",0)) <= 180 * 1024 * 1024
           assert m.get("teamIntelligence")
           assert m.get("animationManifest")
           print("TECH_PACK_VALIDATED=OK")
@@ -355,7 +356,7 @@ jobs:
           mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
           echo "APK_SIZE_BYTES=$bytes"
           echo "APK_SIZE_MIB=$mib"
-          test "$bytes" -ge "$((1024*1024*1024))"
+          test "$bytes" -ge "$((60*1024*1024))
 
           # 1) O APK é um ZIP íntegro e todos os CRCs precisam bater.
           unzip -t "$apk" >/tmp/j90-unzip-test.txt
@@ -387,8 +388,8 @@ jobs:
             echo "COMMIT=${GITHUB_SHA}"
           } | tee Jornada-90-Manager-release.txt
 
-          test "$bytes" -lt "$((2*1024*1024*1024))"
-          echo "APK_UNDER_2_GIB=OK"
+          test "$bytes" -lt "$((300*1024*1024))"
+          echo "APK_UNDER_300_MIB=OK"
           echo "APK_FORENSICS=OK"
           echo "ZIP_INTEGRITY=OK"
           echo "ZIPALIGN=OK"
@@ -463,27 +464,18 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}" >/dev/null
           echo "RELEASE_PUBLISHED=OK"
 
-      # O APK é publicado como asset binário direto da Release. O upload-artifact
-      # sempre cria um ZIP externo, o que adiciona uma camada de CRC desnecessária
-      # para um APK que já é um contêiner ZIP. Mantemos no artifact apenas os
-      # metadados/checksum para diagnóstico; o instalável oficial é o asset .apk.
-      - name: Publicar integridade do APK como artefato
+      # Disponibiliza o instalável também no Artifacts. O download do
+      # artifact é um ZIP externo do GitHub Actions, então o APK precisa ser
+      # extraído antes da instalação. A Release continua sendo a opção
+      # preferencial para baixar o .apk diretamente.
+      - name: Publicar APK + integridade como artefato
         uses: actions/upload-artifact@v7
         with:
-          name: jornada-90-manager-integridade
+          name: jornada-90-manager-apk
           path: |
+            android/Jornada-90-Manager.apk
             android/Jornada-90-Manager.apk.sha256
             android/Jornada-90-Manager-release.txt
           if-no-files-found: error
-          compression-level: 9
+          compression-level: 0
           retention-days: 30
-
-      - name: Publicar relatório do build
-        uses: actions/upload-artifact@v7
-        with:
-          name: jornada-90-manager-release-info
-          path: |
-            android/Jornada-90-Manager.apk.sha256
-            android/Jornada-90-Manager-release.txt
-          if-no-files-found: error
-          compression-level: 9
