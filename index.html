@@ -3002,8 +3002,6 @@ function renderManagerPartial(still){
  var A=$('app'),H=$('j90-manager-head'),T=$('j90-manager-tabs'),C=$('j90-manager-content'),inMatch=!!(S&&S.match2d);
  document.body.classList.add('j90-manager-screen');document.body.classList.toggle('j90-match-fullscreen',inMatch);
  if(inMatch){
-   if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}
-   j90AtmoStarted=false;
    A.className=still?'still':'';
    A.innerHTML='<div class="j90MatchOnly">'+managerV()+'</div>';
    document.body.classList.remove('j90-menu-active');
