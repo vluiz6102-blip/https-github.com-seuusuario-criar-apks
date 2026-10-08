@@ -83,8 +83,8 @@ if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android n
 if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
 if (existsSync('src/j90-landscape.js')) add(fail, 'Arquivo legado de paisagem ainda existe no projeto.');
 if (!/getContext\(['"]2d['"]/.test(match2d) || !/ResizeObserver/.test(match2d) || !/_j90AutoLow/.test(match2d)) add(fail, 'Renderer 2D sem fallback/otimização adaptativa suficiente para dispositivos com menor capacidade.');
-if (/\\bvar\\s+desired=cl\\(/.test(match2d)) add(fail, 'Renderer 2D contém a chamada cl() indefinida na câmera.');
-if (!/function\\s+percentile95\\s*\\(/.test(match2d) || !/_j90FrameP95/.test(match2d) || !/_j90Dpr/.test(match2d) || !/Math\\.min\\(1\\.5/.test(match2d)) add(fail, 'Renderer 2D sem gate de P95/DPR adaptativo do Android.');
+if (/\bvar\s+desired=cl\(/.test(match2d)) add(fail, 'Renderer 2D contém a chamada cl() indefinida na câmera.');
+if (!/function\s+percentile95\s*\(/.test(match2d) || !/_j90FrameP95/.test(match2d) || !/_j90Dpr/.test(match2d) || !/Math\.min\(1\.5/.test(match2d)) add(fail, 'Renderer 2D sem gate de P95/DPR adaptativo do Android.');
 const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
 if (!/J90_CAFE90_URL=['"]https:\/\/www\.buymeacoffee\.com\/['"]/.test(index) || !/function\s+j90OpenCafe90\s*\(/.test(index)) add(fail, 'Entrada do Café 90 ausente ou URL insegura.');
