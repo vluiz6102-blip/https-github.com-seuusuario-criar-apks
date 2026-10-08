@@ -58,6 +58,7 @@ jobs:
           bash -n scripts/publish-release.sh
           python3 -m py_compile scripts/generate-content-pack.py
           node --check scripts/browser-smoke.mjs
+          node --check scripts/android-cdp-smoke.mjs
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
