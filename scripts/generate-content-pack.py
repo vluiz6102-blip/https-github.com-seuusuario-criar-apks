@@ -33,7 +33,10 @@ OPENFOOTBALL = ROOT / "openfootball"
 ROSTERS = Path("data/rosters.json")
 TARGET_MB = int(os.environ.get("J90_PACK_TARGET_MB", "96"))
 TARGET_BYTES = TARGET_MB * 1024 * 1024
-TECH_TARGET_BYTES = 24 * 1024 * 1024
+# Keep the generated technology pack aligned with the CI/runtime contract.
+# The pipeline requires at least 64 MiB of total technology content, while the
+# final offline package must remain below 180 MiB for reliable mobile delivery.
+TECH_TARGET_BYTES = max(64 * 1024 * 1024, int(os.environ.get("J90_TECH_TARGET_MB", "64")) * 1024 * 1024)
 STADIUM_TARGET_BYTES = max(72 * 1024 * 1024, TARGET_BYTES - TECH_TARGET_BYTES)
 WIDTH, HEIGHT = 1024, 576
 MAX_SCENES = int(os.environ.get("J90_PACK_MAX_SCENES", "2400"))
@@ -496,7 +499,7 @@ def build_tech_pack(teams: list[str]) -> dict:
         "teams": intelligence,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
-      # 500 MiB is reserved for real frame atlases. They are generated once at
+    # The technology budget is reserved for real frame atlases. They are generated once at
     # build time and consumed lazily, keeping decoded memory near zero.
     animation_target = TECH_TARGET_BYTES
     animation_total = 0
@@ -523,7 +526,10 @@ def build_tech_pack(teams: list[str]) -> dict:
         if index % 10 == 0:
             print("Tecnologia:", index, "atlases |", round(animation_total / 1024 / 1024, 1), "MiB")
     if animation_total < animation_target:
-        raise SystemExit("Não foi possível gerar o pacote de tecnologia de 500 MiB.")
+        raise SystemExit(
+            f"Não foi possível gerar o pacote de tecnologia ({animation_total / 1024 / 1024:.1f} MiB < "
+            f"{animation_target / 1024 / 1024:.1f} MiB)."
+        )
     animation_manifest = tech_root / "animation-manifest.json"
     animation_manifest.write_text(json.dumps({
         "version": 1,
