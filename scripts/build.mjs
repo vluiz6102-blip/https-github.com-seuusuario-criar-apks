@@ -63,7 +63,7 @@ try {
     try { new Function(code); }
     catch (error) { throw new Error(name + ': ' + error.message); }
   }
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + lifecycleSource + '\n' + autoHealSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + commentarySource + '\n' + lifecycleSource + '\n' + autoHealSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
