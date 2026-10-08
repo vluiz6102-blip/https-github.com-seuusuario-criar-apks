@@ -129,7 +129,9 @@
     var m=match();
     if(!m)return;
     try{
-      if(window.J90TACT&&typeof window.J90TACT.apply==='function'){
+      if(typeof window.mgrMatchTactic==='function'){
+        window.mgrMatchTactic(key);
+      }else if(window.J90TACT&&typeof window.J90TACT.apply==='function'){
         window.J90TACT.apply(key);
       }else{
         if(!m.tacticPlan)m.tacticPlan={};
