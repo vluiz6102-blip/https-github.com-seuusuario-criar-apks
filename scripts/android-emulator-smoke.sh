@@ -23,33 +23,39 @@ grep -q "$PACKAGE" "$OUT/activity.txt"
 adb exec-out screencap -p >"$OUT/startup.png"
 
 PORT=9222
-SOCKET_LIST="$(adb shell cat /proc/net/unix | tr -d '\r' | awk '{print $8}' | grep -E '@webview_devtools_remote_[0-9]+$' | sort -u || true)"
-echo "WEBVIEW_DEVTOOLS_SOCKETS=${SOCKET_LIST:-none}"
 SELECTED_SOCKET=""
 rm -f "$OUT/cdp-version.json" "$OUT/cdp-list.json"
 
-while IFS= read -r raw_socket; do
-  [ -n "$raw_socket" ] || continue
-  socket="${raw_socket#@}"
-  adb forward --remove tcp:$PORT >/dev/null 2>&1 || true
-  if ! adb forward tcp:$PORT "localabstract:$socket" >/dev/null 2>&1; then
-    echo "WEBVIEW_CDP_FORWARD_FAILED=$socket"
-    continue
-  fi
-  if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "http://127.0.0.1:$PORT/json/version" -o "$OUT/cdp-version.json"; then
-    SELECTED_SOCKET="$socket"
-    echo "WEBVIEW_CDP_SOCKET_SELECTED=$socket"
-    cat "$OUT/cdp-version.json"
-    break
-  fi
-  echo "WEBVIEW_CDP_PROBE_FAILED=$socket"
-done <<< "$SOCKET_LIST"
+# WebView DevTools is created asynchronously after the renderer process starts.
+# Poll for up to 30s instead of failing on the first transient probe.
+for attempt in $(seq 1 30); do
+  SOCKET_LIST="$(adb shell cat /proc/net/unix | tr -d '\r' | awk '{print $8}' | grep -E '@webview_devtools_remote_[0-9]+$' | sort -u || true)"
+  echo "WEBVIEW_DEVTOOLS_SOCKETS_ATTEMPT_${attempt}=${SOCKET_LIST:-none}"
+
+  while IFS= read -r raw_socket; do
+    [ -n "$raw_socket" ] || continue
+    socket="${raw_socket#@}"
+    adb forward --remove tcp:$PORT >/dev/null 2>&1 || true
+    if ! adb forward tcp:$PORT "localabstract:$socket" >/dev/null 2>&1; then
+      echo "WEBVIEW_CDP_FORWARD_FAILED=$socket"
+      continue
+    fi
+    if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "http://127.0.0.1:$PORT/json/version" -o "$OUT/cdp-version.json"; then
+      SELECTED_SOCKET="$socket"
+      echo "WEBVIEW_CDP_SOCKET_SELECTED=$socket"
+      cat "$OUT/cdp-version.json"
+      break 2
+    fi
+    echo "WEBVIEW_CDP_PROBE_FAILED=$socket"
+  done <<< "$SOCKET_LIST"
+  sleep 1
+done
 
 test -n "$SELECTED_SOCKET" || {
-  echo "No WebView DevTools socket answered /json/version."
+  echo "No WebView DevTools socket answered /json/version after 30s."
   adb shell dumpsys webviewupdate || true
   adb logcat -d -v time >"$OUT/logcat.txt"
-  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView|DevTools' "$OUT/logcat.txt" | tail -200 || true
+  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView|DevTools' "$OUT/logcat.txt" | tail -250 || true
   exit 1
 }
 
