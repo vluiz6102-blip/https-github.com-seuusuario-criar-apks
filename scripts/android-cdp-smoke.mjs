@@ -56,6 +56,43 @@ class CDP{
 async function connect(){const t=await target();const c=new CDP(t.webSocketDebuggerUrl);await c.connect();await c.call('Runtime.enable');await c.call('Page.enable');return c}
 async function wait(c,expr,ms=15000){const end=Date.now()+ms;while(Date.now()<end){try{if(await c.eval(expr))return}catch{}await sleep(250)}throw Error('Timeout: '+expr)}
 
+async function rendererDiag(c){
+  return c.eval("(()=>{const m=window.S?.match2d,canvas=document.querySelector('#j90MatchCanvas'),r=canvas?.getBoundingClientRect();const life=window.J90MatchLifecycle;return{match:!!m,canvas:!!canvas,frames:Number(m?._j90v3Frames||0),renderError:String(m?._j90RenderError||''),renderErrorStage:String(m?._j90RenderErrorStage||''),renderErrorStack:String(m?._j90RenderErrorStack||''),canvas2d:!!(m&&m._ctx),renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,visibilityState:String(document.visibilityState),hidden:!!document.hidden,readyState:String(document.readyState),lifecycle:life?{version:String(life.version||''),isLive:!!life.isLive?.(),paused:!!m?.paused,lifecyclePaused:!!m?.__j90LifecyclePaused,resumeOnRestore:!!m?.j90ResumeOnRestore}:null,canvasRenderDpr:Number(m?._j90Dpr||0),frameP95:Number(m?._j90FrameP95||0),rendererFps:Number(m?._j90Fps||0),canvasCss:{width:Number(r?.width||0),height:Number(r?.height||0)},canvasCount:document.querySelectorAll('canvas').length,canvases:[...document.querySelectorAll('canvas')].map(x=>({id:x.id||'',className:String(x.className||''),width:x.width,height:x.height,cssWidth:Number(x.getBoundingClientRect().width||0),cssHeight:Number(x.getBoundingClientRect().height||0)})),perf:window.J90Perf?.snapshot?.()||null}})()");
+}
+function filteredAndroidLogcat(limit=180){
+  try{
+    const raw=adb(['logcat','-d','-v','threadtime','-t','500']);
+    const lines=raw.split(/\r?\n/).filter(line=>/chromium|WebView|j90/i.test(line));
+    return lines.slice(-limit).join('\n');
+  }catch(e){
+    return 'logcat capture failed: '+(e?.message||String(e));
+  }
+}
+async function captureRendererFailure(c,error){
+  const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));
+  try{await c.shot(out+'/android-frame-timeout.png')}catch(e){fs.writeFileSync(out+'/android-frame-timeout-screenshot-error.txt',String(e?.message||e))}
+  fs.writeFileSync(out+'/android-frame-timeout-logcat.txt',filteredAndroidLogcat());
+  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),diag},null,2));
+  return diag;
+}
+async function waitForRendererFrames(c,target=8,timeoutMs=90000){
+  const started=Date.now();let last=null;
+  while(Date.now()-started<timeoutMs){
+    try{
+      last=await rendererDiag(c);
+      if(Number(last?.frames||0)>=target)return last;
+    }catch(e){
+      last={evalError:e?.message||String(e)};
+    }
+    const remaining=timeoutMs-(Date.now()-started);
+    if(remaining<=0)break;
+    await sleep(Math.min(1000,remaining));
+  }
+  const failure=new Error('Renderer frame timeout after '+(Date.now()-started)+'ms');
+  failure.lastDiag=last;
+  throw failure;
+}
+
 let c=await connect();
 await wait(c,"!!document.body");
 await wait(c,"!!window.J90Perf",10000);
@@ -80,14 +117,13 @@ await c.eval("(()=>{const b=[...document.querySelectorAll('button')].find(x=>/^I
 await wait(c,"!!document.querySelector('#j90MatchCanvas')",45000);
 await wait(c,"window.J90Match2DV3?.version==='4.0'&&window.J90Match2DV3?.mode==='broadcast-tv'");
 try {
-  await wait(c,"Number(window.S?.match2d?._j90v3Frames||0)>=8",45000);
+  await waitForRendererFrames(c,8,90000);
 } catch (firstFrameError) {
-  const diag=await c.eval("(()=>{const m=window.S?.match2d,e=document.querySelector('#j90MatchCanvas');return{match:!!m,canvas:!!e,frames:Number(m?._j90v3Frames||0),renderError:String(m?._j90RenderError||''),canvas2d:!!(m&&m._ctx),renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode}:null,perf:window.J90Perf?.snapshot?.()||null}})()");
-  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:firstFrameError.message,diag},null,2));
+  const diag=await captureRendererFailure(c,firstFrameError);
   throw Error('Android renderer did not reach 8 frames: '+JSON.stringify(diag));
 }
 
-const check=await c.eval("(()=>{const e=document.querySelector('#j90MatchCanvas'),m=window.S?.match2d,r=e?.getBoundingClientRect();let s=0;try{const p=m?._ctx?.getImageData(Math.floor(e.width/2),Math.floor(e.height/2),1,1).data;s=p?Number(p[0])+Number(p[1])+Number(p[2])+Number(p[3]):0}catch{}return{canvas:!!e,live:document.body.classList.contains('j90-live-match'),width:e?.width||0,height:e?.height||0,cssWidth:r?.width||0,cssHeight:r?.height||0,renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,camera:typeof window.j90MatchCameraCycle==='function',cameraMode:m?.cameraMode||'',frames:Number(m?._j90v3Frames||0),elapsed:Number(m?.elapsed||0),paused:!!m?.paused,sample:s}})()");
+const check=await c.eval("(()=>{const e=document.querySelector('#j90MatchCanvas'),m=window.S?.match2d,r=e?.getBoundingClientRect();let s=0;try{const p=m?._ctx?.getImageData(Math.floor(e.width/2),Math.floor(e.height/2),1,1).data;s=p?Number(p[0])+Number(p[1])+Number(p[2])+Number(p[3]):0}catch{}return{canvas:!!e,live:document.body.classList.contains('j90-live-match'),visibilityState:String(document.visibilityState),hidden:!!document.hidden,lifecyclePaused:!!m?.__j90LifecyclePaused,resumeOnRestore:!!m?.j90ResumeOnRestore,canvasCount:document.querySelectorAll('canvas').length,renderDpr:Number(m?._j90Dpr||0),frameP95:Number(m?._j90FrameP95||0),rendererFps:Number(m?._j90Fps||0),width:e?.width||0,height:e?.height||0,cssWidth:r?.width||0,cssHeight:r?.height||0,renderer:window.J90Match2DV3?{version:window.J90Match2DV3.version,mode:window.J90Match2DV3.mode,animation:window.J90Match2DV3.animationProfile}:null,camera:typeof window.j90MatchCameraCycle==='function',cameraMode:m?.cameraMode||'',frames:Number(m?._j90v3Frames||0),elapsed:Number(m?.elapsed||0),paused:!!m?.paused,sample:s}})()");
 await c.shot(out+'/android-2d.png');
 
 if(!check.canvas||check.width<200||check.height<150||check.cssWidth<200||check.cssHeight<180)throw Error('Invalid Android 2D canvas: '+JSON.stringify(check));
