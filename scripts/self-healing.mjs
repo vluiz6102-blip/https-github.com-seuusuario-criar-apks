@@ -16,9 +16,9 @@ const selfTest=args.includes('--self-test');
 if(selfTest){
   const fixture='/tmp/j90-self-heal-fixture.js';
   writeFileSync(fixture,'function buildPitch(m){return m;}\n');
-  const before=read(fixture);
-  const changed=(()=>{const n=before.replace(/function\\s+buildPitch\\s*\\(/,'function fieldCache(').replace(/buildPitch\\(m\\)/g,'fieldCache(m)');writeFileSync(fixture,n);return n!==before;})();
-  const ok=changed && /function fieldCache\\(/.test(read(fixture));
+  const before=readFileSync(fixture,'utf8');
+  const changed=(()=>{const n=before.replace(/function\s+buildPitch\s*\(/,'function fieldCache(').replace(/buildPitch\\(m\\)/g,'fieldCache(m)');writeFileSync(fixture,n);return n!==before;})();
+  const ok=changed && /function fieldCache\(/.test(read(fixture));
   writeFileSync(fixture,before);
   if(!ok)throw new Error('Self-healing self-test failed.');
   console.log('[J90 SELF-HEAL] SELF-TEST=PASS');
