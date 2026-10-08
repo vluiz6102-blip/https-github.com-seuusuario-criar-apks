@@ -23,42 +23,37 @@ grep -q "$PACKAGE" "$OUT/activity.txt"
 adb exec-out screencap -p >"$OUT/startup.png"
 
 PORT=9222
-SOCKET_LIST="$(adb shell cat /proc/net/unix | tr -d '' | awk '{print $8}' | grep -E '@webview_devtools_remote_[0-9]+$' | sort -u || true)"
-test -n "$SOCKET_LIST" || {
-  echo "No WebView DevTools socket was exposed."
-  adb logcat -d -v time >"$OUT/logcat.txt"
-  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView' "$OUT/logcat.txt" | tail -160 || true
-  exit 1
-}
-
+SOCKET_LIST="$(adb shell cat /proc/net/unix | tr -d '\r' | awk '{print $8}' | grep -E '@webview_devtools_remote_[0-9]+$' | sort -u || true)"
+echo "WEBVIEW_DEVTOOLS_SOCKETS=${SOCKET_LIST:-none}"
 SELECTED_SOCKET=""
-rm -f "$OUT/cdp-version.json"
+rm -f "$OUT/cdp-version.json" "$OUT/cdp-list.json"
+
 while IFS= read -r raw_socket; do
   [ -n "$raw_socket" ] || continue
   socket="${raw_socket#@}"
   adb forward --remove tcp:$PORT >/dev/null 2>&1 || true
   if ! adb forward tcp:$PORT "localabstract:$socket" >/dev/null 2>&1; then
+    echo "WEBVIEW_CDP_FORWARD_FAILED=$socket"
     continue
   fi
-  if curl --fail --silent --show-error --connect-timeout 2 --max-time 4 "http://127.0.0.1:$PORT/json/version" -o "$OUT/cdp-version.json"; then
+  if curl --fail --silent --show-error --connect-timeout 1 --max-time 2 "http://127.0.0.1:$PORT/json/version" -o "$OUT/cdp-version.json"; then
     SELECTED_SOCKET="$socket"
     echo "WEBVIEW_CDP_SOCKET_SELECTED=$socket"
     cat "$OUT/cdp-version.json"
     break
   fi
+  echo "WEBVIEW_CDP_PROBE_FAILED=$socket"
 done <<< "$SOCKET_LIST"
 
 test -n "$SELECTED_SOCKET" || {
   echo "No WebView DevTools socket answered /json/version."
+  adb shell dumpsys webviewupdate || true
   adb logcat -d -v time >"$OUT/logcat.txt"
   grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView|DevTools' "$OUT/logcat.txt" | tail -200 || true
   exit 1
 }
 
-if ! curl --fail --silent --show-error --connect-timeout 2 --max-time 4 "http://127.0.0.1:$PORT/json/list" -o "$OUT/cdp-list.json"; then
-  echo "WebView DevTools /json/list is not reachable."
-  exit 1
-fi
+curl --fail --silent --show-error --connect-timeout 1 --max-time 3 "http://127.0.0.1:$PORT/json/list" -o "$OUT/cdp-list.json"
 cat "$OUT/cdp-list.json"
 
 export J90_ANDROID_SMOKE_OUT="$OUT"
@@ -76,6 +71,7 @@ const page=pages.find(p=>/j90|localhost|capacitor/i.test(p.url()))||pages[0];
 
 page.on('pageerror',e=>errors.push('pageerror: '+e.message));
 page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text())});
+page.setDefaultTimeout(10000);
 page.on('requestfailed',r=>errors.push('requestfailed: '+r.url()+' :: '+(r.failure()?.errorText||'unknown')));
 
 await page.waitForFunction(()=>document.body&&(document.body.innerText||'').length>20,{timeout:15000});
