@@ -43,7 +43,7 @@
       '#j90FusionDock .j90FH{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-bottom:1px solid #242424}',
       '#j90FusionDock .j90FH b{font-size:12px;color:#f5c84b;letter-spacing:.4px}',
       '#j90FusionDock .j90FH small{font-size:10px;color:#898989;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '#j90FusionDock .j90FC{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:8px}',
+      '#j90FusionDock .j90FC{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px}',
       '#j90FusionDock button{min-width:0;min-height:42px;border:1px solid #303030;border-radius:10px;background:#111;color:#eee;font-size:11px;font-weight:700;padding:6px 4px;touch-action:manipulation}',
       '#j90FusionDock button:active{transform:scale(.98)}',
       '#j90FusionDock button.on{border-color:#f5c84b;background:#1a180f;color:#f5c84b}',
@@ -58,7 +58,7 @@
       '#j90FusionDock .j90FBar{height:7px;background:#1d1d1d;border-radius:99px;overflow:hidden}',
       '#j90FusionDock .j90FBar i{display:block;height:100%;width:0;background:#42d77d}',
       '#j90FusionDock .j90FTip{margin-top:7px;font-size:10px;line-height:1.35;color:#9a9a9a}',
-      '@media(max-width:390px){#j90FusionDock{left:7px;right:7px}.j90FusionDock{}#j90FusionDock .j90FC{gap:4px;padding:6px}#j90FusionDock button{font-size:10px;min-height:40px}}'
+      '@media(max-width:390px){#j90FusionDock{left:7px;right:7px}#j90FusionDock .j90FC{gap:4px;padding:6px}#j90FusionDock button{font-size:10px;min-height:40px}}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -76,7 +76,7 @@
           '<button type="button" data-j90f="pressao-alta">Pressão</button>'+
           '<button type="button" data-j90f="contra-ataque">Transição</button>'+
           '<button type="button" data-j90f="bloco-baixo">Bloco</button>'+
-          '<button type="button" data-j90f="camera">Câmera</button>'+
+          '<button type="button" data-j90f="camera">Câmera</button><button type="button" data-j90f="lab">Análise</button>'+
         '</div>'+
         '<div class="j90FX">'+
           '<div class="j90FG">'+
@@ -187,8 +187,7 @@
     var phase=m.action&&m.action.name?String(m.action.name):'jogo';
     var clock=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
     var s=dock.querySelector('[data-j90f-score]');if(s)s.textContent=fmt(h)+' x '+fmt(a);
-    s=dock.querySelector('[data-j90f-pos]');if(s)s.textContent=pct(homePos/100)+'%';
-    if(s){s.textContent=Math.round(homePos*100)+'% / '+Math.round((1-homePos)*100)+'%'}
+    s=dock.querySelector('[data-j90f-pos]');if(s)s.textContent=Math.round(homePos*100)+'% / '+Math.round((1-homePos)*100)+'%';
     s=dock.querySelector('[data-j90f-shots]');if(s)s.textContent=fmt(stat(m,'shots'))+' total';
     s=dock.querySelector('[data-j90f-target]');if(s)s.textContent=fmt(stat(m,'shotsOnTarget'))+' total';
     s=dock.querySelector('[data-j90f-pass]');if(s)s.textContent=fmt(stat(m,'passes'));
