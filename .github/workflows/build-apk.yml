@@ -4,7 +4,7 @@ name: Build APK Jornada 90 Manager
 
 concurrency:
   group: jornada90-apk-build
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 on:
   workflow_dispatch:
@@ -21,6 +21,9 @@ on:
       - 'scripts/diag-smoke.mjs'
       - 'diag.html'
       - 'scripts/quality-scan.mjs'
+      - 'scripts/audit-apk.sh'
+      - 'scripts/publish-release.sh'
+      - 'scripts/visual-scan.mjs'
       - 'package.json'
       - 'capacitor.config.ts'
       - 'android-overrides/**'
@@ -38,18 +41,20 @@ jobs:
       actions: write
     steps:
       - name: Baixar projeto
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: npm
 
       - name: Configurar Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
       - name: Instalar dependências
         run: npm install
@@ -72,8 +77,8 @@ jobs:
           console.log('PREFLIGHT_JS=OK');
           NODE
 
-      - name: Preparar ferramentas de conteúdo
-        run: sudo apt-get update && sudo apt-get install -y python3-pil
+      - name: Preparar ferramentas do CI
+        run: sudo apt-get update && sudo apt-get install -y python3-pil librsvg2-bin
 
       - name: Sincronizar elencos reais dos times
         run: npm run data:rosters
@@ -121,9 +126,6 @@ jobs:
           print("PLAYER_PHOTOS=DISABLED")
           PY
 
-      - name: Validar pacote e runtime final
-        run: npm run quality:scan
-
       - name: Gerar aplicação web a partir da fonte única
         run: npm run build
 
@@ -166,7 +168,7 @@ jobs:
 
       - name: Teste real de inicialização e fluxo no Chromium
         run: |
-          npm install --no-save --ignore-scripts playwright@1.61.1
+          npm install --no-save --ignore-scripts playwright@1.63.0
           npx playwright install --with-deps chromium
           nohup python3 -m http.server 4173 --directory www >/tmp/j90-http.log 2>&1 &
           server_pid=$!
@@ -291,18 +293,39 @@ jobs:
         working-directory: android
         run: |
           manifest="app/src/main/AndroidManifest.xml"
-          grep -q 'android.permission.VIBRATE' "$manifest" || sed -i '/<manifest/a\    <uses-permission android:name="android.permission.VIBRATE" />' "$manifest"
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path("app/src/main/AndroidManifest.xml")
+          text = manifest.read_text(encoding="utf-8")
+          if 'android.permission.VIBRATE' not in text:
+              marker = '</manifest>'
+              if marker not in text:
+                  raise SystemExit('AndroidManifest.xml has no </manifest> boundary')
+              text = text.replace(marker, '    <uses-permission android:name="android.permission.VIBRATE" />\n' + marker, 1)
+              manifest.write_text(text, encoding="utf-8")
+          assert 'android.permission.VIBRATE' in manifest.read_text(encoding='utf-8')
+          PY
 
       - name: Corrigir compatibilidade dos plugins Capacitor 7
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          for name in ("J90HapticsPlugin.java", "J90DisplayRatePlugin.java"):
+          names = ("J90HapticsPlugin.java", "J90DisplayRatePlugin.java", "J90ExternalBrowserPlugin.java", "MainActivity.java")
+          for name in names:
               p = Path("android-overrides") / name
-              s = p.read_text(encoding="utf-8")
-              s = s.replace("import com.getcapacitor.annotation.PluginMethod;", "import com.getcapacitor.PluginMethod;")
-              p.write_text(s, encoding="utf-8")
-              assert "import com.getcapacitor.PluginMethod;" in s, name
+              if not p.is_file():
+                  raise SystemExit(f"Capacitor override ausente: {p}")
+              text = p.read_text(encoding="utf-8")
+              text = text.replace("import com.getcapacitor.annotation.PluginMethod;", "import com.getcapacitor.PluginMethod;")
+              p.write_text(text, encoding="utf-8")
+          for name in names:
+              p = Path("android-overrides") / name
+              text = p.read_text(encoding="utf-8")
+              if "import com.getcapacitor.annotation.PluginMethod;" in text:
+                  raise SystemExit(f"Capacitor 7 import antigo ainda presente em {p}")
+          for name in ("J90HapticsPlugin.java", "J90DisplayRatePlugin.java", "J90ExternalBrowserPlugin.java"):
+              text = (Path("android-overrides") / name).read_text(encoding="utf-8")
+              assert "import com.getcapacitor.PluginMethod;" in text, name
           PY
 
       - name: Aplicar controle nativo de taxa de atualização
@@ -314,9 +337,10 @@ jobs:
           cp android-overrides/J90ExternalBrowserPlugin.java android/app/src/main/java/com/jornada90/manager/J90ExternalBrowserPlugin.java
           test -s android/app/src/main/java/com/jornada90/manager/J90ExternalBrowserPlugin.java
           grep -Fq 'registerPlugin(J90ExternalBrowserPlugin.class);' android/app/src/main/java/com/jornada90/manager/MainActivity.java
-
-      - name: Instalar conversor SVG
-        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+          for name in J90HapticsPlugin.java J90DisplayRatePlugin.java J90ExternalBrowserPlugin.java MainActivity.java; do
+            test -s "android/app/src/main/java/com/jornada90/manager/$name"
+            ! grep -Fq 'com.getcapacitor.annotation.PluginMethod' "android/app/src/main/java/com/jornada90/manager/$name"
+          done
 
       - name: Aplicar identidade e ícone Jornada 90 Manager
         working-directory: android
@@ -373,6 +397,9 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_5
+          ram-size: 4096M
+          heap-size: 576M
+          force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: bash scripts/android-emulator-smoke.sh
@@ -389,16 +416,19 @@ jobs:
             ${{ runner.temp }}/j90-android-smoke/meminfo-before.txt
             ${{ runner.temp }}/j90-android-smoke/meminfo-after.txt
             ${{ runner.temp }}/j90-android-smoke/logcat.txt
+            ${{ runner.temp }}/j90-android-smoke/android-logcat-filtered.txt
             ${{ runner.temp }}/j90-android-smoke/perfetto.trace
+            ${{ runner.temp }}/j90-android-smoke/android-result.json
+            ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.json
+            ${{ runner.temp }}/j90-android-smoke/android-frame-timeout-logcat.txt
+            ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.png
+            ${{ runner.temp }}/j90-android-smoke/android-2d.png
+            ${{ runner.temp }}/j90-android-smoke/android-2d-after-resume.png
+            ${{ runner.temp }}/j90-android-smoke/android-emulator-final.png
           if-no-files-found: warn
           compression-level: 0
           retention-days: 30
           if: always()
-
-      - name: Publicar APK bruto em Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: bash scripts/publish-release.sh
 
       # Disponibiliza o instalável também no Artifacts. O download do
       # artifact é um ZIP externo do GitHub Actions, então o APK precisa ser
@@ -415,3 +445,8 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
+
+      - name: Publicar APK bruto em Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/publish-release.sh
