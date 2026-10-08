@@ -442,6 +442,8 @@ jobs:
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.json
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout-logcat.txt
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.png
+            ${{ runner.temp }}/j90-android-smoke/android-cdp-events.json
+            ${{ runner.temp }}/j90-android-smoke/android-runtime-process.txt
             ${{ runner.temp }}/j90-android-smoke/android-2d.png
             ${{ runner.temp }}/j90-android-smoke/android-2d-after-resume.png
             ${{ runner.temp }}/j90-android-smoke/android-emulator-final.png
