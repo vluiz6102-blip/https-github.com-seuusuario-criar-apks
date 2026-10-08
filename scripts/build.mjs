@@ -30,6 +30,7 @@ const lifecycleSource = readFileSync('src/j90-match-lifecycle.js', 'utf8');
 const autoHealSource = readFileSync('src/j90-auto-heal.js', 'utf8');
 const perfSource = readFileSync('src/j90-perf.js', 'utf8');
 const fusionSource = readFileSync('src/j90-fusion.js', 'utf8');
+const fm26ManagerSource = readFileSync('src/j90-fm26-manager.js', 'utf8');
 const contentRoot = 'assets/j90-content';
 const contentManifestPath = join(contentRoot, 'content-manifest.json');
 if (!existsSync(contentManifestPath)) throw new Error('Pacote de conteúdo ausente. Execute npm run content:build antes da build.');
@@ -56,14 +57,15 @@ const syntaxUnits = [
   ['j90-match-lifecycle.js', lifecycleSource],
   ['j90-auto-heal.js', autoHealSource],
   ['j90-perf.js', perfSource],
-  ['j90-fusion.js', fusionSource]
+  ['j90-fusion.js', fusionSource],
+  ['j90-fm26-manager.js', fm26ManagerSource]
 ];
 try {
   for (const [name, code] of syntaxUnits) {
     try { new Function(code); }
     catch (error) { throw new Error(name + ': ' + error.message); }
   }
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + lifecycleSource + '\n' + autoHealSource);
+  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + lifecycleSource + '\n' + autoHealSource + '\n' + fm26ManagerSource);
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
@@ -97,7 +99,7 @@ const generated = readFileSync('www/index.html', 'utf8');
 const runtimeFiles = [
   'j90-soundscape.js','j90-expansion.js','j90-ai2.js','j90-tactics.js','j90-match2d-v3.js','j90-comfort-ui.js',
   'j90-lineup-ai.js','j90-team-tactical-ai.js','j90-match-replay.js','j90-squad-cards.js','j90-match-events.js',
-  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js','j90-fusion.js'
+  'j90-manager-stats.js','j90-copa-do-brasil.js','j90-manager-ai.js','j90-match-lifecycle.js','j90-auto-heal.js','j90-perf.js','j90-fusion.js','j90-fm26-manager.js'
 ];
 
 function assertBalancedTagPair(html, name) {
