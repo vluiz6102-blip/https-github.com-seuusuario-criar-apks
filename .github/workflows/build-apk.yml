@@ -463,13 +463,19 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}" >/dev/null
           echo "RELEASE_PUBLISHED=OK"
 
-      - name: Publicar APK completo como artefato baixável
+      # O APK é publicado como asset binário direto da Release. O upload-artifact
+      # sempre cria um ZIP externo, o que adiciona uma camada de CRC desnecessária
+      # para um APK que já é um contêiner ZIP. Mantemos no artifact apenas os
+      # metadados/checksum para diagnóstico; o instalável oficial é o asset .apk.
+      - name: Publicar integridade do APK como artefato
         uses: actions/upload-artifact@v7
         with:
-          name: jornada-90-manager-APK-COMPLETO
-          path: android/app/build/outputs/apk/debug/Jornada-90-Manager.apk
+          name: jornada-90-manager-integridade
+          path: |
+            android/Jornada-90-Manager.apk.sha256
+            android/Jornada-90-Manager-release.txt
           if-no-files-found: error
-          compression-level: 0
+          compression-level: 9
           retention-days: 30
 
       - name: Publicar relatório do build
