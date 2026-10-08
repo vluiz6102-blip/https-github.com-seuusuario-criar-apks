@@ -37,6 +37,10 @@ if (!/getContext\(['\"]2d['\"]/.test(match2d)) add(fail, 'Renderer Canvas 2D aus
 if (!/fieldCache\(/.test(match2d)) add(fail, 'Canvas 2D sem pré-renderização do campo.');
 const expansion = read('src/j90-expansion.js');
 checkSyntax('Jornada 90 Plus', expansion);
+const matchEvents = read('src/j90-match-events.js');
+checkSyntax('Match Events', matchEvents);
+if (/createElement\(['"]canvas['"]\)/.test(matchEvents) && /j90EventOverlayCanvas/.test(matchEvents)) add(fail, 'Match Events voltou a criar um Canvas de overlay separado; use o Canvas principal.');
+if (!/getElementById\(['"]j90MatchCanvas['"]\)/.test(matchEvents) || !/function\\s+renderOverlay\\s*\\(/.test(matchEvents)) add(fail, 'Match Events não renderiza overlays no Canvas principal.');
 const ai2 = read('src/j90-ai2.js');
 const managerAi = read('src/j90-manager-ai.js');
 checkSyntax('Manager AI 2.0', managerAi);
@@ -79,6 +83,8 @@ if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android n
 if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
 if (existsSync('src/j90-landscape.js')) add(fail, 'Arquivo legado de paisagem ainda existe no projeto.');
 if (!/getContext\(['"]2d['"]/.test(match2d) || !/ResizeObserver/.test(match2d) || !/_j90AutoLow/.test(match2d)) add(fail, 'Renderer 2D sem fallback/otimização adaptativa suficiente para dispositivos com menor capacidade.');
+if (/\\bvar\\s+desired=cl\\(/.test(match2d)) add(fail, 'Renderer 2D contém a chamada cl() indefinida na câmera.');
+if (!/function\\s+percentile95\\s*\\(/.test(match2d) || !/_j90FrameP95/.test(match2d) || !/_j90Dpr/.test(match2d) || !/Math\\.min\\(1\\.5/.test(match2d)) add(fail, 'Renderer 2D sem gate de P95/DPR adaptativo do Android.');
 const lifecycle = read('src/j90-match-lifecycle.js');
 checkSyntax('Match Lifecycle Guard', lifecycle);
 if (!/J90_CAFE90_URL=['"]https:\/\/www\.buymeacoffee\.com\/['"]/.test(index) || !/function\s+j90OpenCafe90\s*\(/.test(index)) add(fail, 'Entrada do Café 90 ausente ou URL insegura.');
@@ -88,6 +94,7 @@ const mainActivity = read('android-overrides/MainActivity.java');
 if (!/J90ExternalBrowser/.test(externalBrowser) || !/https/.test(externalBrowser) || !/buymeacoffee\.com/.test(externalBrowser)) add(fail, 'Plugin nativo de navegador seguro do Café 90 incompleto.');
 if (!/registerPlugin\(J90ExternalBrowserPlugin\.class\)/.test(mainActivity)) add(fail, 'MainActivity não registra o navegador seguro do Café 90.');
 if (!/J90MatchLifecycle/.test(lifecycle) || !/pauseForBackground/.test(lifecycle) || !/ensureRecoveredMatch/.test(lifecycle)) add(fail, 'Proteção de ciclo de vida da partida incompleta.');
+if (!/syncCanvasBudget/.test(lifecycle)) add(fail, 'Orçamento de Canvas do modo partida ausente.');
 if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
