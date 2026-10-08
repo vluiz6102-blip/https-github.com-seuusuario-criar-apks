@@ -122,7 +122,7 @@ await sleep(250);
 await wait(c,"[...document.querySelectorAll('button')].some(x=>/^Iniciar partida$/.test((x.innerText||'').trim()))");
 await c.eval("(()=>{const b=[...document.querySelectorAll('button')].find(x=>/^Iniciar partida$/.test((x.innerText||'').trim()));if(!b)throw Error('Iniciar partida missing');b.click()})()");
 await wait(c,"!!document.querySelector('#j90MatchCanvas')",45000);
-await wait(c,"window.J90Match2DV3?.version==='4.0'&&window.J90Match2DV3?.mode==='broadcast-tv'");
+await wait(c,"window.J90Match2DV3?.version==='4.1'&&window.J90Match2DV3?.mode==='broadcast-tv'");
 try {
   await waitForRendererFrames(c,8,90000);
 } catch (firstFrameError) {
@@ -134,7 +134,7 @@ const check=await c.eval("(()=>{const e=document.querySelector('#j90MatchCanvas'
 await c.shot(out+'/android-2d.png');
 
 if(!check.canvas||check.width<200||check.height<150||check.cssWidth<200||check.cssHeight<180)throw Error('Invalid Android 2D canvas: '+JSON.stringify(check));
-if(check.renderer?.version!=='4.0'||check.renderer?.mode!=='broadcast-tv'||!/broadcast-smooth/i.test(check.renderer?.animation||''))throw Error('Invalid Android 2D renderer: '+JSON.stringify(check));
+if(check.renderer?.version!=='4.1'||check.renderer?.mode!=='broadcast-tv'||!/broadcast-smooth/i.test(check.renderer?.animation||''))throw Error('Invalid Android 2D renderer: '+JSON.stringify(check));
 if(!check.camera||check.frames<8||check.sample<=0||check.paused)throw Error('Android 2D render verification failed: '+JSON.stringify(check));
 
 const before=Number(await c.eval("window.S?.match2d?.elapsed||0"));await sleep(1100);const after=Number(await c.eval("window.S?.match2d?.elapsed||0"));
@@ -152,7 +152,7 @@ if(resumed.paused||resumed.frames<check.frames+2)throw Error('2D recovery after 
 
 await c.eval("window.J90MatchLifecycle.save()");
 await c.call('Page.reload',{ignoreCache:true});
-await wait(c,"!!window.S?.match2d",20000);await wait(c,"!!document.querySelector('#j90MatchCanvas')",20000);await wait(c,"window.J90Match2DV3?.version==='4.0'",20000);
+await wait(c,"!!window.S?.match2d",20000);await wait(c,"!!document.querySelector('#j90MatchCanvas')",20000);await wait(c,"window.J90Match2DV3?.version==='4.1'",20000);
 const restored=await c.eval("({match:!!window.S?.match2d,canvas:!!document.querySelector('#j90MatchCanvas'),elapsed:Number(window.S?.match2d?.elapsed||0),paused:!!window.S?.match2d?.paused,frames:Number(window.S?.match2d?._j90v3Frames||0)})");
 if(!restored.match||!restored.canvas)throw Error('Live match not restored after WebView reload: '+JSON.stringify(restored));
 if(restored.elapsed+0.5<savedElapsed)throw Error('Clock regressed after reload: '+JSON.stringify({savedElapsed,restored}));
