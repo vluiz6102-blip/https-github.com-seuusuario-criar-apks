@@ -274,6 +274,13 @@ if (await play.count() === 1) {
   if (await page.locator('#j90FusionDock.open .j90FS').count() < 4) {
     throw new Error('Fusion Match Center analysis panel did not open.');
   }
+  const fusionScout = await page.evaluate(() => ({
+    opponent: document.querySelector('[data-j90f-opp]')?.textContent || '',
+    scouting: document.querySelector('[data-j90f-scout]')?.textContent || ''
+  }));
+  if (!fusionScout.opponent || !fusionScout.scouting) {
+    throw new Error('Fusion opponent scouting block did not render: ' + JSON.stringify(fusionScout));
+  }
   await page.locator('#j90FusionDock button[data-j90f="pressao-alta"]').click();
   const fusionTactic = await page.evaluate(() => window.J90Fusion?.state?.() || null);
   if (fusionTactic?.tactic !== 'pressao-alta') throw new Error('Fusion tactical preset was not applied: ' + JSON.stringify(fusionTactic));
