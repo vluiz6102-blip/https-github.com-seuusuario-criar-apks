@@ -126,6 +126,12 @@ def gradient_background(variant_index: int, seed: int) -> Image.Image:
     img = Image.blend(img, grain, 0.075)
     return img
 
+def _valid_rect(y0: int, y1: int) -> tuple[int, int]:
+    """Return a Pillow-safe vertical interval, normalizing accidental inversions."""
+    y0, y1 = int(y0), int(y1)
+    return (y1, y0) if y1 < y0 else (y0, y1)
+
+
 def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> Image.Image:
     image = gradient_background(variant_index, scene_seed)
     draw = ImageDraw.Draw(image, "RGBA")
@@ -134,7 +140,11 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
     wet = variant in {"rain", "storm"}
     gold = VARIANTS[variant_index % len(VARIANTS)][2]
 
-    horizon_y = 605 + int((rng_value(scene_seed, 4) - 0.5) * 35)
+    # The canvas is 576px high. Keep the stadium horizon inside a safe
+    # vertical envelope so every downstream rectangle/polygon has valid
+    # coordinates even when the deterministic jitter is applied.
+    horizon_y = 400 + int((rng_value(scene_seed, 4) - 0.5) * 35)
+    horizon_y = max(260, min(HEIGHT - 120, horizon_y))
 
     # Distant cloud banks.
     for i in range(11):
@@ -146,8 +156,9 @@ def draw_scene(team: str, variant: str, variant_index: int, scene_seed: int) -> 
         draw.ellipse((x, y, x+w, y+h), fill=(225, 231, 235, a))
 
     # Roof and grandstand silhouette.
+    stand_top, stand_bottom = _valid_rect(horizon_y - 90, max(horizon_y + 80, HEIGHT - 34))
     draw.rounded_rectangle(
-        (70, horizon_y-90, WIDTH-70, HEIGHT-90),
+        (70, stand_top, WIDTH-70, stand_bottom),
         radius=80,
         fill=(11, 17, 22, 228),
         outline=(230, 210, 166, 65),
