@@ -153,7 +153,7 @@
       try{play({t:String(t||''),at:window.S&&S.match2d?S.match2d.elapsed:0});}catch(e){}
     };
     wrapped.__j90Replay=true;wrapped.__j90ReplayWrapped=true;wrapped.__original=old;
-    window.mgrMatchEvent=wrapped;return true;
+    window.mgrMatchEvent=wrapped;try{mgrMatchEvent=wrapped}catch(e){}return true;
   }
 
   var n=0;(function retry(){if(!hook()&&n++<80)setTimeout(retry,100);})();
