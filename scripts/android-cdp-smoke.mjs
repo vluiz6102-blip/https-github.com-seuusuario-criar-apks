@@ -77,13 +77,15 @@ function filteredAndroidLogcat(limit=180){
   }
 }
 async function captureRendererFailure(c,error){
-  const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));\n  const cdpEvents=c.events.filter(e=>/^(Runtime\\.exceptionThrown|Runtime\\.consoleAPICalled|Log\\.entryAdded|Page\\.crash|Inspector\\.detached)$/.test(String(e.method||''))).slice(-200);
+  const diag=await rendererDiag(c).catch(e=>({evalError:e?.message||String(e)}));
+  const cdpEvents=c.events.filter(e=>/^(Runtime\.exceptionThrown|Runtime\.consoleAPICalled|Log\.entryAdded|Page\.crash|Inspector\.detached)$/.test(String(e.method||''))).slice(-200);
   let processInfo='';
   try{processInfo=adb(['shell','pidof','com.jornada90.manager']).trim()}catch(e){processInfo='pidof failed: '+(e?.message||String(e))}
-  try{fs.writeFileSync(out+'/android-runtime-process.txt',processInfo+'\\n')}catch{}
+  try{fs.writeFileSync(out+'/android-runtime-process.txt',processInfo+'\n')}catch{}
   try{await c.shot(out+'/android-frame-timeout.png')}catch(e){fs.writeFileSync(out+'/android-frame-timeout-screenshot-error.txt',String(e?.message||e))}
   fs.writeFileSync(out+'/android-frame-timeout-logcat.txt',filteredAndroidLogcat());
-  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),classification:error?.classification||'',diag,processInfo,cdpEvents},null,2));\n  fs.writeFileSync(out+'/android-cdp-events.json',JSON.stringify(cdpEvents,null,2));
+  fs.writeFileSync(out+'/android-frame-timeout.json',JSON.stringify({error:error?.message||String(error),classification:error?.classification||'',diag,processInfo,cdpEvents},null,2));
+  fs.writeFileSync(out+'/android-cdp-events.json',JSON.stringify(cdpEvents,null,2));
   return diag;
 }
 async function waitForRendererFrames(c,target=8,timeoutMs=45000){
