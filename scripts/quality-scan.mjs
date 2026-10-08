@@ -12,6 +12,13 @@ function checkSyntax(label, source) {
   try { new Function(source); }
   catch (e) { add(fail, label + ': ' + e.message); }
 }
+function checkNodeSyntax(label, file) {
+  const result=spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+  if (result.status !== 0) {
+    const detail = String(result.stderr || result.stdout || '').trim().replace(/\s+/g, ' ');
+    add(fail, label + (detail ? ': ' + detail : ': node --check falhou'));
+  }
+}
 
 const inlineScripts = [...index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m => m[1]).join('\n');
 if (!/function\s+startCareer\s*\(/.test(index)) add(fail, 'Fluxo crítico de início de carreira sem startCareer().');
@@ -78,9 +85,9 @@ if (/j90-match2d-webgl\.js/.test(buildScript)) add(fail, 'Renderer WebGL legado 
 if (!/j90-comfort-ui\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Comfort UI.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'scripts/build.mjs não empacota Manager AI 2.0.');
 const workflow = read('.github/workflows/build-apk.yml');
-if (/j90-landscape|screen\.orientation|orientation:landscape/i.test(index + '\\n' + buildScript + '\\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
+if (/j90-landscape|screen\.orientation|orientation:landscape/i.test(index + '\n' + buildScript + '\n' + workflow)) add(fail, 'Modo paisagem ainda está presente no runtime/pipeline.');
 if (!/android:screenOrientation="portrait"/.test(workflow)) add(fail, 'Android não está fixado em orientação retrato.');
-if (!/android:configChanges="orientation\\|screenSize\\|keyboardHidden\\|smallestScreenSize\\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
+if (!/android:configChanges="orientation\|screenSize\|keyboardHidden\|smallestScreenSize\|screenLayout"|configChanges.*orientation.*screenSize/.test(workflow)) add(fail, 'Android pode recriar Activity durante mudanças de configuração.');
 if (existsSync('src/j90-landscape.js')) add(fail, 'Arquivo legado de paisagem ainda existe no projeto.');
 if (!/getContext\(['"]2d['"]/.test(match2d) || !/ResizeObserver/.test(match2d) || !/_j90AutoLow/.test(match2d)) add(fail, 'Renderer 2D sem fallback/otimização adaptativa suficiente para dispositivos com menor capacidade.');
 if (/\bvar\s+desired=cl\(/.test(match2d)) add(fail, 'Renderer 2D contém a chamada cl() indefinida na câmera.');
@@ -98,6 +105,52 @@ if (!/syncCanvasBudget/.test(lifecycle)) add(fail, 'Orçamento de Canvas do modo
 if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento principal não usa serialização segura para runtime da partida.');
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
+
+
+// Full source syntax gate: Node parses every first-party JS/MJS file before packaging.
+const sourceFilesForScan = readdirSync('src', { withFileTypes: true })
+  .filter(e => e.isFile() && /\.(?:js|mjs)$/i.test(e.name))
+  .map(e => join('src', e.name));
+for (const file of sourceFilesForScan) {
+  if (!existsSync(file)) { add(fail, 'Arquivo de origem ausente: ' + file); continue; }
+  checkNodeSyntax('Source ' + file, file);
+}
+
+const indexSourceForScan = read('index.html');
+if (/function startJ90Atmosphere\(\)[\s\S]*if\(!j90AtmoNodes\.length\)return;/.test(indexSourceForScan)) add(fail, 'Loop compartilhado da partida depende indevidamente de Canvas de atmosfera e pode parar no modo ao vivo.');
+if (!/j90AtmoFrame=requestAnimationFrame\(frame\)/.test(indexSourceForScan)) add(fail, 'Loop compartilhado J90 sem agendamento de requestAnimationFrame.');
+if (!/typeof S!=='undefined'&&S&&S\.manager&&S\.match2d/.test(indexSourceForScan)) add(fail, 'Loop compartilhado não possui ramo explícito para partida ao vivo.');
+
+// Full first-party script syntax gate: protect CI scripts from escaped-source corruption.
+const scriptFilesForScan = readdirSync('scripts', { withFileTypes: true })
+  .filter(e => e.isFile() && /\.(?:js|mjs)$/i.test(e.name))
+  .map(e => join('scripts', e.name));
+for (const file of scriptFilesForScan) {
+  checkNodeSyntax('Script ' + file, file);
+}
+
+const androidSmokeSource = read('scripts/android-cdp-smoke.mjs');
+checkNodeSyntax('Android CDP Smoke', 'scripts/android-cdp-smoke.mjs');
+if (!/function webViewRafHeartbeat\(c,durationMs=1200\)/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem heartbeat independente de requestAnimationFrame.');
+if (!/matchIdentity/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem controle de identidade da instância de match.');
+if (!/renderer-commit-stalled-webview-responsive/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de renderer travado com WebView responsiva.');
+if (!/renderer-did-not-commit-enough-frames/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem classificação de commits insuficientes.');
+if (!/pidof.*com\.jornada90\.manager/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke sem captura do processo Android em caso de falha.');
+if (!androidSmokeSource.includes('this.events=[]') || !androidSmokeSource.includes('Runtime\\.exceptionThrown') || !androidSmokeSource.includes('Log\\.entryAdded')) add(fail, 'Android CDP Smoke sem captura de exceções/erros do runtime via CDP.');
+if (!/timeoutMs=45000/.test(androidSmokeSource)) add(fail, 'Android CDP Smoke ainda usa janela longa de timeout para detectar renderer travado.');
+if (!/function menuV\(\)[\s\S]*j90ManagerHome[\s\S]*CRIADO POR[\s\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
+if (!/j90MHClub[\s\S]*j90MHGrid[\s\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
+const match2dSourceForScan = read('src/j90-match2d-v3.js');
+checkSyntax('Match 2D broadcast camera', match2dSourceForScan);
+if (!/function cameraState\(m\)[\s\S]*_cameraY[\s\S]*_cameraZoom/.test(match2dSourceForScan)) add(fail, 'Câmera broadcast não possui follow de profundidade e zoom dinâmico.');
+if (!/function worldPoint\(x,y,cameraX,cameraY,mode,zoom\)/.test(match2dSourceForScan)) add(fail, 'Projeção da câmera broadcast não recebe Y/zoom.');
+const fusionSourceForScan = read('src/j90-fusion.js');
+checkSyntax('Fusion Match Center', fusionSourceForScan);
+if (!/window\.J90Fusion\s*=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não exporta window.J90Fusion.');
+if (!/j90FusionDock/.test(fusionSourceForScan) || !/data-j90f=/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center sem dock/controles.');
+if (!/data-j90f-opp/.test(fusionSourceForScan) || !/data-j90f-scout/.test(fusionSourceForScan)) add(fail, 'Leitura de adversário ausente no Fusion Match Center.');
+if (!/J90TACT\.apply/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center não integra o Tactical Studio existente.');
+if (/requestAnimationFrame|setInterval/.test(fusionSourceForScan)) add(fail, 'Fusion Match Center criou loop visual próprio; deve reutilizar o loop da partida.');
 
 const tacticsSourceForScan = read('src/j90-tactics.js');
 checkSyntax('Tactical Studio', tacticsSourceForScan);
@@ -138,6 +191,13 @@ if (!/j90-match-events\.js/.test(read('scripts/build.mjs'))) add(fail, 'Eventos 
 if (!/j90-match-lifecycle\.js/.test(read('scripts/build.mjs'))) add(fail, 'Match Lifecycle Guard não está no pipeline de build.');
 if (/j90-landscape\.js/.test(read('scripts/build.mjs'))) add(fail, 'Runtime de paisagem ainda está no pipeline de build.');
 if (!/j90-manager-ai\.js/.test(buildScript)) add(fail, 'Manager AI 2.0 não está no pipeline de build.');
+if (!/j90-fusion\.js/.test(buildScript)) add(fail, 'Fusion Match Center não está no pipeline de build.');
+if (!/j90-auto-heal\.js/.test(buildScript)) add(fail, 'J90 Auto-Heal/BugGuard não está no pipeline de build.');
+const autoHealSource = read('src/j90-auto-heal.js');
+if (!/window\.J90BugGuard\s*=/.test(autoHealSource) || !/guardScan/.test(autoHealSource)) add(fail, 'J90 BugGuard sem scanner passivo de saúde.');
+if (!/guardLastFault|guardFaults/.test(autoHealSource)) add(fail, 'J90 BugGuard sem telemetria de falhas.');
+if (!/match-tick-stalled|match-clock-stalled|renderer-frame-stalled/.test(autoHealSource)) add(fail, 'J90 BugGuard sem proteção dos sinais críticos do runtime.');
+if (!/J90AutoHealAI/.test(autoHealSource)) add(fail, 'J90 Auto-Heal ausente.');
 
 
 if (existsSync('assets/j90-content/technology/animation-manifest.json')) {

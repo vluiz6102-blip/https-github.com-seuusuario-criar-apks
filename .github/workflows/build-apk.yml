@@ -84,6 +84,8 @@ jobs:
           node --check src/j90-match2d-v3.js
           node --check src/j90-match-events.js
           node --check src/j90-match-lifecycle.js
+          node --check src/j90-fusion.js
+          node --check scripts/quality-scan.mjs
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
@@ -419,8 +421,12 @@ jobs:
           profile: pixel_5
           ram-size: 4096M
           heap-size: 576M
-          force-avd-creation: false
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          # O smoke precisa de um AVD limpo. Não reutilizar um AVD potencialmente
+          # corrompido pelo runner anterior evita falhas em "Configure emulator".
+          force-avd-creation: true
+          emulator-boot-timeout: 900
+          # Sem snapshots: o teste começa sempre de um estado frio e determinístico.
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: bash scripts/android-emulator-smoke.sh
 
@@ -441,6 +447,8 @@ jobs:
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.json
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout-logcat.txt
             ${{ runner.temp }}/j90-android-smoke/android-frame-timeout.png
+            ${{ runner.temp }}/j90-android-smoke/android-cdp-events.json
+            ${{ runner.temp }}/j90-android-smoke/android-runtime-process.txt
             ${{ runner.temp }}/j90-android-smoke/android-2d.png
             ${{ runner.temp }}/j90-android-smoke/android-2d-after-resume.png
             ${{ runner.temp }}/j90-android-smoke/android-emulator-final.png

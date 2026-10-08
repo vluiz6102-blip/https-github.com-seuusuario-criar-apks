@@ -84,7 +84,23 @@ test -n "$SELECTED_SOCKET" || {
   exit 1
 }
 
-curl --fail --silent --show-error --connect-timeout 1 --max-time 3 "http://127.0.0.1:$PORT/json/list" -o "$OUT/cdp-list.json"
+CDP_LIST_OK=0
+for list_attempt in 1 2 3 4 5; do
+  if curl --fail --silent --show-error --connect-timeout 1 --max-time 6 "http://127.0.0.1:$PORT/json/list" -o "$OUT/cdp-list.json"; then
+    CDP_LIST_OK=1
+    break
+  fi
+  echo "WEBVIEW_CDP_LIST_RETRY=$list_attempt"
+  sleep 1
+done
+if [ "$CDP_LIST_OK" -ne 1 ]; then
+  echo "WebView DevTools socket answered /json/version but /json/list remained unavailable."
+  adb shell dumpsys activity activities >"$OUT/activity-cdp-list-failure.txt" || true
+  adb shell dumpsys webviewupdate >"$OUT/webviewupdate-cdp-list-failure.txt" || true
+  adb logcat -d -v time >"$OUT/cdp-list-failure-logcat.txt" || true
+  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|ANR|chromium|WebView|DevTools|crash' "$OUT/cdp-list-failure-logcat.txt" | tail -300 || true
+  exit 1
+fi
 cat "$OUT/cdp-list.json"
 
 export J90_ANDROID_SMOKE_OUT="$OUT"
