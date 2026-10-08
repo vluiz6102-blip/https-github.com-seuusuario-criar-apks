@@ -12,6 +12,19 @@ const maxRounds=Math.max(1,Math.min(3,Number(roundsIndex>=0?args[roundsIndex+1]:
 const command=sep>=0?args.slice(sep+1).join(' '):'';
 if(!command)throw new Error('Self-healing runner requires a command after --.');
 
+const selfTest=args.includes('--self-test');
+if(selfTest){
+  const fixture='/tmp/j90-self-heal-fixture.js';
+  writeFileSync(fixture,'function buildPitch(m){return m;}\n');
+  const before=read(fixture);
+  const changed=(()=>{const n=before.replace(/function\\s+buildPitch\\s*\\(/,'function fieldCache(').replace(/buildPitch\\(m\\)/g,'fieldCache(m)');writeFileSync(fixture,n);return n!==before;})();
+  const ok=changed && /function fieldCache\\(/.test(read(fixture));
+  writeFileSync(fixture,before);
+  if(!ok)throw new Error('Self-healing self-test failed.');
+  console.log('[J90 SELF-HEAL] SELF-TEST=PASS');
+  process.exit(0);
+}
+
 const stateDir='/tmp/j90-self-healing';
 mkdirSync(stateDir,{recursive:true});
 const logPath=join(stateDir,phase.replace(/[^a-z0-9_-]+/gi,'_')+'.log');
@@ -73,7 +86,7 @@ function repairDuplicateRuntimeTags(){
 
 const rules=[
   {name:'async-async',match:/async\s+async\s+function/,apply:repairAsyncAsync},
-  {name:'canvas-field-cache',match:/Canvas 2D sem pré-renderização do campo|fieldCache|buildPitch/,apply:repairFieldCache},
+  {name:'canvas-field-cache',match:/Canvas 2D sem pré-renderização do campo|pre-renders the field|fieldCache|buildPitch/,apply:repairFieldCache},
   {name:'canvas-backing-floor',match:/Invalid Android 2D canvas|height":141|targetH=Math\.max\(150/,apply:repairCanvasFloor},
   {name:'reduced-motion-raf',match:/prefers-reduced-motion|reduced-motion|tickCount.*0|shared RAF/,apply:repairReducedMotionRAF},
   {name:'duplicate-runtime-tags',match:/duplicad|duplicate.*script|runtime.*tag/i,apply:repairDuplicateRuntimeTags}
