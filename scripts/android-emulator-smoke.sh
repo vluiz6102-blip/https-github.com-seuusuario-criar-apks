@@ -107,6 +107,23 @@ fi
 adb shell dumpsys gfxinfo "$PACKAGE" >"$OUT/gfxinfo-after.txt"
 adb shell dumpsys meminfo "$PACKAGE" >"$OUT/meminfo-after.txt"
 adb logcat -d -v threadtime >"$OUT/logcat.txt"
+grep -E -i 'chromium|WebView|j90' "$OUT/logcat.txt" | tail -250 >"$OUT/android-logcat-filtered.txt" || true
+adb exec-out screencap -p >"$OUT/android-emulator-final.png" 2>/dev/null || true
+
+if [ ! -s "$OUT/android-result.json" ]; then
+  python3 - "$OUT" "$SMOKE_STATUS" <<'PY'
+import json, pathlib, sys
+out=pathlib.Path(sys.argv[1])
+status=int(sys.argv[2])
+diag=out/'android-frame-timeout.json'
+payload={'smokeExitCode':status,'failed':status!=0}
+if diag.exists():
+    try: payload['frameTimeout']=json.loads(diag.read_text(encoding='utf-8'))
+    except Exception as exc: payload['frameTimeoutParseError']=str(exc)
+(out/'android-result.json').write_text(json.dumps(payload,indent=2,ensure_ascii=False),encoding='utf-8')
+PY
+fi
+
 tile_warnings=$(grep -E -i -c 'tile_manager\\.cc\\([0-9]+\\).*tile memory limits exceeded|tile memory limits exceeded' "$OUT/logcat.txt" || true)
 perfetto_bytes=0
 [ -s "$OUT/perfetto.trace" ] && perfetto_bytes=$(stat -c '%s' "$OUT/perfetto.trace" || echo 0)
