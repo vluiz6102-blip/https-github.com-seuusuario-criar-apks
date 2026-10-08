@@ -84,6 +84,7 @@ jobs:
           node --check src/j90-match2d-v3.js
           node --check src/j90-match-events.js
           node --check src/j90-match-lifecycle.js
+          node --check src/j90-fusion.js
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
