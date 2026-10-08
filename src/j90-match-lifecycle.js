@@ -17,7 +17,7 @@
     _simClock:1,_hudCounter:1,_hudLastScore:1,_hudLastHalf:1,
     _cameraX:1,_j90RenderSamples:1,_j90BroadcastReady:1,_j90CameraMode:1,
     _j90RenderError:1,_j90AutoLow:1,_j90EventState:1,_replayBusy:1,
-    _replayStartedAt:1,_lastPassContext:1
+    _replayStartedAt:1,_lastPassContext:1,_j90FrameLastAt:1,_j90FrameIntervals:1,_j90FrameP95:1,_j90Fps:1,_j90Dpr:1,_j90CanvasScaleX:1,_j90CanvasScaleY:1,_j90RenderErrorStack:1,_j90RenderErrorStage:1
   };
 
   function getState(){try{if(typeof S!=='undefined'&&S)return S}catch(e){}try{return window.S||null}catch(e){return null}}
@@ -119,9 +119,28 @@
     return true;
   }
 
+  function syncCanvasBudget(live){
+    var selectors=['.ambientBg .atmoCanvas','.stadiumScene .atmoCanvas'];
+    selectors.forEach(function(sel){document.querySelectorAll(sel).forEach(function(el){
+      if(live){
+        if(el.dataset.j90MatchCanvasHidden!=='1'){
+          el.dataset.j90MatchCanvasHidden='1';
+          el.dataset.j90MatchPrevDisplay=el.style.display||'';
+        }
+        el.style.display='none';
+      }else if(el.dataset.j90MatchCanvasHidden==='1'){
+        el.style.display=el.dataset.j90MatchPrevDisplay||'';
+        delete el.dataset.j90MatchCanvasHidden;delete el.dataset.j90MatchPrevDisplay;
+      }
+    })});
+    if(live){
+      var legacy=document.getElementById('j90EventOverlayCanvas');if(legacy)legacy.remove();
+    }
+  }
+
   function syncScene(){
     var m=match(),body=document.body;if(!body)return;
-    var live=!!m;body.classList.toggle('j90-live-match',live);
+    var live=!!m;syncCanvasBudget(live);body.classList.toggle('j90-live-match',live);
     if(live)body.classList.remove('j90-manager-nav-right');else if(window.S&&S&&S.manager)body.classList.add('j90-manager-nav-right');
     var nav=document.getElementById('j90MgrRightNav');if(nav)nav.style.display=live?'none':'';
     var selectors=['#j90MgrRightNav','.j90ManagerTabs','#j90-manager-head','#j90-manager-tabs','.j90ManagerHead','.j90ManagerShell > header','#j90ComfortButton','#j90Expansion'];
