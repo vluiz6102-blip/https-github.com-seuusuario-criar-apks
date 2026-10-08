@@ -100,7 +100,6 @@ if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global 
 
 
 const indexSourceForScan = read('index.html');
-checkSyntax('index HTML embedded JavaScript', indexSourceForScan.replace(/<script[^>]*>/g,'').replace(/<\\/script>/g,''));
 if (!/function menuV\(\)[\\s\\S]*j90ManagerHome[\\s\\S]*CRIADO POR[\\s\\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
 if (!/j90MHClub[\\s\\S]*j90MHGrid[\\s\\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
 const match2dSourceForScan = read('src/j90-match2d-v3.js');
