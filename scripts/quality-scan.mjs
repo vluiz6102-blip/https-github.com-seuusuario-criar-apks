@@ -99,12 +99,19 @@ if (!/JSON\.stringify\(S,j90SaveReplacer\)/.test(index)) add(fail, 'Salvamento p
 if (!/Object\.defineProperty\(window,'S'/.test(index)) add(fail, 'Bridge global do estado S ausente para runtimes externos.');
 
 
+
+// Full source syntax gate: catch regressions in any first-party JavaScript before packaging.
+const sourceFilesForScan = readdirSync('src', { withFileTypes: true }).filter(e => e.isFile() && /\\.(?:js|mjs)$/i.test(e.name)).map(e => join('src', e.name));
+for (const file of sourceFilesForScan) {
+  const source = read(file);
+  checkSyntax('Source ' + file, source);
+}
 const indexSourceForScan = read('index.html');
-if (!/function menuV\(\)[\\s\\S]*j90ManagerHome[\\s\\S]*CRIADO POR[\\s\\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
-if (!/j90MHClub[\\s\\S]*j90MHGrid[\\s\\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
+if (!/function menuV\(\)[\s\S]*j90ManagerHome[\s\S]*CRIADO POR[\s\S]*VICTOR LUIZ/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem assinatura Criado por Victor Luiz.');
+if (!/j90MHClub[\s\S]*j90MHGrid[\s\S]*j90MHNews/.test(indexSourceForScan)) add(fail, 'Tela inicial J90 v2 sem painel de clube, atalhos e agenda.');
 const match2dSourceForScan = read('src/j90-match2d-v3.js');
 checkSyntax('Match 2D broadcast camera', match2dSourceForScan);
-if (!/function cameraState\(m\)[\\s\\S]*_cameraY[\\s\\S]*_cameraZoom/.test(match2dSourceForScan)) add(fail, 'Câmera broadcast não possui follow de profundidade e zoom dinâmico.');
+if (!/function cameraState\(m\)[\s\S]*_cameraY[\s\S]*_cameraZoom/.test(match2dSourceForScan)) add(fail, 'Câmera broadcast não possui follow de profundidade e zoom dinâmico.');
 if (!/function worldPoint\(x,y,cameraX,cameraY,mode,zoom\)/.test(match2dSourceForScan)) add(fail, 'Projeção da câmera broadcast não recebe Y/zoom.');
 const fusionSourceForScan = read('src/j90-fusion.js');
 checkSyntax('Fusion Match Center', fusionSourceForScan);
