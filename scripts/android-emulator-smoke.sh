@@ -3,7 +3,7 @@ set -euo pipefail
 
 APK="android/app/build/outputs/apk/debug/Jornada-90-Manager.apk"
 PACKAGE="com.jornada90.manager"
-OUT="\${RUNNER_TEMP:-/tmp}/j90-android-smoke"
+OUT="${RUNNER_TEMP:-/tmp}/j90-android-smoke"
 mkdir -p "$OUT"
 
 test -s "$APK"
@@ -29,7 +29,7 @@ for i in $(seq 1 30); do
   sleep 1
 done
 test -n "$SOCKET"
-SOCKET=\${SOCKET#@}
+SOCKET=${SOCKET#@}
 adb forward tcp:9222 "localabstract:$SOCKET"
 
 export J90_ANDROID_SMOKE_OUT="$OUT"
