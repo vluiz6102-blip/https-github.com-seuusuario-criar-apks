@@ -415,7 +415,6 @@ jobs:
         with:
           name: j90-phase0-baseline
           path: |
-            ${{ runner.temp }}/j90-android-smoke/android-result.json
             ${{ runner.temp }}/j90-android-smoke/android-platform-metrics.json
             ${{ runner.temp }}/j90-android-smoke/gfxinfo-before.txt
             ${{ runner.temp }}/j90-android-smoke/gfxinfo-after.txt
