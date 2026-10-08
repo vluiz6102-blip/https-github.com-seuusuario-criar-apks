@@ -1717,7 +1717,7 @@ function menuV(){
  const budget=hasSave&&S.finance&&Number.isFinite(Number(S.finance.budget))?'R$ '+fm(S.finance.budget):'Configure sua carreira';
  const next=hasSave?(round%3===0?'Dia de jogo':'Preparação da rodada'):'Pronto para começar';
  return '<main class="j90ManagerHome" aria-label="Tela inicial Jornada 90 Manager">'+
-   '<header class="j90MHHeader"><div><span class="j90MHEyebrow">JORNADA 90</span><h1>Central do Manager</h1></div><button class="j90MHSettings" onclick="j90MenuNavigate('settings')" aria-label="Configurações">⚙</button></header>'+
+   '<header class="j90MHHeader"><div><span class="j90MHEyebrow">JORNADA 90</span><h1>Central do Manager</h1></div><button class="j90MHSettings" onclick="j90MenuNavigate(\'settings\')" aria-label="Configurações">⚙</button></header>'+
    '<section class="j90MHClub">'+
      '<div class="j90MHClubTop"><div><small>CARREIRA ATUAL</small><strong>'+esc(club)+'</strong><span>'+esc(manager)+' · R'+round+'/18</span></div><div class="j90MHMark">'+esc(String(club).slice(0,3).toUpperCase())+'</div></div>'+
      '<div class="j90MHClubStats"><span><b>'+esc(budget)+'</b><small>CAIXA</small></span><span><b>'+esc(next)+'</b><small>STATUS</small></span><span><b>'+ (hasSave?'ATIVA':'NOVA') +'</b><small>CARREIRA</small></span></div>'+
@@ -1737,8 +1737,8 @@ function menuV(){
    '</section>'+
    '<section class="j90MHNews"><div class="j90MHNewsHead"><b>AGENDA</b><span>'+esc(next)+'</span></div><div class="j90MHNewsRow"><i>●</i><div><b>'+ (hasSave?'Próximo compromisso':'Primeiro passo') +'</b><small>'+ (hasSave?'Prepare a equipe e defina sua estratégia.':'Monte seu perfil e assuma um clube.') +'</small></div><strong>›</strong></div></section>'+
    '<section class="j90MHBottom">'+
-     '<button onclick="j90MenuNavigate('howto')"><b>Como jogar</b><small>Aprenda o fluxo</small></button>'+
-     '<button onclick="j90MenuNavigate('credits')"><b>Créditos</b><small>Victor Luiz</small></button>'+
+     '<button onclick="j90MenuNavigate(\'howto\')"><b>Como jogar</b><small>Aprenda o fluxo</small></button>'+
+     '<button onclick="j90MenuNavigate(\'credits\')"><b>Créditos</b><small>Victor Luiz</small></button>'+
    '</section>'+
    '<footer class="j90MHFooter"><span>CRIADO POR <b>VICTOR LUIZ</b></span><span>ANDROID · WEBVIEW</span></footer>'+
  '</main>';
