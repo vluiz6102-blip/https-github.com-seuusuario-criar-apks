@@ -1591,11 +1591,12 @@ function refreshJ90AtmosphereNodes(){
  if(j90AtmoResize)j90AtmoResize();
 }
 function startJ90Atmosphere(){
- if(j90AtmoStarted&&j90AtmoNodes.length)return;
+ // O RAF é o loop visual/simulador compartilhado e não pode depender da existência
+ // de canvases de atmosfera. A tela fullscreen da partida não possui esses nós.
+ if(j90AtmoStarted&&j90AtmoFrame)return;
  if(j90AtmoResize){try{removeEventListener('resize',j90AtmoResize)}catch(e){}j90AtmoResize=null}
  j90AtmoNodes=Array.from(document.querySelectorAll('.ambientBg .atmoCanvas,.stadiumScene .atmoCanvas'));
  j90AtmoSceneNodes=Array.from(document.querySelectorAll('.stadiumScene'));
- if(!j90AtmoNodes.length)return;
  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  const pstate=typeof j90PerfState==='function'?j90PerfState():(window.J90Perf?.snapshot?.()||{tier:'balanced',low:false});
  const atmoRate=pstate.low?45:(pstate.tier==='high'?120:60);
