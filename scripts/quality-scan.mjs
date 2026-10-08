@@ -146,7 +146,8 @@ if (existsSync('assets/j90-content/content-manifest.json')) {
     const sceneCount = Number(content?.sceneCount)||0;
     const generatedBytes = Number(content?.generatedBytes)||0;
     if (sceneCount < 1) add(fail, 'Pacote de conteúdo sem cenas.');
-    if (generatedBytes < 1000 * 1024 * 1024) add(fail, 'Pacote de conteúdo abaixo de 1000 MiB.');
+    if (generatedBytes < 64 * 1024 * 1024) add(fail, 'Pacote de conteúdo abaixo de 64 MiB.');
+    if (generatedBytes > 180 * 1024 * 1024) add(fail, 'Pacote de conteúdo excede 180 MiB e pode comprometer a distribuição mobile.');
     console.log('Pacote de conteúdo: ' + sceneCount + ' cenas / ' + Math.round(generatedBytes / 1048576) + ' MiB');
   } catch (e) { add(fail, 'content-manifest.json inválido: ' + e.message); }
 }
