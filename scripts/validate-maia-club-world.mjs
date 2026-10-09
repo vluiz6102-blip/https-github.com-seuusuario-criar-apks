@@ -64,4 +64,6 @@ for (const [clubId, squad] of squads) {
     `Position balance mismatch for ${clubId}`,
   );
 }
-console.log(`Club database valid: ${teams.length} clubs, ${players.length} generated players, 8 competitions, all cross-references verified.`);
+const realCount = players.filter((player) => player.id.startsWith("rt-")).length;
+const generatedCount = players.length - realCount;
+console.log(`Club database valid: ${teams.length} clubs, ${players.length} squad players (${realCount} Rising Transfers + ${generatedCount} generated), 8 competitions, all cross-references verified.`);
