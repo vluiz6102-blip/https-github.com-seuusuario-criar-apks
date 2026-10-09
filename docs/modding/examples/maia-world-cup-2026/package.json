@@ -1,9 +1,9 @@
 {
   "schema": "world",
-  "id": "northshire-mini-league",
+  "id": "maia-world-cup-2026",
   "name": "Maia Soccer Manager • Copa do Mundo 2026",
   "description": "Base internacional com 1.363 jogadores reais das seleções da Copa do Mundo de 2026. Dados Rising Transfers, CC BY 4.0. Base de seleções nacionais, não de todos os clubes do mundo.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Victor Luiz / Maia Soccer Manager",
   "license": "CC-BY-4.0",
   "packageType": "database",
