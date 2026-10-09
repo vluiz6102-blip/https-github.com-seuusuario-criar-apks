@@ -19,12 +19,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout Jornada 90 and the original game source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
@@ -39,7 +39,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
+        run: cargo install wasm-pack --locked
 
       - name: Test original match and season engine
         working-directory: game-source
