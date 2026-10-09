@@ -89,18 +89,45 @@ jobs:
       - name: Build ARM64 APK
         run: npm run tauri -- android build --apk --target aarch64 --ci --config src-tauri/tauri.mobile.conf.json
 
-      - name: Validate APK archive and calculate checksum
+      - name: Align, sign, and verify installable APK
         shell: bash
         run: |
           set -euo pipefail
-          apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' -size +5M -print -quit)"
-          test -n "$apk"
-          test -s "$apk"
-          unzip -t "$apk" > "$RUNNER_TEMP/apk-integrity.txt"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          build_tools="$sdk/build-tools/35.0.0"
+          unsigned_apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*unsigned.apk' -size +5M -print -quit)"
+          test -n "$unsigned_apk"
+          test -s "$unsigned_apk"
+          test -x "$build_tools/zipalign"
+          test -x "$build_tools/apksigner"
+          test -x "$build_tools/aapt"
+
           mkdir -p artifacts
-          cp "$apk" artifacts/Openfoot-Manager-arm64.apk
+          aligned="$RUNNER_TEMP/Openfoot-Manager-arm64-aligned.apk"
+          "$build_tools/zipalign" -f -v 4 "$unsigned_apk" "$aligned"
+
+          # A sideloaded APK must be signed. Use a throwaway debug certificate
+          # for CI artifacts; production store releases should use a private release key.
+          key="$RUNNER_TEMP/openfoot-ci-debug.keystore"
+          keytool -genkeypair -noprompt -keystore "$key" -storepass android \
+            -alias androiddebugkey -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+
+          "$build_tools/apksigner" sign --ks "$key" --ks-key-alias androiddebugkey \
+            --ks-pass pass:android --key-pass pass:android \
+            --out artifacts/Openfoot-Manager-arm64.apk "$aligned"
+          "$build_tools/zipalign" -c -v 4 artifacts/Openfoot-Manager-arm64.apk
+          "$build_tools/apksigner" verify --verbose --print-certs artifacts/Openfoot-Manager-arm64.apk
+          "$build_tools/aapt" dump badging artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
+          grep -q '^package: name=' "$RUNNER_TEMP/apk-badging.txt"
+          unzip -t artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-integrity.txt"
+
           (cd artifacts && sha256sum Openfoot-Manager-arm64.apk > Openfoot-Manager-arm64.apk.sha256 && sha256sum --check Openfoot-Manager-arm64.apk.sha256)
+          grep -q 'Verified using v2 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Openfoot-Manager-arm64.apk 2>&1) || \
+            grep -q 'Verified using v1 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Openfoot-Manager-arm64.apk 2>&1)
           echo "APK_ARCHIVE_VALID=YES"
+          echo "APK_SIGNATURE_VALID=YES"
+          echo "APK_ZIPALIGN_VALID=YES"
 
       - name: Upload APK and checksum
         uses: actions/upload-artifact@v7
