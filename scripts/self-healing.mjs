@@ -168,6 +168,11 @@ for(let round=1;round<=maxRounds;round++){
 
   if(!repaired){
     log('NO_SAFE_REPAIR_FOR_FAILURE');
+    const lines=last.out.trim().split(/\r?\n/);
+    log('ORIGINAL_ERROR_BEGIN');
+    for(const line of lines.slice(-100)) console.log(line);
+    log('ORIGINAL_ERROR_END');
+    appendFileSync(logPath,'\nSELF_HEAL_NO_SAFE_REPAIR=true\n');
     break;
   }
 }
