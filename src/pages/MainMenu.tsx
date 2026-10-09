@@ -5,6 +5,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { GITHUB_REPO_URL } from "../lib/communityLinks";
 import { useGameStore, type GameStateData } from "../store/gameStore";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
 import type { CareerStartPhase, CreateManagerFormData } from "../components/menu/CreateManagerForm";
@@ -14,7 +16,7 @@ import { applyExtraTranslations } from "../lib/extraTranslations";
 import { formatAppVersion } from "../lib/appVersion";
 import { resolveBackendError } from "../utils/backendI18n";
 import { prewarmManagerSquadPortraits } from "../services/portraitService";
-import { FolderOpen, Settings, PlusCircle, ChevronRight, Power, Package, Bug } from "lucide-react";
+import { FolderOpen, Settings, PlusCircle, ChevronRight, Power, Package, Bug, Github, MessageCircle } from "lucide-react";
 import { ReportBugModal } from "../components/diagnostics/ReportBugModal";
 import { showError } from "../lib/errorDialog";
 
@@ -861,9 +863,8 @@ export default function MainMenu() {
         </div>
       </div>
 
-      {/* Maia Soccer Manager links */}
+      {/* Maia Soccer Manager community and diagnostics links */}
       <div className="absolute bottom-3 left-4 flex items-center gap-1">
-
         <button
           type="button"
           aria-label={t("menu.reportBug")}
@@ -872,6 +873,24 @@ export default function MainMenu() {
           className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-navy-900"
         >
           <Bug className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("menu.openDiscord")}
+          title={t("menu.openDiscord")}
+          onClick={() => { void openUrl("https://discord.gg/2CXaesaukT"); }}
+          className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-navy-900"
+        >
+          <MessageCircle className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          aria-label={t("menu.openGithub")}
+          title={t("menu.openGithub")}
+          onClick={() => { void openUrl(GITHUB_REPO_URL); }}
+          className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-navy-900"
+        >
+          <Github className="w-5 h-5" />
         </button>
       </div>
 
