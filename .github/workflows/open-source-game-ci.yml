@@ -76,6 +76,10 @@ jobs:
         with:
           targets: aarch64-linux-android
 
+      - name: Test career, transfer, save, and match simulation logic
+        working-directory: src-tauri
+        run: cargo test -p domain -p engine -p ofm_core -p db
+
       - name: Install Android platform and NDK
         run: |
           # The official setup action tries to install the deprecated "tools"
