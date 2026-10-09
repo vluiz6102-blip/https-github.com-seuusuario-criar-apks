@@ -1,0 +1,39 @@
+{
+  "schema": "competition",
+  "id": "maia-la-liga-2026-27",
+  "name": "La Liga 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "ES",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-es-athletic-club",
+      "club-es-ca-osasuna",
+      "club-es-club-atletico-de-madrid",
+      "club-es-deportivo-alaves",
+      "club-es-elche-cf",
+      "club-es-fc-barcelona",
+      "club-es-getafe-cf",
+      "club-es-levante-ud",
+      "club-es-malaga-cf",
+      "club-es-rayo-vallecano-de-madrid",
+      "club-es-rc-celta-de-vigo",
+      "club-es-rc-deportivo-la-coruna",
+      "club-es-rcd-espanyol-de-barcelona",
+      "club-es-real-betis-balompie",
+      "club-es-real-madrid-cf",
+      "club-es-real-racing-club-de-santander",
+      "club-es-real-sociedad-de-futbol",
+      "club-es-sevilla-fc",
+      "club-es-valencia-cf",
+      "club-es-villarreal-cf"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
