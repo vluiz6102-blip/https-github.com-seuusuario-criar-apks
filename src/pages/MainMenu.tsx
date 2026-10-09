@@ -16,7 +16,7 @@ import { applyExtraTranslations } from "../lib/extraTranslations";
 import { formatAppVersion } from "../lib/appVersion";
 import { resolveBackendError } from "../utils/backendI18n";
 import { prewarmManagerSquadPortraits } from "../services/portraitService";
-import { FolderOpen, Settings, PlusCircle, ChevronRight, Power, Package, Bug, Github, MessageCircle } from "lucide-react";
+import { FolderOpen, Settings, PlusCircle, ChevronRight, Power, Package, Bug, ExternalLink, MessageCircle } from "lucide-react";
 import { ReportBugModal } from "../components/diagnostics/ReportBugModal";
 import { showError } from "../lib/errorDialog";
 
@@ -890,7 +890,7 @@ export default function MainMenu() {
           onClick={() => { void openUrl(GITHUB_REPO_URL); }}
           className="p-1.5 rounded-lg text-gray-400 dark:text-gray-600 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-navy-900"
         >
-          <Github className="w-5 h-5" />
+          <ExternalLink className="w-5 h-5" />
         </button>
       </div>
 
