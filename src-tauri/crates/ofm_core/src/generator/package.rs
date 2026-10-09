@@ -1,0 +1,5146 @@
+//! Modular world packages: a folder of JSON/YAML files, each declaring a
+//! top-level `schema` discriminator. The loader walks the folder **recursively**
+//! and classifies every file by its `schema` — never by which directory it sits
+//! in — so authors can organise files however they like. Entities link to one
+//! another by stable string ids, resolved after every file is read.
+//!
+//! This module covers loading, classification, and structural validation
+//! (recognised schema, well-formed entities, unique non-empty ids). Cross-file
+//! reference checks and building a runnable world come in later slices.
+
+use serde::{Deserialize, Serialize};
+use serde_yaml::Value;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+
+use domain::league::CompetitionScope;
+use domain::player::{PlayerAttributes, Position};
+use domain::staff::{CoachingSpecialization, StaffAttributes, StaffRole};
+
+use super::authored_player::authored_player_errors;
+use super::{CompetitionDefinition, NamePool, NamesDefinition, TeamDef};
+
+// ---------------------------------------------------------------------------
+// Authoring structs for the entity types a package can contain
+// ---------------------------------------------------------------------------
+
+/// A confederation / region. Its `id` is the region id used throughout the game.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfederationDef {
+    #[serde(default)]
+    pub id: String,
+    pub name: String,
+}
+
+/// A country, tied to a confederation. `id` is the ISO/football code.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CountryDef {
+    #[serde(default)]
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub confederation: String,
+}
+
+/// A player authored by hand. Ability may be given as a single `overall` (the
+/// engine generates a realistic attribute spread) or as an explicit
+/// `attributes` block. `club` references a [`TeamDef`] id, `nationality` a
+/// country id.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerDef {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub first_name: String,
+    #[serde(default)]
+    pub last_name: String,
+    #[serde(default)]
+    pub club: String,
+    #[serde(default)]
+    pub nationality: String,
+    #[serde(default)]
+    pub position: Position,
+    #[serde(default)]
+    pub date_of_birth: Option<String>,
+    #[serde(default)]
+    pub age: Option<u32>,
+    #[serde(default)]
+    pub overall: Option<u8>,
+    /// Career ceiling (1–99), independent of how current ability was expressed.
+    ///
+    /// Omit it and the engine rolls one from the player's ability and age, as it
+    /// always has — which is why every package written before this field existed
+    /// keeps generating exactly the same players.
+    #[serde(default)]
+    pub potential: Option<u8>,
+    #[serde(default)]
+    pub attributes: Option<PlayerAttributes>,
+    /// Optional path to a profile photo, relative to the package root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub photo: Option<String>,
+    /// Preferred foot ("Left", "Right", "Both"). Defaults to "Right" if omitted.
+    #[serde(default)]
+    pub footedness: Option<String>,
+    /// If true, the player belongs to the club's youth / academy squad rather than the first team.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub youth: bool,
+    /// When the current contract began (`"YYYY-MM-DD"`).
+    ///
+    /// Leave it out and the start is given when a career opens, from the club's own
+    /// season. An author's start is kept exactly as written, even one after the
+    /// career's opening date for a deal that has not begun.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract_start: Option<String>,
+    /// When the current contract ends (`"YYYY-MM-DD"`). Correct for the period it
+    /// was written for and nonsense outside it, so a package meant to be played in
+    /// any era wants `contractLength` instead. Give one or the other, not both.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract_end: Option<String>,
+    /// How long the contract runs, in whole years, as an alternative to
+    /// `contractEnd`. Counted from `contractStart` when there is one, otherwise from
+    /// the year the career opens in, so the same package works in any era.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract_length: Option<u32>,
+    /// Weekly wage, in the game's money. Sized from the player's value when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wage: Option<u32>,
+    /// Market value, in the game's money. Sized from ability and age when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<u64>,
+    /// Weak-foot skill, 1 to 5. Only kept for a player with a specific `position`:
+    /// a general group (`Midfielder`, `Forward`, …) has it re-inferred when a career opens.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub weak_foot: Option<u8>,
+    /// Other positions the player can cover. Same restriction as `weakFoot`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub alternate_positions: Vec<Position>,
+    /// Match sharpness, 0 to 100. Rolled in a realistic band when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub condition: Option<u8>,
+    /// Morale, 0 to 100. Rolled in a realistic band when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub morale: Option<u8>,
+    /// Clubs the player has played for before. The club is a free-text name, so a
+    /// spell at a club the package does not define is fine; `teamId` is optional and
+    /// checked against the package's teams when it is given.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub career_history: Vec<PlayerCareerEntryDef>,
+}
+
+/// One spell in a player's authored career history.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerCareerEntryDef {
+    /// The calendar year the season began in.
+    #[serde(default)]
+    pub season: u32,
+    /// A team defined in this package. Leave it out for a club the package does not
+    /// define; the name below is kept either way.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub team_id: Option<String>,
+    /// The club's name as it should read on the player's profile.
+    #[serde(default)]
+    pub team_name: String,
+    #[serde(default)]
+    pub appearances: u32,
+    #[serde(default)]
+    pub goals: u32,
+    #[serde(default)]
+    pub assists: u32,
+}
+
+fn is_false(v: &bool) -> bool {
+    !v
+}
+
+fn default_staff_role() -> StaffRole {
+    StaffRole::Coach
+}
+
+/// A coaching staff member defined in a world package.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StaffDef {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub first_name: String,
+    #[serde(default)]
+    pub last_name: String,
+    /// Club team id this staff member belongs to. Empty = unattached / free agent.
+    #[serde(default)]
+    pub club: String,
+    #[serde(default)]
+    pub nationality: String,
+    #[serde(default = "default_staff_role")]
+    pub role: StaffRole,
+    #[serde(default)]
+    pub attributes: Option<StaffAttributes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub specialization: Option<CoachingSpecialization>,
+    #[serde(default)]
+    pub date_of_birth: Option<String>,
+    #[serde(default)]
+    pub age: Option<u32>,
+}
+
+/// Package-level metadata (at most one per package).
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldMetaDef {
+    /// Stable slug used as the install key (e.g. `"premier-league-2026"`).
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub default_active_regions: Vec<String>,
+    #[serde(default)]
+    pub default_active_competitions: Vec<String>,
+    #[serde(default)]
+    pub base_year: Option<i32>,
+    /// Semantic version string (e.g. `"1.0.0"`).
+    #[serde(default)]
+    pub version: String,
+    /// Package author / creator.
+    #[serde(default)]
+    pub author: String,
+    /// Monotonic format version for future compatibility.
+    #[serde(default)]
+    pub format_version: u32,
+    /// SPDX license expression (e.g. `"CC-BY-4.0"`).
+    #[serde(default)]
+    pub license: String,
+    /// Minimum game version required (semver, e.g. `"0.3.0"`). Empty = no requirement.
+    #[serde(default)]
+    pub game_min_version: String,
+    /// Package type: `"database"` | `"patch"` | `"assets"`. Defaults to `"database"`.
+    #[serde(default = "default_package_type")]
+    pub package_type: String,
+    /// Relative path to the package logo image within the package (e.g. `"assets/images/logo.png"`).
+    #[serde(default)]
+    pub logo: Option<String>,
+    /// Optional overrides for the league auto-generated when a `database` package
+    /// declares teams but no competitions. Absent = use the built-in defaults.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fallback_league: Option<FallbackLeagueConfig>,
+}
+
+/// Author-supplied shape for the auto-generated fallback league. Every field is
+/// optional and falls back to the built-in default when unset.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FallbackLeagueConfig {
+    /// Display name. When set, it is used verbatim instead of the localized
+    /// default name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Rounds each pair plays: `1` (single) or `2` (double round-robin, default).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legs: Option<u8>,
+    /// Competition scope. Defaults to `Domestic`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<CompetitionScope>,
+}
+
+fn default_package_type() -> String {
+    "database".to_string()
+}
+
+/// A package summarised for display and install management.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageInfo {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub author: String,
+    pub description: String,
+    pub license: String,
+    pub game_min_version: String,
+    pub package_type: String,
+    pub team_count: usize,
+    pub player_count: usize,
+    pub competition_count: usize,
+    /// How many name pools the package supplies, one per country code.
+    ///
+    /// A breadth signal, not a coverage check: it says whether a package brings
+    /// name pools at all and roughly how many, which is what distinguishes two
+    /// otherwise identical-looking packages in a list. Whether the *specific*
+    /// nationalities a squad uses are covered needs the pool keys, not a count.
+    #[serde(default)]
+    pub name_pool_count: usize,
+    #[serde(default)]
+    pub country_count: usize,
+    #[serde(default)]
+    pub confederation_count: usize,
+    /// Absolute path to the installed `.ofm` file.
+    pub installed_path: String,
+    /// Logo encoded as a data URL (`data:<mime>;base64,...`), if available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo_data_url: Option<String>,
+}
+
+/// Everything a package declares, aggregated across all its files.
+#[derive(Debug, Default)]
+pub struct WorldPackage {
+    pub meta: Option<WorldMetaDef>,
+    pub confederations: Vec<ConfederationDef>,
+    pub countries: Vec<CountryDef>,
+    pub teams: Vec<TeamDef>,
+    pub players: Vec<PlayerDef>,
+    pub staff: Vec<StaffDef>,
+    pub competitions: Vec<CompetitionDefinition>,
+    pub names: Option<NamesDefinition>,
+    /// Per-locale translation bundles supplied by the package, keyed by locale
+    /// code (e.g. `"de"`, `"fr"`). Loaded from `translations.{locale}.json`
+    /// files found anywhere in the package directory tree.
+    pub extra_translations: std::collections::HashMap<String, serde_json::Value>,
+    /// Which file each entity was declared in, keyed by schema and held
+    /// **parallel to the entity lists**: `sources["country"][i]` is where
+    /// `countries[i]` came from.
+    ///
+    /// A package may spread its entities over as many files as the author likes
+    /// and the loader walks the tree recursively, so an entity id is not a
+    /// location. Validation reports a *reference* problem — a country naming a
+    /// confederation that does not exist — long after the file it came from is
+    /// out of scope, and without this the author is told only which id is wrong.
+    ///
+    /// Indexed by position rather than by id, because an id is not specific
+    /// enough to be a location: two files may declare the same one, and every
+    /// entity missing an id shares the blank. Keyed by id, an error had to guess
+    /// which declaration it meant and guessed wrong whenever the offending one
+    /// was not the last — sending the author to a file whose entity is fine,
+    /// which is worse than no location at all because it reads as authoritative.
+    ///
+    /// Private: the alignment with the entity lists is the whole contract, so it
+    /// is maintained here and read through [`WorldPackage::source_at`].
+    sources: std::collections::HashMap<String, Vec<String>>,
+    /// The file the manifest was read from, empty when it was not read from one.
+    ///
+    /// Kept apart from `sources` rather than filed under a `"world"` key: that
+    /// map's contract is one entry per entity *in list order*, and `meta` is a
+    /// single `Option` that later files overwrite. A parallel vector would put
+    /// the first declaration's path beside the last declaration's data.
+    ///
+    /// It matters because the manifest is `package.json` only by convention —
+    /// any file with `schema: world` is one — so hardcoding that name sent an
+    /// author with a `world.yaml` to a file that does not exist.
+    manifest_file: String,
+}
+
+impl WorldPackage {
+    /// The file the manifest came from, falling back to the conventional name.
+    ///
+    /// The fallback covers packages assembled in memory with no file behind
+    /// them at all (a test fixture, a synthesised world): `package.json` is
+    /// where an author would look first. A merged stack carries the manifest of
+    /// whichever package supplied the surviving metadata.
+    fn manifest_source(&self) -> &str {
+        if self.manifest_file.is_empty() {
+            "package.json"
+        } else {
+            &self.manifest_file
+        }
+    }
+
+    /// How many name pools the package supplies, one per country code.
+    ///
+    /// Unlike the other entity collections this is not a plain `Vec::len`: name
+    /// pools arrive as an optional `NamesDefinition` whose `pools` map is keyed
+    /// by country code, and a package that declares no `names` file at all has
+    /// none rather than zero. Both summary call sites want the same number, so
+    /// it lives here rather than being spelled out twice.
+    pub fn name_pool_count(&self) -> usize {
+        self.names.as_ref().map_or(0, |names| names.pools.len())
+    }
+
+    /// Remember that the entity about to be appended to `schema`'s list was
+    /// declared in `file`. Called exactly once per entity pushed and in the same
+    /// order — that pairing is what makes an index a location.
+    fn remember(&mut self, schema: &str, file: &str) {
+        self.sources
+            .entry(schema.to_string())
+            .or_default()
+            .push(file.to_string());
+    }
+
+    /// The file the `index`-th entity of `schema` was declared in, or `""` when
+    /// it is not known — a package assembled in memory rather than loaded from
+    /// disk has no files to name.
+    fn source_at(&self, schema: &str, index: usize) -> String {
+        self.sources
+            .get(schema)
+            .and_then(|files| files.get(index))
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    /// How many declarations have been recorded for `schema`; equal to that
+    /// schema's entity count whenever the package was loaded from disk.
+    ///
+    /// Exists to assert that alignment. Nothing in production asks — the loader
+    /// maintains the invariant rather than checking it.
+    #[cfg(test)]
+    fn sources_len(&self, schema: &str) -> usize {
+        self.sources.get(schema).map_or(0, Vec::len)
+    }
+}
+
+/// Sort `entities` by id while keeping `files` — the file each was declared in —
+/// at the matching index.
+///
+/// The loader sorts so that a package's contents do not depend on folder layout.
+/// The sort is stable, so repeated ids stay in declaration order and the second
+/// declaration of an id still points at the second file.
+fn sort_by_id_keeping_sources<T>(
+    entities: &mut Vec<T>,
+    files: &mut Vec<String>,
+    id_of: impl Fn(&T) -> &str,
+) {
+    let mut paired: Vec<(T, String)> = std::mem::take(entities)
+        .into_iter()
+        .zip(
+            std::mem::take(files)
+                .into_iter()
+                .chain(std::iter::repeat(String::new())),
+        )
+        .collect();
+    paired.sort_by(|a, b| id_of(&a.0).cmp(id_of(&b.0)));
+    let (sorted_entities, sorted_files) = paired.into_iter().unzip();
+    *entities = sorted_entities;
+    *files = sorted_files;
+}
+
+// ---------------------------------------------------------------------------
+// Errors
+// ---------------------------------------------------------------------------
+
+const READ_FAILED: &str = "be.error.package.readFailed";
+const MISSING_SCHEMA: &str = "be.error.package.missingSchema";
+const UNKNOWN_SCHEMA: &str = "be.error.package.unknownSchema";
+const UNSUPPORTED_FORMAT_VERSION: &str = "be.error.package.unsupportedFormatVersion";
+const INVALID_ENTITY: &str = "be.error.package.invalidEntity";
+const MISSING_ID: &str = "be.error.package.missingId";
+/// A required manifest field the author left blank, named by a `field` param.
+/// One code rather than four so the locale files carry one sentence, and the
+/// param is the literal JSON field name — the message is rendered by passing
+/// params straight to `t()`, so anything else would leave an untranslated
+/// fragment inside a translated sentence.
+const MISSING_METADATA: &str = "be.error.package.missingMetadata";
+const DUPLICATE_ID: &str = "be.error.package.duplicateId";
+const INVALID_PACKAGE_ID: &str = "be.error.package.invalidPackageId";
+const WORLD_EXPORT_NOT_PACKAGE: &str = "be.error.package.worldExportNotPackage";
+const UNKNOWN_CONFEDERATION: &str = "be.error.package.unknownConfederation";
+const UNKNOWN_COUNTRY: &str = "be.error.package.unknownCountry";
+// `pub(super)`: the rules for an authored player's extra fields live in their own
+// module and name a team by this same key rather than a second one.
+pub(super) const UNKNOWN_TEAM: &str = "be.error.package.unknownTeam";
+const UNKNOWN_COMPETITION: &str = "be.error.package.unknownCompetition";
+const UNKNOWN_REGION: &str = "be.error.package.unknownRegion";
+const REVERSED_RANGE: &str = "be.error.package.reversedRange";
+const OUT_OF_RANGE: &str = "be.error.package.outOfRange";
+// Deliberately not `OUT_OF_RANGE`: that message is written about teams in every
+// locale — it names `{{team}}` and quotes the reputation and finance bounds — so
+// reusing it for a player would render an empty club and the wrong legal range.
+const POTENTIAL_OUT_OF_RANGE: &str = "be.error.package.potentialOutOfRange";
+// One code per source of the ability the ceiling was measured against, rather
+// than one code carrying the source as a parameter: `IssueList` renders
+// `t(code, params)`, so a parameter would drop the bare English word
+// "attributes" into a Czech sentence. Separate keys stay translatable, and let
+// the no-ability case explain where its number came from at all.
+const POTENTIAL_BELOW_ATTRIBUTES: &str = "be.error.package.potentialBelowAttributes";
+const POTENTIAL_BELOW_OVERALL: &str = "be.error.package.potentialBelowOverall";
+const POTENTIAL_BELOW_DEFAULT: &str = "be.error.package.potentialBelowDefaultAbility";
+
+/// Maximum team reputation. Reputation is a `u32`, so it cannot go below 0.
+const MAX_REPUTATION: u32 = 1000;
+
+/// A structured problem found while loading a package. `code` is an i18n key,
+/// `file` locates the offending file (empty for aggregate-level problems), and
+/// `params` fills the message placeholders.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PackageError {
+    pub code: String,
+    pub file: String,
+    pub params: Vec<(String, String)>,
+}
+
+impl PackageError {
+    pub(super) fn new(code: &str, file: &str) -> Self {
+        Self {
+            code: code.to_string(),
+            file: file.to_string(),
+            params: Vec::new(),
+        }
+    }
+
+    pub(super) fn with(mut self, key: &str, value: impl Into<String>) -> Self {
+        self.params.push((key.to_string(), value.into()));
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------
+
+/// Recursively collect every JSON/YAML file under `dir`.
+fn collect_data_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_data_files(&path, out);
+        } else if matches!(
+            path.extension()
+                .and_then(|ext| ext.to_str())
+                .map(str::to_ascii_lowercase)
+                .as_deref(),
+            Some("json") | Some("yaml") | Some("yml")
+        ) {
+            out.push(path);
+        }
+    }
+}
+
+fn parse_entity<T: serde::de::DeserializeOwned>(
+    value: Value,
+    file: &str,
+    schema: &str,
+    errors: &mut Vec<PackageError>,
+) -> Option<T> {
+    match serde_yaml::from_value::<T>(value) {
+        Ok(parsed) => Some(parsed),
+        Err(_) => {
+            errors.push(PackageError::new(INVALID_ENTITY, file).with("schema", schema));
+            None
+        }
+    }
+}
+
+fn classify_entity(
+    schema: &str,
+    value: Value,
+    file: &str,
+    package: &mut WorldPackage,
+    errors: &mut Vec<PackageError>,
+) {
+    match schema {
+        "confederation" => {
+            if let Some(def) = parse_entity::<ConfederationDef>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.confederations.push(def);
+            }
+        }
+        "country" => {
+            if let Some(def) = parse_entity::<CountryDef>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.countries.push(def);
+            }
+        }
+        "team" => {
+            if let Some(def) = parse_entity::<TeamDef>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.teams.push(def);
+            }
+        }
+        "player" => {
+            if let Some(def) = parse_entity::<PlayerDef>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.players.push(def);
+            }
+        }
+        "staff" => {
+            if let Some(def) = parse_entity::<StaffDef>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.staff.push(def);
+            }
+        }
+        "competition" => {
+            if let Some(def) = parse_entity::<CompetitionDefinition>(value, file, schema, errors) {
+                package.remember(schema, file);
+                package.competitions.push(def);
+            }
+        }
+        "names" => {
+            if let Some(def) = parse_entity::<NamesDefinition>(value, file, schema, errors) {
+                package.names = Some(def);
+            }
+        }
+        "world" => {
+            if let Some(def) = parse_entity::<WorldMetaDef>(value, file, schema, errors) {
+                package.meta = Some(def);
+                // Overwritten alongside `meta`, so the recorded path always
+                // belongs to the manifest that actually survived.
+                package.manifest_file = file.to_string();
+            }
+        }
+        other => {
+            errors.push(PackageError::new(UNKNOWN_SCHEMA, file).with("schema", other));
+        }
+    }
+}
+
+fn classify_file(
+    value: Value,
+    file: &str,
+    package: &mut WorldPackage,
+    errors: &mut Vec<PackageError>,
+) {
+    let Some(map) = value.as_mapping() else {
+        errors.push(PackageError::new(MISSING_SCHEMA, file));
+        return;
+    };
+    let schema = map
+        .get("schema")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let Some(schema) = schema else {
+        errors.push(PackageError::new(MISSING_SCHEMA, file));
+        return;
+    };
+
+    // A file holds one entity (its fields at the top level) or a bulk `items`
+    // list of entities of the same schema.
+    let entities: Vec<Value> = match map.get("items") {
+        Some(Value::Sequence(items)) => items.clone(),
+        _ => vec![value.clone()],
+    };
+    for entity in entities {
+        classify_entity(&schema, entity, file, package, errors);
+    }
+}
+
+/// Load a world package from a directory: walk it recursively, classify each
+/// file by its `schema`, and validate ids. Returns the aggregated package and
+/// every problem found. Collections are sorted by id so the result is
+/// independent of file-discovery order (and therefore of folder layout).
+/// Extract the locale code from a translation file name of the form
+/// `translations.{locale}.json`. The locale must be non-empty and must not
+/// contain dots (BCP 47 subtags use hyphens, e.g. `pt-BR`). Returns `None`
+/// for any name that doesn't match this exact pattern.
+fn translation_locale_from_filename(name: &str) -> Option<&str> {
+    let lower = name.to_ascii_lowercase();
+    let stem = lower.strip_suffix(".json")?;
+    let locale_lower = stem.strip_prefix("translations.")?;
+    if locale_lower.is_empty() || locale_lower.contains('.') {
+        return None;
+    }
+    // Return the original-cased locale slice.
+    let start = "translations.".len();
+    let end = name.len() - ".json".len();
+    Some(&name[start..end])
+}
+
+/// Load and classify all files in `dir`, running only id-uniqueness checks.
+/// Cross-reference validation is deliberately deferred so callers can merge
+/// multiple packages before running references (which may span packages).
+pub fn load_world_package_files(dir: &Path) -> (WorldPackage, Vec<PackageError>) {
+    let mut files = Vec::new();
+    collect_data_files(dir, &mut files);
+    files.sort();
+
+    let mut package = WorldPackage::default();
+    let mut errors = Vec::new();
+
+    for path in &files {
+        let file = path
+            .strip_prefix(dir)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/");
+
+        // Translation files are loaded separately and not treated as entity definitions.
+        let file_name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default();
+        if let Some(locale) = translation_locale_from_filename(file_name) {
+            let canonical = locale.to_ascii_lowercase();
+            if let std::collections::hash_map::Entry::Vacant(e) =
+                package.extra_translations.entry(canonical)
+            {
+                match std::fs::read_to_string(path) {
+                    Ok(text) => match serde_json::from_str::<serde_json::Value>(&text) {
+                        Ok(serde_json::Value::Object(map)) => {
+                            e.insert(serde_json::Value::Object(map));
+                        }
+                        Ok(_) | Err(_) => errors.push(PackageError::new(READ_FAILED, &file)),
+                    },
+                    Err(_) => errors.push(PackageError::new(READ_FAILED, &file)),
+                }
+            } else {
+                errors.push(PackageError::new(READ_FAILED, &file));
+            }
+            continue;
+        }
+
+        match std::fs::read_to_string(path) {
+            Ok(text) => match super::parse_definition_str::<Value>(&text) {
+                Ok(value) => classify_file(value, &file, &mut package, &mut errors),
+                Err(_) => errors.push(PackageError::new(READ_FAILED, &file)),
+            },
+            Err(_) => errors.push(PackageError::new(READ_FAILED, &file)),
+        }
+    }
+
+    // Sorted together with their sources: the entity lists are ordered by id so
+    // that a package does not depend on folder layout, and a file left in read
+    // order would then describe a different entity.
+    let mut sources = std::mem::take(&mut package.sources);
+    sort_by_id_keeping_sources(
+        &mut package.confederations,
+        sources.entry("confederation".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    sort_by_id_keeping_sources(
+        &mut package.countries,
+        sources.entry("country".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    sort_by_id_keeping_sources(
+        &mut package.teams,
+        sources.entry("team".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    sort_by_id_keeping_sources(
+        &mut package.players,
+        sources.entry("player".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    sort_by_id_keeping_sources(
+        &mut package.staff,
+        sources.entry("staff".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    sort_by_id_keeping_sources(
+        &mut package.competitions,
+        sources.entry("competition".to_string()).or_default(),
+        |entity| &entity.id,
+    );
+    package.sources = sources;
+
+    errors.extend(validate_ids(&package));
+    (package, errors)
+}
+
+/// Load a world package from a directory: walk it recursively, classify each
+/// file by its `schema`, and validate ids. Returns the aggregated package and
+/// every problem found. Collections are sorted by id so the result is
+/// independent of file-discovery order (and therefore of folder layout).
+pub fn load_world_package(dir: &Path) -> (WorldPackage, Vec<PackageError>) {
+    // An exported world save is not a package and never will parse as one, so
+    // say that rather than reporting each of its shards as malformed. The two
+    // formats are genuinely different — see `world_export_manifest`.
+    if let Some(manifest) = world_export_manifest(dir) {
+        return (
+            WorldPackage::default(),
+            vec![PackageError::new(WORLD_EXPORT_NOT_PACKAGE, &manifest)],
+        );
+    }
+
+    let (package, mut errors) = load_world_package_files(dir);
+    errors.extend(validate_package(&package));
+    (package, errors)
+}
+
+/// The filename of the world-save manifest in `dir`, if `dir` holds an exported
+/// world rather than an authoring package.
+///
+/// The two formats collide on nothing but the `.json` extension. `export_world_package`
+/// writes a manifest plus a `<stem>.shards/` folder whose files are bare JSON
+/// **arrays**; a package is per-entity files shaped `{"schema": …, "items": […]}`.
+/// Pointed at the former, `classify_file` calls every shard schema-less and the
+/// editor reports nine identical problems that name the wrong cause (#413).
+///
+/// The match is a `shards` map plus the absence of the `schema` field that every
+/// package manifest carries. That pair is narrow enough on its own — no package
+/// schema has shards — and it deliberately ignores `formatVersion`: pinning it to
+/// the 2 the exporter writes today would mean a later bump silently stops the
+/// detection and quietly reopens #413, with no test going red. Only the top level
+/// is scanned, which is where the exporter puts the manifest.
+fn world_export_manifest(dir: &Path) -> Option<String> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        // Case-insensitive, as `collect_data_files` already is: a `.JSON` that
+        // survived a rename on a case-preserving filesystem must not slip past
+        // and land the user back on the per-file errors this exists to replace.
+        if !path
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| e.eq_ignore_ascii_case("json"))
+        {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Ok(serde_json::Value::Object(map)) = serde_json::from_str::<serde_json::Value>(&text)
+        else {
+            continue;
+        };
+        if map.contains_key("schema") {
+            continue;
+        }
+        if !map.get("shards").is_some_and(serde_json::Value::is_object) {
+            continue;
+        }
+        return path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(str::to_string);
+    }
+    None
+}
+
+/// The checks a package must pass **once it has been read**, for callers that
+/// obtained one some other way.
+///
+/// [`load_world_package`] runs exactly this after reading a directory. The
+/// archive loader deliberately does not — it is the runtime read path, and an
+/// already-installed package has to keep loading — so anything whose job *is*
+/// validation calls this itself. Keeping the set in one place is the point: when
+/// it lived in two, `ofm-cli validate <dir>` and `ofm-cli validate <file>.ofm`
+/// disagreed about the same package.
+///
+/// **Not included: [`validate_ids`].** Id validation runs inside
+/// `load_world_package_files`, where each entity's source file is still known,
+/// so every read path gets it for free and none of them double-reports. A
+/// caller that assembles a package *without* a loader — `merge_world_packages`
+/// is the only one — has to run `validate_ids` itself.
+pub fn validate_package(package: &WorldPackage) -> Vec<PackageError> {
+    let mut errors = validate_format_version(package);
+    errors.extend(validate_manifest(package));
+    errors.extend(validate_references(package));
+    errors
+}
+
+/// Highest package `formatVersion` this build understands.
+pub const SUPPORTED_PACKAGE_FORMAT_VERSION: u32 = 1;
+
+/// Reject a package written against a newer format than this build knows.
+///
+/// Without this a future package loads "successfully" as nothing at all: its
+/// unfamiliar schemas are each reported as unknown, every collection comes back
+/// empty, and the only clue is a count of issues. Naming the real reason is what
+/// lets a user act on it.
+pub fn validate_format_version(package: &WorldPackage) -> Vec<PackageError> {
+    let Some(meta) = package.meta.as_ref() else {
+        return Vec::new();
+    };
+    if meta.format_version > SUPPORTED_PACKAGE_FORMAT_VERSION {
+        return vec![
+            PackageError::new(UNSUPPORTED_FORMAT_VERSION, "package.json")
+                .with("version", meta.format_version.to_string())
+                .with("supported", SUPPORTED_PACKAGE_FORMAT_VERSION.to_string()),
+        ];
+    }
+    Vec::new()
+}
+
+/// The one package id that cannot be installed — it collides with the prefix
+/// that tells a bundled asset path from a package-qualified one.
+///
+/// Removable once `isPackageQualifiedAsset` (`src/lib/packageAssets.ts`) stops
+/// deciding on the first path segment — if a qualified path carried an explicit
+/// marker, or the two kinds of path were separate fields, `assets` would be an
+/// ordinary id again.
+pub const RESERVED_PACKAGE_ID: &str = "assets";
+
+/// The longest id, in UTF-8 bytes, whose `<id>.ofm` fits ext4's 255-byte
+/// filename limit. This byte cap is also conservative on filesystems that
+/// measure filename length differently. `süper-lig` is ten UTF-8 bytes.
+const MAX_PACKAGE_ID_BYTES: usize = 255 - ".ofm".len();
+
+/// Whether `id` can be used as a package identifier.
+///
+/// The id is not just a label. It becomes a filename under the packages
+/// directory (`<id>.ofm`) and the first segment of every qualified asset path
+/// (`<id>/assets/images/…`), so anything that could escape that directory has
+/// to be refused.
+///
+/// This is the single source of truth for that rule. The installer applies it
+/// to the id it resolves; [`validate_manifest`] applies it while the author can
+/// still fix it. Before they shared this function a manifest could declare an
+/// id that the editor and the CLI both called valid and the installer then
+/// refused with a generic "invalid package" — issue #414, `trendyol-super-lig-25/26`.
+///
+/// The rule is an allow-shape, not a blocklist of known-bad substrings, because
+/// the blocklist missed `"."` — which joins onto the assets root itself, so
+/// uninstalling it deleted every other package's artwork (#470). An id must be:
+///
+/// - non-empty and at most `MAX_PACKAGE_ID_BYTES` (251) bytes;
+/// - free of `/`, `\`, `..`, Windows-reserved punctuation and control
+///   characters (NUL, newlines, escapes — the id is printed to terminals
+///   and shown in dialogs);
+/// - not start with a dot (`.` itself, and hidden files like `.ofm`);
+/// - not end with a dot or a space, which Windows strips from filenames;
+/// - not a Windows device name (`CON`, `NUL`, `COM1`…), in any case and with
+///   any extension, because `<id>.ofm` cannot be created there;
+/// - not [`RESERVED_PACKAGE_ID`].
+pub fn is_valid_package_id(id: &str) -> bool {
+    !(id.is_empty()
+        || id.len() > MAX_PACKAGE_ID_BYTES
+        || id.contains('/')
+        || id.contains('\\')
+        || id.contains("..")
+        || id.chars().any(char::is_control)
+        || id
+            .chars()
+            .any(|ch| matches!(ch, '<' | '>' | ':' | '"' | '|' | '?' | '*'))
+        || id.starts_with('.')
+        || id.ends_with('.')
+        || id.ends_with(' ')
+        || is_windows_device_name(id)
+        || id == RESERVED_PACKAGE_ID)
+}
+
+/// Whether Windows reserves `id` as a device name. It reserves the stem, so
+/// `aux.league` is as unusable as `AUX`. Windows also reserves the superscript
+/// digits `¹`, `²` and `³` after `COM` or `LPT`.
+fn is_windows_device_name(id: &str) -> bool {
+    const DEVICES: [&str; 4] = ["CON", "PRN", "AUX", "NUL"];
+    const NUMBERED: [&str; 2] = ["COM", "LPT"];
+
+    let stem = id.split('.').next().unwrap_or(id);
+    if DEVICES.iter().any(|d| stem.eq_ignore_ascii_case(d)) {
+        return true;
+    }
+    NUMBERED.iter().any(|prefix| {
+        let Some(head) = stem.get(..prefix.len()) else {
+            return false;
+        };
+        let Some(suffix) = stem.get(prefix.len()..) else {
+            return false;
+        };
+        head.eq_ignore_ascii_case(prefix)
+            && ((suffix.len() == 1 && matches!(suffix.as_bytes()[0], b'1'..=b'9'))
+                || matches!(suffix, "¹" | "²" | "³"))
+    })
+}
+
+/// Check the manifest declares the metadata a package cannot work without, and
+/// that the id it declares is one the installer could accept.
+///
+/// Every `WorldMetaDef` field is `#[serde(default)]`, so deserialization can
+/// never fail on an absent one and `{"schema":"world"}` parses happily into an
+/// entirely blank manifest. Nothing downstream re-checked them, so such a
+/// package validated clean — while `id` is the install key *and* the packed
+/// filename, and `version` feeds compatibility checks. The author's only signal
+/// was `ofm-cli schema world`, which advertised these as required when nothing
+/// enforced it.
+///
+/// `packageType` is checked but effectively always present: it deserializes to
+/// `"database"` when omitted, so only an explicitly blanked value is reported.
+pub fn validate_manifest(package: &WorldPackage) -> Vec<PackageError> {
+    let Some(meta) = package.meta.as_ref() else {
+        return Vec::new();
+    };
+    let mut errors = Vec::new();
+    let file = package.manifest_source();
+
+    // The id gets its own code: `missingId` already exists, is already
+    // translated, and `ofm-cli`'s own docs already show it emitted with
+    // `kind=world` — output the code could not previously produce.
+    if meta.id.trim().is_empty() {
+        errors.push(PackageError::new(MISSING_ID, file).with("kind", "world"));
+    } else if !is_valid_package_id(&meta.id) {
+        errors.push(PackageError::new(INVALID_PACKAGE_ID, file).with("id", meta.id.clone()));
+    }
+
+    for (field, value) in [
+        ("name", &meta.name),
+        ("version", &meta.version),
+        ("license", &meta.license),
+        ("packageType", &meta.package_type),
+    ] {
+        if value.trim().is_empty() {
+            errors.push(PackageError::new(MISSING_METADATA, file).with("field", field));
+        }
+    }
+
+    errors
+}
+
+/// Whether this error is about the manifest's *metadata* rather than the
+/// package's content.
+///
+/// The distinction matters to anything that refuses to open a package it could
+/// not read. A blank `license` says nothing about whether the entity files
+/// parsed — and the World Editor's Metadata section is precisely where an
+/// author fixes it, so treating it as unreadable would lock them out of the one
+/// screen that repairs it. Content problems still block; these are shown as
+/// issues and edited in place.
+pub fn is_manifest_metadata_error(error: &PackageError) -> bool {
+    match error.code.as_str() {
+        MISSING_METADATA => true,
+        // An id that exists but cannot be used is the same kind of problem as
+        // one that is absent, and is repaired on the same screen. Leaving it
+        // out meant a package whose id contained a `/` still could not be
+        // opened — the author was told the id was wrong and denied the field
+        // that sets it.
+        INVALID_PACKAGE_ID => true,
+        // `missingId` is shared with entity validation, so only the manifest's
+        // own is metadata; a team with no id is a content problem.
+        MISSING_ID => error
+            .params
+            .iter()
+            .any(|(key, value)| key == "kind" && value == "world"),
+        _ => false,
+    }
+}
+
+/// Whether a load produced nothing an editor could show.
+///
+/// A package that partially parses is still worth opening — repairing one is
+/// what the editor is for. A package where *nothing* resolved is different: it
+/// presents as a blank project, and saving over it destroys the original.
+pub fn is_unreadable(package: &WorldPackage) -> bool {
+    package.confederations.is_empty()
+        && package.countries.is_empty()
+        && package.teams.is_empty()
+        && package.players.is_empty()
+        && package.staff.is_empty()
+        && package.competitions.is_empty()
+        && package.names.is_none()
+}
+
+/// Validate that every entity has a non-empty id and that ids are unique within
+/// each entity type.
+pub fn validate_ids(package: &WorldPackage) -> Vec<PackageError> {
+    let mut errors = Vec::new();
+    check_ids(
+        package.confederations.iter().map(|c| c.id.as_str()),
+        "confederation",
+        package,
+        &mut errors,
+    );
+    check_ids(
+        package.countries.iter().map(|c| c.id.as_str()),
+        "country",
+        package,
+        &mut errors,
+    );
+    check_ids(
+        package.teams.iter().map(|t| t.id.as_str()),
+        "team",
+        package,
+        &mut errors,
+    );
+    check_ids(
+        package.players.iter().map(|p| p.id.as_str()),
+        "player",
+        package,
+        &mut errors,
+    );
+    check_ids(
+        package.staff.iter().map(|s| s.id.as_str()),
+        "staff",
+        package,
+        &mut errors,
+    );
+    check_ids(
+        package.competitions.iter().map(|c| c.id.as_str()),
+        "competition",
+        package,
+        &mut errors,
+    );
+    errors
+}
+
+fn check_ids<'a>(
+    ids: impl Iterator<Item = &'a str>,
+    kind: &str,
+    package: &WorldPackage,
+    errors: &mut Vec<PackageError>,
+) {
+    let mut seen: HashSet<&str> = HashSet::new();
+    // The position in the entity list *is* the declaration, so each problem
+    // names its own file: the third entity to repeat an id points at the third
+    // file, and two entities with no id at all — indistinguishable by id, since
+    // they share the blank — are still told apart.
+    for (index, id) in ids.enumerate() {
+        if id.is_empty() {
+            errors.push(
+                PackageError::new(MISSING_ID, &package.source_at(kind, index)).with("kind", kind),
+            );
+        } else if !seen.insert(id) {
+            errors.push(
+                PackageError::new(DUPLICATE_ID, &package.source_at(kind, index))
+                    .with("kind", kind)
+                    .with("id", id),
+            );
+        }
+    }
+}
+
+/// Validate cross-file references: a country's confederation, a team's country,
+/// a player's club and nationality, and every competition reference. References
+/// resolve against entities defined in the package **plus** the built-in
+/// confederation/country catalog, so a package may reference (e.g.) `europe` or
+/// `ES` without redefining them. Empty (unspecified) references are left for the
+/// world-build step to default.
+/// The ability an authored player's ceiling has to clear, and where it came from.
+///
+/// Mirrors `generate_player_from_def`'s precedence exactly — an explicit
+/// attribute block wins over `overall`, which wins over the engine's default —
+/// because a ceiling that validates under one ability mode and is then floored
+/// under the other is the silent rewrite this whole check exists to prevent.
+///
+/// The message code travels with the number so the author is told where it came
+/// from. Without that, someone who declared no ability at all would be told
+/// their ceiling is below a value that appears nowhere in their file.
+fn effective_authored_ability(player: &PlayerDef) -> (u8, &'static str) {
+    if let Some(attributes) = player.attributes.as_ref() {
+        let ovr = crate::player_rating::ovr_from_attributes(attributes, &player.position);
+        return (ovr.round() as u8, POTENTIAL_BELOW_ATTRIBUTES);
+    }
+    match player.overall {
+        Some(overall) => (overall, POTENTIAL_BELOW_OVERALL),
+        None => (
+            crate::generator::generation::DEFAULT_AUTHORED_OVERALL,
+            POTENTIAL_BELOW_DEFAULT,
+        ),
+    }
+}
+
+fn player_potential_errors(player: &PlayerDef, source: &str) -> Vec<PackageError> {
+    let Some(potential) = player.potential else {
+        return Vec::new();
+    };
+
+    if !(1..=99).contains(&potential) {
+        return vec![
+            PackageError::new(POTENTIAL_OUT_OF_RANGE, source)
+                .with("entity", &player.id)
+                .with("potential", potential.to_string()),
+        ];
+    }
+
+    let (ability, code) = effective_authored_ability(player);
+    if potential < ability {
+        return vec![
+            PackageError::new(code, source)
+                .with("entity", &player.id)
+                .with("potential", potential.to_string())
+                .with("ability", ability.to_string()),
+        ];
+    }
+
+    Vec::new()
+}
+
+pub fn validate_references(package: &WorldPackage) -> Vec<PackageError> {
+    let mut errors = Vec::new();
+
+    let team_ids: HashSet<&str> = package.teams.iter().map(|t| t.id.as_str()).collect();
+    let country_ids: HashSet<&str> = package.countries.iter().map(|c| c.id.as_str()).collect();
+    let confederation_ids: HashSet<&str> = package
+        .confederations
+        .iter()
+        .map(|c| c.id.as_str())
+        .collect();
+
+    let known_confederation =
+        |id: &str| confederation_ids.contains(id) || crate::nations::is_builtin_region(id);
+    let known_country =
+        |code: &str| country_ids.contains(code) || crate::nations::nation_by_code(code).is_some();
+
+    for (index, country) in package.countries.iter().enumerate() {
+        if !country.confederation.is_empty() && !known_confederation(&country.confederation) {
+            errors.push(
+                PackageError::new(UNKNOWN_CONFEDERATION, &package.source_at("country", index))
+                    .with("country", &country.id)
+                    .with("confederation", &country.confederation),
+            );
+        }
+    }
+
+    for (index, team) in package.teams.iter().enumerate() {
+        if !team.country.is_empty() && !known_country(&team.country) {
+            errors.push(
+                PackageError::new(UNKNOWN_COUNTRY, &package.source_at("team", index))
+                    .with("entity", &team.id)
+                    .with("country", &team.country),
+            );
+        }
+    }
+
+    for (index, player) in package.players.iter().enumerate() {
+        if !player.club.is_empty() && !team_ids.contains(player.club.as_str()) {
+            errors.push(
+                PackageError::new(UNKNOWN_TEAM, &package.source_at("player", index))
+                    .with("entity", &player.id)
+                    .with("team", &player.club),
+            );
+        }
+        if !player.nationality.is_empty() && !known_country(&player.nationality) {
+            errors.push(
+                PackageError::new(UNKNOWN_COUNTRY, &package.source_at("player", index))
+                    .with("entity", &player.id)
+                    .with("country", &player.nationality),
+            );
+        }
+        errors.extend(player_potential_errors(
+            player,
+            &package.source_at("player", index),
+        ));
+        errors.extend(authored_player_errors(
+            player,
+            &package.source_at("player", index),
+            &team_ids,
+        ));
+    }
+
+    for (index, staff) in package.staff.iter().enumerate() {
+        if !staff.club.is_empty() && !team_ids.contains(staff.club.as_str()) {
+            errors.push(
+                PackageError::new(UNKNOWN_TEAM, &package.source_at("staff", index))
+                    .with("entity", &staff.id)
+                    .with("team", &staff.club),
+            );
+        }
+        if !staff.nationality.is_empty() && !known_country(&staff.nationality) {
+            errors.push(
+                PackageError::new(UNKNOWN_COUNTRY, &package.source_at("staff", index))
+                    .with("entity", &staff.id)
+                    .with("country", &staff.nationality),
+            );
+        }
+    }
+
+    // Check that every id in defaultActiveCompetitions exists as a competition
+    // in the same package. Skipped for `patch` packages, which are expected to
+    // reference competitions defined in the base database they supplement; those
+    // cross-package references are validated after merge_world_packages combines
+    // the full stack.
+    let is_patch = package
+        .meta
+        .as_ref()
+        .map(|m| m.package_type == "patch")
+        .unwrap_or(false);
+    if !is_patch && let Some(meta) = &package.meta {
+        let comp_ids: HashSet<&str> = package.competitions.iter().map(|c| c.id.as_str()).collect();
+        for id in &meta.default_active_competitions {
+            if !id.is_empty() && !comp_ids.contains(id.as_str()) {
+                errors.push(
+                    PackageError::new(UNKNOWN_COMPETITION, "")
+                        .with("id", id)
+                        .with("field", "defaultActiveCompetitions"),
+                );
+            }
+        }
+        // Each defaultActiveRegions id must be a known region: a confederation
+        // defined in this package or a built-in region (e.g. `europe`).
+        for id in &meta.default_active_regions {
+            if !id.is_empty() && !known_confederation(id) {
+                errors.push(
+                    PackageError::new(UNKNOWN_REGION, "")
+                        .with("id", id)
+                        .with("field", "defaultActiveRegions"),
+                );
+            }
+        }
+    }
+
+    // Check team reputation / finance ranges for reversed (min > max) and
+    // out-of-bounds endpoints (reputation 0..=1000, finance >= 0).
+    for team in &package.teams {
+        if let Some([min, max]) = team.reputation_range {
+            if min > max {
+                errors.push(
+                    PackageError::new(REVERSED_RANGE, "")
+                        .with("team", &team.id)
+                        .with("field", "reputationRange"),
+                );
+            }
+            if min > MAX_REPUTATION || max > MAX_REPUTATION {
+                errors.push(
+                    PackageError::new(OUT_OF_RANGE, "")
+                        .with("team", &team.id)
+                        .with("field", "reputationRange"),
+                );
+            }
+        }
+        if let Some([min, max]) = team.finance_range {
+            if min > max {
+                errors.push(
+                    PackageError::new(REVERSED_RANGE, "")
+                        .with("team", &team.id)
+                        .with("field", "financeRange"),
+                );
+            }
+            if min < 0 || max < 0 {
+                errors.push(
+                    PackageError::new(OUT_OF_RANGE, "")
+                        .with("team", &team.id)
+                        .with("field", "financeRange"),
+                );
+            }
+        }
+    }
+
+    // Resolve selectors only after the cheap reference and range checks pass.
+    // Invalid entities cannot form a useful validation world.
+    if errors.is_empty() {
+        errors.extend(validate_competition_references(package));
+    }
+    errors
+}
+
+/// Validate the package's constructed world with the same competition rules as
+/// the game loader. Preserve source locations when surfacing definition errors.
+fn validate_competition_references(package: &WorldPackage) -> Vec<PackageError> {
+    if package.competitions.is_empty() {
+        return Vec::new();
+    }
+
+    // Reuse production construction for country and regional membership;
+    // project reputation below for a stable authoring check.
+    let mut world = super::build_world_data_from_package(
+        package,
+        None,
+        &super::DefinitionSources::embedded_only(),
+    );
+    // Only selector inputs need a fixed projection here. Game construction
+    // keeps sampling ranges, but a package's authoring verdict must not roll
+    // fresh reputations and change exclusion-chain membership on every run.
+    for (team, definition) in world.teams.iter_mut().zip(&package.teams) {
+        let [min, max] = definition
+            .reputation_range
+            .unwrap_or(super::DEFAULT_TEAM_REPUTATION_RANGE);
+        team.reputation = min.midpoint(max);
+    }
+    let file = super::CompetitionDefinitionFile {
+        format_version: super::SUPPORTED_DEFINITION_FORMAT_VERSION,
+        competitions: package.competitions.clone(),
+    };
+
+    super::validate_definitions_for_world(&file, &world)
+        .into_iter()
+        .map(|error| {
+            let mut params = error.params;
+            // Located by occurrence, which is what `source_at` is keyed on and
+            // what every other error path in this file uses. An error the
+            // validator raises about the package as a whole carries no
+            // occurrence and stays unlocated, which is honest: it is not about
+            // one entity.
+            let file = error
+                .competition_index
+                .map(|index| package.source_at("competition", index))
+                .unwrap_or_default();
+            if !error.competition_id.is_empty() {
+                params.push(("competition".to_string(), error.competition_id));
+            }
+            (
+                error.competition_index,
+                PackageError {
+                    code: error.code,
+                    file,
+                    params,
+                },
+            )
+        })
+        // One competition can raise the same problem from more than one field —
+        // an unknown country reaches the validator once as `countryId` and again
+        // as the participant selector's `country`, and the author sees the
+        // identical line twice with nothing to tell them apart. Collapse exact
+        // duplicates; two competitions with the same bad country still report
+        // separately, because the `competition` param differs.
+        //
+        // Keyed on the occurrence, so one competition raising the same problem
+        // from two fields — an unknown country reaches the validator once as
+        // `countryId` and again as the participant selector's `country` —
+        // collapses to one line, while two competitions each raising it stay
+        // two. Keying on the id instead cannot separate those two cases: a
+        // blank or repeated id makes distinct competitions indistinguishable,
+        // and every scheme built on it either hides a broken competition or
+        // prints one problem twice.
+        //
+        // Kept on a seen-set rather than scanning the output for each error: a
+        // package is untrusted input, and one with many broken competitions
+        // would make a linear scan quadratic in the size of its own mistakes.
+        .fold(
+            (Vec::new(), HashSet::new()),
+            |(mut unique, mut seen), (index, error)| {
+                if seen.insert((index, error.code.clone(), error.params.clone())) {
+                    unique.push(error);
+                }
+                (unique, seen)
+            },
+        )
+        .0
+}
+
+// ---------------------------------------------------------------------------
+// Package stack conflict detection
+// ---------------------------------------------------------------------------
+
+/// Severity of a conflict detected between two or more stacked packages.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ConflictSeverity {
+    /// The conflict may produce unexpected results but does not block game start.
+    Warning,
+    /// The conflict blocks game start and must be resolved.
+    Error,
+}
+
+/// Describes a single conflict between packages in a stack.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StackConflict {
+    pub severity: ConflictSeverity,
+    /// Human-readable i18n key for the conflict kind.
+    pub code: String,
+    /// Entity type ("team", "competition", …).
+    pub entity_kind: String,
+    /// The conflicting entity id.
+    pub entity_id: String,
+    /// Package ids involved in the conflict (winner listed last).
+    pub packages: Vec<String>,
+}
+
+impl StackConflict {
+    fn db_clash(entity_kind: &str, entity_id: &str, pkg_a: &str, pkg_b: &str) -> Self {
+        Self {
+            severity: ConflictSeverity::Warning,
+            code: "be.error.conflict.duplicateId".to_string(),
+            entity_kind: entity_kind.to_string(),
+            entity_id: entity_id.to_string(),
+            packages: vec![pkg_a.to_string(), pkg_b.to_string()],
+        }
+    }
+}
+
+/// Inspect a slice of packages for cross-package id conflicts **before** merging.
+///
+/// Rules:
+/// - Two `database` packages declaring the **same id with different content** →
+///   `Warning` (last-wins, but the user should know).
+/// - Two `database` packages declaring the **same id with identical content** →
+///   no conflict (safe dedup).
+/// - A `patch` package overriding any id from a `database` package →
+///   no conflict (intentional override).
+/// - Two `patch` packages clashing → `Warning`.
+/// - Packages with the same package-level `id` → `Error`.
+pub fn validate_package_stack(packages: &[&WorldPackage]) -> Vec<StackConflict> {
+    let mut conflicts = Vec::new();
+
+    // Check duplicate package ids.
+    let mut pkg_ids_seen: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+    for (i, pkg) in packages.iter().enumerate() {
+        if let Some(meta) = &pkg.meta
+            && !meta.id.is_empty()
+        {
+            if let Some(&prev) = pkg_ids_seen.get(meta.id.as_str()) {
+                conflicts.push(StackConflict {
+                    severity: ConflictSeverity::Error,
+                    code: "be.error.conflict.duplicatePackageId".to_string(),
+                    entity_kind: "package".to_string(),
+                    entity_id: meta.id.clone(),
+                    packages: vec![format!("#{}", prev + 1), format!("#{}", i + 1)],
+                });
+            } else {
+                pkg_ids_seen.insert(meta.id.as_str(), i);
+            }
+        }
+    }
+
+    fn pkg_type(pkg: &WorldPackage) -> &str {
+        pkg.meta
+            .as_ref()
+            .map(|m| m.package_type.as_str())
+            .unwrap_or("database")
+    }
+
+    // Build per-entity-type index: id → (package_index, serialized_content)
+    // for detecting content divergence between packages of the same tier.
+    macro_rules! check_entity_conflicts {
+        ($field:ident, $id_fn:expr, $kind:expr) => {{
+            let mut seen: std::collections::HashMap<String, (usize, String)> =
+                std::collections::HashMap::new();
+            for (i, pkg) in packages.iter().enumerate() {
+                let is_patch = pkg_type(pkg) == "patch";
+                for entity in &pkg.$field {
+                    let id = $id_fn(entity);
+                    if id.is_empty() {
+                        continue;
+                    }
+                    let content = serde_json::to_string(entity).unwrap_or_default();
+                    if let Some((prev_i, prev_content)) = seen.get(id.as_str()) {
+                        let prev_is_patch = pkg_type(packages[*prev_i]) == "patch";
+                        // patch overriding database → intentional, no conflict
+                        if is_patch && !prev_is_patch {
+                            // update to this version as the new winner
+                            seen.insert(id.clone(), (i, content));
+                            continue;
+                        }
+                        // database after patch → patch still wins, no conflict
+                        if !is_patch && prev_is_patch {
+                            continue;
+                        }
+                        // identical content → safe dedup, no conflict
+                        if content == *prev_content {
+                            continue;
+                        }
+                        // db-db or patch-patch clash with divergent content → warning
+                        let prev_pkg_id = packages[*prev_i]
+                            .meta
+                            .as_ref()
+                            .map(|m| m.id.as_str())
+                            .unwrap_or("(unknown)");
+                        let this_pkg_id = pkg
+                            .meta
+                            .as_ref()
+                            .map(|m| m.id.as_str())
+                            .unwrap_or("(unknown)");
+                        conflicts.push(StackConflict::db_clash(
+                            $kind,
+                            id.as_str(),
+                            prev_pkg_id,
+                            this_pkg_id,
+                        ));
+                        // update seen so subsequent packages compare against this one
+                        seen.insert(id.clone(), (i, content));
+                    } else {
+                        seen.insert(id.clone(), (i, content));
+                    }
+                }
+            }
+        }};
+    }
+
+    check_entity_conflicts!(teams, |t: &TeamDef| t.id.clone(), "team");
+    check_entity_conflicts!(
+        competitions,
+        |c: &CompetitionDefinition| c.id.clone(),
+        "competition"
+    );
+    check_entity_conflicts!(
+        confederations,
+        |c: &ConfederationDef| c.id.clone(),
+        "confederation"
+    );
+    check_entity_conflicts!(countries, |c: &CountryDef| c.id.clone(), "country");
+
+    conflicts
+}
+
+/// Merge multiple packages into one.
+///
+/// **Precedence**: `database` packages are processed first (in stack order),
+/// then `patch` packages (in stack order), so patches always win over databases.
+/// Within the same tier, later entries win (last-in-stack wins). This makes
+/// `patch` packages unambiguously override `database` ones without surfacing a
+/// conflict warning.
+///
+/// **Meta merging**: `defaultActiveCompetitions` and `defaultActiveRegions` are
+/// unioned across all metas. `baseYear` takes the maximum value. `name` and
+/// other scalar fields come from the last non-empty value across all metas.
+///
+/// After merging, entity ids, references, and format are validated on the
+/// combined result. Manifest metadata errors are authoring issues; installed
+/// packages with missing metadata remain usable at runtime. Cross-package
+/// references resolve correctly because all entities are present first.
+pub fn merge_world_packages(packages: Vec<WorldPackage>) -> (WorldPackage, Vec<PackageError>) {
+    use std::collections::BTreeMap;
+
+    // Split into tiers: database (or unknown) first, patch second.
+    let (databases, patches): (Vec<WorldPackage>, Vec<WorldPackage>) =
+        packages.into_iter().partition(|p| {
+            p.meta
+                .as_ref()
+                .map(|m| m.package_type.as_str())
+                .unwrap_or("database")
+                != "patch"
+        });
+    // A merged stack that contains any non-patch package is a complete world and
+    // must be validated as one (the per-package "patch" skip would otherwise
+    // suppress dangling-reference checks for the whole stack).
+    let has_database = !databases.is_empty();
+
+    let mut merged = WorldPackage::default();
+    // Each entity is carried with the file it was declared in, so overriding an
+    // entity overrides its location too. Keeping the two apart is what let a
+    // merged stack report an entity at a file the merge had already discarded.
+    let mut confeds: BTreeMap<String, (ConfederationDef, String)> = BTreeMap::new();
+    let mut countries: BTreeMap<String, (CountryDef, String)> = BTreeMap::new();
+    let mut teams: BTreeMap<String, (TeamDef, String)> = BTreeMap::new();
+    let mut players: BTreeMap<String, (PlayerDef, String)> = BTreeMap::new();
+    let mut staff_map: BTreeMap<String, (StaffDef, String)> = BTreeMap::new();
+    let mut competitions: BTreeMap<String, (CompetitionDefinition, String)> = BTreeMap::new();
+
+    // Collected meta fields for union/max merging.
+    let mut all_default_active_competitions: Vec<String> = Vec::new();
+    let mut all_default_active_competitions_seen: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    let mut all_default_active_regions: Vec<String> = Vec::new();
+    let mut all_default_active_regions_seen: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    let mut merged_meta_base: Option<WorldMetaDef> = None;
+    let mut merged_manifest_file = String::new();
+    // Name pools are unioned per-key across packages (like every other entity
+    // collection) rather than wholesale-replaced, so stacking packages that each
+    // supply distinct pools keeps them all.
+    let mut merged_pools: std::collections::HashMap<String, NamePool> =
+        std::collections::HashMap::new();
+    let mut names_version = 0u32;
+    let mut names_description = String::new();
+    let mut saw_names = false;
+
+    for package in databases.into_iter().chain(patches) {
+        if let Some(meta) = package.meta {
+            // Union the list fields; scalar fields take the last non-empty value.
+            for id in &meta.default_active_competitions {
+                if !id.is_empty() && all_default_active_competitions_seen.insert(id.clone()) {
+                    all_default_active_competitions.push(id.clone());
+                }
+            }
+            for id in &meta.default_active_regions {
+                if !id.is_empty() && all_default_active_regions_seen.insert(id.clone()) {
+                    all_default_active_regions.push(id.clone());
+                }
+            }
+            if let Some(ref mut base) = merged_meta_base {
+                if !meta.name.is_empty() {
+                    base.name = meta.name;
+                }
+                if !meta.description.is_empty() {
+                    base.description = meta.description;
+                }
+                if !meta.author.is_empty() {
+                    base.author = meta.author;
+                }
+                if !meta.version.is_empty() {
+                    base.version = meta.version;
+                }
+                if !meta.id.is_empty() {
+                    base.id = meta.id;
+                }
+                if meta.base_year > base.base_year {
+                    base.base_year = meta.base_year;
+                }
+                if meta.logo.is_some() {
+                    base.logo = meta.logo;
+                }
+                if !meta.license.is_empty() {
+                    base.license = meta.license;
+                }
+                if !meta.game_min_version.is_empty() {
+                    base.game_min_version = meta.game_min_version;
+                }
+                if meta.format_version > base.format_version {
+                    base.format_version = meta.format_version;
+                }
+                if !meta.package_type.is_empty() {
+                    base.package_type = meta.package_type;
+                }
+            } else {
+                merged_meta_base = Some(meta);
+            }
+            // Track the manifest alongside the metadata it carries, so an error
+            // about a merged stack names a file that exists. Last-wins, matching
+            // how the scalar fields above merge.
+            if !package.manifest_file.is_empty() {
+                merged_manifest_file = package.manifest_file.clone();
+            }
+        }
+        let sources = package.sources;
+        let file_of = |schema: &str, index: usize| -> String {
+            sources
+                .get(schema)
+                .and_then(|files| files.get(index))
+                .cloned()
+                .unwrap_or_default()
+        };
+        for (i, c) in package.confederations.into_iter().enumerate() {
+            confeds.insert(c.id.clone(), (c, file_of("confederation", i)));
+        }
+        for (i, c) in package.countries.into_iter().enumerate() {
+            countries.insert(c.id.clone(), (c, file_of("country", i)));
+        }
+        for (i, t) in package.teams.into_iter().enumerate() {
+            teams.insert(t.id.clone(), (t, file_of("team", i)));
+        }
+        for (i, p) in package.players.into_iter().enumerate() {
+            players.insert(p.id.clone(), (p, file_of("player", i)));
+        }
+        for (i, s) in package.staff.into_iter().enumerate() {
+            staff_map.insert(s.id.clone(), (s, file_of("staff", i)));
+        }
+        for (i, c) in package.competitions.into_iter().enumerate() {
+            competitions.insert(c.id.clone(), (c, file_of("competition", i)));
+        }
+        if let Some(names) = package.names {
+            saw_names = true;
+            if names.version > names_version {
+                names_version = names.version;
+            }
+            if !names.description.is_empty() {
+                names_description = names.description;
+            }
+            for (key, pool) in names.pools {
+                merged_pools.insert(key, pool);
+            }
+        }
+        for (locale, bundle) in package.extra_translations {
+            merged.extra_translations.insert(locale, bundle);
+        }
+    }
+
+    if let Some(mut meta) = merged_meta_base {
+        meta.default_active_competitions = all_default_active_competitions.into_iter().collect();
+        meta.default_active_regions = all_default_active_regions.into_iter().collect();
+        if has_database {
+            meta.package_type = default_package_type();
+        }
+        merged.meta = Some(meta);
+        merged.manifest_file = merged_manifest_file;
+    }
+
+    if saw_names {
+        merged.names = Some(NamesDefinition {
+            version: names_version,
+            description: names_description,
+            pools: merged_pools,
+        });
+    }
+
+    let (confederations, confederations_files): (Vec<_>, Vec<_>) = confeds.into_values().unzip();
+    merged.confederations = confederations;
+    merged
+        .sources
+        .insert("confederation".to_string(), confederations_files);
+    let (countries, countries_files): (Vec<_>, Vec<_>) = countries.into_values().unzip();
+    merged.countries = countries;
+    merged
+        .sources
+        .insert("country".to_string(), countries_files);
+    let (teams, teams_files): (Vec<_>, Vec<_>) = teams.into_values().unzip();
+    merged.teams = teams;
+    merged.sources.insert("team".to_string(), teams_files);
+    let (players, players_files): (Vec<_>, Vec<_>) = players.into_values().unzip();
+    merged.players = players;
+    merged.sources.insert("player".to_string(), players_files);
+    let (staff, staff_files): (Vec<_>, Vec<_>) = staff_map.into_values().unzip();
+    merged.staff = staff;
+    merged.sources.insert("staff".to_string(), staff_files);
+    let (competitions, competitions_files): (Vec<_>, Vec<_>) = competitions.into_values().unzip();
+    merged.competitions = competitions;
+    merged
+        .sources
+        .insert("competition".to_string(), competitions_files);
+
+    // `validate_ids` *and* the non-metadata parts of `validate_package`.
+    //
+    // The merge used to run `validate_ids` + `validate_references`, which
+    // skipped the format-version check. But `validate_package`
+    // does not itself cover ids: the loader runs `validate_ids` as it reads,
+    // because that is where an entity's source file is known, and the archive
+    // read path depends on it staying there. Merging produces a package no
+    // loader has seen, so it has to ask for both. Runtime archive loading
+    // permits missing manifest metadata, so the merge must not turn those
+    // authoring errors into career startup failures.
+    let mut errors = validate_ids(&merged);
+    errors.extend(
+        validate_package(&merged)
+            .into_iter()
+            .filter(|error| !is_manifest_metadata_error(error)),
+    );
+    (merged, errors)
+}
+
+// ---------------------------------------------------------------------------
+// Package lockfile
+// ---------------------------------------------------------------------------
+
+/// Records which `.ofm` package was used to build a save, for reproducibility.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct PackageLock {
+    pub id: String,
+    pub version: String,
+    /// SHA-256 hex digest of the installed `.ofm` file bytes.
+    pub hash: String,
+}
+
+/// Compute the SHA-256 hex digest of a file's bytes. Returns `None` on I/O error.
+pub fn hash_package_file(path: &std::path::Path) -> Option<String> {
+    use sha2::{Digest, Sha256};
+    let bytes = std::fs::read(path).ok()?;
+    Some(hex::encode(Sha256::digest(&bytes)))
+}
+
+// ---------------------------------------------------------------------------
+// .ofm archive support
+// ---------------------------------------------------------------------------
+
+/// Maximum size of an `.ofm` file on disk (256 MB).
+pub const MAX_ARCHIVE_BYTES: u64 = 256 * 1024 * 1024;
+/// Maximum total uncompressed size of all entries (1 GB — zip-bomb guard).
+pub const MAX_UNCOMPRESSED_BYTES: u64 = 1024 * 1024 * 1024;
+/// Maximum number of files in an archive.
+pub const MAX_FILE_COUNT: usize = 10_000;
+/// Maximum decompressed size of a single entry read in isolation (manifest,
+/// logo) outside the full hardened extraction path (16 MB — zip-bomb guard).
+const MAX_SINGLE_ENTRY_BYTES: u64 = 16 * 1024 * 1024;
+
+/// Read a single zip entry into memory, counting decompressed bytes and
+/// returning `None` if it exceeds `max_bytes` or the read fails. Defends against
+/// decompression bombs when an entry is read outside [`extract_archive_safely`].
+fn read_entry_capped<R: std::io::Read>(entry: &mut R, max_bytes: u64) -> Option<Vec<u8>> {
+    let mut buf = Vec::new();
+    let mut total: u64 = 0;
+    let mut chunk = [0u8; 65536];
+    loop {
+        match entry.read(&mut chunk) {
+            Ok(0) => break,
+            Ok(n) => {
+                total = total.saturating_add(n as u64);
+                if total > max_bytes {
+                    return None;
+                }
+                buf.extend_from_slice(&chunk[..n]);
+            }
+            Err(_) => return None,
+        }
+    }
+    Some(buf)
+}
+
+const ZIPSLIP_ERROR: &str = "be.error.package.zipSlip";
+const SYMLINK_ERROR: &str = "be.error.package.symlinkDetected";
+const TOO_MANY_FILES_ERROR: &str = "be.error.package.tooManyFiles";
+const ARCHIVE_TOO_LARGE_ERROR: &str = "be.error.package.archiveTooLarge";
+
+/// Return the destination path for a zip entry, or `None` if the entry name
+/// is unsafe (zip-slip attempt: absolute path, `..` component, etc.).
+fn safe_entry_path(base: &Path, entry_name: &str) -> Option<PathBuf> {
+    if entry_name.starts_with('/') || entry_name.starts_with('\\') {
+        return None;
+    }
+    let entry_path = Path::new(entry_name);
+    for component in entry_path.components() {
+        match component {
+            std::path::Component::Normal(_) | std::path::Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    if entry_name.ends_with('/') || entry_name.ends_with('\\') {
+        return None;
+    }
+    Some(base.join(entry_name))
+}
+
+/// Hardened extraction of a `.ofm` zip archive into `dest_dir`. Enforces the
+/// file-count, uncompressed-size, symlink and zip-slip guards. Per-entry
+/// problems (symlink, zip-slip, read/write failure) are collected and returned
+/// so the caller can decide whether to surface or skip them; fatal conditions
+/// (open/parse failure, too many files, archive too large) return `Err(code)`
+/// with a `be.error.*` key.
+///
+/// This is the single hardened extraction path: every code path that unpacks an
+/// untrusted `.ofm` (package install/load *and* the world-editor "open for
+/// editing" flow) must route through it so the guards can never diverge.
+pub fn extract_archive_safely(
+    ofm_path: &Path,
+    dest_dir: &Path,
+) -> Result<Vec<PackageError>, String> {
+    extract_archive_entries(ofm_path, dest_dir, |_| true)
+}
+
+/// Extract only the package's `assets/` tree.
+///
+/// Asset files are carried into the archive by `pack` but are never read by the
+/// loader, so nothing ever put them anywhere the app could serve them — an
+/// authored club badge reached the frontend as a path into a temp directory
+/// that had already been deleted. Extracting them to a stable directory is what
+/// makes package artwork renderable.
+pub fn extract_package_assets(
+    ofm_path: &Path,
+    dest_dir: &Path,
+) -> Result<Vec<PackageError>, String> {
+    extract_archive_entries(ofm_path, dest_dir, is_package_asset_entry)
+}
+
+/// Whether an archive entry belongs to the package's asset tree.
+fn is_package_asset_entry(entry_name: &str) -> bool {
+    let normalised = entry_name.replace('\\', "/");
+    normalised.starts_with(ASSET_DIR_PREFIX)
+}
+
+/// Directory inside a package that holds artwork, as established by the World
+/// Editor's `copy_package_asset`.
+const ASSET_DIR_PREFIX: &str = "assets/";
+
+/// Whether a manifest-authored asset reference stays inside its own package.
+///
+/// Mirrors [`safe_entry_path`]'s rules for archive entries: a manifest carries
+/// exactly as much trust as the archive it came in, and these values are joined
+/// to the extracted asset root by the frontend and handed to Tauri's asset
+/// protocol. Backslashes are refused outright rather than normalised, because
+/// `Path` reads `..\..\x` as one ordinary component on Unix and as traversal on
+/// Windows — the same string must not mean two different things.
+fn is_contained_asset_path(value: &str) -> bool {
+    if value.starts_with('/') || value.contains('\\') {
+        return false;
+    }
+    Path::new(value).components().all(|component| {
+        matches!(
+            component,
+            std::path::Component::Normal(_) | std::path::Component::CurDir
+        )
+    })
+}
+
+/// Rewrite a package's asset references so they carry the package they came
+/// from: `assets/images/santos.png` becomes `brazil-1962/assets/images/santos.png`.
+///
+/// Must run **before** packages are merged into one world, because merging
+/// collapses the manifests and the origin of each club's artwork would be lost.
+/// The result is a stable, relative key the frontend resolves against the
+/// extracted asset root — relative rather than absolute so a save stays portable
+/// between machines.
+///
+/// A reference that escapes its package is dropped rather than qualified. The
+/// consumers already render a generated crest or portrait when there is no
+/// artwork, so refusing the path costs nothing and keeps a crafted manifest
+/// from naming a file outside the asset root.
+pub fn qualify_package_asset_paths(package: &mut WorldPackage, package_id: &str) {
+    if package_id.is_empty() {
+        return;
+    }
+    let qualify = |path: &mut Option<String>| {
+        // Trim first and store the trimmed value: the frontend trims before it
+        // joins, so validating anything else would check a path that is not the
+        // one eventually resolved.
+        let Some(value) = path.as_ref().map(|value| value.trim().to_string()) else {
+            return;
+        };
+        if value.is_empty() {
+            return;
+        }
+        if !is_contained_asset_path(&value) {
+            *path = None;
+            return;
+        }
+        *path = Some(if value.starts_with(&format!("{package_id}/")) {
+            value
+        } else {
+            format!("{package_id}/{value}")
+        });
+    };
+
+    for team in &mut package.teams {
+        qualify(&mut team.logo);
+    }
+    for player in &mut package.players {
+        qualify(&mut player.photo);
+    }
+    if let Some(meta) = package.meta.as_mut() {
+        qualify(&mut meta.logo);
+    }
+}
+
+/// Shared, hardened extraction. `keep` selects which entries are written; every
+/// entry is still checked for symlinks, zip-slip and decompressed size first, so
+/// a filtered extraction is no less safe than a full one.
+fn extract_archive_entries(
+    ofm_path: &Path,
+    dest_dir: &Path,
+    keep: impl Fn(&str) -> bool,
+) -> Result<Vec<PackageError>, String> {
+    use std::io::Read;
+
+    let file = std::fs::File::open(ofm_path).map_err(|_| READ_FAILED.to_string())?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|_| READ_FAILED.to_string())?;
+    std::fs::create_dir_all(dest_dir).map_err(|_| READ_FAILED.to_string())?;
+
+    if archive.len() > MAX_FILE_COUNT {
+        return Err(TOO_MANY_FILES_ERROR.to_string());
+    }
+
+    let mut errors = Vec::new();
+    let mut total_uncompressed: u64 = 0;
+    for i in 0..archive.len() {
+        let Ok(mut entry) = archive.by_index(i) else {
+            continue;
+        };
+        if entry.is_dir() {
+            continue;
+        }
+        if entry.is_symlink() {
+            errors.push(PackageError::new(SYMLINK_ERROR, entry.name()));
+            continue;
+        }
+        let entry_name = entry.name().to_string();
+        let Some(dest) = safe_entry_path(dest_dir, &entry_name) else {
+            errors.push(PackageError::new(ZIPSLIP_ERROR, &entry_name));
+            continue;
+        };
+        if !keep(&entry_name) {
+            continue;
+        };
+        if let Some(parent) = dest.parent()
+            && std::fs::create_dir_all(parent).is_err()
+        {
+            errors.push(PackageError::new(READ_FAILED, &entry_name));
+            continue;
+        }
+        // Read in 64 KB chunks and count actual decompressed bytes.
+        // entry.size() comes from the zip central-directory header, which an
+        // attacker can set to 0, so we must count bytes as they are read.
+        let mut buf = Vec::new();
+        let mut read_ok = true;
+        loop {
+            let mut chunk = [0u8; 65536];
+            match entry.read(&mut chunk) {
+                Ok(0) => break,
+                Ok(n) => {
+                    total_uncompressed = total_uncompressed.saturating_add(n as u64);
+                    if total_uncompressed > MAX_UNCOMPRESSED_BYTES {
+                        return Err(ARCHIVE_TOO_LARGE_ERROR.to_string());
+                    }
+                    buf.extend_from_slice(&chunk[..n]);
+                }
+                Err(_) => {
+                    read_ok = false;
+                    break;
+                }
+            }
+        }
+        if !read_ok {
+            errors.push(PackageError::new(READ_FAILED, &entry_name));
+            continue;
+        }
+        if std::fs::write(&dest, &buf).is_err() {
+            errors.push(PackageError::new(READ_FAILED, &entry_name));
+        }
+    }
+
+    Ok(errors)
+}
+
+/// Extract a `.ofm` zip archive to a temp directory, load the package from it,
+/// clean up, and return. Zip-slip/symlink paths are silently skipped.
+pub fn load_world_package_from_ofm(path: &Path) -> (WorldPackage, Vec<PackageError>) {
+    let temp_dir = std::env::temp_dir().join(format!("ofm-extract-{}", uuid::Uuid::new_v4()));
+    let extract_errors = match extract_archive_safely(path, &temp_dir) {
+        Ok(errors) => errors,
+        Err(code) => {
+            let _ = std::fs::remove_dir_all(&temp_dir);
+            return (WorldPackage::default(), vec![PackageError::new(&code, "")]);
+        }
+    };
+
+    // Load whatever was successfully extracted, even if some entries had errors.
+    //
+    // Deliberately *not* validating the manifest id here. This is the runtime
+    // read path: `read_package_info` drops a package from the installed list on
+    // any error at all, and career startup refuses to begin. A package already
+    // sitting in the packages directory — dropped there by hand, or installed by
+    // a build that predates the check — would silently disappear instead of
+    // continuing to work. Authoring tools call `validate_manifest` themselves.
+    let (package, load_errors) = load_world_package_files(&temp_dir);
+    let _ = std::fs::remove_dir_all(&temp_dir);
+
+    // Prepend extraction-level errors before the parse/validate errors.
+    let mut all_errors = extract_errors;
+    all_errors.extend(load_errors);
+    (package, all_errors)
+}
+
+/// Read only the `schema: world` metadata entry from an `.ofm` archive without
+/// fully extracting it. Used by the package manager to list installed packages
+/// without extraction overhead.
+pub fn read_package_manifest_from_ofm(path: &Path) -> Option<WorldMetaDef> {
+    let file = std::fs::File::open(path).ok()?;
+    let mut archive = zip::ZipArchive::new(file).ok()?;
+    let count = archive.len();
+
+    for i in 0..count {
+        let Ok(mut entry) = archive.by_index(i) else {
+            continue;
+        };
+        if entry.is_dir() {
+            continue;
+        }
+        let name = entry.name().to_string();
+        let lower = name.to_ascii_lowercase();
+        if !lower.ends_with(".json") && !lower.ends_with(".yaml") && !lower.ends_with(".yml") {
+            continue;
+        }
+        let Some(bytes) = read_entry_capped(&mut entry, MAX_SINGLE_ENTRY_BYTES) else {
+            continue;
+        };
+        let Ok(text) = String::from_utf8(bytes) else {
+            continue;
+        };
+        let Ok(value) = super::parse_definition_str::<Value>(&text) else {
+            continue;
+        };
+        let Some(map) = value.as_mapping() else {
+            continue;
+        };
+        if map.get("schema").and_then(Value::as_str) != Some("world") {
+            continue;
+        }
+        if let Ok(meta) = serde_yaml::from_value::<WorldMetaDef>(value) {
+            return Some(meta);
+        }
+    }
+    None
+}
+
+/// Read a logo file from an `.ofm` archive and return it encoded as a data URL.
+/// The `logo_path` is the relative path stored in `WorldMetaDef.logo`.
+pub fn read_logo_from_ofm(archive_path: &Path, logo_path: &str) -> Option<String> {
+    use base64::{Engine, engine::general_purpose::STANDARD};
+
+    let file = std::fs::File::open(archive_path).ok()?;
+    let mut archive = zip::ZipArchive::new(file).ok()?;
+    let logo_lower = logo_path.to_ascii_lowercase();
+    let count = archive.len();
+    for i in 0..count {
+        let Ok(mut entry) = archive.by_index(i) else {
+            continue;
+        };
+        if entry.is_dir() {
+            continue;
+        }
+        let entry_lower = entry.name().to_ascii_lowercase();
+        // Match the relative path or the file's trailing suffix.
+        if entry_lower != logo_lower && !entry_lower.ends_with(&format!("/{logo_lower}")) {
+            continue;
+        }
+        let Some(bytes) = read_entry_capped(&mut entry, MAX_SINGLE_ENTRY_BYTES) else {
+            continue;
+        };
+        let ext = Path::new(logo_path)
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("png")
+            .to_ascii_lowercase();
+        let mime = match ext.as_str() {
+            "jpg" | "jpeg" => "image/jpeg",
+            "gif" => "image/gif",
+            "webp" => "image/webp",
+            "svg" => "image/svg+xml",
+            _ => "image/png",
+        };
+        return Some(format!("data:{mime};base64,{}", STANDARD.encode(&bytes)));
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn world_meta_def_round_trips_fallback_league_config() {
+        // A manifest carrying fallbackLeague must survive load -> save so the
+        // field isn't silently dropped (there is no editor UI for it yet).
+        let json = r#"{
+            "id": "p", "name": "P", "packageType": "database",
+            "fallbackLeague": { "name": "Custom Cup", "legs": 1, "scope": "Continental" }
+        }"#;
+        let meta: WorldMetaDef = serde_json::from_str(json).unwrap();
+        let cfg = meta
+            .fallback_league
+            .as_ref()
+            .expect("config should deserialize");
+        assert_eq!(cfg.name.as_deref(), Some("Custom Cup"));
+        assert_eq!(cfg.legs, Some(1));
+        assert_eq!(cfg.scope, Some(CompetitionScope::Continental));
+
+        let serialized = serde_json::to_string(&meta).unwrap();
+        assert!(
+            serialized.contains("fallbackLeague"),
+            "dropped on save: {serialized}"
+        );
+        assert!(serialized.contains("Custom Cup"));
+
+        // A manifest without the field deserializes to None and omits it on save.
+        let bare: WorldMetaDef = serde_json::from_str(r#"{ "id": "p", "name": "P" }"#).unwrap();
+        assert!(bare.fallback_league.is_none());
+        assert!(
+            !serde_json::to_string(&bare)
+                .unwrap()
+                .contains("fallbackLeague")
+        );
+    }
+
+    /// Definition sources for tests: the shipped files, never a machine's own.
+    fn embedded() -> crate::generator::DefinitionSources {
+        crate::generator::DefinitionSources::embedded_only()
+    }
+
+    /// A package thin enough to be padded with procedural opponents must take
+    /// those opponents from the *resolved* definitions, not the embedded ones.
+    /// Filler clubs are still generation, so an author who redefined a nation's
+    /// cities should see them here too.
+    #[test]
+    fn filler_clubs_for_a_thin_package_honour_a_nations_override() {
+        let data_dir = temp_package();
+        write(
+            &data_dir,
+            "default_nations.json",
+            r##"{"clubsPerDivision":4,
+                 "colorPalette":[{"primary":"#123456","secondary":"#ffffff"}],
+                 "genericCities":["Overridden"],
+                 "nations":[{"code":"ZZ","style":"Generic","tiers":1,"strength":3,
+                             "cities":["Zedopolis","Zedhaven","Zedford","Zedmouth"]}]}"##,
+        );
+
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: thin\nname: Thin\nversion: 1.0.0\nlicense: CC0-1.0\n",
+        );
+        write(
+            &dir,
+            "confed.yaml",
+            "schema: confederation\nid: galaxy\nname: Galaxy\n",
+        );
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: galaxy\n",
+        );
+        write(
+            &dir,
+            "teams.yaml",
+            "schema: team\nid: solo\nname: Solo FC\ncity: Zedopolis\ncountry: ZZ\ncolors:\n  primary: '#000000'\n  secondary: '#ffffff'\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "fixture should be valid: {errors:?}");
+
+        let sources = crate::generator::DefinitionSources::searching([data_dir.clone()]);
+        let world = crate::generator::build_world_data_from_package(&package, None, &sources);
+
+        let filler: Vec<&str> = world
+            .teams
+            .iter()
+            .filter(|team| team.id != "solo")
+            .map(|team| team.city.as_str())
+            .collect();
+        assert!(!filler.is_empty(), "the thin package should be padded");
+        assert!(
+            filler.iter().all(|city| city.starts_with("Zed")),
+            "filler clubs should use the overridden cities, got {filler:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::remove_dir_all(&data_dir).ok();
+    }
+
+    fn temp_package() -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("ofm-pkg-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn write(dir: &Path, rel: &str, contents: &str) {
+        let path = dir.join(rel);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).unwrap();
+        }
+        std::fs::write(path, contents).unwrap();
+    }
+
+    /// Build a `.ofm` zip whose entries are `(name, bytes)` pairs, writing the
+    /// names verbatim (so tests can inject traversal/zip-slip entry names).
+    fn build_zip(entries: &[(&str, &[u8])]) -> PathBuf {
+        use std::io::Write;
+        use zip::write::SimpleFileOptions;
+        let path = std::env::temp_dir().join(format!("ofm-ziptest-{}.ofm", uuid::Uuid::new_v4()));
+        let file = std::fs::File::create(&path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let opts = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored);
+        for (name, bytes) in entries {
+            zip.start_file(*name, opts).unwrap();
+            zip.write_all(bytes).unwrap();
+        }
+        zip.finish().unwrap();
+        path
+    }
+
+    #[test]
+    fn an_unusable_package_id_is_caught_while_the_author_can_still_fix_it() {
+        // Issue #414: the reporter's manifest declared `trendyol-super-lig-25/26`.
+        // The editor and `ofm-cli validate` both called the package valid, and the
+        // installer then refused it — the slash makes `<id>.ofm` escape the
+        // packages directory. Whatever the installer will not accept has to fail
+        // here, at authoring time, on the author's own machine.
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","id":"trendyol-super-lig-25/26","name":"Süper Lig"}"#,
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        let err = errors
+            .iter()
+            .find(|e| e.code == INVALID_PACKAGE_ID)
+            .expect("the unusable id should be reported");
+        // The id travels with the error: "invalid package" alone is what left the
+        // reporter with nothing to act on.
+        assert_eq!(
+            err.params,
+            vec![("id".to_string(), "trendyol-super-lig-25/26".to_string())]
+        );
+    }
+
+    #[test]
+    fn an_omitted_package_id_is_reported_as_missing_not_invalid() {
+        // An omitted id used to be accepted here, on the theory that the
+        // installer falls back to the archive filename. But `id` is the install
+        // key and the packed filename, so an absent one produced an unnamed
+        // artifact and an unkeyed install — and the author had no way to learn
+        // that. It is now required, and reported as *missing* rather than
+        // *invalid*: the author wrote nothing, they did not write something bad.
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","name":"Nameless"}"#,
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        assert!(
+            errors.iter().any(|e| e.code == MISSING_ID
+                && e.params
+                    .contains(&("kind".to_string(), "world".to_string()))),
+            "an omitted id must be reported as missingId(kind=world), got {errors:?}"
+        );
+        assert!(
+            !errors.iter().any(|e| e.code == INVALID_PACKAGE_ID),
+            "an omitted id is missing, not malformed: {errors:?}"
+        );
+    }
+
+    /// The `{"schema":"world"}` case from #457: every field defaulted, nothing
+    /// checked, so a package with no id, name, version or license validated
+    /// cleanly — and `pack` then wrote it to a hidden file named `.ofm`.
+    #[test]
+    fn a_manifest_with_no_metadata_is_rejected() {
+        let dir = temp_package();
+        write(&dir, "package.json", r#"{"schema":"world"}"#);
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        assert!(
+            errors.iter().any(|e| e.code == MISSING_ID),
+            "id must be required: {errors:?}"
+        );
+        for field in ["name", "version", "license"] {
+            assert!(
+                errors.iter().any(|e| e.code == MISSING_METADATA
+                    && e.params.contains(&("field".to_string(), field.to_string()))),
+                "{field} must be required: {errors:?}"
+            );
+        }
+    }
+
+    /// `package.json` is a convention, not a rule — any file with
+    /// `schema: world` is the manifest. Hardcoding the name sent an author with
+    /// a `world.yaml` to a file that does not exist.
+    #[test]
+    fn a_manifest_error_names_the_file_the_manifest_was_read_from() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: named\nname: Named\n",
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        let missing: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == MISSING_METADATA)
+            .collect();
+        assert!(!missing.is_empty(), "version and license are missing");
+        for error in missing {
+            assert_eq!(
+                error.file, "world.yaml",
+                "the error should point at the real manifest: {error:?}"
+            );
+        }
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// An installed stack may contain incomplete manifest metadata. The merge
+    /// path must not turn those authoring issues into career startup failures.
+    #[test]
+    fn a_merged_stack_allows_missing_manifest_metadata() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: merged\nname: Merged\n",
+        );
+        let (pkg, _) = load_world_package_files(&dir);
+
+        let (_merged, errors) = merge_world_packages(vec![pkg]);
+
+        assert!(
+            !errors.iter().any(is_manifest_metadata_error),
+            "missing version and license must not block the merge: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_installed_archive_without_a_license_can_merge() {
+        let archive = build_zip(&[(
+            "package.json",
+            br#"{"schema":"world","id":"legacy","name":"Legacy","version":"1.0.0"}"#,
+        )]);
+        let (pkg, load_errors) = load_world_package_from_ofm(&archive);
+        assert!(load_errors.is_empty(), "archive read: {load_errors:?}");
+        assert!(
+            validate_package(&pkg)
+                .iter()
+                .any(|e| e.code == MISSING_METADATA),
+            "authoring validation must still report the missing license"
+        );
+
+        let (_merged, merge_errors) = merge_world_packages(vec![pkg]);
+        assert!(
+            merge_errors.is_empty(),
+            "the installed archive should be usable at runtime: {merge_errors:?}"
+        );
+        std::fs::remove_file(&archive).ok();
+    }
+
+    #[test]
+    fn a_complete_manifest_passes() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","id":"my-league","name":"My League","version":"1.0.0","license":"CC0-1.0","packageType":"database"}"#,
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        assert!(
+            errors.is_empty(),
+            "a complete manifest must pass: {errors:?}"
+        );
+    }
+
+    /// `packageType` deserializes to `"database"` when omitted, so it is only
+    /// ever empty if the author explicitly blanked it — which is still wrong.
+    #[test]
+    fn an_omitted_package_type_defaults_rather_than_failing() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","id":"my-league","name":"My League","version":"1.0.0","license":"CC0-1.0"}"#,
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        assert!(
+            !errors.iter().any(|e| e.code == MISSING_METADATA
+                && e.params
+                    .contains(&("field".to_string(), "packageType".to_string()))),
+            "an omitted packageType takes its default: {errors:?}"
+        );
+    }
+
+    /// The merge accepts legacy metadata but still rejects content and format
+    /// problems that make the combined world unusable.
+    #[test]
+    fn merging_a_stack_ignores_metadata_but_checks_format() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","formatVersion":99}"#,
+        );
+        let (pkg, _errors) = load_world_package(&dir);
+
+        let (_merged, errors) = merge_world_packages(vec![pkg]);
+
+        assert!(
+            !errors.iter().any(is_manifest_metadata_error),
+            "missing manifest fields must not block the merge: {errors:?}"
+        );
+        assert!(
+            errors.iter().any(|e| e.code == UNSUPPORTED_FORMAT_VERSION),
+            "unsupported format must still fail the merge: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn reading_an_installed_archive_stays_permissive_about_the_id() {
+        // The archive load is the *runtime* read path. `read_package_info` drops a
+        // package from the installed list on any error, and career startup refuses
+        // to begin — so folding the id check in here would make a package that is
+        // already installed, and already working, silently disappear. Whatever the
+        // id says, reading it back has to keep succeeding; `validate_manifest` is
+        // what authoring tools ask for on top.
+        let archive = build_zip(&[(
+            "package.json",
+            br#"{"schema":"world","id":"a/b","name":"Slashed"}"#,
+        )]);
+
+        let (pkg, errors) = load_world_package_from_ofm(&archive);
+
+        assert!(
+            errors.is_empty(),
+            "the runtime read must not fail on the id: {errors:?}"
+        );
+        // …and asking explicitly, as `ofm-cli validate` does, still reports it.
+        assert!(
+            validate_manifest(&pkg)
+                .iter()
+                .any(|e| e.code == INVALID_PACKAGE_ID)
+        );
+        std::fs::remove_file(&archive).ok();
+    }
+
+    #[test]
+    fn an_archive_and_a_directory_validate_to_the_same_answer() {
+        // `ofm-cli validate` used to give two answers for the same package: the
+        // directory branch ran the full set, the archive branch ran none of it,
+        // so an unsupported formatVersion or a dangling reference came back
+        // "Valid" from a `.ofm` and rejected from the folder it was packed from.
+        // `validate_package` is the one set both now ask for.
+        let manifest = r#"{"schema":"world","id":"drifted","name":"Drifted","formatVersion":99}"#;
+        let team = r##"{"schema":"team","items":[{"id":"zed","name":"Zed FC","city":"Zed",
+             "country":"NOWHERE","colors":{"primary":"#fff","secondary":"#000"}}]}"##;
+
+        let dir = temp_package();
+        write(&dir, "package.json", manifest);
+        write(&dir, "teams/teams.json", team);
+        let (_, from_dir) = load_world_package(&dir);
+
+        let archive = build_zip(&[
+            ("package.json", manifest.as_bytes()),
+            ("teams/teams.json", team.as_bytes()),
+        ]);
+        let (pkg, mut from_archive) = load_world_package_from_ofm(&archive);
+        from_archive.extend(validate_package(&pkg));
+
+        let codes = |errors: &[PackageError]| {
+            let mut codes: Vec<String> = errors.iter().map(|e| e.code.clone()).collect();
+            codes.sort();
+            codes
+        };
+        assert_eq!(codes(&from_dir), codes(&from_archive));
+        assert!(
+            from_dir
+                .iter()
+                .any(|e| e.code == UNSUPPORTED_FORMAT_VERSION)
+        );
+        assert!(from_dir.iter().any(|e| e.code == UNKNOWN_COUNTRY));
+
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::remove_file(&archive).ok();
+    }
+
+    #[test]
+    fn the_installer_and_the_validator_share_one_id_rule() {
+        // The two used to be separate copies, which is how they drifted apart.
+        // If a case is ever added to one list, this fails until it is in both.
+        for bad in ["", "..", "../evil", "a/b", "a\\b", "with\0null", "assets"] {
+            assert!(!is_valid_package_id(bad), "expected {bad:?} to be refused");
+        }
+        for good in ["eng-premier-league", "brasileirao_2026", "süper-lig-25-26"] {
+            assert!(is_valid_package_id(good), "expected {good:?} to pass");
+        }
+    }
+
+    #[test]
+    fn a_package_id_must_be_a_plain_filename() {
+        // Issue #470: "." passed every clause, and `assets_root.join(".")` is
+        // the assets root itself — uninstalling it deleted every other
+        // package's artwork. The rest are the same class: ids that are not an
+        // ordinary, visible, portable filename component.
+        let too_long = "a".repeat(MAX_PACKAGE_ID_BYTES + 1);
+        for bad in [
+            ".",
+            ".hidden",
+            " ",
+            "trailing-dot.",
+            "trailing-space ",
+            "evil\r\n\x1b[2J",
+            "tab\there",
+            "league:2026",
+            "league*2026",
+            "league?2026",
+            "league\"2026",
+            "league<2026",
+            "league>2026",
+            "league|2026",
+            "CON",
+            "con",
+            "Nul",
+            "com1",
+            "COM¹",
+            "com².league",
+            "COM³",
+            "LPT9",
+            "LPT¹",
+            "lpt².league",
+            "LPT³",
+            "aux.league",
+            too_long.as_str(),
+        ] {
+            assert!(!is_valid_package_id(bad), "expected {bad:?} to be refused");
+        }
+        let longest = "a".repeat(MAX_PACKAGE_ID_BYTES);
+        for good in [
+            "la-liga-2012",
+            "v1.2",
+            "console",
+            "com10",
+            "nullable",
+            longest.as_str(),
+        ] {
+            assert!(is_valid_package_id(good), "expected {good:?} to pass");
+        }
+    }
+
+    #[test]
+    fn an_exported_world_is_recognised_instead_of_reported_as_broken_files() {
+        // Issue #413: export a world, then open the exported folder in the editor.
+        // Every shard came back "missing schema", which names a cause that is not
+        // the real one — the folder is a world save, a different format entirely.
+        //
+        // Built with the real exporter, so a change to the export layout that
+        // breaks the detection fails here rather than in a user's hands.
+        let dir = temp_package();
+        let world = crate::generator::WorldData::default();
+        crate::generator::export_world_package(&world, &dir.join("my-world.json"))
+            .expect("the world exports");
+
+        let (pkg, errors) = load_world_package(&dir);
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "one clear reason, not one per shard: {errors:?}"
+        );
+        assert_eq!(errors[0].code, WORLD_EXPORT_NOT_PACKAGE);
+        assert_eq!(errors[0].file, "my-world.json");
+        assert!(is_unreadable(&pkg));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_future_world_export_is_still_recognised() {
+        // The detection must not be pinned to the format version the exporter
+        // happens to write today. Version-locking it would mean a bump to 3 stops
+        // the detection silently and reopens #413 with every test still green.
+        let dir = temp_package();
+        // Uppercase extension too: `collect_data_files` matches case-insensitively,
+        // so this must as well or the two disagree about what is even a data file.
+        write(
+            &dir,
+            "my-world.JSON",
+            r#"{"formatVersion":3,"worldId":"w","name":"W","description":"",
+                "shards":{"teams":"my-world.shards/teams.json"}}"#,
+        );
+
+        let (_pkg, errors) = load_world_package(&dir);
+
+        assert_eq!(errors.len(), 1, "expected one clear reason: {errors:?}");
+        assert_eq!(errors[0].code, WORLD_EXPORT_NOT_PACKAGE);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_ordinary_package_is_not_mistaken_for_a_world_export() {
+        // The detection has to stay narrow. A package manifest carries `schema`
+        // and its own `formatVersion`, and neither may read as a world save.
+        let dir = temp_package();
+        write(
+            &dir,
+            "package.json",
+            r#"{"schema":"world","id":"real","name":"Real","formatVersion":1}"#,
+        );
+        write(
+            &dir,
+            "teams/teams.json",
+            r##"{"schema":"team","items":[{"id":"zed","name":"Zed FC","city":"Zed",
+                 "country":"BR","colors":{"primary":"#fff","secondary":"#000"}}]}"##,
+        );
+
+        let (pkg, errors) = load_world_package(&dir);
+
+        assert!(
+            !errors.iter().any(|e| e.code == WORLD_EXPORT_NOT_PACKAGE),
+            "a real package must still load: {errors:?}"
+        );
+        assert_eq!(pkg.teams.len(), 1);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_newer_format_version_is_named_as_the_reason() {
+        // A package from a future build parses as nothing recognisable, so the
+        // only symptom is emptiness. Say what is actually wrong.
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nname: Future World\nformatVersion: 99\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+
+        let error = errors
+            .iter()
+            .find(|e| e.code == UNSUPPORTED_FORMAT_VERSION)
+            .expect("an unsupported format version should be reported");
+        let param = |key: &str| {
+            error
+                .params
+                .iter()
+                .find(|(name, _)| name == key)
+                .map(|(_, value)| value.as_str())
+        };
+        assert_eq!(param("version"), Some("99"));
+        assert_eq!(param("supported"), Some("1"));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_supported_format_version_passes_quietly() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nname: Fine World\nformatVersion: 1\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+
+        assert!(
+            !errors.iter().any(|e| e.code == UNSUPPORTED_FORMAT_VERSION),
+            "a supported version must not be flagged: {errors:?}",
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_package_that_resolved_to_nothing_is_unreadable() {
+        let package = WorldPackage::default();
+        assert!(is_unreadable(&package));
+    }
+
+    #[test]
+    fn a_partially_parsed_package_is_still_readable() {
+        // The editor exists to repair broken packages, so partial content must
+        // keep opening — only total emptiness is treated as unreadable.
+        let mut package = WorldPackage::default();
+        let team: super::super::definitions::TeamDef = serde_json::from_value(serde_json::json!({
+            "id": "zed-fc", "name": "Zed FC", "city": "Zedtown", "country": "ZZ",
+            "colors": { "primary": "#000", "secondary": "#fff" }
+        }))
+        .expect("team def");
+        package.teams.push(team);
+
+        assert!(!is_unreadable(&package));
+    }
+
+    #[test]
+    fn a_packaged_badge_resolves_to_a_file_on_disk() {
+        // The whole point of this feature, asserted end to end. Before it, this
+        // exact check was false: the badge was packed, the path survived to
+        // `media.logo`, and it pointed into a temp directory the loader had
+        // already deleted. Unit-testing extraction and qualification separately
+        // would not have caught that, because each half worked.
+        let archive = build_zip(&[
+            (
+                "package.json",
+                br##"{"schema":"world","id":"badge-pkg","name":"Badge Pkg"}"##,
+            ),
+            (
+                "teams/teams.json",
+                br##"{"schema":"team","items":[{"id":"santos","name":"Santos","city":"Santos",
+                     "country":"BR","colors":{"primary":"#fff","secondary":"#000"},
+                     "logo":"assets/images/santos.png"}]}"##,
+            ),
+            ("assets/images/santos.png", b"PNGBYTES"),
+        ]);
+
+        let asset_root = std::env::temp_dir().join(format!("ofm-chain-{}", uuid::Uuid::new_v4()));
+        let package_assets = asset_root.join("badge-pkg");
+        extract_package_assets(&archive, &package_assets).expect("assets extract");
+
+        let (mut package, errors) = load_world_package_from_ofm(&archive);
+        assert!(errors.is_empty(), "package should load: {errors:?}");
+        qualify_package_asset_paths(&mut package, "badge-pkg");
+
+        // No opening year: this asserts badge resolution, not era ageing, so let
+        // the package's own `baseYear` (absent here) pick the default.
+        let world = crate::generator::build_world_from_package(&package, None, &embedded())
+            .expect("world builds");
+        let logo = world
+            .teams
+            .iter()
+            .find(|team| team.id == "santos")
+            .and_then(|team| team.media.logo.clone())
+            .expect("the authored badge should reach the team");
+
+        assert_eq!(logo, "badge-pkg/assets/images/santos.png");
+        let on_disk = asset_root.join(&logo);
+        assert!(
+            on_disk.exists(),
+            "the path the frontend resolves must point at a real file, got {}",
+            on_disk.display(),
+        );
+        assert_eq!(std::fs::read(&on_disk).unwrap(), b"PNGBYTES");
+
+        std::fs::remove_dir_all(&asset_root).ok();
+        std::fs::remove_file(&archive).ok();
+    }
+
+    #[test]
+    fn extract_package_assets_writes_only_the_asset_tree() {
+        // Package artwork is carried into the archive but never landed anywhere
+        // the app could serve it, so every club fell back to a generated crest.
+        let archive = build_zip(&[
+            ("teams/teams.json", b"[]"),
+            ("assets/images/santos.png", b"PNGDATA"),
+            ("assets/nested/deep/badge.svg", b"<svg/>"),
+        ]);
+        let dest = std::env::temp_dir().join(format!("ofm-assets-{}", uuid::Uuid::new_v4()));
+
+        let errors = extract_package_assets(&archive, &dest).expect("extraction should run");
+
+        assert!(errors.is_empty(), "unexpected errors: {errors:?}");
+        assert_eq!(
+            std::fs::read(dest.join("assets/images/santos.png")).unwrap(),
+            b"PNGDATA",
+        );
+        assert!(dest.join("assets/nested/deep/badge.svg").exists());
+        assert!(
+            !dest.join("teams/teams.json").exists(),
+            "data files do not belong in the asset directory",
+        );
+        std::fs::remove_dir_all(&dest).ok();
+    }
+
+    #[test]
+    fn extract_package_assets_still_rejects_zip_slip() {
+        // Filtering must not weaken the hardening: the traversal check runs
+        // before the filter, so a crafted asset path is still refused.
+        let archive = build_zip(&[
+            ("assets/images/ok.png", b"PNG"),
+            ("../assets/escape.png", b"pwned"),
+        ]);
+        let dest = std::env::temp_dir().join(format!("ofm-assets-{}", uuid::Uuid::new_v4()));
+
+        let errors = extract_package_assets(&archive, &dest).expect("extraction should run");
+
+        assert!(
+            errors.iter().any(|e| e.code == ZIPSLIP_ERROR),
+            "traversal entry should be reported, got {errors:?}",
+        );
+        assert!(!dest.parent().unwrap().join("assets/escape.png").exists());
+        std::fs::remove_dir_all(&dest).ok();
+    }
+
+    #[test]
+    fn qualifying_asset_paths_records_the_owning_package() {
+        // Merging collapses manifests, so the package a club's badge came from
+        // has to be baked into the path before the merge happens.
+        let mut package = WorldPackage::default();
+        let mut team: super::super::definitions::TeamDef =
+            serde_json::from_value(serde_json::json!({
+                "id": "santos", "name": "Santos", "city": "Santos", "country": "BR",
+                "colors": { "primary": "#fff", "secondary": "#000" },
+                "logo": "assets/images/santos.png"
+            }))
+            .expect("team def");
+        team.logo = Some("assets/images/santos.png".to_string());
+        package.teams.push(team);
+
+        qualify_package_asset_paths(&mut package, "brazil-1962");
+
+        assert_eq!(
+            package.teams[0].logo.as_deref(),
+            Some("brazil-1962/assets/images/santos.png"),
+        );
+    }
+
+    #[test]
+    fn qualifying_asset_paths_drops_a_reference_that_escapes_the_package() {
+        // A manifest is as untrusted as the archive entries beside it, and these
+        // values are handed to the asset protocol verbatim. A club that names a
+        // file outside its own asset tree gets no artwork; the generated crest
+        // is the right outcome, not a read of whatever sits at that path.
+        let escapes = [
+            "../../../../etc/passwd",
+            "assets/../../secret.png",
+            "/etc/passwd",
+            "..\\..\\windows\\win.ini",
+            "   ../sneaky.png",
+        ];
+
+        for path in escapes {
+            let mut package = WorldPackage::default();
+            let mut team: super::super::definitions::TeamDef =
+                serde_json::from_value(serde_json::json!({
+                    "id": "santos", "name": "Santos", "city": "Santos", "country": "BR",
+                    "colors": { "primary": "#fff", "secondary": "#000" }
+                }))
+                .expect("team def");
+            team.logo = Some(path.to_string());
+            package.teams.push(team);
+
+            qualify_package_asset_paths(&mut package, "brazil-1962");
+
+            assert_eq!(
+                package.teams[0].logo, None,
+                "{path} escapes the package and must not be qualified",
+            );
+        }
+    }
+
+    #[test]
+    fn qualifying_asset_paths_trims_before_it_qualifies() {
+        // The frontend trims before joining, so validating an untrimmed value
+        // would let " ../x.png" pass here and traverse there.
+        let mut package = WorldPackage::default();
+        let mut team: super::super::definitions::TeamDef =
+            serde_json::from_value(serde_json::json!({
+                "id": "santos", "name": "Santos", "city": "Santos", "country": "BR",
+                "colors": { "primary": "#fff", "secondary": "#000" }
+            }))
+            .expect("team def");
+        team.logo = Some("  assets/images/santos.png  ".to_string());
+        package.teams.push(team);
+
+        qualify_package_asset_paths(&mut package, "brazil-1962");
+
+        assert_eq!(
+            package.teams[0].logo.as_deref(),
+            Some("brazil-1962/assets/images/santos.png"),
+        );
+    }
+
+    #[test]
+    fn qualifying_asset_paths_is_idempotent() {
+        // A world can be rebuilt from an already-qualified package; prefixing
+        // twice would produce a path that resolves to nothing.
+        let mut package = WorldPackage::default();
+        let mut team: super::super::definitions::TeamDef =
+            serde_json::from_value(serde_json::json!({
+                "id": "santos", "name": "Santos", "city": "Santos", "country": "BR",
+                "colors": { "primary": "#fff", "secondary": "#000" }
+            }))
+            .expect("team def");
+        team.logo = Some("brazil-1962/assets/images/santos.png".to_string());
+        package.teams.push(team);
+
+        qualify_package_asset_paths(&mut package, "brazil-1962");
+
+        assert_eq!(
+            package.teams[0].logo.as_deref(),
+            Some("brazil-1962/assets/images/santos.png"),
+        );
+    }
+
+    #[test]
+    fn extract_archive_safely_rejects_zip_slip_entries() {
+        let archive = build_zip(&[
+            ("teams/teams.json", b"[]"),
+            ("../escape.txt", b"pwned"),
+            ("/abs.txt", b"pwned"),
+        ]);
+        let dest = temp_package();
+        let errors = extract_archive_safely(&archive, &dest).unwrap();
+        // The two unsafe entries are reported and never written.
+        assert_eq!(errors.iter().filter(|e| e.code == ZIPSLIP_ERROR).count(), 2);
+        assert!(dest.join("teams/teams.json").exists());
+        // The traversal target (sibling of dest) must not have been created.
+        assert!(!dest.parent().unwrap().join("escape.txt").exists());
+        let _ = std::fs::remove_file(&archive);
+        let _ = std::fs::remove_dir_all(&dest);
+    }
+
+    #[test]
+    fn extract_ofm_to_dir_aborts_on_zip_slip() {
+        // A safe entry precedes the zip-slip entry, so extraction writes a file
+        // before it hits the rejection — the cleanup must still wipe the dir.
+        let archive = build_zip(&[("teams/teams.json", b"{}"), ("../escape.txt", b"pwned")]);
+        let dest = temp_package();
+        let result = super::super::world_io::extract_ofm_to_dir(&archive, &dest);
+        assert_eq!(result, Err(ZIPSLIP_ERROR.to_string()));
+        assert!(!dest.parent().unwrap().join("escape.txt").exists());
+        // No partially-unpacked tree is left behind for the editor to open.
+        assert!(
+            !dest.exists(),
+            "partial extraction directory should be removed"
+        );
+        let _ = std::fs::remove_file(&archive);
+        let _ = std::fs::remove_dir_all(&dest);
+    }
+
+    #[test]
+    fn player_def_deserializes_footedness_from_frontend_key() {
+        // The package-editor frontend sends the chosen foot under the camelCase
+        // key "footedness"; this pins that contract so a rename can't silently
+        // drop the authored foot again.
+        let def: PlayerDef = serde_json::from_str(r#"{"id":"p1","footedness":"Left"}"#).unwrap();
+        assert_eq!(def.footedness.as_deref(), Some("Left"));
+        // Round-trips back out under the same key.
+        let json = serde_json::to_value(&def).unwrap();
+        assert_eq!(
+            json.get("footedness").and_then(|v| v.as_str()),
+            Some("Left")
+        );
+    }
+
+    #[test]
+    fn read_entry_capped_rejects_oversized_entry() {
+        let small: &[u8] = b"hello";
+        assert_eq!(
+            read_entry_capped(&mut &small[..], 1024),
+            Some(small.to_vec())
+        );
+        // Exceeds the cap → None (no unbounded allocation).
+        assert_eq!(read_entry_capped(&mut &small[..], 4), None);
+    }
+
+    const REAL_MADRID_YAML: &str = "\
+schema: team
+id: real-madrid
+name: Real Madrid
+city: Madrid
+country: ES
+colors:
+  primary: \"#FEBE10\"
+  secondary: \"#FFFFFF\"
+";
+
+    #[test]
+    fn loads_single_entity_and_bulk_items_files() {
+        let dir = temp_package();
+        write(&dir, "real.yaml", REAL_MADRID_YAML);
+        write(
+            &dir,
+            "more.yaml",
+            "schema: team\nitems:\n  - { id: sevilla, name: Sevilla, city: Seville, country: ES, colors: { primary: \"#D80027\", secondary: \"#fff\" } }\n  - { id: betis, name: Real Betis, city: Seville, country: ES, colors: { primary: \"#00954C\", secondary: \"#fff\" } }\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "unexpected errors: {errors:?}");
+        let ids: Vec<&str> = package.teams.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(ids, vec!["betis", "real-madrid", "sevilla"]);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn mixes_json_and_yaml() {
+        let dir = temp_package();
+        write(&dir, "real.yaml", REAL_MADRID_YAML);
+        write(
+            &dir,
+            "country.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "europe" }"#,
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "unexpected errors: {errors:?}");
+        assert_eq!(package.teams.len(), 1);
+        assert_eq!(package.countries.len(), 1);
+        assert_eq!(package.countries[0].name, "Spain");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn folder_layout_does_not_affect_the_result() {
+        let flat = temp_package();
+        write(&flat, "real.yaml", REAL_MADRID_YAML);
+        write(
+            &flat,
+            "spain.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "europe" }"#,
+        );
+
+        let nested = temp_package();
+        write(&nested, "teams/europe/spain/real.yaml", REAL_MADRID_YAML);
+        write(
+            &nested,
+            "deep/nested/dirs/spain.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "europe" }"#,
+        );
+
+        let (flat_pkg, flat_errors) = load_world_package(&flat);
+        let (nested_pkg, nested_errors) = load_world_package(&nested);
+        assert!(flat_errors.is_empty() && nested_errors.is_empty());
+        assert_eq!(flat_pkg.teams, nested_pkg.teams);
+        assert_eq!(flat_pkg.countries, nested_pkg.countries);
+
+        std::fs::remove_dir_all(&flat).ok();
+        std::fs::remove_dir_all(&nested).ok();
+    }
+
+    #[test]
+    fn reports_unknown_and_missing_schema() {
+        let dir = temp_package();
+        write(&dir, "weird.yaml", "schema: dragon\nid: smaug\n");
+        write(&dir, "noschema.yaml", "id: nobody\nname: Nobody\n");
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(errors.iter().any(|e| e.code == UNKNOWN_SCHEMA));
+        assert!(errors.iter().any(|e| e.code == MISSING_SCHEMA));
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn reports_duplicate_and_missing_ids() {
+        let dir = temp_package();
+        write(&dir, "a.yaml", REAL_MADRID_YAML);
+        write(&dir, "b.yaml", REAL_MADRID_YAML); // same id again
+        write(
+            &dir,
+            "noid.yaml",
+            "schema: country\nname: Nowhere\nconfederation: europe\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(
+            errors.iter().any(|e| e.code == DUPLICATE_ID),
+            "expected a duplicate-id error: {errors:?}"
+        );
+        assert!(
+            errors.iter().any(|e| e.code == MISSING_ID),
+            "expected a missing-id error: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn ignores_non_data_files() {
+        let dir = temp_package();
+        write(&dir, "real.yaml", REAL_MADRID_YAML);
+        write(&dir, "README.md", "# My world package\n");
+        write(&dir, "notes.txt", "scratch notes");
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "unexpected errors: {errors:?}");
+        assert_eq!(package.teams.len(), 1);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn parses_a_competition_file_without_colliding_with_its_inner_type() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: es-1\nname: La Liga\ntype: League\nscope: Domestic\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: ES\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "unexpected errors: {errors:?}");
+        assert_eq!(package.competitions.len(), 1);
+        assert_eq!(package.competitions[0].id, "es-1");
+        assert_eq!(
+            package.competitions[0].r#type,
+            domain::league::CompetitionType::League
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_fully_cross_referenced_package_is_valid() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "confed.yaml",
+            "schema: confederation\nid: galaxy\nname: Galaxy\n",
+        );
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: galaxy\n",
+        );
+        write(
+            &dir,
+            "teams.yaml",
+            "schema: team\nitems:\n  - { id: zed-fc, name: Zed FC, city: Zedtown, country: ZZ, colors: { primary: \"#000\", secondary: \"#fff\" } }\n  - { id: zed-utd, name: Zed United, city: Zedford, country: ZZ, colors: { primary: \"#111\", secondary: \"#fff\" } }\n",
+        );
+        write(
+            &dir,
+            "player.yaml",
+            "schema: player\nid: zed-star\nname: Zed Star\nclub: zed-fc\nnationality: ZZ\nposition: Forward\noverall: 80\n",
+        );
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: zz-1\nname: Zed League\ntype: League\nscope: Domestic\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: ZZ\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(
+            errors.is_empty(),
+            "expected a valid package, got: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn references_to_the_builtin_catalog_resolve() {
+        let dir = temp_package();
+        // A country in the built-in `europe` region, and a club in the built-in
+        // country `ES` — neither redefined in the package.
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: CUSTOM\nname: Customland\nconfederation: europe\n",
+        );
+        write(
+            &dir,
+            "team.yaml",
+            "schema: team\nid: madrid\nname: Madrid FC\ncity: Madrid\ncountry: ES\ncolors: { primary: \"#fff\", secondary: \"#000\" }\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "builtin refs should resolve: {errors:?}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn unknown_references_are_reported() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: nowhere\n",
+        );
+        write(
+            &dir,
+            "team.yaml",
+            "schema: team\nid: t1\nname: Orphan FC\ncity: Nowhere\ncountry: XX\ncolors: { primary: \"#000\", secondary: \"#fff\" }\n",
+        );
+        write(
+            &dir,
+            "player.yaml",
+            "schema: player\nid: p1\nname: Lost Player\nclub: ghost\nnationality: XX\nposition: Midfielder\noverall: 70\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let codes: Vec<&str> = errors.iter().map(|e| e.code.as_str()).collect();
+        assert!(codes.contains(&UNKNOWN_CONFEDERATION), "{errors:?}");
+        assert!(codes.contains(&UNKNOWN_TEAM), "{errors:?}");
+        assert!(
+            errors.iter().filter(|e| e.code == UNKNOWN_COUNTRY).count() >= 2,
+            "both the team's and player's unknown country should be reported: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_reference_error_names_the_file_the_offending_entity_came_from() {
+        // Reported from real use: a package used `uefa` as a confederation, and
+        // validation said so without saying *where*, so the author had to open
+        // every file in the package to find the one country that said it. The
+        // id alone is not a location — packages split entities across as many
+        // files as the author likes, and the loader walks the tree recursively.
+        let dir = temp_package();
+        write(
+            &dir,
+            "countries/europe/spain.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "uefa" }"#,
+        );
+        write(
+            &dir,
+            "teams/ghosts.json",
+            r##"{ "schema": "team", "id": "t1", "name": "Ghost FC", "city": "Nowhere", "country": "ZZ",
+                  "colors": { "primary": "#000", "secondary": "#fff" } }"##,
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+
+        let confederation = errors
+            .iter()
+            .find(|e| e.code == UNKNOWN_CONFEDERATION)
+            .expect("`uefa` is not a built-in region, so this must error");
+        assert_eq!(
+            confederation.file, "countries/europe/spain.json",
+            "the error must name the file that declares the country: {confederation:?}"
+        );
+
+        // Not just the one path: an error is located by whichever entity carries
+        // the bad reference, so a team's unknown country names the team's file.
+        let country = errors
+            .iter()
+            .find(|e| e.code == UNKNOWN_COUNTRY)
+            .expect("`ZZ` is not a known country");
+        assert_eq!(country.file, "teams/ghosts.json", "{country:?}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    fn is_potential_error(code: &str) -> bool {
+        [
+            POTENTIAL_OUT_OF_RANGE,
+            POTENTIAL_BELOW_ATTRIBUTES,
+            POTENTIAL_BELOW_OVERALL,
+            POTENTIAL_BELOW_DEFAULT,
+        ]
+        .contains(&code)
+    }
+
+    /// Build a one-club package whose single player carries `player_fields`.
+    fn package_with_player(player_fields: &str) -> (PathBuf, Vec<PackageError>) {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: pot\nname: Potential\nversion: 1.0.0\nlicense: CC0-1.0\n",
+        );
+        write(
+            &dir,
+            "teams/clubs.json",
+            r##"{"schema":"team","items":[{"id":"c1","name":"Club","city":"Town","country":"ENG","colors":{"primary":"#000","secondary":"#fff"}}]}"##,
+        );
+        write(
+            &dir,
+            "players/squad.json",
+            &format!(
+                r#"{{"schema":"player","items":[{{"id":"p1","name":"P One","club":"c1","nationality":"ENG","position":"Striker",{player_fields}}}]}}"#
+            ),
+        );
+        let (_package, errors) = load_world_package(&dir);
+        (dir, errors)
+    }
+
+    /// A ceiling outside 1–99 is an authoring mistake, not a value to clamp.
+    #[test]
+    fn a_potential_outside_the_legal_range_is_reported() {
+        for bad in ["0", "100"] {
+            let (dir, errors) = package_with_player(&format!(r#""overall":70,"potential":{bad}"#));
+            let hit = errors
+                .iter()
+                .find(|e| e.code == POTENTIAL_OUT_OF_RANGE)
+                .unwrap_or_else(|| panic!("potential {bad} should be reported: {errors:?}"));
+            assert_eq!(
+                hit.file, "players/squad.json",
+                "the error must name the file the player was declared in"
+            );
+            std::fs::remove_dir_all(&dir).ok();
+        }
+    }
+
+    /// A ceiling below current ability is a mistake the author can act on.
+    ///
+    /// Reported rather than fixed: `refresh_player_derived` would silently raise
+    /// it to the player's ovr, and an authoring format that quietly rewrites what
+    /// you wrote is worse than one that tells you.
+    #[test]
+    fn a_potential_below_the_authored_overall_is_reported() {
+        let (dir, errors) = package_with_player(r#""overall":70,"potential":60"#);
+
+        let hit = errors
+            .iter()
+            .find(|e| e.code == POTENTIAL_BELOW_OVERALL)
+            .unwrap_or_else(|| panic!("a ceiling under the floor should be reported: {errors:?}"));
+        assert_eq!(hit.file, "players/squad.json", "{hit:?}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Attributes win over `overall` in generation, so validation compares
+    /// against the same thing — otherwise a file validates under one ability
+    /// mode and generates under the other.
+    #[test]
+    fn a_potential_below_the_attribute_derived_ability_is_reported() {
+        let (dir, errors) = package_with_player(
+            r#""potential":40,"attributes":{"pace":80,"stamina":80,"strength":80,"passing":80,"shooting":80,"tackling":80,"dribbling":80,"defending":80,"positioning":80,"vision":80,"decisions":80}"#,
+        );
+
+        assert!(
+            errors.iter().any(|e| e.code == POTENTIAL_BELOW_ATTRIBUTES),
+            "an attributes-only player's ceiling must be checked too: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// When both are written, the attribute block is the one that counts.
+    ///
+    /// Generation ignores `overall` outright once an attribute block is present,
+    /// so validation has to ignore it too. Measuring against the wrong one is how
+    /// a package validates under one ability mode and is generated under the
+    /// other — which is the whole failure this check exists to close.
+    #[test]
+    fn attributes_outrank_a_present_overall_when_checking_the_ceiling() {
+        let (dir, errors) = package_with_player(
+            r#""overall":40,"potential":50,"attributes":{"pace":80,"stamina":80,"strength":80,"passing":80,"shooting":80,"tackling":80,"dribbling":80,"defending":80,"positioning":80,"vision":80,"decisions":80}"#,
+        );
+
+        assert!(
+            errors.iter().any(|e| e.code == POTENTIAL_BELOW_ATTRIBUTES),
+            "a ceiling of 50 is under what these attributes are worth: {errors:?}"
+        );
+        assert!(
+            !errors.iter().any(|e| e.code == POTENTIAL_BELOW_OVERALL),
+            "the authored overall of 40 must not be what the ceiling was judged \
+             against — generation would never have used it: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A player who declares no ability at all is still generated against a
+    /// default, so a ceiling under it is still wrong — but the author cannot see
+    /// that number anywhere in their file, which is why this case gets its own
+    /// message rather than being told it is "below 65".
+    #[test]
+    fn a_potential_below_the_default_ability_names_the_default() {
+        let (dir, errors) = package_with_player(r#""potential":40"#);
+
+        assert!(
+            errors.iter().any(|e| e.code == POTENTIAL_BELOW_DEFAULT),
+            "a ceiling under the default ability should be reported: {errors:?}"
+        );
+        assert!(
+            !errors.iter().any(|e| e.code == POTENTIAL_BELOW_OVERALL),
+            "nothing was authored to be 'below overall' of: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Equality is legal — a finished player with no growth left is a real thing
+    /// to author, even though it means they never improve again.
+    #[test]
+    fn a_potential_equal_to_ability_is_accepted() {
+        let (dir, errors) = package_with_player(r#""overall":70,"potential":70"#);
+
+        assert!(
+            !errors.iter().any(|e| is_potential_error(&e.code)),
+            "{errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The back-compat guarantee: every package written before the field existed.
+    #[test]
+    fn a_player_without_a_potential_loads_as_none_and_is_not_reported() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: pot\nname: Potential\nversion: 1.0.0\nlicense: CC0-1.0\n",
+        );
+        write(
+            &dir,
+            "teams/clubs.json",
+            r##"{"schema":"team","items":[{"id":"c1","name":"Club","city":"Town","country":"ENG","colors":{"primary":"#000","secondary":"#fff"}}]}"##,
+        );
+        write(
+            &dir,
+            "players/squad.json",
+            r#"{"schema":"player","items":[{"id":"p1","name":"P One","club":"c1","nationality":"ENG","position":"Striker","overall":70}]}"#,
+        );
+
+        let (package, errors) = load_world_package(&dir);
+
+        assert_eq!(
+            package.players[0].potential, None,
+            "an absent ceiling must stay absent, not become a zero the engine \
+             would read as 'unset' by accident"
+        );
+        assert!(
+            !errors.iter().any(|e| is_potential_error(&e.code)),
+            "an omitted ceiling is not an error: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Validation reports; it never edits what the author wrote.
+    #[test]
+    fn validation_leaves_an_invalid_potential_as_the_author_wrote_it() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: pot\nname: Potential\nversion: 1.0.0\nlicense: CC0-1.0\n",
+        );
+        write(
+            &dir,
+            "teams/clubs.json",
+            r##"{"schema":"team","items":[{"id":"c1","name":"Club","city":"Town","country":"ENG","colors":{"primary":"#000","secondary":"#fff"}}]}"##,
+        );
+        write(
+            &dir,
+            "players/squad.json",
+            r#"{"schema":"player","items":[{"id":"p1","name":"P One","club":"c1","nationality":"ENG","position":"Striker","overall":70,"potential":60}]}"#,
+        );
+
+        let (package, _errors) = load_world_package(&dir);
+
+        assert_eq!(
+            package.players[0].potential,
+            Some(60),
+            "the authored value must survive validation untouched"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_merged_stack_keeps_the_locations_its_packages_had() {
+        // `merge_world_packages` rebuilds every entity list through a BTreeMap.
+        // If the source index did not ride along, validating a stack would be
+        // exactly as unhelpful as validating a single package used to be — and
+        // it would only show up for users who stack, which is the harder case
+        // to notice.
+        let base = temp_package();
+        write(
+            &base,
+            "world.json",
+            r#"{ "schema": "world", "id": "base", "name": "Base", "packageType": "database" }"#,
+        );
+        let overlay = temp_package();
+        write(
+            &overlay,
+            "world.json",
+            r#"{ "schema": "world", "id": "overlay", "name": "Overlay", "packageType": "patch" }"#,
+        );
+        write(
+            &overlay,
+            "countries/added.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "uefa" }"#,
+        );
+
+        let (base_pkg, _) = load_world_package_files(&base);
+        let (overlay_pkg, _) = load_world_package_files(&overlay);
+        let (merged, _) = merge_world_packages(vec![base_pkg, overlay_pkg]);
+
+        let error = validate_references(&merged)
+            .into_iter()
+            .find(|e| e.code == UNKNOWN_CONFEDERATION)
+            .expect("the overlay's country still references an unknown confederation");
+        assert_eq!(error.file, "countries/added.json", "{error:?}");
+
+        std::fs::remove_dir_all(&base).ok();
+        std::fs::remove_dir_all(&overlay).ok();
+    }
+
+    #[test]
+    fn the_declaration_that_holds_the_bad_reference_is_the_one_named() {
+        // Two files declare `ES`, and it is the *first* that names a
+        // confederation nothing resolves. Locating the error by id alone picked
+        // whichever declaration was read last, so the author was sent to the
+        // file whose country is fine — worse than no location at all, because
+        // it reads as authoritative.
+        let dir = temp_package();
+        write(
+            &dir,
+            "countries/a-broken.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "uefa" }"#,
+        );
+        write(
+            &dir,
+            "countries/b-fine.json",
+            r#"{ "schema": "country", "id": "ES", "name": "España", "confederation": "europe" }"#,
+        );
+
+        let (package, _) = load_world_package(&dir);
+        let error = validate_references(&package)
+            .into_iter()
+            .find(|e| e.code == UNKNOWN_CONFEDERATION)
+            .expect("`uefa` resolves to nothing, so this must error");
+        assert_eq!(
+            error.file, "countries/a-broken.json",
+            "the file that says `uefa` is the one to open: {error:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_merged_blank_id_names_the_declaration_that_survived_the_merge() {
+        // Blank ids all collapse onto one key, so merging two packages that each
+        // leave a country unnamed keeps exactly one of them — the later package
+        // overrides the earlier. The error has to name the survivor's file;
+        // naming the overridden one sends the author to a declaration that is no
+        // longer part of the merged world.
+        let base = temp_package();
+        write(
+            &base,
+            "world.json",
+            r#"{ "schema": "world", "id": "base", "name": "Base", "packageType": "database" }"#,
+        );
+        write(
+            &base,
+            "countries/nameless-in-base.json",
+            r#"{ "schema": "country", "id": "", "name": "Base Nowhere" }"#,
+        );
+        let overlay = temp_package();
+        write(
+            &overlay,
+            "world.json",
+            r#"{ "schema": "world", "id": "overlay", "name": "Overlay", "packageType": "patch" }"#,
+        );
+        write(
+            &overlay,
+            "countries/nameless-in-overlay.json",
+            r#"{ "schema": "country", "id": "", "name": "Overlay Nowhere" }"#,
+        );
+
+        let (base_pkg, _) = load_world_package_files(&base);
+        let (overlay_pkg, _) = load_world_package_files(&overlay);
+        let (merged, errors) = merge_world_packages(vec![base_pkg, overlay_pkg]);
+
+        assert_eq!(merged.countries.len(), 1, "one blank id survives the merge");
+        // Deliberately the errors the merge *returned*, not a fresh
+        // `validate_ids(&merged)`. Asserting on a direct call cannot notice the
+        // merge dropping a check — which is exactly how entity-id validation
+        // went missing from the merged stack once and nothing failed.
+        let error = errors
+            .iter()
+            .find(|e| e.code == MISSING_ID)
+            .expect("a country with no id is still an error after merging");
+        assert_eq!(
+            error.file, "countries/nameless-in-overlay.json",
+            "the surviving declaration is the overlay's: {error:?}"
+        );
+
+        std::fs::remove_dir_all(&base).ok();
+        std::fs::remove_dir_all(&overlay).ok();
+    }
+
+    #[test]
+    fn every_entity_keeps_a_source_beside_it() {
+        // The invariant the whole index rests on: one recorded file per entity,
+        // in the same order. An entity pushed without one would shift every
+        // location after it in that schema by one, and each error would name a
+        // real file — just the wrong one.
+        let dir = temp_package();
+        write(
+            &dir,
+            "countries/two.json",
+            r#"{ "schema": "country", "items": [
+                { "id": "ES", "name": "Spain", "confederation": "europe" },
+                { "id": "FR", "name": "France", "confederation": "europe" }
+            ]}"#,
+        );
+        write(
+            &dir,
+            "teams/one.json",
+            r##"{ "schema": "team", "id": "t1", "name": "FC", "city": "Town", "country": "ES",
+                  "colors": { "primary": "#000", "secondary": "#fff" } }"##,
+        );
+
+        let (package, _) = load_world_package(&dir);
+
+        assert_eq!(package.sources_len("country"), package.countries.len());
+        assert_eq!(package.sources_len("team"), package.teams.len());
+        // And they are aligned, not merely equal in number: the entity lists are
+        // sorted by id after loading, so the files have to be carried along.
+        let spain = package.countries.iter().position(|c| c.id == "ES").unwrap();
+        assert_eq!(package.source_at("country", spain), "countries/two.json");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_duplicate_id_names_the_file_that_repeats_it() {
+        // Two files declaring the same id is the other "go and find it" error:
+        // the message names the id, which the author already knows, and not the
+        // file, which is what they are looking for.
+        let dir = temp_package();
+        write(
+            &dir,
+            "countries/first.json",
+            r#"{ "schema": "country", "id": "ES", "name": "Spain", "confederation": "europe" }"#,
+        );
+        write(
+            &dir,
+            "countries/second.json",
+            r#"{ "schema": "country", "id": "ES", "name": "España", "confederation": "europe" }"#,
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let duplicate = errors
+            .iter()
+            .find(|e| e.code == DUPLICATE_ID)
+            .expect("the same country id twice is a duplicate");
+        // Files are walked in directory order, so the second declaration is the
+        // one reported — the copy, not the original.
+        assert_eq!(duplicate.file, "countries/second.json", "{duplicate:?}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn each_repeat_of_an_id_names_its_own_file() {
+        // Three files, one id. Storing only the last declaration would make both
+        // duplicate errors name `third.json`, sending the author to the same
+        // place twice and never to the second copy.
+        let dir = temp_package();
+        for (file, name) in [
+            ("countries/first.json", "Spain"),
+            ("countries/second.json", "Espana"),
+            ("countries/third.json", "España"),
+        ] {
+            write(
+                &dir,
+                file,
+                &format!(
+                    r#"{{ "schema": "country", "id": "ES", "name": "{name}", "confederation": "europe" }}"#
+                ),
+            );
+        }
+
+        let (_package, errors) = load_world_package(&dir);
+        let files: Vec<&str> = errors
+            .iter()
+            .filter(|e| e.code == DUPLICATE_ID)
+            .map(|e| e.file.as_str())
+            .collect();
+
+        assert_eq!(files, ["countries/second.json", "countries/third.json"]);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn two_entities_with_no_id_name_the_two_files_they_are_in() {
+        // Every id-less entity shares one key, so without per-declaration
+        // locations both errors would name the same file — and an entity with no
+        // id cannot be identified any other way, making the file the *only*
+        // thing that points at it.
+        let dir = temp_package();
+        write(
+            &dir,
+            "teams/alpha.json",
+            r##"{ "schema": "team", "name": "No Id FC", "city": "A", "country": "ENG",
+                  "colors": { "primary": "#000", "secondary": "#fff" } }"##,
+        );
+        write(
+            &dir,
+            "teams/beta.json",
+            r##"{ "schema": "team", "name": "Also No Id", "city": "B", "country": "ENG",
+                  "colors": { "primary": "#000", "secondary": "#fff" } }"##,
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let mut files: Vec<&str> = errors
+            .iter()
+            .filter(|e| e.code == MISSING_ID)
+            .map(|e| e.file.as_str())
+            .collect();
+        files.sort_unstable();
+
+        assert_eq!(files, ["teams/alpha.json", "teams/beta.json"]);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_competition_error_names_the_file_that_declares_the_competition() {
+        // Competition problems come from the definition validator, which reasons
+        // over the merged list and knows nothing about files. Without a test, a
+        // regression that dropped the location back to "" would look fine — the
+        // existing competition tests only assert the error code.
+        let dir = temp_package();
+        write(
+            &dir,
+            "competitions/league.json",
+            r#"{ "schema": "competition", "id": "cup", "name": "Cup", "type": "League",
+                 "scope": "Domestic", "countryId": "ZZ", "priority": 1,
+                 "format": { "kind": "LeagueTable", "legs": 2 },
+                 "participants": { "selector": { "kind": "allInCountry", "country": "ZZ" } } }"#,
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let located = errors
+            .iter()
+            .find(|e| {
+                e.params
+                    .iter()
+                    .any(|(k, v)| k == "competition" && v == "cup")
+            })
+            .expect("the competition's unknown country must be reported");
+        assert_eq!(located.file, "competitions/league.json", "{located:?}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn staff_unknown_club_is_labeled_entity_not_player() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "team.yaml",
+            "schema: team\nid: t1\nname: Real FC\ncity: Town\ncountry: ENG\ncolors: { primary: \"#000\", secondary: \"#fff\" }\n",
+        );
+        write(
+            &dir,
+            "staff.yaml",
+            "schema: staff\nid: coach-1\nfirstName: A\nlastName: B\nclub: ghost\nnationality: ENG\nrole: Coach\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let err = errors
+            .iter()
+            .find(|e| e.code == UNKNOWN_TEAM)
+            .expect("a staff member referencing a missing club should error");
+        // The referencing entity is identified generically, never mislabeled "player".
+        assert!(
+            err.params
+                .iter()
+                .any(|(k, v)| k == "entity" && v == "coach-1"),
+            "{:?}",
+            err.params
+        );
+        assert!(
+            !err.params.iter().any(|(k, _)| k == "player"),
+            "staff error must not use the player param: {:?}",
+            err.params
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A minimal one-country package declaring `base_year`, for era assertions.
+    fn write_era_package(dir: &std::path::Path, base_year: i32) {
+        write(
+            dir,
+            "world.yaml",
+            &format!(
+                "schema: world\nid: era-world\nname: Era World\nversion: 1.0.0\nlicense: CC0-1.0\nbaseYear: {base_year}\n"
+            ),
+        );
+        write(
+            dir,
+            "confed.yaml",
+            "schema: confederation\nid: galaxy\nname: Galaxy\n",
+        );
+        write(
+            dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: galaxy\n",
+        );
+        write(
+            dir,
+            "teams.yaml",
+            "schema: team\nitems:\n  - { id: zed-fc, name: Zed FC, city: Zedtown, country: ZZ, colors: { primary: \"#000\", secondary: \"#fff\" } }\n",
+        );
+    }
+
+    /// The most recent birth year in the world — the era ceiling every player
+    /// must sit at or below.
+    fn newest_birth_year(world: &crate::generator::WorldData) -> i32 {
+        world
+            .players
+            .iter()
+            .filter_map(|player| player.date_of_birth.get(0..4))
+            .filter_map(|year| year.parse::<i32>().ok())
+            .max()
+            .expect("world should have players with parseable birth years")
+    }
+
+    #[test]
+    fn package_base_year_ages_squads_when_no_career_year_is_given() {
+        let dir = temp_package();
+        write_era_package(&dir, 1962);
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+
+        assert!(
+            newest_birth_year(&world) < 1962,
+            "a package declaring baseYear 1962 must not generate players born after it",
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_absurdly_early_base_year_cannot_underflow_birth_years() {
+        // `baseYear` is author-supplied with no lower bound, and every birth
+        // year is `opening_year - age`. A tiny value therefore underflows a
+        // u32 — a panic in debug, a birth year near 4 billion in release —
+        // so a mistyped manifest could take the game down.
+        let dir = temp_package();
+        write_era_package(&dir, 5);
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+
+        // `baseYear: 5` resolves to the clamped floor, so every player must be
+        // born at or before it. A loose range here would let a regression that
+        // ignores the clamp slip through.
+        let floor = crate::generator::MIN_OPENING_YEAR as i32;
+        for player in &world.players {
+            let birth_year: i32 = player.date_of_birth[0..4]
+                .parse()
+                .unwrap_or_else(|_| panic!("unparseable dob {}", player.date_of_birth));
+            assert!(
+                birth_year <= floor && birth_year > floor - 100,
+                "{} was born in {birth_year}, outside the clamped era floor {floor}",
+                player.full_name,
+            );
+        }
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_negative_base_year_clamps_to_the_floor_like_a_tiny_one_does() {
+        // `baseYear: 5` and `baseYear: -50` are the same authoring mistake, so
+        // they belong in the same place. Discarding the negative instead of
+        // clamping it silently opened a contemporary world from a manifest that
+        // plainly asked for a historical one.
+        let dir = temp_package();
+        write_era_package(&dir, -50);
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+
+        let floor = crate::generator::MIN_OPENING_YEAR as i32;
+        assert!(
+            newest_birth_year(&world) <= floor,
+            "a negative baseYear must clamp to {floor}, not fall back to today",
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_absurdly_late_base_year_still_produces_parseable_dates() {
+        // The year is formatted straight into birth and contract dates, so an
+        // unbounded value yields strings no date parser accepts — no crash,
+        // just ages that silently stop resolving.
+        let dir = temp_package();
+        write_era_package(&dir, 2_000_000_000);
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+
+        let ceiling = crate::generator::MAX_OPENING_YEAR as i32;
+        for player in &world.players {
+            chrono::NaiveDate::parse_from_str(&player.date_of_birth, "%Y-%m-%d")
+                .unwrap_or_else(|_| panic!("unparseable dob {}", player.date_of_birth));
+            let birth_year: i32 = player.date_of_birth[0..4].parse().expect("year");
+            assert!(
+                birth_year <= ceiling,
+                "{} was born in {birth_year}, past the era ceiling {ceiling}",
+                player.full_name,
+            );
+        }
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn career_start_year_overrides_the_packages_declared_base_year() {
+        // Installing a 1962 database but starting a 1985 career must age squads
+        // against 1985 — the clock is what the player actually experiences.
+        let dir = temp_package();
+        write_era_package(&dir, 1962);
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+        let world =
+            crate::generator::build_world_data_from_package(&package, Some(1985), &embedded());
+
+        let newest = newest_birth_year(&world);
+        assert!(
+            newest < 1985,
+            "players must not be born after the career start year, got {newest}",
+        );
+        assert!(
+            newest > 1962,
+            "squads should be aged against the 1985 career, not the 1962 manifest (got {newest})",
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn builds_a_playable_world_from_a_package() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: zed-world\nname: Zed World\nversion: 1.0.0\nlicense: CC0-1.0\ndescription: A tiny world\n",
+        );
+        write(
+            &dir,
+            "confed.yaml",
+            "schema: confederation\nid: galaxy\nname: Galaxy\n",
+        );
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: galaxy\n",
+        );
+        write(
+            &dir,
+            "teams.yaml",
+            "schema: team\nitems:\n  - { id: zed-fc, name: Zed FC, city: Zedtown, country: ZZ, colors: { primary: \"#000\", secondary: \"#fff\" } }\n  - { id: zed-utd, name: Zed United, city: Zedford, country: ZZ, colors: { primary: \"#111\", secondary: \"#fff\" } }\n",
+        );
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: zz-1\nname: Zed League\ntype: League\nscope: Domestic\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: ZZ\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "package should be valid: {errors:?}");
+
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+        assert_eq!(world.name, "Zed World");
+        let team_ids: Vec<&str> = world.teams.iter().map(|t| t.id.as_str()).collect();
+        assert_eq!(
+            team_ids,
+            vec!["zed-fc", "zed-utd"],
+            "stable authored ids are kept"
+        );
+        assert_eq!(
+            world.players.len(),
+            46,
+            "22 players and an academy keeper per club are generated"
+        );
+
+        let galaxy = world
+            .regions
+            .iter()
+            .find(|r| r.id == "galaxy")
+            .expect("the package's confederation becomes a region");
+        assert!(galaxy.country_codes.contains(&"ZZ".to_string()));
+
+        let defs = world
+            .competition_definitions
+            .as_ref()
+            .expect("package competitions are embedded for resolution");
+        assert_eq!(defs.competitions.len(), 1);
+        assert_eq!(defs.competitions[0].id, "zz-1");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn authored_players_are_placed_in_their_clubs() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "confed.yaml",
+            "schema: confederation\nid: galaxy\nname: Galaxy\n",
+        );
+        write(
+            &dir,
+            "country.yaml",
+            "schema: country\nid: ZZ\nname: Zedland\nconfederation: galaxy\n",
+        );
+        write(
+            &dir,
+            "team.yaml",
+            "schema: team\nid: zed-fc\nname: Zed FC\ncity: Zedtown\ncountry: ZZ\ncolors: { primary: \"#000\", secondary: \"#fff\" }\n",
+        );
+        write(
+            &dir,
+            "star.yaml",
+            "schema: player\nid: zed-star\nname: Zed Star\nclub: zed-fc\nnationality: ZZ\nposition: Forward\noverall: 88\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(errors.is_empty(), "{errors:?}");
+
+        let world = crate::generator::build_world_data_from_package(&package, None, &embedded());
+
+        let star = world
+            .players
+            .iter()
+            .find(|p| p.id == "zed-star")
+            .expect("the authored player should be in the squad");
+        assert_eq!(star.team_id.as_deref(), Some("zed-fc"));
+        assert_eq!(star.full_name, "Zed Star");
+        assert_eq!(star.position, domain::player::Position::Forward);
+        assert!(
+            star.ovr >= 72,
+            "an overall of 88 should yield a high OVR, got {}",
+            star.ovr
+        );
+
+        // The authored forward replaced a generated one, so the squad stays at 22.
+        let squad = world
+            .players
+            .iter()
+            .filter(|p| p.team_id.as_deref() == Some("zed-fc"))
+            .count();
+        assert_eq!(squad, 22);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn name_pool_count_counts_one_pool_per_country_code() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "names.yaml",
+            "schema: names\npools:\n  BR:\n    first_names: [Joao, Pedro]\n    last_names: [Silva, Santos]\n  AR:\n    first_names: [Diego]\n    last_names: [Maradona]\n",
+        );
+
+        let (package, errors) = load_world_package(&dir);
+        assert!(
+            errors.is_empty(),
+            "names-only package should be valid: {errors:?}"
+        );
+        assert_eq!(package.name_pool_count(), 2);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A package that declares no `names` file has no pools rather than an
+    /// absent count — the summary shows 0, which is the honest answer and the
+    /// whole point of surfacing it.
+    #[test]
+    fn a_package_without_a_names_file_has_no_name_pools() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "teams.yaml",
+            "schema: team\nid: solo\nname: Solo FC\ncity: Nowhere\ncountry: ENG\ncolors:\n  primary: '#000000'\n  secondary: '#ffffff'\n",
+        );
+
+        let (package, _errors) = load_world_package(&dir);
+        assert_eq!(package.name_pool_count(), 0);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn package_selector_exclusion_verdict_is_stable() {
+        // Given overlapping explicit and reputation selectors, their union can
+        // leave 2, 3 or 4 clubs for C. Three cannot form playable size-two groups.
+        let mut package = WorldPackage {
+            teams: (b'a'..=b'f')
+                .map(|id| {
+                    serde_json::from_value(serde_json::json!({
+                        "id": char::from(id).to_string(), "name": "Club", "city": "City",
+                        "country": "ENG", "reputationRange": [0, 1000],
+                        "colors": {"primary": "#000000", "secondary": "#ffffff"}
+                    }))
+                    .unwrap()
+                })
+                .collect(),
+            competitions: serde_json::from_value(serde_json::json!([
+                {"id":"a-cup", "name":"A", "type":"Cup", "scope":"Domestic",
+                 "format":{"kind":"Knockout"}, "participants":{"explicit":["a", "b"]}},
+                {"id":"b-cup", "name":"B", "type":"Cup", "scope":"Domestic",
+                 "format":{"kind":"Knockout"}, "participants":{"selector":{
+                     "kind":"topByReputation", "country":"ENG", "count":2}}},
+                {"id":"c-cup", "name":"C", "type":"Cup", "scope":"Domestic",
+                 "format":{"kind":"GroupAndKnockout", "groupSize":2, "qualifiersPerGroup":2},
+                 "participants":{"selector":{"kind":"allInCountry", "country":"ENG",
+                     "excludeCompetitions":["a-cup", "b-cup"]}}}
+            ]))
+            .unwrap(),
+            ..Default::default()
+        };
+        for authored_range in [Some([0, 1000]), None] {
+            for team in &mut package.teams {
+                team.reputation_range = authored_range;
+            }
+            // When the same package is validated twice, repeatedly (also with
+            // omitted ranges), then the verdict cannot depend on a fresh roll.
+            let expected = validate_package(&package);
+            for _ in 0..32 {
+                let first = validate_package(&package);
+                let second = validate_package(&package);
+                assert_eq!(first, second, "two validations must give the same verdict");
+                assert_eq!(
+                    first, expected,
+                    "the verdict must remain stable across runs"
+                );
+            }
+            assert!(
+                expected.is_empty(),
+                "the midpoint field has four clubs: {expected:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn declared_clubless_country_keeps_its_optional_cup() {
+        use chrono::TimeZone;
+        // Given a custom country with no clubs, with or without an explicit
+        // region, its declaration must survive every validation boundary.
+        for confederation in ["custom-region", ""] {
+            let package = WorldPackage {
+                confederations: vec![ConfederationDef {
+                    id: "custom-region".into(),
+                    name: "Custom Region".into(),
+                }],
+                countries: vec![CountryDef {
+                    id: "ZZZ".into(),
+                    name: "Clubless Country".into(),
+                    confederation: confederation.into(),
+                }],
+                competitions: vec![serde_json::from_value(serde_json::json!({
+                    "id":"optional-cup", "name":"Optional Cup", "type":"Cup", "scope":"Domestic",
+                    "countryId":"ZZZ", "format":{"kind":"GroupAndKnockout", "groupSize":2},
+                    "participants":{"selector":{"kind":"allInCountry", "country":"ZZZ"}}
+                })).unwrap()],
+                ..Default::default()
+            };
+            // When package validation, world build and JSON reload run, then
+            // the declared country is known and its empty competition skips.
+            let errors = validate_package(&package);
+            assert!(
+                errors.is_empty(),
+                "a declared country is known even without clubs: {errors:?}"
+            );
+            let world =
+                crate::generator::build_world_from_package(&package, Some(2031), &embedded())
+                    .expect("the package builds");
+            let json = crate::generator::export_world_to_json(&world).unwrap();
+            let loaded = crate::generator::load_world_from_json(&json)
+                .expect("its declaration survives reload");
+            let ctx = crate::generator::WorldValidationContext::from_world(&loaded);
+            assert!(ctx.country_codes.contains("ZZZ"));
+            let start = chrono::Utc.with_ymd_and_hms(2031, 7, 1, 0, 0, 0).unwrap();
+            assert!(
+                crate::generator::resolve_definitions(
+                    loaded.competition_definitions.as_ref().unwrap(),
+                    &loaded,
+                    2031,
+                    start
+                )
+                .is_empty()
+            );
+        }
+    }
+
+    #[test]
+    fn invalid_package_references_skip_validation_world_build() {
+        // Given a competition whose selectors would need a built world.
+        let mut package = WorldPackage {
+            teams: vec![
+                serde_json::from_value(serde_json::json!({
+                    "id":"club", "name":"Club", "city":"City", "country":"ENG",
+                    "colors":{"primary":"#000000", "secondary":"#ffffff"}
+                }))
+                .unwrap(),
+            ],
+            competitions: vec![
+                serde_json::from_value(serde_json::json!({
+                    "id":"cup", "name":"Cup", "type":"Cup", "scope":"Domestic",
+                    "format":{"kind":"Knockout"},
+                    "participants":{"selector":{"kind":"allInCountry", "country":"ENG"}}
+                }))
+                .unwrap(),
+            ],
+            ..Default::default()
+        };
+        super::super::PACKAGE_WORLD_BUILDS.with(|count| count.set(0));
+        assert!(validate_package(&package).is_empty());
+        super::super::PACKAGE_WORLD_BUILDS.with(|count| assert_eq!(count.get(), 1));
+        for (country, reputation, finance, expected) in [
+            ("ZZZ", None, None, UNKNOWN_COUNTRY),
+            ("ENG", Some([900, 300]), None, REVERSED_RANGE),
+            ("ENG", None, Some([-1, 100]), OUT_OF_RANGE),
+        ] {
+            package.teams[0].country = country.into();
+            package.teams[0].reputation_range = reputation;
+            package.teams[0].finance_range = finance;
+            super::super::PACKAGE_WORLD_BUILDS.with(|count| count.set(0));
+            // When cheap entity/reference checks fail, then report them without
+            // entering the actual production world builder.
+            let errors = validate_package(&package);
+            assert!(
+                errors.iter().any(|error| error.code == expected),
+                "{errors:?}"
+            );
+            super::super::PACKAGE_WORLD_BUILDS.with(|count| {
+                assert_eq!(
+                    count.get(),
+                    0,
+                    "invalid package must not build a validation world"
+                );
+            });
+        }
+    }
+
+    #[test]
+    fn competition_reference_errors_surface_as_package_errors() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: bad-1\nname: Bad League\ntype: League\nscope: Domestic\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.code == "be.error.competitionDef.unknownCountry"),
+            "competition validation should surface: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The Malta case from #458: one nation used as a team's country, a
+    /// player's nationality *and* a competition's country, in a single package.
+    /// Entity validation resolves through `all_nations()` (211) while the
+    /// competition context used to seed from `NATION_CATALOG` (68), so the same
+    /// code was simultaneously known and unknown in one validation run.
+    #[test]
+    fn a_selectable_nation_is_accepted_by_competition_validation_too() {
+        let dir = temp_package();
+        // AM (Armenia) is in ADDITIONAL_NATIONS, not the World Cup catalog.
+        assert!(
+            crate::nations::ADDITIONAL_NATIONS
+                .iter()
+                .any(|n| n.code == "AM"),
+            "test premise: AM must be a merely-selectable nation"
+        );
+        write(
+            &dir,
+            "teams.yaml",
+            "schema: team\nid: yerevan\nname: Yerevan FC\nshortName: YER\ncity: Yerevan\ncountry: AM\ncolors:\n  primary: '#cc0000'\n  secondary: '#ffffff'\n",
+        );
+        write(
+            &dir,
+            "players.yaml",
+            "schema: player\nid: am-player-1\nname: Test Player\nclub: yerevan\nnationality: AM\nposition: CentralMidfielder\n",
+        );
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: am-premier\nname: Armenian Premier League\ntype: League\nscope: Domestic\ncountryId: AM\nformat:\n  kind: LeagueTable\n  legs: 2\nparticipants:\n  selector:\n    kind: allInCountry\n    country: AM\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(
+            errors.is_empty(),
+            "a nation valid for a team and a player must be valid for its league: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// An unknown country reaches the validator twice for one competition —
+    /// once as `countryId`, once as the selector's `country` — and used to be
+    /// reported twice, identically, with nothing to tell the two lines apart.
+    #[test]
+    fn one_competition_reports_an_unknown_country_once() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "league.yaml",
+            "schema: competition\nid: bad-1\nname: Bad League\ntype: League\nscope: Domestic\ncountryId: XX\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(
+            unknown_country.len(),
+            1,
+            "one competition, one bad country, one error: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Two competitions sharing one bad country are still two problems — the
+    /// dedup must collapse repeats of the same competition, not merge distinct
+    /// ones into a single line the author cannot act on.
+    #[test]
+    fn two_competitions_with_the_same_unknown_country_report_separately() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "leagues.yaml",
+            "schema: competition\nitems:\n  - id: bad-1\n    name: Bad One\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n  - id: bad-2\n    name: Bad Two\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(
+            unknown_country.len(),
+            2,
+            "each competition keeps its own error: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Two unnamed competitions are two problems. Neither can be told from the
+    /// other by id, so the dedup key cannot tell them apart either — and must
+    /// therefore not collapse them, or the author fixes one blank id and is
+    /// surprised by a second that validation never mentioned.
+    #[test]
+    fn two_competitions_without_ids_report_separately() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "leagues.yaml",
+            "schema: competition\nitems:\n  - id: \"\"\n    name: Bad One\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n  - id: \"\"\n    name: Bad Two\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let empty_id: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.emptyId")
+            .collect();
+        assert_eq!(
+            empty_id.len(),
+            2,
+            "each unnamed competition keeps its own error: {errors:?}"
+        );
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(
+            unknown_country.len(),
+            2,
+            "an unidentifiable competition still reports its own bad country: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Two competitions sharing one id are two problems too. The shared id is
+    /// itself an error, but until the author fixes it every other error it
+    /// carries must still be reported per competition rather than merged.
+    #[test]
+    fn two_competitions_sharing_an_id_report_separately() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "leagues.yaml",
+            "schema: competition\nitems:\n  - id: clash\n    name: Bad One\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n  - id: clash\n    name: Bad Two\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.code == "be.error.competitionDef.duplicateId"),
+            "the shared id is reported: {errors:?}"
+        );
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(
+            unknown_country.len(),
+            2,
+            "each competition keeps its own bad country: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Two files declare the same competition id and only the second is broken.
+    /// Locating by id would send the author to the first file, whose
+    /// competition is fine — worse than no location at all, because it reads as
+    /// authoritative. Locating by occurrence names the file that is wrong.
+    #[test]
+    fn a_shared_id_still_names_the_file_that_holds_the_broken_one() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "good.yaml",
+            "schema: competition\nid: clash\nname: Fine One\ntype: League\nscope: Domestic\ncountryId: AR\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: AR\n",
+        );
+        write(
+            &dir,
+            "broken.yaml",
+            "schema: competition\nid: clash\nname: Bad Two\ntype: League\nscope: Domestic\ncountryId: XX\nformat:\n  kind: LeagueTable\nparticipants:\n  selector:\n    kind: allInCountry\n    country: XX\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(unknown_country.len(), 1, "one broken country: {errors:?}");
+        assert_eq!(
+            unknown_country[0].file, "broken.yaml",
+            "the file named must be the one that is wrong: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The asymmetric case: two competitions share an id, but only one of them
+    /// is broken. The budget is two, and one competition raises the same error
+    /// from both `countryId` and its selector — so a key-and-budget scheme with
+    /// no notion of *which* competition spoke prints one problem twice.
+    #[test]
+    fn one_broken_competition_among_id_twins_reports_once() {
+        let dir = temp_package();
+        write(
+            &dir,
+            "leagues.yaml",
+            "schema: competition\nitems:\n  - id: clash\n    name: Bad One\n    type: League\n    scope: Domestic\n    countryId: XX\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: XX\n  - id: clash\n    name: Fine Two\n    type: League\n    scope: Domestic\n    countryId: AR\n    format:\n      kind: LeagueTable\n    participants:\n      selector:\n        kind: allInCountry\n        country: AR\n",
+        );
+
+        let (_package, errors) = load_world_package(&dir);
+        let unknown_country: Vec<_> = errors
+            .iter()
+            .filter(|e| e.code == "be.error.competitionDef.unknownCountry")
+            .collect();
+        assert_eq!(
+            unknown_country.len(),
+            1,
+            "one competition is broken, so one line: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The invariant that broke in #458, stated the way it can actually hold.
+    /// The two catalogs are deliberately different sizes (68 vs 211), so the
+    /// assertion is not "same set" but "competition validation accepts every
+    /// country entity validation accepts".
+    #[test]
+    fn competition_validation_knows_every_country_entity_validation_knows() {
+        let world = super::super::WorldData::default();
+        let ctx = super::super::WorldValidationContext::from_world(&world);
+
+        for nation in crate::nations::all_nations() {
+            assert!(
+                ctx.country_codes.contains(nation.code),
+                "{} ({}) is a valid nationality but unknown to competition validation",
+                nation.code,
+                nation.name
+            );
+        }
+    }
+
+    #[test]
+    fn translation_locale_from_filename_valid() {
+        assert_eq!(
+            translation_locale_from_filename("translations.en.json"),
+            Some("en")
+        );
+        assert_eq!(
+            translation_locale_from_filename("translations.pt-BR.json"),
+            Some("pt-BR")
+        );
+        assert_eq!(
+            translation_locale_from_filename("translations.zh-CN.json"),
+            Some("zh-CN")
+        );
+    }
+
+    #[test]
+    fn translation_locale_from_filename_rejects_invalid() {
+        // Empty locale between the two dots
+        assert_eq!(translation_locale_from_filename("translations..json"), None);
+        // Locale itself contains a dot (would create ambiguous multi-part names)
+        assert_eq!(
+            translation_locale_from_filename("translations.pt-BR.extra.json"),
+            None
+        );
+        // No "translations." prefix
+        assert_eq!(translation_locale_from_filename("en.json"), None);
+        // Not a JSON file
+        assert_eq!(
+            translation_locale_from_filename("translations.en.yaml"),
+            None
+        );
+        // Completely wrong name
+        assert_eq!(translation_locale_from_filename("competition.json"), None);
+    }
+
+    // -----------------------------------------------------------------------
+    // Adversarial / stress tests — document current survival behavior.
+    // Lines marked BUG: indicate gaps the implementation should later fix.
+    // Lines marked OK: mean the system already handles this correctly.
+    // -----------------------------------------------------------------------
+
+    // Helper: build a minimal package in a dir and return the WorldPackage + errors.
+    fn package_from_files(files: &[(&str, &str)]) -> (WorldPackage, Vec<PackageError>, PathBuf) {
+        let dir = temp_package();
+        for (name, content) in files {
+            write(&dir, name, content);
+        }
+        let (pkg, errs) = load_world_package(&dir);
+        (pkg, errs, dir)
+    }
+
+    const TEAM_A: &str = "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\n";
+    const TEAM_B: &str = "schema: team\nid: team-b\nname: Team B\ncity: City B\ncountry: ES\ncolors: { primary: \"#222\", secondary: \"#fff\" }\n";
+    const TEAM_A_ALT: &str = "schema: team\nid: team-a\nname: Team A (Alternate)\ncity: Other City\ncountry: ES\ncolors: { primary: \"#333\", secondary: \"#000\" }\n";
+
+    // --- Merge: db-db id clash (different content) ---------------------------
+
+    #[test]
+    fn merge_db_db_id_clash_surfaces_stack_conflict_warning() {
+        // Two "database" packages with the same team id but different content
+        // should surface a StackConflict warning. Last-wins still applies for
+        // the merge, but the caller can show the user a conflict notice.
+        let dir_a = temp_package();
+        write(
+            &dir_a,
+            "world.yaml",
+            "schema: world\nid: pkg-a\nname: Pkg A\nversion: 1.0.0\nlicense: CC0-1.0\npackageType: database\n",
+        );
+        write(&dir_a, "team.yaml", TEAM_A);
+        let (pkg_a, errs_a) = load_world_package(&dir_a);
+        assert!(errs_a.is_empty());
+
+        let dir_b = temp_package();
+        write(
+            &dir_b,
+            "world.yaml",
+            "schema: world\nid: pkg-b\nname: Pkg B\nversion: 1.0.0\nlicense: CC0-1.0\npackageType: database\n",
+        );
+        write(&dir_b, "team.yaml", TEAM_A_ALT);
+        let (pkg_b, errs_b) = load_world_package(&dir_b);
+        assert!(errs_b.is_empty());
+
+        let conflicts = validate_package_stack(&[&pkg_a, &pkg_b]);
+        assert!(
+            conflicts
+                .iter()
+                .any(|c| c.entity_id == "team-a" && c.severity == ConflictSeverity::Warning),
+            "expected a Warning conflict for team-a db-db clash: {conflicts:?}"
+        );
+
+        // Merge still works; last-in-stack wins.
+        let (merged, merge_errors) = merge_world_packages(vec![pkg_a, pkg_b]);
+        assert!(merge_errors.is_empty());
+        assert_eq!(merged.teams.len(), 1);
+        assert_eq!(merged.teams[0].name, "Team A (Alternate)");
+
+        std::fs::remove_dir_all(&dir_a).ok();
+        std::fs::remove_dir_all(&dir_b).ok();
+    }
+
+    #[test]
+    fn merge_db_db_id_clash_identical_content_is_fine() {
+        // Two packages declaring the exact same team should dedup silently (no error).
+        // This is the "international tournament references base-league teams" case.
+        let dir_a = temp_package();
+        write(&dir_a, "team.yaml", TEAM_A);
+        let (pkg_a, _) = load_world_package(&dir_a);
+
+        let dir_b = temp_package();
+        write(&dir_b, "team.yaml", TEAM_A); // identical
+        let (pkg_b, _) = load_world_package(&dir_b);
+
+        let (merged, merge_errors) = merge_world_packages(vec![pkg_a, pkg_b]);
+        // OK: identical content, last-wins dedup, no error
+        assert!(merge_errors.is_empty());
+        assert_eq!(merged.teams.len(), 1);
+
+        std::fs::remove_dir_all(&dir_a).ok();
+        std::fs::remove_dir_all(&dir_b).ok();
+    }
+
+    // --- Merge: meta is wholesale replaced -----------------------------------
+
+    #[test]
+    fn merge_meta_unions_default_active_competitions_across_packages() {
+        // Stacking PL + CL should union both defaultActiveCompetitions lists.
+        let dir_pl = temp_package();
+        write(
+            &dir_pl,
+            "world.yaml",
+            "schema: world\nid: pl\nname: Premier League\ndefaultActiveCompetitions:\n  - pl-1\n",
+        );
+        let (pkg_pl, _) = load_world_package(&dir_pl);
+
+        let dir_cl = temp_package();
+        write(
+            &dir_cl,
+            "world.yaml",
+            "schema: world\nid: cl\nname: Champions League\ndefaultActiveCompetitions:\n  - cl-1\n",
+        );
+        let (pkg_cl, _) = load_world_package(&dir_cl);
+
+        let (merged, _) = merge_world_packages(vec![pkg_pl, pkg_cl]);
+        let meta = merged.meta.as_ref().expect("merged meta should exist");
+        // Both competition ids must be present after the union.
+        assert!(
+            meta.default_active_competitions
+                .contains(&"pl-1".to_string()),
+            "pl-1 must survive the merge: {:?}",
+            meta.default_active_competitions
+        );
+        assert!(
+            meta.default_active_competitions
+                .contains(&"cl-1".to_string()),
+            "cl-1 must survive the merge: {:?}",
+            meta.default_active_competitions
+        );
+
+        std::fs::remove_dir_all(&dir_pl).ok();
+        std::fs::remove_dir_all(&dir_cl).ok();
+    }
+
+    #[test]
+    fn merge_database_with_patch_still_validates_dangling_competitions() {
+        // A database referencing a competition it never defines, stacked under a
+        // patch. Previously the merged package_type became "patch" (last-wins),
+        // which suppressed the dangling-reference check for the whole stack.
+        let dir_db = temp_package();
+        write(
+            &dir_db,
+            "world.yaml",
+            "schema: world\nid: db\nname: DB\ndefaultActiveCompetitions:\n  - missing-comp\n",
+        );
+        let (pkg_db, _) = load_world_package(&dir_db);
+
+        let dir_patch = temp_package();
+        write(
+            &dir_patch,
+            "world.yaml",
+            "schema: world\nid: patch\nname: Patch\npackageType: patch\n",
+        );
+        let (pkg_patch, _) = load_world_package(&dir_patch);
+
+        let (merged, errors) = merge_world_packages(vec![pkg_db, pkg_patch]);
+        assert_eq!(merged.meta.as_ref().unwrap().package_type, "database");
+        assert!(
+            errors.iter().any(|e| e.code == UNKNOWN_COMPETITION),
+            "dangling defaultActiveCompetitions must be flagged after merge: {errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir_db).ok();
+        std::fs::remove_dir_all(&dir_patch).ok();
+    }
+
+    #[test]
+    fn merge_unions_name_pools_across_packages() {
+        // Each package supplies a distinct pool; both must survive the merge
+        // instead of the last package's names wholesale-replacing the first.
+        let dir_a = temp_package();
+        write(&dir_a, "world.yaml", "schema: world\nid: a\nname: A\n");
+        write(
+            &dir_a,
+            "names.yaml",
+            "schema: names\nversion: 1\npools:\n  ENG:\n    first_names:\n      - John\n    last_names:\n      - Smith\n",
+        );
+        let (pkg_a, _) = load_world_package(&dir_a);
+
+        let dir_b = temp_package();
+        write(&dir_b, "world.yaml", "schema: world\nid: b\nname: B\n");
+        write(
+            &dir_b,
+            "names.yaml",
+            "schema: names\nversion: 1\npools:\n  BRA:\n    first_names:\n      - Joao\n    last_names:\n      - Silva\n",
+        );
+        let (pkg_b, _) = load_world_package(&dir_b);
+
+        let (merged, _) = merge_world_packages(vec![pkg_a, pkg_b]);
+        let names = merged.names.as_ref().expect("merged names should exist");
+        let keys: Vec<_> = names.pools.keys().cloned().collect();
+        assert!(names.pools.contains_key("ENG"), "ENG pool kept: {keys:?}");
+        assert!(names.pools.contains_key("BRA"), "BRA pool kept: {keys:?}");
+
+        std::fs::remove_dir_all(&dir_a).ok();
+        std::fs::remove_dir_all(&dir_b).ok();
+    }
+
+    // --- Thin packages: teams but no competitions ----------------------------
+
+    #[test]
+    fn teams_without_competitions_auto_generates_fallback_league() {
+        // Package with 4 teams and no competition should auto-generate a fallback
+        // single-division league containing all 4 teams, and emit a build notice.
+        let (pkg, errors, dir) = package_from_files(&[
+            ("a.yaml", TEAM_A),
+            ("b.yaml", TEAM_B),
+            (
+                "c.yaml",
+                "schema: team\nid: team-c\nname: Team C\ncity: City C\ncountry: ES\ncolors: { primary: \"#444\", secondary: \"#fff\" }\n",
+            ),
+            (
+                "d.yaml",
+                "schema: team\nid: team-d\nname: Team D\ncity: City D\ncountry: ES\ncolors: { primary: \"#555\", secondary: \"#fff\" }\n",
+            ),
+        ]);
+        assert!(errors.is_empty());
+        let world = crate::generator::build_world_data_from_package(&pkg, None, &embedded());
+        assert_eq!(world.teams.len(), 4);
+        // Fallback league must be generated.
+        let defs = world
+            .competition_definitions
+            .as_ref()
+            .expect("fallback league should be auto-generated");
+        assert_eq!(defs.competitions.len(), 1);
+        assert_eq!(defs.competitions[0].id, "ofm-fallback-league");
+        let explicit = defs.competitions[0]
+            .participants
+            .explicit
+            .as_ref()
+            .expect("fallback uses explicit participant list");
+        assert_eq!(explicit.len(), 4, "all 4 teams included");
+        // Build notice must be present.
+        assert!(
+            world
+                .build_notices
+                .iter()
+                .any(|n| n == "be.error.notice.fallbackLeagueGenerated"),
+            "build notice must be emitted: {:?}",
+            world.build_notices
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn single_team_no_competitions_fills_procedural_opponents() {
+        // 1 authored team + no competitions → 7 procedural fillers generated,
+        // totalling 8 teams, and a fallback league covering all of them.
+        let (pkg, errors, dir) = package_from_files(&[("a.yaml", TEAM_A)]);
+        assert!(errors.is_empty());
+        let world = crate::generator::build_world_data_from_package(&pkg, None, &embedded());
+        assert_eq!(
+            world.teams.len(),
+            8,
+            "should fill to THIN_PACKAGE_MIN_TEAMS"
+        );
+        assert!(
+            world.competition_definitions.is_some(),
+            "fallback league should be generated after fill"
+        );
+        assert!(
+            world
+                .build_notices
+                .iter()
+                .any(|n| n == "be.error.notice.fallbackTeamsFilled"),
+            "must warn player that filler teams were added: {:?}",
+            world.build_notices
+        );
+        assert!(
+            world
+                .build_notices
+                .iter()
+                .any(|n| n == "be.error.notice.fallbackLeagueGenerated"),
+            "must also warn about fallback league: {:?}",
+            world.build_notices
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Competition format vs participant count ------------------------------
+
+    #[test]
+    fn knockout_competition_with_one_explicit_team_already_errors() {
+        // OK: competition validation already catches a Knockout with only 1
+        // explicit participant. This is better than expected — no fix needed here.
+        let (_, errors, dir) = package_from_files(&[
+            ("a.yaml", TEAM_A),
+            (
+                "cup.yaml",
+                "schema: competition\nid: broken-cup\nname: Broken Cup\ntype: Cup\nscope: Domestic\nformat:\n  kind: Knockout\nparticipants:\n  explicit:\n    - team-a\n",
+            ),
+        ]);
+        assert!(
+            !errors.is_empty(),
+            "OK: already catches < 2 explicit participants in a Knockout"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn league_with_competition_referencing_nonexistent_teams_errors() {
+        // OK: explicit participants pointing at team ids not in the package
+        // are caught by competition reference validation.
+        let (_, errors, dir) = package_from_files(&[(
+            "cup.yaml",
+            "schema: competition\nid: ghost-league\nname: Ghost League\ntype: League\nscope: Domestic\nformat:\n  kind: LeagueTable\nparticipants:\n  explicit:\n    - ghost-team-1\n    - ghost-team-2\n",
+        )]);
+        assert!(
+            !errors.is_empty(),
+            "OK: dangling explicit participants should error"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Dangling defaultActiveCompetitions ----------------------------------
+
+    #[test]
+    fn dangling_default_active_competition_is_an_error() {
+        // A package whose defaultActiveCompetitions points to a competition id
+        // not defined in the package must now produce an error.
+        let (_, errors, dir) = package_from_files(&[
+            ("a.yaml", TEAM_A),
+            (
+                "world.yaml",
+                "schema: world\nid: test\nname: Test\ndefaultActiveCompetitions:\n  - nonexistent-competition\n",
+            ),
+        ]);
+        assert!(
+            errors.iter().any(|e| e.code == UNKNOWN_COMPETITION),
+            "dangling defaultActiveCompetitions ref must error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn dangling_default_active_region_is_an_error() {
+        let (_, errors, dir) = package_from_files(&[
+            ("a.yaml", TEAM_A),
+            (
+                "world.yaml",
+                "schema: world\nid: test\nname: Test\ndefaultActiveRegions:\n  - nowhere-land\n",
+            ),
+        ]);
+        assert!(
+            errors.iter().any(|e| e.code == UNKNOWN_REGION),
+            "dangling defaultActiveRegions ref must error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn builtin_default_active_region_is_accepted() {
+        // A built-in region id (e.g. `europe`) needs no package-defined confederation.
+        let (_, errors, dir) = package_from_files(&[
+            ("a.yaml", TEAM_A),
+            (
+                "world.yaml",
+                "schema: world\nid: test\nname: Test\ndefaultActiveRegions:\n  - europe\n",
+            ),
+        ]);
+        assert!(
+            !errors.iter().any(|e| e.code == UNKNOWN_REGION),
+            "built-in region must be accepted: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Content values out of plausible range -------------------------------
+
+    #[test]
+    fn reversed_reputation_range_is_an_error() {
+        // reputationRange where min > max (e.g. [900, 100]) must now produce an error.
+        let (_, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\nreputationRange: [900, 100]\n",
+        )]);
+        assert!(
+            errors.iter().any(|e| e.code == REVERSED_RANGE),
+            "reversed reputationRange must produce a REVERSED_RANGE error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn reputation_above_1000_is_out_of_range() {
+        let (_, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\nreputationRange: [500, 2000]\n",
+        )]);
+        assert!(
+            errors.iter().any(|e| e.code == OUT_OF_RANGE),
+            "reputation above 1000 must produce an OUT_OF_RANGE error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn negative_finance_is_out_of_range() {
+        let (_, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\nfinanceRange: [-100, 500000]\n",
+        )]);
+        assert!(
+            errors.iter().any(|e| e.code == OUT_OF_RANGE),
+            "negative finance must produce an OUT_OF_RANGE error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn in_bounds_ranges_are_accepted() {
+        let (_, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\nreputationRange: [300, 900]\nfinanceRange: [500000, 10000000]\n",
+        )]);
+        assert!(
+            !errors
+                .iter()
+                .any(|e| e.code == OUT_OF_RANGE || e.code == REVERSED_RANGE),
+            "valid ranges must not error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// Pinning a club to a single value is legitimate authoring — the world
+    /// editor's `makeRange` documents equal bounds as allowed, and packages in the
+    /// wild use them. Tightening `REVERSED_RANGE` to `min >= max` would reject
+    /// those packages, so the acceptance is asserted rather than left implicit.
+    #[test]
+    fn ranges_pinned_to_a_single_value_are_accepted() {
+        let (_, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: team-a\nname: Team A\ncity: City A\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\nreputationRange: [640, 640]\nfinanceRange: [1000000, 1000000]\n",
+        )]);
+        assert!(
+            !errors
+                .iter()
+                .any(|e| e.code == OUT_OF_RANGE || e.code == REVERSED_RANGE),
+            "equal bounds must not error: {errors:?}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Hostile content in string fields ------------------------------------
+
+    #[test]
+    fn xss_and_sql_in_names_are_stored_as_plain_strings() {
+        // OK: the package loader is JSON/YAML → struct; no query or HTML
+        // construction happens at load time. Hostile strings are stored literally.
+        let (pkg, errors, dir) = package_from_files(&[(
+            "a.yaml",
+            "schema: team\nid: xss-team\nname: \"<script>alert(1)</script>\"\ncity: \"'; DROP TABLE teams; --\"\ncountry: ES\ncolors: { primary: \"#111\", secondary: \"#fff\" }\n",
+        )]);
+        assert!(errors.is_empty(), "hostile strings are not a parse error");
+        assert_eq!(pkg.teams[0].name, "<script>alert(1)</script>");
+        // The UI layer is responsible for escaping — React does this automatically.
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Zero-teams hard error (already correct) -----------------------------
+
+    #[test]
+    fn zero_teams_hard_error_at_game_start() {
+        // OK: stacking packages that produce 0 teams after merge returns an error.
+        let dir = temp_package();
+        write(
+            &dir,
+            "world.yaml",
+            "schema: world\nid: empty\nname: Empty World\n",
+        );
+        let (pkg, _) = load_world_package(&dir);
+        let world = crate::generator::build_world_data_from_package(&pkg, None, &embedded());
+        // The world builds but has no teams; game.rs rejects this as noDatabasePackage.
+        assert!(world.teams.is_empty(), "OK: correctly produces 0 teams");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // --- Cross-package reference (intended use case) -------------------------
+
+    #[test]
+    fn cross_package_reference_resolves_after_merge() {
+        // OK: a CL package referencing teams from a PL package works after merge.
+        let dir_pl = temp_package();
+        write(&dir_pl, "team.yaml", TEAM_A);
+        write(&dir_pl, "team2.yaml", TEAM_B);
+        let (pkg_pl, _) = load_world_package(&dir_pl);
+
+        let dir_cl = temp_package();
+        write(
+            &dir_cl,
+            "cup.yaml",
+            "schema: competition\nid: intl-cup\nname: International Cup\ntype: ContinentalClub\nscope: Continental\nformat:\n  kind: GroupAndKnockout\nparticipants:\n  explicit:\n    - team-a\n    - team-b\n    - team-a\n    - team-b\n",
+        );
+        let (pkg_cl, _) = load_world_package(&dir_cl);
+
+        let (_merged, merge_errors) = merge_world_packages(vec![pkg_pl, pkg_cl]);
+        // OK: after merge, team-a and team-b resolve correctly for the CL competition.
+        // Duplicate explicit participants are the only issue here.
+        let ref_errors: Vec<_> = merge_errors
+            .iter()
+            .filter(|e| e.code == UNKNOWN_TEAM)
+            .collect();
+        assert!(
+            ref_errors.is_empty(),
+            "OK: cross-package team refs resolve after merge: {ref_errors:?}"
+        );
+
+        std::fs::remove_dir_all(&dir_pl).ok();
+        std::fs::remove_dir_all(&dir_cl).ok();
+    }
+
+    // --- Patch package override (future: should be silent last-wins) ---------
+
+    #[test]
+    fn patch_package_overrides_database_team_without_conflict_warning() {
+        // A "patch" package overriding a "database" team should be silent:
+        // no StackConflict, but the patch's version wins in the merge.
+        let dir_db = temp_package();
+        write(
+            &dir_db,
+            "world.yaml",
+            "schema: world\nid: base-db\nname: Base DB\npackageType: database\n",
+        );
+        write(&dir_db, "team.yaml", TEAM_A);
+        let (pkg_db, _) = load_world_package(&dir_db);
+
+        let dir_patch = temp_package();
+        write(
+            &dir_patch,
+            "world.yaml",
+            "schema: world\nid: team-a-patch\nname: Team A Stats Patch\npackageType: patch\n",
+        );
+        write(&dir_patch, "team.yaml", TEAM_A_ALT);
+        let (pkg_patch, _) = load_world_package(&dir_patch);
+
+        // No conflict: patch-over-database is intentional.
+        let conflicts = validate_package_stack(&[&pkg_db, &pkg_patch]);
+        assert!(
+            !conflicts.iter().any(|c| c.entity_id == "team-a"),
+            "patch override must not generate a conflict: {conflicts:?}"
+        );
+
+        // Patch wins in the merge.
+        let (merged, _) = merge_world_packages(vec![pkg_db, pkg_patch]);
+        assert_eq!(
+            merged.teams[0].name, "Team A (Alternate)",
+            "patch version must win"
+        );
+
+        std::fs::remove_dir_all(&dir_db).ok();
+        std::fs::remove_dir_all(&dir_patch).ok();
+    }
+}

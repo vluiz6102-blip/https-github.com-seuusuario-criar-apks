@@ -1,0 +1,142 @@
+[package]
+name = "openfootmanager"
+version = "0.3.0"
+description = "Openfoot Manager"
+authors = ["Sturdy Robot (admin@esportsmanager.net)"]
+edition = "2021"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "openfootmanager_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[workspace]
+members = ["crates/ofm_core", "crates/db", "crates/domain", "crates/engine", "crates/sim-bench", "crates/ofm-cli"]
+
+# Lint levels live here so a plain `cargo clippy` applies the levels CI enforces, instead of only
+# doing so when someone remembers to append `-- -D warnings`. Every member opts in with
+# `[lints] workspace = true`; a member that forgets is silently unlinted, which is why the root
+# package below opts in too.
+#
+# What this does not buy is CI's *coverage*. CI lints `--workspace --all-targets` and then makes a
+# second pass with `--features mcp`; a bare `cargo clippy` sees one package, its default targets
+# and its default features. It can therefore be clean while CI is red, so match the scope too
+# before calling a change clippy-clean.
+#
+# Nor does it buy warning parity. CI's trailing `-D warnings` also denies ordinary rustc warnings,
+# and the tempting fix — `warnings = "deny"` here — is deliberately not taken: workspace lints
+# apply to every cargo invocation, so it would turn an unused variable into a hard error during
+# `cargo build` and `cargo test` while you are still mid-edit. Being stricter than CI in the one
+# place that hurts most is a worse trade than the residual gap.
+[workspace.lints.rust]
+# There is no `unsafe` in this workspace and no reason for any to appear: the crates are game
+# logic, persistence and simulation. `forbid` rather than `deny` so it cannot be switched off with
+# a local `#[allow]` — if a genuine need ever arrives, removing this line is the conversation.
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+# `priority = -1` so this sets a floor for the whole group while still allowing a specific lint to
+# be configured individually at the default priority. Without it, cargo rejects the combination as
+# ambiguous the first time a single lint is added below.
+all = { level = "deny", priority = -1 }
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
+log = "0.4"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+domain = { path = "crates/domain" }
+ofm_core = { path = "crates/ofm_core" }
+engine = { path = "crates/engine" }
+db = { path = "crates/db" }
+chrono = "0.4.44"
+rand = "0.10"
+semver = "1"
+base64 = "0.22"
+image = { version = "0.25.6", default-features = false, features = ["png", "webp"] }
+webp = "0.3.1"
+# Pin `time` below 0.3.52: that release made a breaking change to
+# `Parsable::parse` within a 0.3.x patch, which fails to compile against the
+# transitive `cookie` 0.18.1 (pulled in by Tauri). Remove once Tauri/cookie
+# ship a fix. See PR #265 CI failure.
+time = "=0.3.51"
+# Team names and cities are free text, so CSV export has to quote and escape
+# properly — a club like "Preston North End, Lancashire" would otherwise shift
+# every following column. Using the same crate to read keeps a future importer
+# byte-compatible with what we write.
+csv = "1"
+
+# Reused rather than re-implemented: the .ofm packager already writes zips with this exact crate
+# and version (crates/ofm_core). A report bundle is the same problem — a handful of files the user
+# will hand to someone else — so it uses the same writer.
+zip = { version = "2", features = ["deflate"] }
+tempfile = "3"
+
+# Dev builds (`tauri dev`) otherwise run the whole simulation unoptimized, which
+# is the dominant cause of the in-app sluggishness. Lightly optimizing our own
+# crates and fully optimizing dependencies keeps incremental compiles fast while
+# making the played dev build an order of magnitude quicker at runtime.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Release builds had no profile at all, so they shipped Cargo's defaults: 16 codegen units, no
+# LTO, and full symbols. The simulation is the hot path in a game that runs thousands of matches
+# per season, and it is exactly the kind of cross-crate call graph that thin LTO helps. `strip`
+# roughly halves the shipped binary.
+#
+# Deliberately not `panic = "abort"`: it changes runtime behaviour and interacts with the test
+# harness, for no benefit we can point at.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+# `debuginfo`, not `true`: stripping symbols too would leave release panics with address-only
+# backtraces, which works against the diagnosability this release is trying to improve. Dropping
+# debuginfo alone gets most of the size win and keeps function names in the trace.
+strip = "debuginfo"
+
+# Used only by `.github/workflows/mutation-tests.yml`, which rebuilds one crate once per mutant.
+# Debuginfo is part of every one of those rebuilds and nobody reads a mutant's backtrace; without
+# it, and with incremental compilation on, an `ofm_core` mutant's build on a hosted runner went
+# from 90 s to 16 s (4 Oct and 6 Oct 2026). The optimisation levels are left as `test` has them. Lowering them would trade build
+# time for test time in a suite full of simulations, and nobody has measured which way that goes.
+[profile.mutants]
+inherits = "test"
+debug = "none"
+
+[features]
+mcp = ["dep:rmcp", "dep:axum", "dep:tokio"]
+# Forwards to `db/save-snapshots`. Enable with `tauri dev -f save-snapshots`
+# (or via the `ofm-dev-snap` alias from shell.nix) to write a date-stamped
+# copy of each save's `.db` before every overwrite. Dev-only.
+save-snapshots = ["db/save-snapshots"]
+
+[dependencies.rmcp]
+version = "2.1"
+features = ["server", "transport-streamable-http-server", "macros"]
+optional = true
+
+[dependencies.axum]
+version = "0.8"
+optional = true
+
+[dependencies.tokio]
+version = "1"
+features = ["net", "rt-multi-thread", "macros", "signal"]
+optional = true

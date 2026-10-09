@@ -1,0 +1,5 @@
+node_modules/
+simulations/
+nbproject/
+tests/scratch/
+package-lock.json

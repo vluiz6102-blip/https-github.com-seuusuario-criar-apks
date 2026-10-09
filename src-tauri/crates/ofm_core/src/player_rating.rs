@@ -1,0 +1,758 @@
+use domain::player::{
+    Footedness, Player, PlayerAttributes, PlayerTrait, Position, WEAK_FOOT_MAX, WEAK_FOOT_MIN,
+};
+use rand::RngExt;
+
+const WONDERKID_MAX_AGE: u32 = 20;
+const WONDERKID_MIN_POTENTIAL: u8 = 90;
+const WONDERKID_MIN_GROWTH_ROOM: u8 = 14;
+// Wonderkid rebalance for v0.2.1: tightened from age <= 21, potential >= 85,
+// and growth room >= 10 to reduce how often the tag appears in playtesting.
+
+pub fn formation_slots(formation: &str) -> Vec<Position> {
+    formation_slot_rows(formation)
+        .into_iter()
+        .flatten()
+        .collect()
+}
+
+/// The granular field position a player is deployed in for `team`, derived from
+/// the team's formation and starting XI order.
+///
+/// Returns `None` when the player is not in the starting XI (e.g. on the bench);
+/// such players have no deployed slot and callers should fall back to the
+/// player's natural position. This is the single source of truth for "where the
+/// player is currently playing", since `player.position` is no longer mutated to
+/// encode the deployed slot.
+pub fn deployed_position(team: &domain::team::Team, player_id: &str) -> Option<Position> {
+    let slot_index = team.starting_xi_ids.iter().position(|id| id == player_id)?;
+    formation_slots(&team.formation).get(slot_index).cloned()
+}
+
+/// Refresh a player's derived fields: `ovr`, `potential`, and `traits`.
+///
+/// - `ovr` is recomputed from the player's natural position using position-weighted attributes.
+/// - `potential` is set only if it is currently 0 (unset), using a random bonus based on age.
+///   Once set it is preserved so training gains can grow OVR toward the ceiling naturally.
+/// - `traits` are recomputed from current attributes, and the `Wonderkid` trait is applied only
+///   after the v0.2.1 rebalance for age <= 20, potential >= 90, and growth room >= 14.
+///
+/// Pass `current_year` for accurate age calculation (use the game clock year).
+pub fn refresh_player_derived(player: &mut Player, current_year: u32) {
+    // 1. Compute position-weighted OVR
+    let ovr_f = natural_ovr(player);
+    let ovr = ovr_f.round() as u8;
+
+    // 2. Compute potential if not yet set (initial generation or legacy saves)
+    let age = player_age(&player.date_of_birth, current_year);
+    let potential = if player.potential == 0 {
+        // A player with no potential yet (a legacy save, a hand-built player): drawn from
+        // the player's own id, so the same player gets the same ceiling every time.
+        generate_potential(ovr, age, &mut crate::seed::rng_from_key(&player.id))
+    } else {
+        // Keep existing potential; clamp so it is always >= ovr
+        player.potential.max(ovr)
+    };
+
+    // 3. Recompute attribute-based traits
+    let mut traits = domain::player::compute_traits(&player.attributes, &player.natural_position);
+
+    // 4. Award Wonderkid trait: young player whose ceiling far exceeds current ability
+    if qualifies_for_wonderkid(age, potential, ovr) && !traits.contains(&PlayerTrait::Wonderkid) {
+        traits.push(PlayerTrait::Wonderkid);
+    }
+
+    player.ovr = ovr;
+    player.potential = potential;
+    player.traits = traits;
+}
+
+/// Returns `true` when a player qualifies as a wonderkid: they are at or below
+/// `WONDERKID_MAX_AGE`, have at least `WONDERKID_MIN_POTENTIAL`, and their
+/// remaining growth (`potential - ovr`) meets `WONDERKID_MIN_GROWTH_ROOM`,
+/// reducing the number of qualifying players after playtesting.
+pub fn qualifies_for_wonderkid(age: u32, potential: u8, ovr: u8) -> bool {
+    age <= WONDERKID_MAX_AGE
+        && potential >= WONDERKID_MIN_POTENTIAL
+        && potential.saturating_sub(ovr) >= WONDERKID_MIN_GROWTH_ROOM
+}
+
+/// Generate a potential rating for a newly-created player based on current OVR and age.
+/// Returns a value in [1, 99] that is always >= `ovr`.
+/// The lower bound of 1 (via `ovr.max(1)`) ensures potential is never 0 even when `ovr` is 0.
+pub fn generate_potential(ovr: u8, age: u32, rng: &mut impl rand::Rng) -> u8 {
+    let bonus: u8 = match age {
+        ..=18 => rng.random_range(15u8..=30),
+        19..=20 => rng.random_range(8u8..=22),
+        21..=22 => rng.random_range(4u8..=14),
+        23..=25 => rng.random_range(0u8..=7),
+        _ => 0,
+    };
+    (ovr.saturating_add(bonus)).min(99).max(ovr.max(1))
+}
+
+/// Parse birth year from a "YYYY-MM-DD" date string and return approximate age.
+fn player_age(date_of_birth: &str, current_year: u32) -> u32 {
+    let birth_year: u32 = date_of_birth
+        .split('-')
+        .next()
+        .and_then(|y| y.parse().ok())
+        .unwrap_or(2000);
+    current_year.saturating_sub(birth_year)
+}
+
+fn formation_slot_rows(formation: &str) -> Vec<Vec<Position>> {
+    let parts: Vec<usize> = formation
+        .split('-')
+        .filter_map(|part| part.parse::<usize>().ok())
+        .collect();
+
+    match parts.as_slice() {
+        [defenders, midfielders, forwards] => vec![
+            vec![Position::Goalkeeper],
+            defender_line(*defenders),
+            midfield_line(*midfielders),
+            forward_line(*forwards),
+        ],
+        [defenders, deep_midfielders, attacking_midfielders, forwards] => vec![
+            vec![Position::Goalkeeper],
+            defender_line(*defenders),
+            deep_midfield_line(*deep_midfielders),
+            attacking_midfield_line(*attacking_midfielders),
+            forward_line(*forwards),
+        ],
+        _ => formation_slot_rows("4-4-2"),
+    }
+}
+
+pub fn natural_ovr(player: &Player) -> f64 {
+    let natural_position = primary_position(player);
+    ovr_for_position(player, &natural_position)
+}
+
+pub fn ovr_for_position(player: &Player, position: &Position) -> f64 {
+    ovr_from_attributes(&player.attributes, position)
+}
+
+/// Position-weighted rating for a bare attribute block.
+///
+/// The same maths as [`ovr_for_position`], reachable before a [`Player`] has
+/// been assembled — world generation needs it to size market value and wage,
+/// which previously used a flat average of eleven outfield attributes. That
+/// average excluded `handling`, `reflexes` and `aerial` entirely, so keepers
+/// were priced as if their actual craft did not exist.
+///
+/// `position` may be a legacy bucket (`Defender`/`Midfielder`/`Forward`); it is
+/// canonicalised before scoring.
+pub fn ovr_from_attributes(attributes: &PlayerAttributes, position: &Position) -> f64 {
+    let canonical = canonical_position(position);
+    let base = weighted_score(attributes, &canonical);
+    let penalty = critical_penalty(attributes, &canonical);
+    (base - penalty).clamp(1.0, 99.0)
+}
+
+/// Condition-free positional fit for a formation slot: ovr-for-position minus
+/// compatibility and footedness penalties, floored at 1.0. This is the
+/// `effective_rating_for_assignment` value BEFORE the condition multiplier —
+/// used by AI load-management so a tired starter and a fresh alternative are
+/// compared on quality alone (condition is weighed separately by the caller).
+pub fn positional_fit_for_assignment(player: &Player, slot_position: &Position) -> f64 {
+    let canonical_slot = canonical_position(slot_position);
+    let base = ovr_for_position(player, &canonical_slot);
+    let compatibility_penalty = compatibility_penalty(player, &canonical_slot);
+    let foot_penalty = footedness_penalty(player, &canonical_slot);
+    (base - compatibility_penalty - foot_penalty).max(1.0)
+}
+
+pub fn effective_rating_for_assignment(player: &Player, slot_position: &Position) -> f64 {
+    positional_fit_for_assignment(player, slot_position) * (player.condition as f64 / 100.0)
+}
+
+fn defender_line(count: usize) -> Vec<Position> {
+    match count {
+        3 => vec![
+            Position::CenterBack,
+            Position::CenterBack,
+            Position::CenterBack,
+        ],
+        4 => vec![
+            Position::LeftBack,
+            Position::CenterBack,
+            Position::CenterBack,
+            Position::RightBack,
+        ],
+        5 => vec![
+            Position::LeftWingBack,
+            Position::CenterBack,
+            Position::CenterBack,
+            Position::CenterBack,
+            Position::RightWingBack,
+        ],
+        _ => vec![Position::CenterBack; count],
+    }
+}
+
+fn midfield_line(count: usize) -> Vec<Position> {
+    match count {
+        2 => vec![Position::CentralMidfielder, Position::CentralMidfielder],
+        3 => vec![
+            Position::DefensiveMidfielder,
+            Position::CentralMidfielder,
+            Position::AttackingMidfielder,
+        ],
+        4 => vec![
+            Position::LeftMidfielder,
+            Position::CentralMidfielder,
+            Position::CentralMidfielder,
+            Position::RightMidfielder,
+        ],
+        5 => vec![
+            Position::LeftMidfielder,
+            Position::DefensiveMidfielder,
+            Position::CentralMidfielder,
+            Position::AttackingMidfielder,
+            Position::RightMidfielder,
+        ],
+        _ => vec![Position::CentralMidfielder; count],
+    }
+}
+
+fn deep_midfield_line(count: usize) -> Vec<Position> {
+    match count {
+        1 => vec![Position::DefensiveMidfielder],
+        2 => vec![Position::DefensiveMidfielder, Position::CentralMidfielder],
+        _ => vec![Position::DefensiveMidfielder; count],
+    }
+}
+
+fn attacking_midfield_line(count: usize) -> Vec<Position> {
+    match count {
+        1 => vec![Position::AttackingMidfielder],
+        2 => vec![Position::AttackingMidfielder, Position::AttackingMidfielder],
+        3 => vec![
+            Position::LeftMidfielder,
+            Position::AttackingMidfielder,
+            Position::RightMidfielder,
+        ],
+        _ => vec![Position::AttackingMidfielder; count],
+    }
+}
+
+fn forward_line(count: usize) -> Vec<Position> {
+    match count {
+        1 => vec![Position::Striker],
+        2 => vec![Position::Striker, Position::Striker],
+        3 => vec![
+            Position::LeftWinger,
+            Position::Striker,
+            Position::RightWinger,
+        ],
+        _ => vec![Position::Striker; count],
+    }
+}
+
+fn primary_position(player: &Player) -> Position {
+    let preferred = if player.natural_position.is_legacy_bucket() {
+        player.position.clone()
+    } else {
+        player.natural_position.clone()
+    };
+
+    canonical_position(&preferred)
+}
+
+fn canonical_position(position: &Position) -> Position {
+    match position {
+        Position::Goalkeeper => Position::Goalkeeper,
+        Position::Defender => Position::CenterBack,
+        Position::Midfielder => Position::CentralMidfielder,
+        Position::Forward => Position::Striker,
+        granular => granular.clone(),
+    }
+}
+
+fn compatibility_penalty(player: &Player, slot_position: &Position) -> f64 {
+    let primary = primary_position(player);
+    if &primary == slot_position {
+        return 0.0;
+    }
+
+    let alternates = player
+        .alternate_positions
+        .iter()
+        .map(canonical_position)
+        .collect::<Vec<_>>();
+
+    if alternates.iter().any(|position| position == slot_position) {
+        4.0
+    } else if primary.to_group_position() == slot_position.to_group_position() {
+        8.0
+    } else {
+        14.0
+    }
+}
+
+fn footedness_penalty(player: &Player, slot_position: &Position) -> f64 {
+    let Some(required_side) = slot_side(slot_position) else {
+        return 0.0;
+    };
+
+    match (player.footedness, required_side) {
+        (Footedness::Both, _) => 0.0,
+        (Footedness::Left, Side::Left) | (Footedness::Right, Side::Right) => 0.0,
+        _ => (10_i32 - (player.weak_foot.clamp(WEAK_FOOT_MIN, WEAK_FOOT_MAX) as i32 * 2)).max(0)
+            as f64,
+    }
+}
+
+fn weighted_score(attrs: &PlayerAttributes, position: &Position) -> f64 {
+    match position {
+        Position::Goalkeeper => weighted_average(&[
+            (attrs.handling, 28),
+            (attrs.reflexes, 28),
+            (attrs.aerial, 14),
+            (attrs.positioning, 10),
+            (attrs.decisions, 10),
+            (attrs.composure, 5),
+            (attrs.strength, 5),
+        ]),
+        Position::RightBack | Position::LeftBack => weighted_average(&[
+            (attrs.pace, 18),
+            (attrs.stamina, 16),
+            (attrs.tackling, 17),
+            (attrs.defending, 16),
+            (attrs.positioning, 12),
+            (attrs.passing, 10),
+            (attrs.dribbling, 6),
+            (attrs.decisions, 5),
+        ]),
+        Position::CenterBack => weighted_average(&[
+            (attrs.defending, 24),
+            (attrs.tackling, 18),
+            (attrs.positioning, 18),
+            (attrs.strength, 14),
+            (attrs.aerial, 12),
+            (attrs.decisions, 8),
+            (attrs.composure, 6),
+        ]),
+        Position::RightWingBack | Position::LeftWingBack => weighted_average(&[
+            (attrs.pace, 18),
+            (attrs.stamina, 18),
+            (attrs.tackling, 14),
+            (attrs.defending, 12),
+            (attrs.passing, 13),
+            (attrs.dribbling, 11),
+            (attrs.vision, 7),
+            (attrs.decisions, 7),
+        ]),
+        Position::DefensiveMidfielder => weighted_average(&[
+            (attrs.tackling, 18),
+            (attrs.positioning, 18),
+            (attrs.decisions, 16),
+            (attrs.passing, 14),
+            (attrs.defending, 12),
+            (attrs.stamina, 10),
+            (attrs.vision, 7),
+            (attrs.strength, 5),
+        ]),
+        Position::CentralMidfielder => weighted_average(&[
+            (attrs.passing, 20),
+            (attrs.vision, 16),
+            (attrs.decisions, 16),
+            (attrs.stamina, 12),
+            (attrs.dribbling, 10),
+            (attrs.positioning, 9),
+            (attrs.teamwork, 9),
+            (attrs.tackling, 8),
+        ]),
+        Position::AttackingMidfielder => weighted_average(&[
+            (attrs.vision, 20),
+            (attrs.passing, 18),
+            (attrs.dribbling, 16),
+            (attrs.decisions, 14),
+            (attrs.shooting, 10),
+            (attrs.positioning, 8),
+            (attrs.composure, 8),
+            (attrs.pace, 6),
+        ]),
+        Position::RightMidfielder | Position::LeftMidfielder => weighted_average(&[
+            (attrs.pace, 17),
+            (attrs.stamina, 16),
+            (attrs.passing, 15),
+            (attrs.dribbling, 14),
+            (attrs.vision, 10),
+            (attrs.decisions, 10),
+            (attrs.positioning, 10),
+            (attrs.tackling, 8),
+        ]),
+        Position::RightWinger | Position::LeftWinger => weighted_average(&[
+            (attrs.pace, 22),
+            (attrs.dribbling, 22),
+            (attrs.passing, 14),
+            (attrs.shooting, 12),
+            (attrs.vision, 10),
+            (attrs.decisions, 8),
+            (attrs.positioning, 6),
+            (attrs.stamina, 6),
+        ]),
+        Position::Striker => weighted_average(&[
+            (attrs.shooting, 26),
+            (attrs.positioning, 18),
+            (attrs.decisions, 14),
+            (attrs.pace, 12),
+            (attrs.dribbling, 10),
+            (attrs.strength, 8),
+            (attrs.composure, 8),
+            (attrs.aerial, 4),
+        ]),
+        Position::Defender | Position::Midfielder | Position::Forward => unreachable!(),
+    }
+}
+
+fn critical_penalty(attrs: &PlayerAttributes, position: &Position) -> f64 {
+    let critical_min = match position {
+        Position::Goalkeeper => attrs.handling.min(attrs.reflexes).min(attrs.positioning),
+        Position::RightBack | Position::LeftBack => {
+            attrs.tackling.min(attrs.defending).min(attrs.positioning)
+        }
+        Position::CenterBack => attrs.defending.min(attrs.tackling).min(attrs.positioning),
+        Position::RightWingBack | Position::LeftWingBack => {
+            attrs.pace.min(attrs.stamina).min(attrs.tackling)
+        }
+        Position::DefensiveMidfielder => attrs.tackling.min(attrs.positioning).min(attrs.passing),
+        Position::CentralMidfielder => attrs.passing.min(attrs.vision).min(attrs.decisions),
+        Position::AttackingMidfielder => attrs.vision.min(attrs.passing).min(attrs.dribbling),
+        Position::RightMidfielder | Position::LeftMidfielder => {
+            attrs.pace.min(attrs.passing).min(attrs.stamina)
+        }
+        Position::RightWinger | Position::LeftWinger => {
+            attrs.pace.min(attrs.dribbling).min(attrs.passing)
+        }
+        Position::Striker => attrs.shooting.min(attrs.positioning).min(attrs.decisions),
+        Position::Defender | Position::Midfielder | Position::Forward => 50,
+    };
+
+    if critical_min >= 45 {
+        0.0
+    } else {
+        (45 - critical_min) as f64 * 0.6
+    }
+}
+
+fn weighted_average(values: &[(u8, i32)]) -> f64 {
+    values
+        .iter()
+        .map(|(value, weight)| *value as f64 * *weight as f64)
+        .sum::<f64>()
+        / 100.0
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Side {
+    Left,
+    Right,
+}
+
+fn slot_side(position: &Position) -> Option<Side> {
+    match position {
+        Position::LeftBack
+        | Position::LeftWingBack
+        | Position::LeftMidfielder
+        | Position::LeftWinger => Some(Side::Left),
+        Position::RightBack
+        | Position::RightWingBack
+        | Position::RightMidfielder
+        | Position::RightWinger => Some(Side::Right),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A specialist keeper: elite at keeping, poor at everything an outfielder
+    /// does. The flat attribute average buries him; the weighted OVR does not.
+    fn make_specialist_keeper() -> Player {
+        let mut player = make_player(Position::Goalkeeper);
+        player.natural_position = Position::Goalkeeper;
+        let a = &mut player.attributes;
+        a.handling = 87;
+        a.reflexes = 90;
+        a.aerial = 83;
+        a.positioning = 88;
+        a.decisions = 84;
+        a.composure = 88;
+        a.strength = 74;
+        // Irrelevant to keeping, and low — exactly what a flat average punishes.
+        a.shooting = 20;
+        a.tackling = 30;
+        a.dribbling = 30;
+        a.defending = 55;
+        a.pace = 58;
+        a.passing = 58;
+        a.stamina = 70;
+        a.vision = 68;
+        player
+    }
+
+    #[test]
+    fn ovr_from_attributes_matches_the_player_level_rating() {
+        let keeper = make_specialist_keeper();
+
+        let direct = ovr_from_attributes(&keeper.attributes, &Position::Goalkeeper);
+
+        assert_eq!(
+            direct.round() as u8,
+            natural_ovr(&keeper).round() as u8,
+            "the attribute-level entry point must agree with the player-level one",
+        );
+    }
+
+    #[test]
+    fn ovr_from_attributes_resolves_legacy_position_buckets() {
+        let keeper = make_specialist_keeper();
+
+        // `Defender`/`Midfielder`/`Forward` are legacy buckets that
+        // `weighted_score` cannot score directly; they must be canonicalised.
+        for bucket in [Position::Defender, Position::Midfielder, Position::Forward] {
+            let score = ovr_from_attributes(&keeper.attributes, &bucket);
+            assert!(
+                (1.0..=99.0).contains(&score),
+                "{bucket:?} must resolve to a canonical position, got {score}",
+            );
+        }
+    }
+
+    #[test]
+    fn keeper_rating_ignores_outfield_attributes() {
+        // The bug this guards: market value and wage were sized from a flat
+        // average of eleven outfield attributes that excluded handling,
+        // reflexes and aerial entirely, so an elite keeper priced like a
+        // journeyman. The rating must not collapse when outfield attributes do.
+        let keeper = make_specialist_keeper();
+
+        let rating = ovr_from_attributes(&keeper.attributes, &Position::Goalkeeper);
+
+        assert!(
+            rating >= 80.0,
+            "an elite keeper must rate as elite, got {rating}",
+        );
+    }
+
+    fn make_player(position: Position) -> Player {
+        Player::new(
+            "p-1".to_string(),
+            "Test".to_string(),
+            "Test Player".to_string(),
+            "2000-01-01".to_string(),
+            "GB".to_string(),
+            position,
+            PlayerAttributes {
+                pace: 70,
+                stamina: 70,
+                strength: 70,
+                agility: 70,
+                passing: 70,
+                shooting: 70,
+                tackling: 70,
+                dribbling: 70,
+                defending: 70,
+                positioning: 70,
+                vision: 70,
+                decisions: 70,
+                composure: 70,
+                aggression: 70,
+                teamwork: 70,
+                leadership: 70,
+                handling: 20,
+                reflexes: 20,
+                aerial: 70,
+            },
+        )
+    }
+
+    #[test]
+    fn formation_slots_return_exact_role_layout() {
+        assert_eq!(
+            formation_slots("4-4-2"),
+            vec![
+                Position::Goalkeeper,
+                Position::LeftBack,
+                Position::CenterBack,
+                Position::CenterBack,
+                Position::RightBack,
+                Position::LeftMidfielder,
+                Position::CentralMidfielder,
+                Position::CentralMidfielder,
+                Position::RightMidfielder,
+                Position::Striker,
+                Position::Striker,
+            ]
+        );
+    }
+
+    #[test]
+    fn deployed_position_maps_starting_xi_index_to_formation_slot() {
+        use domain::team::Team;
+
+        let mut team = Team::new(
+            "t1".to_string(),
+            "Test FC".to_string(),
+            "TFC".to_string(),
+            "England".to_string(),
+            "London".to_string(),
+            "Ground".to_string(),
+            25_000,
+        );
+        team.formation = "4-4-2".to_string();
+        team.starting_xi_ids = vec![
+            "gk".to_string(),
+            "lb".to_string(),
+            "cb1".to_string(),
+            "cb2".to_string(),
+            "rb".to_string(),
+        ];
+
+        assert_eq!(deployed_position(&team, "gk"), Some(Position::Goalkeeper));
+        assert_eq!(deployed_position(&team, "lb"), Some(Position::LeftBack));
+        assert_eq!(deployed_position(&team, "rb"), Some(Position::RightBack));
+        // Not in the starting XI -> no deployed slot.
+        assert_eq!(deployed_position(&team, "bench"), None);
+    }
+
+    #[test]
+    fn role_specific_rating_favors_matching_profile() {
+        let mut player = make_player(Position::CenterBack);
+        player.natural_position = Position::CenterBack;
+        player.attributes.defending = 88;
+        player.attributes.tackling = 84;
+        player.attributes.positioning = 82;
+        player.attributes.strength = 80;
+        player.attributes.passing = 55;
+        player.attributes.vision = 50;
+        player.attributes.shooting = 40;
+        player.attributes.dribbling = 44;
+
+        assert!(
+            ovr_for_position(&player, &Position::CenterBack)
+                > ovr_for_position(&player, &Position::Striker)
+        );
+    }
+
+    #[test]
+    fn assignment_penalty_drops_wrong_side_fullback_more_with_poor_weak_foot() {
+        let mut player = make_player(Position::RightBack);
+        player.natural_position = Position::RightBack;
+        player.footedness = Footedness::Right;
+        player.weak_foot = 1;
+        player.attributes.tackling = 82;
+        player.attributes.defending = 80;
+        player.attributes.positioning = 78;
+        player.attributes.pace = 81;
+        player.attributes.stamina = 79;
+
+        let same_side = effective_rating_for_assignment(&player, &Position::RightBack);
+        let wrong_side = effective_rating_for_assignment(&player, &Position::LeftBack);
+
+        assert!(same_side > wrong_side);
+    }
+
+    #[test]
+    fn alternate_positions_reduce_assignment_penalty() {
+        let mut player = make_player(Position::CentralMidfielder);
+        player.natural_position = Position::CentralMidfielder;
+        player.alternate_positions = vec![Position::AttackingMidfielder];
+        player.attributes.passing = 82;
+        player.attributes.vision = 84;
+        player.attributes.decisions = 78;
+        player.attributes.dribbling = 76;
+
+        let alternate_role =
+            effective_rating_for_assignment(&player, &Position::AttackingMidfielder);
+        let out_of_group_role = effective_rating_for_assignment(&player, &Position::RightBack);
+
+        assert!(alternate_role > out_of_group_role);
+    }
+
+    #[test]
+    fn formation_slots_532_yields_11_granular_positions() {
+        let slots = formation_slots("5-3-2");
+        assert_eq!(slots.len(), 11);
+        assert_eq!(slots[0], Position::Goalkeeper);
+        // 5 defenders
+        assert_eq!(
+            &slots[1..6],
+            &[
+                Position::LeftWingBack,
+                Position::CenterBack,
+                Position::CenterBack,
+                Position::CenterBack,
+                Position::RightWingBack,
+            ]
+        );
+        // 3 midfielders
+        assert_eq!(
+            &slots[6..9],
+            &[
+                Position::DefensiveMidfielder,
+                Position::CentralMidfielder,
+                Position::AttackingMidfielder,
+            ]
+        );
+        // 2 forwards
+        assert_eq!(&slots[9..11], &[Position::Striker, Position::Striker]);
+    }
+
+    #[test]
+    fn formation_slots_4141_yields_11_granular_positions() {
+        let slots = formation_slots("4-1-4-1");
+        assert_eq!(slots.len(), 11);
+        assert_eq!(slots[0], Position::Goalkeeper);
+        // 4 defenders
+        assert_eq!(
+            &slots[1..5],
+            &[
+                Position::LeftBack,
+                Position::CenterBack,
+                Position::CenterBack,
+                Position::RightBack,
+            ]
+        );
+        // 1 deep midfielder
+        assert_eq!(slots[5], Position::DefensiveMidfielder);
+        // 4 attacking midfielders (attacking_midfield_line wildcard arm: all AM)
+        assert_eq!(
+            &slots[6..10],
+            &[
+                Position::AttackingMidfielder,
+                Position::AttackingMidfielder,
+                Position::AttackingMidfielder,
+                Position::AttackingMidfielder,
+            ]
+        );
+        // 1 forward
+        assert_eq!(slots[10], Position::Striker);
+    }
+
+    #[test]
+    fn refresh_does_not_award_wonderkid_below_elite_potential_threshold() {
+        let mut player = make_player(Position::Striker);
+        player.date_of_birth = "2007-01-01".to_string();
+        player.natural_position = Position::Striker;
+        player.attributes.shooting = 70;
+        player.attributes.positioning = 70;
+        player.attributes.decisions = 70;
+        player.attributes.pace = 70;
+        player.attributes.dribbling = 70;
+        player.attributes.strength = 70;
+        player.attributes.composure = 70;
+        player.attributes.aerial = 70;
+        player.potential = 84;
+
+        refresh_player_derived(&mut player, 2026);
+
+        assert!(player.potential >= player.ovr.saturating_add(10));
+        assert!(!player.traits.contains(&PlayerTrait::Wonderkid));
+    }
+}

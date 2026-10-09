@@ -1,0 +1,492 @@
+use crate::clock::GameClock;
+use domain::finance::CashJournal;
+use domain::league::{CompetitionType, FixtureStatus, League};
+use domain::manager::Manager;
+use domain::message::InboxMessage;
+use domain::national_team::NationalTeam;
+use domain::news::NewsArticle;
+use domain::player::{Player, Position};
+use domain::season::SeasonContext;
+use domain::staff::Staff;
+use domain::team::Team;
+use domain::world_history::WorldHistoryArchive;
+
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeSet, HashMap, HashSet};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ObjectiveType {
+    LeaguePosition,
+    Wins,
+    GoalsScored,
+    FinancialStability,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BoardObjective {
+    pub id: String,
+    pub description: String,
+    pub target: u32,
+    pub objective_type: ObjectiveType,
+    pub met: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScoutingAssignment {
+    pub id: String,
+    pub scout_id: String,
+    pub player_id: String,
+    pub days_remaining: u32,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum YouthScoutingRegion {
+    #[default]
+    Domestic,
+    International,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum YouthScoutingObjective {
+    #[default]
+    Balanced,
+    HighPotential,
+    ReadySoon,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct YouthScoutingAssignment {
+    pub id: String,
+    pub scout_id: String,
+    #[serde(default)]
+    pub region: YouthScoutingRegion,
+    #[serde(default)]
+    pub objective: YouthScoutingObjective,
+    pub target_position: Option<Position>,
+    pub days_remaining: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Game {
+    pub clock: GameClock,
+    pub manager: Manager,
+    #[serde(default)]
+    pub manager_id: String,
+    #[serde(default)]
+    pub managers: Vec<Manager>,
+    pub teams: Vec<Team>,
+    pub players: Vec<Player>,
+    pub staff: Vec<Staff>,
+    pub messages: Vec<InboxMessage>,
+    #[serde(default)]
+    pub news: Vec<NewsArticle>,
+    #[serde(default)]
+    pub competitions: Vec<League>,
+    #[serde(default)]
+    pub national_teams: Vec<NationalTeam>,
+    #[serde(default)]
+    pub active_region_ids: Vec<String>,
+    #[serde(default)]
+    pub active_competition_ids: Vec<String>,
+    /// DEPRECATED (legacy, back-compat only). Superseded by `competitions`, which
+    /// is the single source of truth. Retained for two reasons: loading saves
+    /// written before the multi-competition system (see
+    /// [`Game::promote_legacy_league`], run on load to populate `competitions`
+    /// from it), and as the turn loop's working buffer (`sync_legacy_league`
+    /// mirrors the user's competition here). Do not add new readers; it will be
+    /// removed once the save-format gate has migrated all saves off it.
+    #[serde(default)]
+    pub league: Option<League>,
+    #[serde(default)]
+    pub scouting_assignments: Vec<ScoutingAssignment>,
+    #[serde(default)]
+    pub youth_scouting_assignments: Vec<YouthScoutingAssignment>,
+    #[serde(default)]
+    pub board_objectives: Vec<BoardObjective>,
+    #[serde(default)]
+    pub season_context: SeasonContext,
+    #[serde(default)]
+    pub days_since_last_job_offer: Option<u32>,
+    #[serde(default)]
+    pub available_staff_market_last_activity_date: Option<String>,
+    #[serde(default)]
+    pub vacant_team_days: HashMap<String, u32>,
+    #[serde(default)]
+    pub world_history: WorldHistoryArchive,
+    /// Keys of events that have already been announced to the player.
+    ///
+    /// This is the sent-ledger. It exists because `messages` cannot serve as
+    /// one: the player deletes from the inbox and clears it, so "is this id in
+    /// `messages`?" answers "is it still in the mailbox", not "was it ever
+    /// sent". Generators that used the mailbox as their guard re-fired the
+    /// moment a message was removed — see issue #520. Nothing outside
+    /// [`crate::inbox`] should write to this.
+    #[serde(default)]
+    pub emitted_events: BTreeSet<String>,
+    /// Per-locale translation bundles from the world package (if any), keyed by
+    /// locale code. The frontend merges these into the active i18n namespace so
+    /// custom competition `name_key` values resolve to package-supplied strings.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub extra_translations: std::collections::HashMap<String, serde_json::Value>,
+    /// Records which `.ofm` packages were used to build this save.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub package_lockfile: Vec<crate::generator::PackageLock>,
+    /// The one seed every random choice on the day path is derived from, through
+    /// [`Game::rng_for`]. It is the seed the world was generated from, so a career
+    /// can be replayed from its start; `0` only for a game that was never given one
+    /// (tests), which is still a fixed seed and so still reproducible.
+    #[serde(default)]
+    pub seed: u64,
+    /// True for a career that began before World Cups were drawn from the game's seed: its
+    /// field and groups keep being drawn from the cup year alone, as they were, so a draw
+    /// already made is not contradicted by the next. Never set on a new game.
+    #[serde(default)]
+    pub legacy_world_cup_draw: bool,
+
+    /// Append-only cash journal. `Clone` is a pointer bump; `post` copy-on-writes.
+    /// Skipped on IPC serde. Persistence is incremental SQL, not Game JSON.
+    #[serde(skip)]
+    pub cash_journal: CashJournal,
+    /// Ids `post` added since the last successful flush of the live Game.
+    /// `SaveManager::save_game` takes `&Game` and cannot clear this; see
+    /// `persist_active_game`.
+    #[serde(skip)]
+    pub cash_journal_dirty_ids: Vec<String>,
+    /// Every emergency squad top-up this session made
+    /// ([`crate::squad_floor::restore_minimum_squad`]). A diagnostic, not game
+    /// state: never saved or sent over IPC, so a loaded game starts it empty.
+    /// Ordinary squad planning should leave it empty for AI clubs; tests and
+    /// the season harness read it to check that it does.
+    #[serde(skip)]
+    pub squad_floor_top_ups: Vec<crate::squad_floor::SquadFloorTopUp>,
+}
+
+impl Game {
+    pub fn new(
+        clock: GameClock,
+        manager: Manager,
+        teams: Vec<Team>,
+        players: Vec<Player>,
+        staff: Vec<Staff>,
+        messages: Vec<InboxMessage>,
+    ) -> Self {
+        let manager_id = manager.id.clone();
+        let managers = vec![manager.clone()];
+        let mut game = Self {
+            clock,
+            manager,
+            manager_id,
+            managers,
+            teams,
+            players,
+            staff,
+            messages,
+            news: vec![],
+            competitions: vec![],
+            national_teams: vec![],
+            active_region_ids: vec![],
+            active_competition_ids: vec![],
+            league: None,
+            scouting_assignments: vec![],
+            youth_scouting_assignments: vec![],
+            board_objectives: vec![],
+            season_context: SeasonContext::default(),
+            days_since_last_job_offer: None,
+            available_staff_market_last_activity_date: None,
+            vacant_team_days: HashMap::new(),
+            world_history: WorldHistoryArchive::default(),
+            emitted_events: BTreeSet::new(),
+            extra_translations: std::collections::HashMap::new(),
+            package_lockfile: vec![],
+            seed: 0,
+            legacy_world_cup_draw: false,
+            cash_journal: CashJournal::default(),
+            cash_journal_dirty_ids: Vec::new(),
+            squad_floor_top_ups: Vec::new(),
+        };
+        game.promote_legacy_league();
+        crate::football_identity::upgrade_game_football_identities(&mut game);
+        crate::season_context::refresh_game_context(&mut game);
+        game
+    }
+
+    pub fn sync_user_manager_record(&mut self) {
+        let user_manager_id = self.manager_id.clone();
+        if let Some(existing) = self
+            .managers
+            .iter_mut()
+            .find(|manager| manager.id == user_manager_id)
+        {
+            *existing = self.manager.clone();
+        } else {
+            self.managers.push(self.manager.clone());
+        }
+    }
+
+    pub fn promote_legacy_league(&mut self) {
+        if self.competitions.is_empty()
+            && let Some(league) = self.league.clone()
+        {
+            self.competitions.push(league);
+        }
+        self.sync_legacy_league();
+    }
+
+    pub fn sync_legacy_league(&mut self) {
+        // The legacy `league` field backs the home dashboard (next match, league
+        // position, etc.), so it must mirror the competition the user's club
+        // actually plays in — not just the first competition in the world.
+        //
+        // When there is nothing to sync from, leave the mirror alone rather than clearing it. A
+        // save written before `competitions` existed has the legacy field as its only copy, and
+        // `promote_legacy_league` fills `competitions` from it on load — so an empty vector here
+        // means "no competitions to mirror", never "the user has no league". Clearing it cost the
+        // delegate path its round summary, which reads the mirror.
+        if let Some(mirrored) = self
+            .user_competition_index()
+            .map(|index| self.competitions[index].clone())
+            .or_else(|| self.competitions.first().cloned())
+        {
+            self.league = Some(mirrored);
+        }
+    }
+
+    /// Every competition the world is actually playing, legacy saves included.
+    ///
+    /// `competitions` is the modern home for them; a save old enough to predate
+    /// it has one competition sitting in `league` and nothing in the list. Any
+    /// pass over the world's fixtures owes both shapes the same answer.
+    pub(crate) fn competitions_in_play(&self) -> &[League] {
+        if self.competitions.is_empty() {
+            self.league.as_slice()
+        } else {
+            &self.competitions
+        }
+    }
+
+    /// Whether the user's club has a scheduled fixture on `date` in ANY of its
+    /// competitions (league or cup). This is the source of truth for "is today a
+    /// match day" — the legacy `league` mirror misses cups and isn't reliable
+    /// while the turn loop swaps competitions through it.
+    pub fn user_has_scheduled_match_on(&self, date: &str) -> bool {
+        let Some(team_id) = self.manager.team_id.as_deref() else {
+            return false;
+        };
+        self.competitions.iter().any(|competition| {
+            competition.fixtures.iter().any(|fixture| {
+                fixture.date == date
+                    && fixture.status == FixtureStatus::Scheduled
+                    && (fixture.home_team_id == team_id || fixture.away_team_id == team_id)
+            })
+        })
+    }
+
+    /// Index of the competition the user's club plays in, preferring its
+    /// domestic league. `None` when unemployed or no competition lists the club.
+    ///
+    /// Shared with the transfer log so a record involving the user's club lands in the same
+    /// competition `sync_legacy_league` mirrors, rather than one the mirror never shows.
+    /// Whether the user's club takes part in `competition`. `false` when they manage nobody.
+    fn user_club_takes_part_in(&self, competition: &League) -> bool {
+        let Some(team_id) = self.manager.team_id.as_deref() else {
+            return false;
+        };
+        competition
+            .standings
+            .iter()
+            .any(|entry| entry.team_id == team_id)
+            || competition.participant_ids.iter().any(|id| id == team_id)
+    }
+
+    pub(crate) fn user_competition_index(&self) -> Option<usize> {
+        self.competitions
+            .iter()
+            .position(|competition| {
+                competition.kind == CompetitionType::League
+                    && self.user_club_takes_part_in(competition)
+            })
+            .or_else(|| {
+                self.competitions
+                    .iter()
+                    .position(|competition| self.user_club_takes_part_in(competition))
+            })
+    }
+
+    /// The user's domestic **league**, and only that: `None` when their club plays cup football
+    /// only, which is a real state rather than an error.
+    ///
+    /// Distinct from [`Self::user_competition`], which falls back to *any* competition the club
+    /// takes part in. That fallback is right for "which competition is this manager's" and wrong for
+    /// anything needing a league table: a knockout cup has no table, and its "matchday" is a round
+    /// number from a different sequence, so borrowing it produces a digest describing nothing.
+    pub fn user_league(&self) -> Option<&League> {
+        self.competitions.iter().find(|competition| {
+            competition.kind == CompetitionType::League && self.user_club_takes_part_in(competition)
+        })
+    }
+
+    /// The competition the user's club plays in, preferring its domestic league.
+    ///
+    /// Distinct from [`Self::primary_competition`], which is just the first
+    /// competition in the world — in a multi-competition save those are rarely
+    /// the same thing.
+    pub fn user_competition(&self) -> Option<&League> {
+        self.user_competition_index()
+            .map(|index| &self.competitions[index])
+    }
+
+    pub fn primary_competition(&self) -> Option<&League> {
+        self.competitions.first().or(self.league.as_ref())
+    }
+
+    /// Confederation/region id for a country code. Prefers the world's own
+    /// data — a domestic competition's declared region — so data-defined
+    /// confederations are respected at runtime, falling back to the built-in
+    /// nation catalog for countries the world doesn't place itself.
+    pub fn region_for_country(&self, country_code: &str) -> String {
+        self.competitions
+            .iter()
+            .filter(|competition| competition.country_id.as_deref() == Some(country_code))
+            .find_map(|competition| competition.region_id.clone())
+            .unwrap_or_else(|| crate::nations::region_for_code(country_code).to_string())
+    }
+
+    /// A club's display name, or its id when no club has it — the fallback
+    /// every inbox message, news item and result row wants, so a dangling id
+    /// still says something rather than nothing.
+    pub fn team_name_or_id(&self, team_id: &str) -> String {
+        self.teams
+            .iter()
+            .find(|team| team.id == team_id)
+            .map(|team| team.name.clone())
+            .unwrap_or_else(|| team_id.to_string())
+    }
+
+    /// Whether a competition falls within the player's active simulation scope.
+    /// Empty scope sets mean "everything is active" (the legacy, unscoped game),
+    /// so this stays backward compatible with worlds that never set a scope.
+    pub fn competition_in_active_scope(&self, competition: &League) -> bool {
+        let competition_selected = self.active_competition_ids.is_empty()
+            || self.active_competition_ids.contains(&competition.id);
+        let region_selected = self.active_region_ids.is_empty()
+            || competition
+                .region_id
+                .as_ref()
+                .is_none_or(|region_id| self.active_region_ids.contains(region_id));
+        competition_selected && region_selected
+    }
+
+    /// The set of team ids participating in an actively-simulated competition,
+    /// or `None` when no scope is configured (every team is simulated in full).
+    ///
+    /// Used to keep expensive daily subsystems (e.g. the transfer market) to the
+    /// teams the player actually follows; dormant clubs are handled by lighter,
+    /// periodic approximations rather than the full daily pass.
+    pub fn active_team_ids(&self) -> Option<HashSet<String>> {
+        if self.active_competition_ids.is_empty() && self.active_region_ids.is_empty() {
+            return None;
+        }
+        let mut ids = HashSet::new();
+        for competition in &self.competitions {
+            if self.competition_in_active_scope(competition) {
+                for entry in &competition.standings {
+                    ids.insert(entry.team_id.clone());
+                }
+            }
+        }
+        // The player's own club is always simulated in full.
+        if let Some(team_id) = &self.manager.team_id {
+            ids.insert(team_id.clone());
+        }
+        Some(ids)
+    }
+
+    pub fn primary_competition_mut(&mut self) -> Option<&mut League> {
+        if self.competitions.is_empty()
+            && let Some(league) = self.league.clone()
+        {
+            self.competitions.push(league);
+        }
+        self.competitions.first_mut()
+    }
+
+    pub fn competition_by_id(&self, competition_id: &str) -> Option<&League> {
+        self.competitions
+            .iter()
+            .find(|competition| competition.id == competition_id)
+    }
+
+    pub fn competition_by_id_mut(&mut self, competition_id: &str) -> Option<&mut League> {
+        self.competitions
+            .iter_mut()
+            .find(|competition| competition.id == competition_id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::clock::GameClock;
+    use chrono::{TimeZone, Utc};
+    use domain::manager::Manager;
+
+    fn game_with_only_a_legacy_league() -> Game {
+        let clock = GameClock::new(Utc.with_ymd_and_hms(2025, 6, 15, 12, 0, 0).unwrap());
+        let manager = Manager::new(
+            "mgr1".to_string(),
+            "Test".to_string(),
+            "Manager".to_string(),
+            "1980-01-01".to_string(),
+            "England".to_string(),
+        );
+        let mut game = Game::new(clock, manager, vec![], vec![], vec![], vec![]);
+        game.competitions.clear();
+        game.league = Some(League::new(
+            "league1".to_string(),
+            "Test League".to_string(),
+            1,
+            &["team1".to_string(), "team2".to_string()],
+        ));
+        game
+    }
+
+    #[test]
+    fn syncing_with_no_competitions_keeps_the_legacy_league() {
+        // The shape of a save written before `competitions` existed: the legacy field is the only
+        // copy of the user's league. `promote_legacy_league` fills the vector from it in the save
+        // reader, so an empty vector here means "nothing to mirror", never "the user has no
+        // league" — and this used to clear the field, destroying the only copy. It cost the
+        // delegate path its round summary, which reads the mirror.
+        let mut game = game_with_only_a_legacy_league();
+
+        game.sync_legacy_league();
+
+        assert_eq!(
+            game.league.as_ref().map(|league| league.id.as_str()),
+            Some("league1"),
+            "syncing from an empty competition list must not erase the league it was mirroring"
+        );
+    }
+
+    #[test]
+    fn syncing_still_mirrors_the_users_competition_when_there_is_one() {
+        let mut game = game_with_only_a_legacy_league();
+        game.manager.hire("team3".to_string());
+        let mut other = League::new(
+            "league2".to_string(),
+            "Their League".to_string(),
+            1,
+            &["team3".to_string(), "team4".to_string()],
+        );
+        other.participant_ids = vec!["team3".to_string(), "team4".to_string()];
+        game.competitions = vec![other];
+
+        game.sync_legacy_league();
+
+        assert_eq!(
+            game.league.as_ref().map(|league| league.id.as_str()),
+            Some("league2"),
+            "with a competition to mirror, the stale legacy copy is replaced"
+        );
+    }
+}

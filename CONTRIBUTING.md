@@ -1,0 +1,365 @@
+# CONTRIBUTING
+
+Thank you for taking the time to read this and for showing your interest in supporting the project.
+
+There are several ways to contribute, whether you are a programmer or just a fan of this type of game. Any meaningful help is appreciated. This game was born from dissatisfaction with market alternatives and was built by a football fan for football fans.
+
+If you do not code, you can still help in many ways:
+
+- Give us a star!
+- Join the Discord server: https://discord.gg/2CXaesaukT
+- Tweet about the project!
+- Refer this project in your project's readme!
+- Tell your friends about us!
+- Share us on Facebook!
+- Donate to the project _(not available yet)_
+- Make a video about it!
+- Play it!
+
+## How to contribute
+
+If you really want to help us directly, thank you very much! We have a few jobs that you might be interested in:
+
+- **Report a problem**  
+  You can report bugs or issues you encounter in the game. Open an Issue and follow the steps to report the problem. Please read carefully the bug reporting issue template before submitting a new bug report. Provide as much information as you can to help us track the bug and solve it as fast as we possibly can. If you want to discuss a problem before filing it, you can also join the Discord server: https://discord.gg/2CXaesaukT
+
+- **Propose enhancements**  
+  You can also propose new enhancements or improvements to the game. We're considering new ideas every day, and you can propose yours by opening an Issue and following the steps to propose enhancements. Just make sure to check the Issues page for similar ideas before opening up a new Issue. We don't want to flood the page with duplicated issues. Discord is also a good place for early discussion: https://discord.gg/2CXaesaukT
+
+- **Documentation**  
+  Do you think we can improve our documentation somehow? You can propose changes to the text, or write useful tutorials or examples on how to do certain things in the game.
+
+- **Translation**  
+  Localization contributions are welcome. You can help improve existing translations and add new locales for both the game UI and documentation.
+
+- **Create new content**  
+  You can propose and contribute content for the game, such as images, logos, and database improvements. Please open an Issue first so we can align scope and format.
+
+### How work gets scheduled
+
+Before picking something up, it helps to know how work is organised:
+
+1. [**VISION.md**](VISION.md) says what the project is for, what it will never do, and where it is
+   going. Read it first if you are proposing something new — it will tell you whether an idea fits
+   before you write any code.
+2. The [**roadmap index** (#11)](https://github.com/openfootmanager/openfootmanager/issues/11) lists
+   every release and links to its tracking issue.
+3. Each **release tracking issue** holds that release's theme, its goals, its explicit non-goals, and
+   the checklist that has to pass before it ships. This is the best place to look for "what is being
+   worked on right now".
+4. Individual issues carry a **milestone** (the stable release they are due in) and an `area:*`
+   label. Issues labelled `good first issue` are a good entry point, and `release-blocker` marks the
+   ones holding up the next stable cut.
+
+Discussion about something not yet on the roadmap belongs in
+[Discussions](https://github.com/openfootmanager/openfootmanager/discussions) (the `Ideas` category)
+or on Discord.
+
+## Submitting code
+
+The most traditional way to contribute is to submit new code. **Openfoot Manager** is a GPLv3 licensed project, read the [LICENSE.md](LICENSE.md) before submitting your code.
+
+Your code must be GPLv3 compliant, which means you understand that any code submitted here is original or also GPL-compliant, and must not depend on patents or copyrighted third-party content. Your code is subject to a free and open source license that will be available to the entire open source community.
+
+Once you understand that concept, you're welcome to submit new code.
+
+### Installing dependencies
+
+This project uses **Rust** for the backend and **Node.js/npm** for the frontend.
+
+1. Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
+2. Ensure you have [Node.js](https://nodejs.org/) (v18+) installed.
+3. Install Tauri prerequisites for your OS following the [official Tauri guide](https://v2.tauri.app/start/prerequisites/).
+
+After cloning the repository, install the frontend dependencies:
+
+```bash
+npm install
+```
+
+To run the debug version of the project (starts both the Vite server and the Tauri app):
+
+```bash
+npm run tauri dev
+```
+
+### Understanding the code
+
+The backend is split into multiple Rust crates:
+
+- `domain`: Pure business logic and models.
+- `engine`: Match simulation engine.
+- `db`: Database access and persistence handling.
+- `ofm_core`: Coordinates state, the game clock, and data flow.
+
+The frontend is built with React, TypeScript, and TailwindCSS in the `src/` directory.
+
+### Fork and Pull
+
+We work with a [Fork & Pull](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#fork--pull) method. Fork this repo, write your code in a feature branch (make sure it is up to date with the `develop` branch), and open a **Pull Request** targeting `develop`, describing your changes and referencing the **Issue** that inspired your code when applicable.
+
+If you're working on a new feature that has no prior **Issue** related to it, please open an **Issue** describing the feature and then reference it in your new **Pull Request**.
+
+### Code conventions
+
+- **Rust**:
+  - Run `cargo fmt --manifest-path src-tauri/Cargo.toml --all` to format your Rust code. CI runs
+    the same command with `--check` and fails on any difference, so this is not optional. There
+    is no `rustfmt.toml`: the style is whatever the pinned toolchain's default is, which is why
+    nobody has to agree on it. (A bare `cargo fmt --all` from the repository root fails — the
+    workspace lives under `src-tauri/`.)
+  - Run `cargo clippy` to catch common mistakes and improve code quality. Address all warnings before submitting a PR.
+  - Use descriptive variable names and leverage Rust's strong type system.
+  - Write docstrings for public functions and complex logic.
+
+- **Frontend (TypeScript/React)**:
+  - Keep components modular.
+  - Use TailwindCSS for styling instead of raw CSS where possible.
+  - Ensure type safety across the application (avoid `any` types).
+
+### Which Biome lint rules are on, and why the list is short
+
+`biome.json` starts from `preset: none` and admits rules one group at a time. A group is only
+turned on once its findings have actually been cleared, so the lint step is green the day it
+lands. A rule that reports findings nobody has fixed is a reporter, not a gate, and this project
+has already watched two of those sit switched off for a year.
+
+`biome.json` is strict JSON and cannot carry comments, so the decisions live here:
+
+Five rules sit at **`info`** rather than `error`. That is not "off": Biome still reports them
+every time you lint, it just does not fail the build on them. Don't add new ones — each rule moves
+to `error` once its backlog is cleared, and every new finding is one more to clear first. Fixing a
+few is always welcome.
+
+| Rule | Outstanding | Why it is not a hard error yet |
+|---|---|---|
+| `style/noNonNullAssertion` | 59 | Biome's fix rewrites `game.league!.standings` to `game.league?.standings`, turning a crash into a silent `undefined`. In a test, `expect(a?.b).toBe(c)` then passes vacuously — an assertion-free test, produced by an automated fix. Each site needs a real guard saying what the invariant is. |
+| `a11y/noLabelWithoutControl` | 35 | Some are a `<label>` next to a `<Select>` and want `htmlFor`/`id`. Others label a *group* of cards, where the right answer is a `<fieldset>`/`<legend>`, not a control reference. |
+| `a11y/noStaticElementInteractions` | 24 | Clickable `<div>`s across 18 files. |
+| `a11y/useKeyWithClickEvents` | 24 | The same elements, from the other side: they respond to a mouse and not a keyboard. |
+| `a11y/useSemanticElements` | 9 | `role="button"` on a `<div>` that should be a `<button>`. |
+
+The last three change what is focusable and what responds to Enter and Space in the schedule,
+inbox, tactics pitch and substitution panel. That is interactive behaviour, and it wants
+verifying in the running app rather than in a type-check — which is why it is a floor to work
+down rather than a sweep somebody rushed.
+
+- **`nursery` — never.** Its rules change meaning between Biome minors, which would make every
+  Biome upgrade a red build, for the same reason the Rust toolchain is pinned.
+
+Every other rule in those groups' `recommended` presets is on and hard. If you want to add one
+that is not, measure it first
+(`npm exec --no -- biome lint --only=<rule>`), and only send the PR if the same PR can clear
+what it finds.
+
+### The format sweep, and `git blame`
+
+Formatting was gated for the first time in this repository's history, and that required two
+sweeps: `cargo fmt` across 92 Rust files, and `biome format` across 454 frontend files. Two
+consequences worth knowing about.
+
+**`git blame` needs telling to skip it**, or every line in those files is attributed to the
+sweep. GitHub reads `.git-blame-ignore-revs` automatically; locally, once per clone:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+`scripts/check-blame-ignore-revs.sh` runs in CI and fails if a commit named in that file no
+longer exists, because a wrong SHA there fails silently and blame quietly goes back to being
+useless.
+
+**If you have a branch that predates the sweep**, do not fight the conflicts by hand. Rebase onto
+the formatted `develop`, then run the formatter as **its own commit**:
+
+```bash
+git rebase upstream/develop
+cargo fmt --manifest-path src-tauri/Cargo.toml --all   # if you touched Rust
+npm exec --no -- biome format --write                  # if you touched the frontend
+git commit -am "style: reformat after the repo-wide sweep"
+```
+
+That commit is then a no-op plus your own lines, and your real changes stay readable. This is the
+one sanctioned exception to the standing rule against reformatting code you did not touch — a
+formatting commit mixed into a feature change is how a four-file diff becomes a thirty-four-file
+one, which has happened here before.
+
+### Dependencies and the lockfile
+
+`src-tauri/Cargo.lock` is **committed**. Leaving it out is the right call for a library, whose
+dependents pick their own versions; OpenFoot Manager is a shipped desktop application, so the
+opposite holds — two people on the same commit should get the same build, and a release should
+match the CI run that approved it.
+
+CI runs its cargo commands with `--locked`, so **a manifest change that moves the resolved graph
+is a diff you have to commit**. Add or bump a dependency, touch only `Cargo.toml`, and the build
+stops with:
+
+```text
+error: cannot update the lock file … because --locked was passed to prevent this
+```
+
+Not every manifest edit does this — widening a version range that the locked version already
+satisfies leaves the lockfile alone. When it does fire, run the command again **without**
+`--locked` (a plain `cargo test --manifest-path src-tauri/Cargo.toml --workspace` will do it),
+then commit the resulting `Cargo.lock` alongside the manifest change.
+
+That is deliberate rather than a nuisance: it means a transitive version jump shows up in review
+as a diff someone can see and question, instead of arriving invisibly on whichever machine
+happened to resolve it first.
+
+**Which commands take the flag.** Use `--locked` when you are *verifying* — the pre-PR run
+above, the [`/preflight`](.claude/skills/preflight/SKILL.md) list, the release checklist — so
+your machine agrees with CI. Leave it off while you are *iterating*, which is why the quick
+reference in `CLAUDE.md` and `AGENTS.md` omits it: mid-change is exactly when you want cargo
+free to resolve a dependency you just added.
+
+### Tests
+
+Whenever you add a new feature (backend or frontend), include tests to ensure it behaves as expected.
+
+Write unit tests in the same file as your code using the `#[cfg(test)]` module, as is standard in the Rust community.
+
+Run all relevant tests before opening a Pull Request:
+
+```bash
+npm test
+```
+
+Local runs use at most two workers to avoid oversubscribing developer machines (#616). This also
+applies to `npm run preflight` and watch mode. CI retains Vitest's default pool. To measure another
+worker count explicitly, use `npm test -- --maxWorkers=3`; deadlines and retries are unchanged.
+
+```bash
+cd src-tauri
+cargo test --locked --workspace
+```
+
+If your change affects both layers, run both test suites.
+
+`--locked` here matches what CI runs, so a lockfile you forgot to commit fails on your machine
+instead of twenty minutes into a CI run. Drop it while you are still iterating — see
+[Dependencies and the lockfile](#dependencies-and-the-lockfile).
+
+One trap worth knowing: Tauri command tests live in the `openfootmanager_lib` **lib** target. Use `cargo test --lib` to run them — `cargo test --bin` matches zero tests and exits successfully, which looks like a pass but checks nothing.
+
+### Versioning and release streams
+
+We follow the odd/even convention used by projects like GNOME and PCSX2:
+
+- **Odd minor versions (`0.3.x`)** are the *unstable* stream. They live on `develop` and are
+  published as nightlies.
+- **Even minor versions (`0.4.x`)** are *stable* releases, cut from the `release` branch.
+
+So a user on `0.3.x` knows they are on an unstable build just from the number.
+
+The base version lives in three files that must stay in sync:
+
+- `src-tauri/tauri.conf.json` (the source of truth the build reads)
+- `src-tauri/Cargo.toml`
+- `package.json`
+
+**Do not bump these per build.** They only change when a release stream branches
+(`0.3` → `0.4`). Everything that varies build to build — the channel and the commit hash — is
+injected by `vite.config.ts` as `__APP_VERSION__`, `__APP_CHANNEL__` and `__APP_COMMIT__`, and
+formatted by `formatAppVersion()` in
+`src/lib/appVersion.ts`:
+
+| build | shown in the UI and window title |
+| --- | --- |
+| stable | `v0.4.0` |
+| nightly | `v0.3.0-nightly · f164fcd` |
+| local | `v0.3.0-dev · f164fcd` |
+
+The channel is set by CI via the `OFM_CHANNEL` environment variable; locally it defaults to
+`dev`. It is deliberately not translated — it is part of a semver identifier, not prose.
+
+Version numbers do not carry a maturity tag. There is no `0.4.0-beta`, because the odd/even number
+already says whether a build is stable. Older roadmap entries used `-alpha`/`-beta` suffixes. Those are
+historical.
+
+### What "stable" means
+
+An even release is a promise, so it has a gate. Before a stable version is cut from `release`, all of
+the following must hold:
+
+- **No open `release-blocker` issues** in that release's milestone.
+- **A full season plays start to finish** — create a career, play through to the end of the season,
+  including a transfer window and the season rollover, without hitting a blocking defect.
+- **Saves round-trip.** Save and load at several points in that playthrough, and confirm nothing is
+  lost. See [`docs/SAVE_SYSTEM_DESIGN.md`](docs/SAVE_SYSTEM_DESIGN.md); a save written by a stable
+  release must keep loading for the life of that stable line.
+- **Translations are complete** — `src/i18n/localeCoverage.test.ts` green across every locale, and
+  no untranslated player-facing strings introduced since the last cut (see [Translations](#translations)).
+- **The suite is green** — `npm test`, `cargo test --locked --workspace`, and both clippy gates
+  (`cargo clippy --locked --manifest-path src-tauri/Cargo.toml --workspace --all-targets -- -D warnings`,
+  and the same with `--features mcp`).
+
+The full-season playthrough is currently a manual check. An automated scenario suite driving the game
+through the MCP server is planned for 0.4.0, and joins this list when it lands.
+
+Nightlies carry none of these promises, which is the entire point of having two streams: `develop` can
+move fast because `release` is the thing that has to be trustworthy.
+
+### Release workflows
+
+- `publish-nightly` runs on every push to `develop` and publishes **one release per build**,
+  tagged `nightly-<yyyymmdd>-<sha>`. It used to upsert a single rolling `nightly` tag, which meant
+  the releases page showed one entry whose date never advanced and no record existed of what
+  shipped on any given night.
+  Each build is created as a **draft** and only published once every platform in the matrix has
+  uploaded. A build that fails or is cancelled therefore leaves a draft nobody sees, instead of a
+  half-finished release sitting on the page looking complete.
+  Nothing prunes old nightlies — a build should not delete published releases on its own.
+- `publish` runs on pushes to `release` and creates `v__VERSION__` as a non-prerelease, which
+  is what gives the releases page its "Latest" badge.
+- The `*-release-manifest` workflows generate the download manifest consumed by the website.
+  `nightly-release-manifest.yml` is dispatch-only: `release: published` would fire when the first
+  of five platforms creates the release, and a manifest built then would describe assets that are
+  still uploading.
+
+### Translations
+
+OpenFoot Manager ships in **every locale listed in `SUPPORTED_LANGUAGES`** (`src/i18n/index.ts`). Any string a player can read must exist in all of them, not only English.
+
+Two tests enforce this, and it is worth knowing precisely what each one catches, because between them they leave a gap:
+
+- `src/i18n/localeCoverage.test.ts` — every locale file has every key `en.json` has, and no locale simply copies the English text. Add a key to `en.json` and stop, and CI fails here.
+- `src/i18n/frontendKeyCoverage.test.ts` — every literal `t("…")` key used in `src/` exists in `en.json`, so a typo'd key fails too.
+
+Neither catches English text hardcoded straight into a component, because it never becomes a key at all. `npm run audit:i18n` scans for those, but it is a heuristic reporter and **always exits 0** — read its output, don't rely on its exit code.
+
+The locale list lives in `SUPPORTED_LANGUAGES` in `src/i18n/index.ts`, and the files are in `src/i18n/locales/`. On the Rust side, never emit English prose for the player: emit a translation key (like `be.error.noTeamAssigned`) and add that key to every locale file.
+
+## Contributing with AI agents
+
+AI coding agents are welcome here, and the repository is set up so they start with the project's actual conventions instead of guessing.
+
+**Read these first** (your agent will pick them up automatically):
+
+- [`CLAUDE.md`](CLAUDE.md) — commands, the project's six non-negotiable rules, and an index into `docs/`
+- [`AGENTS.md`](AGENTS.md) — the same rules, for tools that don't read `CLAUDE.md`
+- `src/CLAUDE.md` and `src-tauri/CLAUDE.md` — frontend and backend specifics, loaded when working in those trees
+
+**Claude Code users** also get project skills and review agents in `.claude/`:
+
+| Skill | Use it when |
+|-------|-------------|
+| `/add-ui-string` | Adding or changing any text a player can see |
+| `/new-ui-surface` | Building a new component, panel, tab, or screen |
+| `/add-domain-field` | Adding a field that must survive save/load |
+| `/add-tauri-command` | Exposing new backend behaviour to the frontend |
+| `/add-mcp-tool` | Adding a tool for AI agents that play the game |
+| `/preflight` | Before opening a PR — the full local check sequence |
+
+| Review agent | What it checks |
+|--------------|----------------|
+| `ofm-architecture-reviewer` | Crate boundaries, layering, save compatibility, SOLID |
+| `i18n-auditor` | Untranslated strings, missing locales, translation quality |
+| `ui-accessibility-reviewer` | Design tokens, theme parity, focus, keyboard, labelling |
+
+**The bar is the same.** An AI-assisted PR is held to exactly the standards above: tests that would have failed before the change, every locale, clean `cargo clippy`, and a description that explains *why*. "The agent wrote it" is not a review comment we can act on.
+
+**A note on `.claude/settings.json`.** The shared settings pre-approve only read-only `git` inspection commands. Build and test commands are deliberately left prompting, even though approving them would be more convenient: `npm test`, `cargo test`, and `cargo clippy` all execute code from the working tree — test files, `vite.config.ts`, `build.rs`, proc macros. On a fork-and-pull project you will sometimes check out someone else's branch to review it, and a checked-in allowlist would run their code without asking you first. If you want those commands approved on your own machine, put them in `.claude/settings.local.json`, which is gitignored.
+
+**Please disclose it.** The pull request template has a checkbox. This is a GPLv3 project, and knowing how a contribution was produced matters for licensing and for review. Read your own diff before you open the PR — you are the author, and you are vouching for it.

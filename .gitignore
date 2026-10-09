@@ -1,9 +1,58 @@
-node_modules/
-android/.gradle/
-android/build/
-android/app/build/
-android/.idea/
-android/local.properties
-*.iml
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
 .DS_Store
-www/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Rust
+/target
+/src-tauri/target
+coverage/
+
+# Claude local settings and scratch worktrees
+# (.claude/settings.json, skills/, and agents/ ARE tracked — they are shared
+# contributor tooling. Only per-user and per-session artefacts are ignored.)
+.claude/settings.local.json
+.claude/worktrees/
+.worktrees/
+
+# Local Vitest reporter output
+vitest-*.json
+
+# World JSON exports (large files, generated locally)
+exported_world.json
+# The sharded form of the same export (<stem>.shards/ beside the manifest). The
+# game's local world export, never source.
+exported_world.shards/
+test-world.json
+
+# Personal-use imported world assets/data
+/public/assets/worlds/
+
+# Built OFM packages (generated locally; saving here during tauri dev would
+# trigger the file watcher and restart the app)
+/src-tauri/data/*.ofm
+/src-tauri/databases/*.ofm
+
+# Benchmark output from scripts/perf/run-matrix.sh (machine-specific measurements)
+/scripts/perf/results/

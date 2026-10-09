@@ -1,1 +1,0 @@
-import { spawnSync } from 'node:child_process'; const r=spawnSync(process.execPath,['scripts/validate-audio.mjs'],{stdio:'inherit'}); process.exitCode=r.status??1;

@@ -1,0 +1,95 @@
+name: Open-source football manager validation and Android build
+
+on:
+  push:
+    branches:
+      - rebuild/open-source-game
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install manager dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build manager frontend
+        run: npm run build
+
+      - name: Test manager logic and UI
+        run: npm test
+
+      - name: Package and smoke-check the copied 2D match engine
+        run: |
+          node integration/package-soccer-js.mjs
+          test -s dist/open-source-games/soccer-js/build/app.bundle.js
+          test -s dist/open-source-games/soccer-js/build/app.css
+          node --check integration/package-soccer-js.mjs
+          node --check integration/j90-open-source-launcher.js
+
+      - name: Configure Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configure Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Rust Android target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install Android platform and NDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Initialize Tauri Android project
+        run: npm run tauri -- android init --ci --skip-targets-install --config src-tauri/tauri.mobile.conf.json
+
+      - name: Build ARM64 APK
+        run: npm run tauri -- android build --apk --target aarch64 --ci --config src-tauri/tauri.mobile.conf.json
+
+      - name: Validate APK archive and calculate checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' -size +5M -print -quit)"
+          test -n "$apk"
+          test -s "$apk"
+          unzip -t "$apk" > "$RUNNER_TEMP/apk-integrity.txt"
+          mkdir -p artifacts
+          cp "$apk" artifacts/Openfoot-Manager-arm64.apk
+          (cd artifacts && sha256sum Openfoot-Manager-arm64.apk > Openfoot-Manager-arm64.apk.sha256 && sha256sum --check Openfoot-Manager-arm64.apk.sha256)
+          echo "APK_ARCHIVE_VALID=YES"
+
+      - name: Upload APK and checksum
+        uses: actions/upload-artifact@v7
+        with:
+          name: openfoot-manager-arm64-apk
+          path: |
+            artifacts/Openfoot-Manager-arm64.apk
+            artifacts/Openfoot-Manager-arm64.apk.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

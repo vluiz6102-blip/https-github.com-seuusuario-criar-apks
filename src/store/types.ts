@@ -1,0 +1,820 @@
+/** One training group as the backend stores it. */
+export interface TrainingGroupData {
+  id: string;
+  name: string;
+  focus: string;
+  player_ids: string[];
+}
+
+export interface TeamColors {
+  primary: string;
+  secondary: string;
+}
+
+export type KitPattern = "Solid" | "Stripes" | "Hoops" | "HalfAndHalf" | "Diagonal";
+
+export interface FacilitiesData {
+  training: number;
+  medical: number;
+  scouting: number;
+}
+
+export interface SponsorshipData {
+  sponsor_name: string;
+  base_value: number;
+  remaining_weeks: number;
+  bonus_criteria: unknown[];
+}
+
+export type TransactionKind =
+  | "PrizeMoney"
+  | "ContractTermination"
+  | "BoardSupport"
+  | "CommercialCampaign";
+
+export interface FinancialTransactionData {
+  date: string;
+  description: string;
+  amount: number;
+  kind: TransactionKind;
+}
+
+export interface TeamSeasonRecord {
+  season: number;
+  league_position: number;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+}
+
+export type PlayerRole =
+  // Goalkeeper
+  | "Standard"
+  | "BallPlayingKeeper"
+  | "SweeperKeeper"
+  // Center Back
+  | "Stopper"
+  | "CoverCB"
+  | "BallPlayingCB"
+  // Full Back / Wing Back
+  | "AttackingFB"
+  | "DefensiveFB"
+  | "InvertedFB"
+  | "WingBack"
+  // Defensive Midfielder
+  | "AnchorMan"
+  | "BallWinner"
+  | "DeepLyingPlaymaker"
+  // Central Midfielder
+  | "BoxToBox"
+  | "Carrilero"
+  | "Mezzala"
+  // Attacking Midfielder
+  | "AdvancedPlaymaker"
+  | "ShadowStriker"
+  // Wide
+  | "WideForward"
+  | "InsideForward"
+  | "InvertedWinger"
+  // Striker
+  | "Poacher"
+  | "TargetMan"
+  | "DeepLyingForward"
+  | "False9"
+  | "PressingForward"
+  | "CompleteForward";
+
+export type BuildUpStyle = "Short" | "Mixed" | "Long";
+export type PitchWidth = "Narrow" | "Normal" | "Wide";
+export type Tempo = "Patient" | "Direct";
+export type DefensiveLine = "VeryLow" | "Low" | "Medium" | "High";
+export type PressingIntensity = "Passive" | "Medium" | "Aggressive";
+export type DefensiveShape = "Stretched" | "Normal" | "Compact";
+export type MarkingStyle = "Zonal" | "Mixed" | "ManToMan";
+export type CounterPressDuration = "None" | "Short" | "Long";
+export type BreakSpeed = "Slow" | "Medium" | "Fast";
+
+export interface TacticsPhaseSettings {
+  build_up_style: BuildUpStyle;
+  width: PitchWidth;
+  tempo: Tempo;
+  defensive_line: DefensiveLine;
+  pressing_intensity: PressingIntensity;
+  defensive_shape: DefensiveShape;
+  marking_style: MarkingStyle;
+  counter_press_duration: CounterPressDuration;
+  break_speed: BreakSpeed;
+}
+
+export interface TeamMatchRolesData {
+  captain: string | null;
+  vice_captain: string | null;
+  penalty_taker: string | null;
+  free_kick_taker: string | null;
+  corner_taker: string | null;
+}
+
+/** Optional media paths for team branding. resolveLocalMediaPath accepts local paths only. */
+export interface TeamMediaData {
+  /** Local path to a team logo image; remote URLs and data URIs are ignored. */
+  logo?: string;
+}
+
+export interface TeamData {
+  id: string;
+  name: string;
+  short_name: string;
+  country: string;
+  city: string;
+  stadium_name: string;
+  stadium_capacity: number;
+  finance: number;
+  manager_id: string | null;
+  reputation: number;
+  wage_budget: number;
+  transfer_budget: number;
+  season_income: number;
+  season_expenses: number;
+  financial_ledger?: FinancialTransactionData[];
+  formation: string;
+  play_style: string;
+  training_focus: string;
+  training_intensity: string;
+  training_schedule: string;
+  /**
+   * Optional because a team saved before migration v002 has none. The backend has persisted this
+   * since that migration; the frontend type simply never declared it, so every read went through
+   * `as any` and TypeScript could not have noticed a rename or a shape change on either side.
+   */
+  training_groups?: TrainingGroupData[];
+  founded_year: number;
+  colors: TeamColors;
+  kit_pattern?: KitPattern;
+  media?: TeamMediaData;
+  facilities?: FacilitiesData;
+  sponsorship?: SponsorshipData | null;
+  starting_xi_ids: string[];
+  match_roles?: TeamMatchRolesData;
+  player_roles?: Record<string, PlayerRole>;
+  tactics_phase?: TacticsPhaseSettings;
+  form: string[];
+  history: TeamSeasonRecord[];
+}
+
+export interface PlayerSeasonStats {
+  appearances: number;
+  goals: number;
+  assists: number;
+  clean_sheets: number;
+  yellow_cards: number;
+  red_cards: number;
+  avg_rating: number;
+  minutes_played: number;
+  shots?: number;
+  shots_on_target?: number;
+  passes_completed?: number;
+  passes_attempted?: number;
+  tackles_won?: number;
+  interceptions?: number;
+  fouls_committed?: number;
+}
+
+export interface CareerEntry {
+  season: number;
+  team_id: string;
+  team_name: string;
+  appearances: number;
+  goals: number;
+  assists: number;
+}
+
+export type PlayerMovementKind =
+  | "permanent_transfer"
+  | "loan_start"
+  | "loan_return"
+  | "loan_to_buy"
+  | "free_agent_signing"
+  | "released"
+  | "renewal"
+  | "retired"
+  | "initial_contract";
+
+/** How a contract came to exist. Mirrors `ContractSource` in the domain crate. */
+export type ContractSource = "initial" | "legacy_migrated" | "renewal" | "free_agent" | "transfer";
+
+export type ReleaseReason = "expired" | "terminated";
+
+/** The terms of one agreement, carried by a ledger entry that makes a contract. */
+export interface ContractRecord {
+  /** `null` is an honest unknown (a save from before starts were recorded). */
+  start?: string | null;
+  end?: string | null;
+  /** Per week. */
+  weekly_wage: number;
+  source: ContractSource;
+}
+
+export interface PlayerMovementEntry {
+  date: string;
+  kind: PlayerMovementKind;
+  from_team_id?: string | null;
+  from_team_name?: string | null;
+  to_team_id?: string | null;
+  to_team_name?: string | null;
+  fee?: number | null;
+  loan_end_date?: string | null;
+  contract?: ContractRecord | null;
+  release_reason?: ReleaseReason | null;
+}
+
+export interface ContractExitIntentData {
+  kind: "let_expire";
+  set_on: string;
+  reason?: string | null;
+}
+
+export interface ContractRenewalStateData {
+  // Backend `RenewalSessionStatus` (domain/player.rs) uses serde default enum
+  // representation — PascalCase variant names on the wire. Do not confuse with
+  // the lowercase `session_status` in command responses, which goes through a
+  // dedicated `serialize_session_status()` helper on the Rust side.
+  status: "Idle" | "Open" | "Agreed" | "Blocked" | "Stalled";
+  manager_blocked_until?: string | null;
+  last_attempt_date?: string | null;
+  last_assistant_attempt_date?: string | null;
+  last_outcome?: string | null;
+  conversation_round: number;
+  exit_intent?: ContractExitIntentData | null;
+}
+
+export interface PlayerMoraleCoreData {
+  manager_trust: number;
+  renewal_state?: ContractRenewalStateData | null;
+}
+
+export type PlayerSquadRole = "Senior" | "Youth";
+
+/** Optional media paths for player visuals. resolveLocalMediaPath accepts local paths only. */
+export interface PlayerMediaData {
+  /** Local path to a player face image; remote URLs and data URIs are ignored. */
+  face?: string;
+}
+
+export interface PlayerData {
+  id: string;
+  match_name: string;
+  full_name: string;
+  date_of_birth: string;
+  nationality: string;
+  football_nation?: string;
+  media?: PlayerMediaData;
+  position: string;
+  natural_position: string;
+  alternate_positions: string[];
+  footedness?: string;
+  weak_foot?: number;
+  training_focus: string | null;
+  attributes: {
+    pace: number;
+    stamina: number;
+    strength: number;
+    agility: number;
+    passing: number;
+    shooting: number;
+    tackling: number;
+    dribbling: number;
+    defending: number;
+    positioning: number;
+    vision: number;
+    decisions: number;
+    composure: number;
+    aggression: number;
+    teamwork: number;
+    leadership: number;
+    handling: number;
+    reflexes: number;
+    aerial: number;
+  };
+  condition: number;
+  morale: number;
+  injury: null | { name: string; days_remaining: number };
+  team_id: string | null;
+  retired: boolean;
+  squad_role?: PlayerSquadRole;
+  /**
+   * When the current contract began. Absent or null means unknown, not expired:
+   * a save from before the field existed knows only when the deal ends.
+   */
+  contract_start?: string | null;
+  contract_end: string | null;
+  wage: number;
+  market_value: number;
+  stats: PlayerSeasonStats;
+  career: CareerEntry[];
+  movement_history?: PlayerMovementEntry[];
+  transfer_listed: boolean;
+  loan_listed: boolean;
+  transfer_offers: TransferOfferData[];
+  loan_offers?: LoanOfferData[];
+  active_loan?: ActiveLoanData | null;
+  traits: string[];
+  morale_core?: PlayerMoraleCoreData;
+  /** Position-weighted overall rating (1–99). Computed by the backend from the player's natural position. */
+  ovr?: number;
+  /** Player's potential ceiling (1–99). Set at generation; higher than ovr for young players. */
+  potential?: number;
+  /** Jersey/squad number (1–99). Null if unassigned. */
+  jersey_number?: number | null;
+}
+
+export interface TransferOfferData {
+  id: string;
+  from_team_id: string;
+  fee: number;
+  wage_offered: number;
+  last_manager_fee: number | null;
+  negotiation_round: number;
+  suggested_counter_fee: number | null;
+  status: "Pending" | "PendingRegistration" | "Accepted" | "Rejected" | "Withdrawn";
+  date: string;
+  registration_date?: string | null;
+  /**
+   * When talks ended, for offers that were rejected or withdrawn. Distinct from `date`, which
+   * is when the offer arrived and is rewritten whenever a club re-opens talks.
+   */
+  closed_on?: string | null;
+}
+
+export interface LoanOfferData {
+  id: string;
+  from_team_id: string;
+  parent_team_id: string;
+  start_date: string;
+  end_date: string;
+  wage_contribution_pct: number;
+  buy_option_fee?: number | null;
+  last_manager_wage_contribution_pct?: number | null;
+  last_manager_end_date?: string | null;
+  last_manager_buy_option_fee?: number | null;
+  negotiation_round?: number;
+  suggested_wage_contribution_pct?: number | null;
+  suggested_end_date?: string | null;
+  suggested_buy_option_fee?: number | null;
+  status: "Pending" | "PendingRegistration" | "Accepted" | "Rejected" | "Withdrawn";
+  date: string;
+  /** See {@link TransferOfferData.closed_on}. */
+  closed_on?: string | null;
+}
+
+export interface ActiveLoanData {
+  parent_team_id: string;
+  loan_team_id: string;
+  start_date: string;
+  end_date: string;
+  wage_contribution_pct: number;
+  buy_option_fee?: number | null;
+  loan_start_minutes?: number;
+  loan_start_appearances?: number;
+  development_reported_minutes?: number;
+  development_reported_appearances?: number;
+}
+
+export interface StaffData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  nationality: string;
+  football_nation?: string;
+  role: "AssistantManager" | "Coach" | "Scout" | "Physio";
+  attributes: {
+    coaching: number;
+    judgingAbility: number;
+    judgingPotential: number;
+    physiotherapy: number;
+  };
+  team_id: string | null;
+  specialization: string | null;
+  wage: number;
+  contract_end: string | null;
+}
+
+export interface MessageAction {
+  id: string;
+  label: string;
+  action_type:
+    | "Acknowledge"
+    | "Dismiss"
+    | { NavigateTo: { route: string } }
+    | { ChooseOption: { options: MessageActionOption[] } };
+  resolved: boolean;
+  label_key?: string;
+}
+
+export interface MessageActionOption {
+  id: string;
+  label: string;
+  description: string;
+  label_key?: string;
+  description_key?: string;
+}
+
+export interface ScoutReportData {
+  player_id: string;
+  player_name: string;
+  position: string;
+  nationality: string;
+  dob: string;
+  team_name: string | null;
+  pace: number | null;
+  shooting: number | null;
+  passing: number | null;
+  dribbling: number | null;
+  defending: number | null;
+  physical: number | null;
+  condition: number | null;
+  morale: number | null;
+  avg_rating: number | null;
+  rating_key: string;
+  potential_key: string;
+  confidence_key: string;
+}
+
+export interface DelegatedRenewalCaseMessageData {
+  player_id: string;
+  player_name: string;
+  status: string;
+  agreed_wage?: number | null;
+  agreed_years?: number | null;
+  note_key?: string;
+  note_params?: Record<string, string>;
+}
+
+export interface DelegatedRenewalReportMessageData {
+  success_count: number;
+  failure_count: number;
+  stalled_count: number;
+  cases: DelegatedRenewalCaseMessageData[];
+}
+
+export interface PlayerSelectionOptions {
+  openRenewal?: boolean;
+  openTermination?: boolean;
+}
+
+export interface MessageContext {
+  team_id: string | null;
+  team_name?: string | null;
+  player_id: string | null;
+  fixture_id: string | null;
+  youth_target_position?: string | null;
+  youth_search_region?: string | null;
+  youth_search_objective?: string | null;
+  youth_prospects?: PlayerData[];
+  match_result: null | {
+    home_team_id: string;
+    home_team_name?: string;
+    away_team_id: string;
+    away_team_name?: string;
+    home_goals: number;
+    away_goals: number;
+  };
+  scout_report?: ScoutReportData;
+  delegated_renewal_report?: DelegatedRenewalReportMessageData;
+}
+
+export interface MessageData {
+  id: string;
+  subject: string;
+  body: string;
+  sender: string;
+  sender_role: string;
+  date: string;
+  read: boolean;
+  category: string;
+  priority: string;
+  actions: MessageAction[];
+  context: MessageContext;
+  subject_key?: string;
+  body_key?: string;
+  sender_key?: string;
+  sender_role_key?: string;
+  i18n_params?: Record<string, string>;
+}
+
+export interface ManagerCareerStats {
+  matches_managed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  trophies: number;
+  best_finish: number | null;
+}
+
+export interface ManagerCareerEntry {
+  team_id: string;
+  team_name: string;
+  start_date: string;
+  end_date: string | null;
+  matches: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  best_league_position: number | null;
+}
+
+export interface ManagerData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  nationality: string;
+  football_nation?: string;
+  birth_country?: string | null;
+  reputation: number;
+  satisfaction: number;
+  fan_approval: number;
+  team_id: string | null;
+  warning_stage?: number;
+  career_stats: ManagerCareerStats;
+  career_history: ManagerCareerEntry[];
+}
+
+/** Mirrors the backend's `FixtureCompetition` enum. */
+export type FixtureCompetition =
+  | "League"
+  | "Cup"
+  | "ContinentalClub"
+  | "InternationalClub"
+  | "InternationalNation"
+  | "Friendly"
+  | "FriendlyCup"
+  | "PreseasonTournament";
+
+export interface FixtureData {
+  id: string;
+  competition_id?: string;
+  matchday: number;
+  date: string;
+  home_team_id: string;
+  away_team_id: string;
+  competition: FixtureCompetition;
+  status: "Scheduled" | "InProgress" | "Completed";
+  result: null | {
+    home_goals: number;
+    away_goals: number;
+    home_scorers: { player_id: string; minute: number }[];
+    away_scorers: { player_id: string; minute: number }[];
+    report?: CompactMatchReportData | null;
+    /** Shootout score when a knockout tie was decided on penalties. */
+    home_penalties?: number | null;
+    away_penalties?: number | null;
+  };
+}
+
+export interface CompactMatchEventData {
+  minute: number;
+  event_type: string;
+  side: "Home" | "Away";
+  player_id: string | null;
+  secondary_player_id: string | null;
+}
+
+export interface CompactTeamMatchStatsData {
+  possession_pct: number;
+  shots: number;
+  shots_on_target: number;
+  fouls: number;
+  corners: number;
+  yellow_cards: number;
+  red_cards: number;
+}
+
+export interface CompactMatchReportData {
+  total_minutes: number;
+  home_stats: CompactTeamMatchStatsData;
+  away_stats: CompactTeamMatchStatsData;
+  events: CompactMatchEventData[];
+}
+
+export interface StandingData {
+  team_id: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  points: number;
+}
+
+export interface CompletedTransferData {
+  date: string;
+  from_team_id: string;
+  to_team_id: string;
+  player_id: string;
+  fee: number;
+}
+
+export interface TransferRumourData {
+  id: string;
+  date: string;
+  player_id: string;
+  player_name: string;
+  team_id: string;
+  team_name: string;
+}
+
+export interface LeagueData {
+  id: string;
+  name: string;
+  kind?: string;
+  scope?: string;
+  season: number;
+  region_id?: string | null;
+  country_id?: string | null;
+  required_region_ids?: string[];
+  participant_ids?: string[];
+  rules?: {
+    format: "LeagueTable" | "Knockout" | "GroupAndKnockout";
+    counts_in_season_flow: boolean;
+    group_size?: number;
+  };
+  fixtures: FixtureData[];
+  standings: StandingData[];
+  groups?: {
+    id: string;
+    name: string;
+    team_ids: string[];
+    standings: StandingData[];
+  }[];
+  knockout_rounds?: {
+    id: string;
+    name: string;
+    fixture_ids: string[];
+    bye_team_ids?: string[];
+    completed: boolean;
+  }[];
+  transfer_log?: CompletedTransferData[];
+  transfer_rumours?: TransferRumourData[];
+  priority?: number;
+  name_key?: string;
+}
+
+export interface WorldCupChampionData {
+  year: number;
+  nation_code: string;
+  nation_name: string;
+}
+
+export interface NationalTeamData {
+  id: string;
+  name: string;
+  football_nation: string;
+  region_id?: string | null;
+  squad_player_ids: string[];
+  manager_name?: string | null;
+  reputation: number;
+  fixtures: FixtureData[];
+  name_key?: string | null;
+}
+
+export interface WorldRegionData {
+  id: string;
+  name: string;
+  country_codes: string[];
+}
+
+export type SeasonPhase = "Preseason" | "InSeason" | "PostSeason";
+
+export type TransferWindowStatus = "Closed" | "Open" | "DeadlineDay";
+
+export interface TransferWindowContextData {
+  status: TransferWindowStatus;
+  opens_on: string | null;
+  closes_on: string | null;
+  days_until_opens: number | null;
+  days_remaining: number | null;
+}
+
+export interface SeasonContextData {
+  phase: SeasonPhase;
+  season_start: string | null;
+  season_end: string | null;
+  days_until_season_start: number | null;
+  transfer_window: TransferWindowContextData;
+  /** Whether the rollover to next season is available now. Decided by the
+   *  backend, which is also what `advance_to_next_season` enforces. */
+  season_complete?: boolean;
+}
+
+export interface NewsMatchScore {
+  home_team_id: string;
+  away_team_id: string;
+  home_goals: number;
+  away_goals: number;
+}
+
+export interface NewsArticle {
+  id: string;
+  headline: string;
+  body: string;
+  source: string;
+  date: string;
+  category: string;
+  team_ids: string[];
+  player_ids: string[];
+  match_score: NewsMatchScore | null;
+  read: boolean;
+  headline_key?: string;
+  body_key?: string;
+  source_key?: string;
+  i18n_params?: Record<string, string>;
+}
+
+export interface SeasonAwardEntryData {
+  player_id: string;
+  player_name: string;
+  team_id: string;
+  team_name: string;
+  value: number;
+}
+
+export interface SeasonManagerAwardEntryData {
+  manager_id: string;
+  manager_name: string;
+  team_id: string;
+  team_name: string;
+  value: number;
+  win_rate: number;
+}
+
+export interface SeasonAwardsData {
+  golden_boot: SeasonAwardEntryData[];
+  assist_king: SeasonAwardEntryData[];
+  player_of_year: SeasonAwardEntryData[];
+  clean_sheet_king: SeasonAwardEntryData[];
+  most_appearances: SeasonAwardEntryData[];
+  young_player: SeasonAwardEntryData[];
+  manager_of_season: SeasonManagerAwardEntryData[];
+}
+
+export interface BoardObjective {
+  id: string;
+  description: string;
+  target: number;
+  objective_type: string;
+  met: boolean;
+}
+
+export interface ScoutingAssignment {
+  id: string;
+  scout_id: string;
+  player_id: string;
+  days_remaining: number;
+}
+
+export interface YouthScoutingAssignment {
+  id: string;
+  scout_id: string;
+  region?: string;
+  objective?: string;
+  target_position?: string | null;
+  days_remaining: number;
+}
+
+export interface GameStateData {
+  clock: {
+    current_date: string;
+    start_date: string;
+  };
+  manager: ManagerData;
+  managers?: ManagerData[];
+  teams: TeamData[];
+  players: PlayerData[];
+  staff: StaffData[];
+  messages: MessageData[];
+  news: NewsArticle[];
+  competitions?: LeagueData[];
+  national_teams?: NationalTeamData[];
+  world_history?: {
+    world_cup_champions?: WorldCupChampionData[];
+  };
+  // Authored competition definitions (resolved at game creation; present on
+  // imported worlds that ship their own competitions).
+  competitionDefinitions?: unknown;
+  active_region_ids?: string[];
+  active_competition_ids?: string[];
+  regions?: WorldRegionData[];
+  league: LeagueData | null;
+  scouting_assignments: ScoutingAssignment[];
+  youth_scouting_assignments?: YouthScoutingAssignment[];
+  board_objectives: BoardObjective[];
+  season_context?: SeasonContextData;
+  available_staff_market_last_activity_date?: string | null;
+  extra_translations?: Record<string, Record<string, unknown>>;
+  package_lockfile?: Array<{ id: string; version: string; hash: string }>;
+}

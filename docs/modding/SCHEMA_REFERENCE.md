@@ -1,0 +1,680 @@
+# Schema Reference
+
+Every data file in a `.ofm` package must have a top-level `"schema"` field that identifies what kind of entity the file contains. This document describes every schema, every field, and valid values.
+
+All field names use **camelCase** in JSON/YAML (e.g. `shortName`, `playStyle`, `seasonStartMonth`).
+
+---
+
+## Adding a field to a schema
+
+The package format is described in six places, and they used to drift apart
+silently — `kitPattern` was a real, loadable field that no document mentioned,
+and `fallbackLeague` reached the World Editor without ever reaching `ofm-cli`.
+They are now chained together, each link enforced by a test:
+
+```text
+Rust  *Def struct                                  ← the format
+  └─ scaffold::entity_template                     ← ofm-cli add / the skeleton
+       ├─ ofm-cli schema <entity> annotated text
+       ├─ this document
+       └─ schemaFields.generated.json               ← the frontend handshake
+            └─ the editor's types.ts interfaces
+```
+
+So adding a field is a checklist that mostly writes itself — each step fails
+until you do the next:
+
+1. Add it to the `*Def` struct with `#[serde(default)]` (old packages must keep
+   loading). `populated_definitions` in `generator/scaffold.rs` stops compiling,
+   because its struct literals are deliberately exhaustive.
+2. Add it there, and to `entity_template`, until the parity tests pass.
+3. Document it in `ofm-cli`'s annotated `SCHEMA_*` text and in the table below —
+   `the_annotated_schema_...` and `the_schema_reference_...` in the CLI's tests
+   name whatever is still missing.
+4. Regenerate the frontend fixture:
+   `OFM_UPDATE_SCHEMA_FIXTURE=1 cargo test -p ofm_core --lib the_frontend_fixture`
+5. Declare it on the matching interface in
+   `src/components/menu/PackageEditor/types.ts`, until `schemaParity.test.ts`
+   passes. The editor can only show what it can name.
+
+## File Format Rules
+
+- Supported formats: `.json`, `.yaml`, `.yml`
+- A file can contain **one entity** (fields at the top level alongside `schema`) or **many entities** in an `items` array
+- JSON comments are not supported (use YAML for commented data)
+- The loader walks the package directory recursively — directory names do not matter
+- At most **one `world` entity** is allowed per package
+
+**Single entity:**
+```json
+{ "schema": "team", "id": "my-club", "name": "My Club FC", "city": "London", "country": "ENG", ... }
+```
+
+**Multiple entities (items array):**
+```json
+{
+  "schema": "team",
+  "items": [
+    { "id": "club-a", "name": "Club A", ... },
+    { "id": "club-b", "name": "Club B", ... }
+  ]
+}
+```
+
+---
+
+## `world` — Package Manifest
+
+The package manifest. Place this in `package.json` (or any file with `"schema": "world"`). Only one world entity is allowed per package.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | yes | — | Stable slug used as the install key. Lowercase letters, numbers, and hyphens only. Example: `"bundesliga-2026"`. Must be unique. |
+| `name` | string | yes | — | Human-readable display name. Example: `"Bundesliga 2026"`. |
+| `description` | string | no | `""` | Short description shown in the world selector. |
+| `version` | string | yes | — | Semantic version. Example: `"1.0.0"`. Increment on each update. |
+| `author` | string | no | `""` | Author name or username. |
+| `license` | string | yes | — | [SPDX license identifier](https://spdx.org/licenses/). Examples: `"CC-BY-4.0"`, `"CC0-1.0"`, `"MIT"`. |
+| `packageType` | string | no | `"database"` | One of: `"database"`, `"patch"`, `"assets"`. Omitting it is fine — it resolves to `"database"`. Only an explicitly empty value (`""`) is rejected. |
+| `gameMinVersion` | string | no | `""` | Minimum OFM version required. Semver string. Example: `"0.3.0"`. Empty = no requirement. |
+| `formatVersion` | integer | no | `1` | Schema format version. Always `1` for the current release. |
+| `baseYear` | integer or null | no | `null` | Season year displayed in the world selector. Example: `2026`. |
+| `defaultActiveRegions` | array of strings | no | `[]` | Region ids that are enabled by default when starting a new game with this package. |
+| `defaultActiveCompetitions` | array of strings | no | `[]` | Competition ids that are enabled by default when starting a new game with this package. |
+| `fallbackLeague` | object or null | no | `null` | Overrides for the league auto-generated when a `database` package declares teams but **no** competitions. See below. |
+
+### `fallbackLeague` overrides
+
+When a `database` package defines teams but no competitions, the engine synthesizes a single-division league over all teams so the world is still playable (and raises a notice). This object lets you shape that league. Every field is optional; an omitted field uses the built-in default.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string or null | localized "Default League" | Display name, used verbatim. |
+| `legs` | integer or null | `2` | Rounds each pair plays: `1` (single) or `2` (double round-robin). Other values are ignored. |
+| `scope` | string or null | `"Domestic"` | One of `"Domestic"`, `"Regional"`, `"Continental"`, `"International"`. |
+
+If you define your own competitions, this object is ignored.
+
+You do not have to write this by hand — the World Editor exposes all three fields in its **Metadata** section (see [Metadata Section](PACKAGE_EDITOR.md#metadata-section)).
+
+**Minimal valid example:**
+```json
+{
+  "schema": "world",
+  "id": "my-league-2026",
+  "name": "My League 2026",
+  "version": "1.0.0",
+  "license": "CC-BY-4.0",
+  "packageType": "database"
+}
+```
+
+`id`, `name`, `version` and `license` are enforced by validation: a manifest
+missing any of them is reported as `be.error.package.missingId` (for `id`) or
+`be.error.package.missingMetadata` (for the rest), in `ofm-cli validate` and in
+the World Editor alike. `packageType` is checked too, but omitting it resolves
+to `"database"`, so only an explicitly empty value fails.
+
+`id` in particular is the install key *and* the packed filename. `ofm-cli pack`
+runs validation first and refuses to build an archive while any of these are
+missing, so a package can no longer be written to an unnamed file.
+
+Because it becomes a filename, the `id` must be a plain one, or validation
+reports `be.error.package.invalidPackageId`: it cannot start with a dot, end
+with a dot or a space, contain `/`, `\`, `..`, control characters or
+Windows-reserved punctuation (`<`, `>`, `:`, `"`, `|`, `?`, `*`), exceed
+251 bytes, be a Windows device name (`CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`,
+`LPT1`–`LPT9`, `COM¹`–`COM³`, `LPT¹`–`LPT³`, in any case and with any extension),
+or be `assets`.
+
+---
+
+## `team` — Club Definition
+
+Defines a football club.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | no | _(auto-UUID)_ | Stable slug used to reference this team in players and competitions. Auto-generated from `name` if empty. Example: `"manchester-city"`. |
+| `name` | string | yes | — | Full display name. Example: `"Manchester City"`. |
+| `shortName` | string | no | `""` | 2–5 character abbreviation for standings tables. Example: `"MCI"`. |
+| `city` | string | yes | — | City the team is based in. |
+| `country` | string | yes | — | Football country code. See [Country Codes](#country-codes) below. Example: `"ENG"`. |
+| `colors.primary` | string | yes | — | Primary kit color as a hex string. Example: `"#1c6bba"`. |
+| `colors.secondary` | string | yes | — | Secondary kit color as a hex string. Example: `"#ffffff"`. |
+| `playStyle` | string | no | `"Balanced"` | Team's tactical tendency. One of: `"Balanced"`, `"Attacking"`, `"Defensive"`, `"Possession"`, `"Counter"`, `"HighPress"`. An unrecognised value is silently read as `"Balanced"`. |
+| `stadiumName` | string | no | `""` | Home stadium name. |
+| `reputationRange` | [integer, integer] or null | no | `null` | `[min, max]` reputation (0–1000). The game draws a random value in this range at world generation. Higher = more prestigious. |
+| `financeRange` | [integer, integer] or null | no | `null` | `[min, max]` budget in euros. The game draws a random value in this range at world generation. |
+| `logo` | string or null | no | `null` | Relative path to the team's logo image inside the package. Example: `"assets/logos/manchester-city.png"`. |
+| `kitPattern` | string or null | no | `null` | Jersey pattern used when drawing the club's kit. One of: `"Solid"`, `"Stripes"`, `"Hoops"`, `"HalfAndHalf"`, `"Diagonal"`. |
+| `foundedYear` | integer or null | no | `null` | Year the team was founded. If omitted or `null`, the game draws a random year between 1880 and 1959 at world generation. Example: `2005`. |
+
+**Example:**
+```json
+{
+  "schema": "team",
+  "id": "manchester-city",
+  "name": "Manchester City",
+  "shortName": "MCI",
+  "city": "Manchester",
+  "country": "ENG",
+  "colors": { "primary": "#1c6bba", "secondary": "#ffffff" },
+  "playStyle": "HighPress",
+  "stadiumName": "Etihad Stadium",
+  "reputationRange": [850, 1000],
+  "financeRange": [50000000, 200000000],
+  "foundedYear": 2005
+}
+```
+
+---
+
+## `player` — Player Definition
+
+Defines a specific player. Reference teams and countries by their `id`.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | no | _(auto-UUID)_ | Stable slug. Auto-generated from `name` if empty. |
+| `name` | string | no | `""` | Full display name (used as fallback if `firstName`/`lastName` are empty). |
+| `firstName` | string | no | `""` | First name. Used for display and name pool lookup. |
+| `lastName` | string | no | `""` | Last name. |
+| `club` | string | no | `""` | Team `id` this player starts at. Must match an existing team. |
+| `nationality` | string | no | `""` | Country `id` (ISO alpha-2 or football code). Example: `"ENG"`, `"ES"`. |
+| `position` | string | no | `"Goalkeeper"` | Player position. See [Position Values](#position-values). |
+| `footedness` | string or null | no | `"Right"` | Preferred foot: `"Right"`, `"Left"`, or `"Both"`. |
+| `dateOfBirth` | string or null | no | `null` | ISO 8601 date: `"YYYY-MM-DD"`. Example: `"1990-05-15"`. |
+| `age` | integer or null | no | `null` | Player age at world generation start. Used if `dateOfBirth` is absent. |
+| `youth` | boolean | no | `false` | If `true`, the player joins the club's youth/academy squad instead of the first team. |
+| `photo` | string or null | no | `null` | Relative path to a player photo asset bundled in the package. |
+| `overall` | integer (1–99) or null | no | `null` | Overall ability rating. The engine generates a realistic attribute spread from this value. |
+| `potential` | integer (1–99) or null | no | `null` | Career ceiling. Omit it and the engine rolls one from the player's ability and age. See below. |
+| `attributes` | object or null | no | `null` | Explicit attribute block. Replaces `overall`-based generation entirely — this is not a partial override, so any of the 19 attributes you omit takes its serde default (8 are optional; the other 11 are required). |
+| `contractStart` | string or null | no | `null` | ISO date (`"YYYY-MM-DD"`) the current contract began. Omit it and the start is given when a career opens. See [Contracts](#contracts). |
+| `contractEnd` | string or null | no | `null` | ISO date the contract ends. Give this **or** `contractLength`, not both. |
+| `contractLength` | integer (1–5) or null | no | `null` | Contract length in whole years, as an alternative to `contractEnd`. |
+| `wage` | integer or null | no | `null` | **Weekly** wage in the game's money. Omit it and it is sized from the player's value. |
+| `value` | integer (0–9007199254740991) or null | no | `null` | Market value in the game's money. Omit it and it is sized from ability and age. |
+| `weakFoot` | integer (1–5) or null | no | `null` | Weak-foot skill. Only kept for a specific `position`; see [Identity fields](#identity-fields). |
+| `alternatePositions` | array of positions | no | `[]` | Other positions the player can cover. Same restriction as `weakFoot`. |
+| `condition` | integer (0–100) or null | no | `null` | Match sharpness. Omit it and it is rolled in a realistic band. |
+| `morale` | integer (0–100) or null | no | `null` | Morale. Omit it and it is rolled in a realistic band. |
+| `careerHistory` | array of career entries | no | `[]` | Earlier clubs. See [Career history](#career-history). |
+
+> **Tip**: You only need to specify `overall` *or* `attributes` — not both. For most authored players, `overall` is sufficient. Use `attributes` for precise control.
+
+### Contracts
+
+A contract runs from a start to an end, and you can write either or both ends of it.
+
+- **`contractEnd`** is an absolute date. It is exactly right for the period you wrote the package
+  for, and nonsense outside it: a squad built for 2010 and played in 2026 has every contract long
+  expired. Use it when you want that.
+- **`contractLength`** is a number of whole years, 1 to 5 (the same ceiling negotiation uses). It is
+  counted from `contractStart` when you give one, and otherwise from the year the career opens in,
+  ending on 30 June like every generated contract. So the same package works whichever year a player
+  starts in. Use this for a package meant to be played in any era.
+- Give **one or the other**. Writing both is an error, because they say the same thing two ways.
+- **`contractStart` alone** is half an interval. The engine rolls a length as it always has and
+  counts it from your start, so you get a whole contract and the start is yours.
+- **Leave all three out** and the engine rolls a contract exactly as it did before these fields
+  existed, so every older package generates the same players.
+
+**When the start is not written.** It is given when a career opens, from the club's own season
+rather than a fixed date, because a club's season does not begin on the same day everywhere: a
+Brazilian club's opens in December of the year before. It is never later than the day the career
+begins, and it is left unknown rather than invented if it would not come before the end. A start
+you *do* write is kept exactly as you wrote it, even one after the career begins, for a deal that
+has not started yet.
+
+`wage` is **weekly**, matching how the game stores and pays it. `value` and `wage` are whole numbers
+and may be `0`; a `0` is used as written and is not treated as "omitted".
+
+### Identity fields
+
+`weakFoot` and `alternatePositions` are only kept for a player with a **specific** `position`.
+`Goalkeeper`, `Defender`, `Midfielder` and `Forward` are general groups, and the game re-works a
+general-group player's weak foot and alternate positions from their attributes when a career opens
+(and for a goalkeeper, who has no more specific form, on every load), which would overwrite what you
+wrote. Package validation reports this rather than letting the values be silently discarded; choose
+a specific position such as `CentralMidfielder` or `Striker`. `alternatePositions` must also be specific, must not repeat the player's own position,
+and must not list a position twice.
+
+### Career history
+
+`careerHistory` records the clubs a player has already played for. Each entry is:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `season` | integer (1–9999) | The calendar year the season began in. |
+| `teamName` | string | The club's name as the profile should read. **Required**, free text. |
+| `teamId` | string or null | A team defined in this package, if the club is one. Omit it for a club the package does not define. |
+| `appearances`, `goals`, `assists` | integer | Counts for that spell. Default `0`. |
+
+A club does not have to be in your package: give its `teamName` and leave `teamId` out. A package
+that contains only Real Madrid can still record Zidane's years at Juventus. If you do give a
+`teamId`, it must match a team in the package, and validation says so if it does not. Two entries may
+share a season, for a player who moved clubs mid-year.
+
+### `potential` — the career ceiling
+
+`potential` is how good a player can *become*, and it is independent of how you expressed how good
+they are *now* — set it alongside either `overall` or `attributes`.
+
+Leave it out and nothing changes: the engine rolls a ceiling from the player's ability and age,
+exactly as it did before the field existed, so every package written without it generates the same
+players it always did. Set it and the number is yours; the engine will not overwrite it.
+
+Three things to know before using it.
+
+- **It cannot sit below current ability**, and validation will tell you if it does. Which ability it
+  is measured against follows the same precedence generation uses: your `attributes` block if you
+  wrote one, otherwise your `overall`, otherwise the default ability a player with neither is
+  generated at.
+- **A player who has reached their ceiling stops improving.** Training raises attributes only while
+  there is headroom left, so a player generated at their ceiling never develops again. That is a
+  reasonable thing to author for a finished veteran — just not what you want for a 19-year-old.
+  Writing `overall` and `potential` equal is the way to say "this player is finished", and it does
+  exactly that: the engine bounds the attribute spread it generates so a player is never created
+  above their own ceiling.
+- **It can earn the Wonderkid trait.** A player aged 20 or under whose ceiling is 90 or better and
+  at least 14 points above their current ability is tagged a wonderkid by the engine. Authoring a
+  generational talent therefore also authors the badge — usually what you want, but worth knowing
+  it is not something you set separately.
+
+**Position Values:**
+
+| Value | Role |
+|-------|------|
+| `"Goalkeeper"` | Goalkeeper |
+| `"CenterBack"` | Centre-back |
+| `"LeftBack"` | Left back |
+| `"RightBack"` | Right back |
+| `"LeftWingBack"` | Left wing-back |
+| `"RightWingBack"` | Right wing-back |
+| `"DefensiveMidfielder"` | Defensive midfielder |
+| `"CentralMidfielder"` | Central midfielder |
+| `"AttackingMidfielder"` | Attacking midfielder |
+| `"LeftMidfielder"` | Left midfielder |
+| `"RightMidfielder"` | Right midfielder |
+| `"LeftWinger"` | Left winger |
+| `"RightWinger"` | Right winger |
+| `"Striker"` | Striker |
+| `"Defender"` | Generic defender (engine assigns specific role) |
+| `"Midfielder"` | Generic midfielder |
+| `"Forward"` | Generic forward |
+
+**Example:**
+```json
+{
+  "schema": "player",
+  "id": "john-smith",
+  "firstName": "John",
+  "lastName": "Smith",
+  "club": "northshire-fc",
+  "nationality": "ENG",
+  "position": "CentralMidfielder",
+  "dateOfBirth": "1998-03-22",
+  "overall": 72
+}
+```
+
+---
+
+## `staff` — Coaching & Backroom Staff
+
+Defines a non-playing staff member (manager assistant, coach, scout, or physio). Place these inside `staff/*.json` in the `"items"` array. Reference teams by their `id`.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | no | _(auto-UUID)_ | Stable slug. Auto-generated from the name if empty. |
+| `firstName` | string | no | `""` | First name. |
+| `lastName` | string | no | `""` | Last name. |
+| `club` | string | no | `""` | Team `id` this staff member belongs to. Empty = unattached / free agent. |
+| `nationality` | string | no | `""` | Country `id` (ISO alpha-2 or football code). |
+| `role` | string | no | `"Coach"` | One of `"AssistantManager"`, `"Coach"`, `"Scout"`, `"Physio"`. |
+| `specialization` | string or null | no | `null` | Coaching focus (coaches only): `"Fitness"`, `"Technique"`, `"Tactics"`, `"Defending"`, `"Attacking"`, `"GoalKeeping"`, `"Youth"`. |
+| `dateOfBirth` | string or null | no | `null` | ISO 8601 date: `"YYYY-MM-DD"`. |
+| `age` | integer or null | no | `null` | Age at world generation start. Used if `dateOfBirth` is absent. |
+| `attributes` | object or null | no | `null` | Explicit attribute overrides: `coaching`, `judgingAbility`, `judgingPotential`, `physiotherapy` (each 1–99). |
+
+**Example:**
+```json
+{
+  "schema": "staff",
+  "id": "alex-ferguson",
+  "firstName": "Alex",
+  "lastName": "Ferguson",
+  "club": "northshire-fc",
+  "nationality": "ENG",
+  "role": "AssistantManager",
+  "specialization": null,
+  "dateOfBirth": "1941-12-31"
+}
+```
+
+### Managers, and why you cannot author one yet
+
+There is no `manager` schema, and **an assistant manager is not a way to author one**. A staff
+member you write with `role: "AssistantManager"` is exactly that: the club's assistant manager.
+The Ferguson example above authors an assistant, nothing more.
+
+Every club that has no manager of its own is given a newly invented one when the world is built.
+That manager is a separate person from anyone on the club's staff, with their own name, their own
+nationality and their own reputation — a manager's standing is never taken from the club they
+happen to work for.
+
+Your authored staff are left exactly as you wrote them. Nothing is promoted out of the staff list,
+renamed, or replaced.
+
+An earlier version of the game did build a club's manager by copying its assistant manager's
+details. If you have a package that relied on that to name a club's manager, it no longer will —
+the person you wrote stays an assistant, and the club gets a manager of its own. Authoring
+managers directly is planned; until then, a club's manager is not yours to set.
+
+**The one exception is mid-career.** If an AI club is left without a manager — its manager sacked,
+say — its assistant manager steps up to cover the post, and keeps their own job while doing it.
+That is a stand-in, not a rewrite: the same person holds both roles for as long as the club is
+without a permanent manager, and their staff record is untouched throughout.
+
+The assistant and nobody else. A club with staff but no assistant manager appoints a new person
+instead; a coach, a scout or a physio is never moved sideways into the dugout.
+
+The club *you* take over is never affected. Taking charge dismisses the incumbent to make room for
+you, so there is no vacancy for anyone to step into.
+
+---
+
+## `confederation` — Region Definition
+
+Defines a football confederation or regional grouping. You only need this if you are creating fictional confederations not in the built-in catalog.
+
+**Built-in confederation ids:** `europe`, `south-america`, `north-america`, `central-america`, `africa`, `asia`, `oceania`
+
+These are the game's regional groupings, which split the Americas into three. They are not the six FIFA confederations — `uefa`, `concacaf` and the rest are not ids you can reference, and a package that wants them has to define them itself.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | yes | — | Stable slug. Example: `"europa-fictiva"`. |
+| `name` | string | yes | — | Display name. Example: `"Europa Fictiva"`. |
+
+**Example:**
+```json
+{ "schema": "confederation", "id": "fictland-union", "name": "Fictland Football Union" }
+```
+
+---
+
+## `country` — Country Definition
+
+Defines a country. You only need this for fictional countries. Standard football country codes (`ENG`, `ES`, `DE`, `FR`, `IT`, `PT`, `BR`, `AR`, etc.) are built-in and do not need to be re-declared.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `id` | string | yes | — | Country code or slug. Used in `team.country`, `player.nationality`, and competition country references. |
+| `name` | string | yes | — | Display name. Example: `"England"`. |
+| `confederation` | string | no | `""` | Confederation `id` this country belongs to. Must match a built-in or package-defined confederation. |
+
+**Example (fictional country):**
+```json
+{ "schema": "country", "id": "NOR", "name": "Northshire Republic", "confederation": "europe" }
+```
+
+---
+
+## Country Codes
+
+The following codes are in the built-in catalog and can be used in `team.country` and `player.nationality` without defining a `country` entity:
+
+| Code | Country | Code | Country | Code | Country |
+|------|---------|------|---------|------|---------|
+| `ENG` | England | `SCO` | Scotland | `WAL` | Wales |
+| `NIR` | Northern Ireland | `ES` | Spain | `DE` | Germany |
+| `FR` | France | `IT` | Italy | `PT` | Portugal |
+| `NL` | Netherlands | `BE` | Belgium | `BR` | Brazil |
+| `AR` | Argentina | `CO` | Colombia | `MX` | Mexico |
+| `US` | United States | `CN` | China | `JP` | Japan |
+| `KR` | South Korea | `SA` | Saudi Arabia | `NG` | Nigeria |
+| `SN` | Senegal | `GH` | Ghana | `EG` | Egypt |
+| `MA` | Morocco | `ZA` | South Africa | `AU` | Australia |
+
+This is not the complete list. To see all supported codes, run `ofm-cli schema country` or check the `nations` module in the source.
+
+---
+
+## `competition` — Competition Definition
+
+Competitions are the most complex entity. A competition defines a league, cup, or continental tournament and the rules for selecting participants.
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Stable slug. Example: `"eng-premier-league"`. Must be unique. |
+| `name` | string | Display name. Example: `"Premier League"`. |
+| `type` | string | Competition category. See [Competition Types](#competition-types). |
+| `scope` | string | Geographic scope. See [Competition Scopes](#competition-scopes). |
+| `format` | object | Format rules. See [Format](#format). |
+| `participants` | object | How participants are chosen. See [Participants](#participants). |
+
+### Optional Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `countryId` | string or null | `null` | Country this competition belongs to (required for `Domestic` scope). |
+| `regionId` | string or null | `null` | Region this competition belongs to (required for `Regional`/`Continental` scope). |
+| `requiredRegionIds` | array of strings | `[]` | Region ids that must be active for this competition to appear. |
+| `priority` | integer | `0` | Tier rank within a country: **lower is the higher division**. Domestic `League` competitions in `LeagueTable` format that share a `countryId` form a promotion/relegation pyramid ordered by it, so a first division is `0` and a second `1`. Gaps are fine — tiers are chained in rank order, not by consecutive numbers — but two tiers of one pyramid must not share a value. A tier that is the target of a `positionRange` berth, or one of several feeders into the same target, is filled through those berths instead and leaves the linear ladder, so it is exempt. Also ranks continental cups by prestige, lowest first. |
+| `berths` | array | `[]` | Qualification spots this competition awards to other competitions. See [Berths](#berths). |
+| `seasonStartMonth` | integer (1–12) | `8` | Month the season begins. |
+| `seasonStartDay` | integer (1–31) | `1` | Day of the month the season begins. |
+| `nameKey` | string or null | `null` | i18n key for a translated competition name. |
+
+### Competition Types
+
+| Value | Use |
+|-------|-----|
+| `"League"` | Domestic league table |
+| `"Cup"` | Domestic knockout cup |
+| `"ContinentalClub"` | Club-level continental tournament (e.g. Champions League) |
+| `"InternationalClub"` | Club-level international tournament |
+| `"InternationalNation"` | National team tournament |
+| `"FriendlyCup"` | Pre-season or friendly tournament |
+
+### Competition Scopes
+
+| Value | Use |
+|-------|-----|
+| `"Domestic"` | Belongs to one country; set `countryId` |
+| `"Regional"` | Belongs to a region; set `regionId` |
+| `"Continental"` | Continent-wide; set `regionId` |
+| `"International"` | Global tournament |
+
+### Format
+
+```json
+"format": {
+  "kind": "LeagueTable",
+  "legs": 2
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `kind` | string | — | `"LeagueTable"`, `"Knockout"`, or `"GroupAndKnockout"` |
+| `legs` | integer | `2` | _(LeagueTable / groups phase only)_ Number of legs per round-robin cycle. `1` = one-leg, `2` = home and away. |
+| `groupSize` | integer | `4` | _(GroupAndKnockout only)_ Maximum clubs per group. Uneven fields are balanced across groups. |
+| `qualifiersPerGroup` | integer | `2` | _(GroupAndKnockout only)_ Clubs advancing from each group. |
+| `bestThirdQualifiers` | integer | `0` | _(GroupAndKnockout only)_ Best third-placed teams that also advance (like the 2026 World Cup format). |
+
+### Participants
+
+Exactly one of `explicit` or `selector` must be set.
+
+**Explicit list:**
+```json
+"participants": {
+  "explicit": ["team-id-1", "team-id-2", "team-id-3", "team-id-4"]
+}
+```
+All team ids must exist in the package. Minimum 2 teams.
+
+**Selector:**
+```json
+"participants": {
+  "selector": {
+    "kind": "topByReputation",
+    "country": "ENG",
+    "count": 20
+  }
+}
+```
+
+| Selector Kind | Description | Required fields |
+|---------------|-------------|-----------------|
+| `"topByReputation"` | Top N clubs by reputation in a country | `country`, `count` (≥ 2) |
+| `"allInCountry"` | All clubs from a country | `country` |
+| `"allInRegion"` | All clubs from a region | `region` |
+| `"championsOf"` | Top N finishers of another competition | `sourceCompetition`, optionally `count` |
+
+Additional selector fields:
+
+| Field | Description |
+|-------|-------------|
+| `excludeCompetitions` | Array of competition ids whose participants are excluded (e.g. to fill a second division without repeating first division clubs) |
+
+### Berths
+
+Berths define automatic qualification spots that a competition awards to other competitions. For example, a league's top two finishers qualify for a continental cup.
+
+When the target is a domestic `LeagueTable`, a primary `positionRange` berth also drives promotion: those place-getters replace the target's bottom finishers (the league keeps its authored size) and the dropouts return to the feeders quota-first — each feeder receives as many dropouts as it promoted, which accounts for all of them. A club only moves while it is still registered with the competition it is leaving, so a club the ordinary ladder has already moved is never promoted a second time.
+
+The target is left out of the linear adjacent-tier swap so sibling regional groups do not promote into each other. When two or more leagues send `positionRange` berths to the same target they are treated as one sibling group and **all** of them leave the ladder — otherwise which group swapped with the tier below would depend on the order the competitions happen to be declared in. A tier below such a group therefore has no automatic promotion path: give it `positionRange` berths into the groups if its clubs should be able to go up. A league that is the *sole* `positionRange` feeder into a target keeps its ordinary ladder edge, so a plain two-tier pyramid can be written as data without losing promotion and relegation with the tier beneath it.
+
+`CupWinner`, `PlayoffWinner`, and `fallbackTo` targets do not take a league out of that ladder. `fallbackTo` is a continental cascade only — it never awards a domestic promotion place, because a club that misses its primary target simply stays in its own league.
+
+Regional groups feeding one Central League:
+
+```json
+"berths": [
+  {
+    "target": "central-league",
+    "rule": { "kind": "positionRange", "from": 1, "to": 2 }
+  }
+]
+```
+
+A league awarding several berths at once — a continental place and a relegation play-off place:
+
+```json
+"berths": [
+  {
+    "target": "continental-cup",
+    "rule": { "kind": "positionRange", "from": 1, "to": 2 }
+  },
+  {
+    "target": "relegation-play-off",
+    "rule": { "kind": "positionRange", "from": 17, "to": 20 }
+  }
+]
+```
+
+| Berth Rule Kind | Description |
+|-----------------|-------------|
+| `"positionRange"` | League finishers from position `from` to `to` (1-based, inclusive) |
+| `"cupWinner"` | The winner of this cup |
+| `"playoffWinner"` | The winner of a playoff contested by league finishers in `[from, to]` (1-based, inclusive) |
+
+### Full Example
+
+A domestic league using `topByReputation` selector:
+
+```json
+{
+  "schema": "competition",
+  "id": "eng-premier-league",
+  "name": "Premier League",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "ENG",
+  "priority": 0,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "selector": {
+      "kind": "topByReputation",
+      "country": "ENG",
+      "count": 20
+    }
+  },
+  "berths": [
+    { "target": "eng-champions-cup", "rule": { "kind": "positionRange", "from": 1, "to": 4 } }
+  ],
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
+```
+
+A group + knockout continental tournament:
+
+```json
+{
+  "schema": "competition",
+  "id": "continental-champions-cup",
+  "name": "Continental Champions Cup",
+  "type": "ContinentalClub",
+  "scope": "Continental",
+  "regionId": "europe",
+  "priority": 100,
+  "format": {
+    "kind": "GroupAndKnockout",
+    "legs": 1,
+    "groupSize": 4,
+    "qualifiersPerGroup": 2
+  },
+  "participants": {
+    "selector": {
+      "kind": "championsOf",
+      "sourceCompetition": "eng-premier-league",
+      "count": 1
+    }
+  }
+}
+```
+
+---
+
+## `names` — Name Pools
+
+Provides first and last name lists for random player name generation. Keyed by ISO 3166-1 alpha-2 country code.
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `version` | integer | no | `1` | Always `1`. |
+| `description` | string | no | `""` | Optional description of the name pool. |
+| `pools` | object | yes | — | Map of country code → name lists. |
+| `pools.<code>.first_names` | array of strings | yes | — | First name list for this country. |
+| `pools.<code>.last_names` | array of strings | yes | — | Last name list for this country. |
+
+> **Note:** The name pool fields use **snake_case** (`first_names`, `last_names`), unlike most other entities which use camelCase. This matches the internal serialization format.
+
+**Example:**
+```json
+{
+  "schema": "names",
+  "version": 1,
+  "description": "Fictional name pools for Northshire",
+  "pools": {
+    "NOR": {
+      "first_names": ["Aldo", "Bram", "Celia", "Dana"],
+      "last_names": ["Northwick", "Ashfield", "Moorgate"]
+    }
+  }
+}
+```
+
+The built-in name pools already cover common footballing countries. You only need to define name pools for countries your package introduces, or if you want to customize the names generated for existing countries.
