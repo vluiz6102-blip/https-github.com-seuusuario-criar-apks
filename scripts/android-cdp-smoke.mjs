@@ -63,7 +63,7 @@ async function connect(){
     try{
       const t=await target();
       const url=String(t.webSocketDebuggerUrl||'');
-      if(!/^wss?:\\/\\//.test(url))throw Error('Invalid CDP target websocket URL: '+url);
+      if(!/^wss?:\/\//.test(url))throw Error('Invalid CDP target websocket URL: '+url);
       c=new CDP(url);
       await c.connect();
       await c.call('Runtime.enable');
