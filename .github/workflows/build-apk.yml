@@ -60,6 +60,9 @@ jobs:
       - name: Apply only Jornada 90 name and visible credits
         run: python3 scripts/prepare-mobile-brand.py
 
+      - name: Add national-team mode and CC0 World Cup squads
+        run: node scripts/patch-national-teams.mjs
+
       - name: Build the mobile-first web app
         working-directory: game-source/web
         run: npm run build
