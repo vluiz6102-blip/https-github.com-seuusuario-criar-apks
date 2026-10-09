@@ -37,7 +37,8 @@
     "resources": {
       "crates/ofm_core/data/default_names.json": "data/default_names.json",
       "crates/ofm_core/data/default_nations.json": "data/default_nations.json",
-      "../docs/modding/examples/maia-world-cup-2026": "databases/northshire-mini-league"
+      "../docs/modding/examples/maia-world-cup-2026": "databases/maia-world-cup-2026",
+      "../docs/modding/examples/maia-club-world-2026": "databases/maia-club-world-2026"
     },
     "icon": [
       "icons/32x32.png",
