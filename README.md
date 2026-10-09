@@ -1,17 +1,21 @@
-# Jornada 90 para Android
+# Jornada 90
 
-Esta branch usa **Gandula** como base de jogo: um manager de futebol brasileiro com interface responsiva para celular, temporadas, três divisões, promoção/rebaixamento, Copa do Brasil, finanças, contratos, mercado de transferências, desenvolvimento de jogadores, clubes rivais com IA e partidas simuladas.
+**Marca e personalização:** Victor Luiz
 
-- **Base original:** [felipedbene/gandula](https://github.com/felipedbene/gandula)
-- **Licença do projeto-base:** MIT. A licença e os créditos originais são preservados.
-- **Crédito da personalização Android/marca:** Victor Luiz.
-- **Modo de jogo:** offline, carreira e dados locais no navegador/WebView, sem exigir conta nem servidor de jogo.
-- **Alterações funcionais:** nenhuma alteração intencional no motor, na simulação ou nos sistemas de carreira. A pipeline só aplica a marca Jornada 90 e inclui os créditos.
+**Tecnologias usadas:** React, TypeScript, Rust, WebAssembly, Vite e Capacitor 7.
+
+## O que já existe
+
+A base de jogo contém simulação de partidas, temporadas, três divisões, promoção e rebaixamento, Copa, finanças, contratos, mercado de transferências, desenvolvimento de jogadores, IA para clubes rivais e salvamento local da carreira. A interface web é responsiva e foi feita para funcionar em telas móveis; o APK é empacotado com Capacitor.
+
+A tela inicial agora permite escolher um dos clubes disponíveis antes de iniciar a carreira. A engine de partidas e a progressão de temporada são testadas na pipeline, antes da aplicação da marca.
+
+## Dados ainda necessários antes de chamar a versão de final
+
+O banco atual do jogo usa 60 clubes fictícios e elencos derivados/ficcionalizados. **Ainda não contém todos os elencos reais do futebol mundial nem um modo completo de carreira com seleções nacionais.** Não vou substituir essa base por dados raspados de jogos comerciais sem uma licença verificável ou misturar jogadores aleatoriamente entre clubes e chamá-los de elencos reais. Esse banco precisa ser uma etapa de integração própria com uma fonte de dados autorizada e cobertura conhecida.
 
 ## APK Android
 
-O workflow `.github/workflows/build-apk.yml` compila o motor Rust para WebAssembly, executa os testes do projeto, gera o site mobile-first e empacota a aplicação com Capacitor. O APK é disponibilizado como artefato de teste do GitHub Actions.
+A branch `goal/open-source-replacement` gera o APK por GitHub Actions. Os avisos legais dos componentes open-source permanecem incluídos no pacote (`game-source/LICENSE` e `OPEN_SOURCE_LICENSES.txt`); isso não exige mostrar atribuições de terceiros na tela principal.
 
-A implementação original é baixada pelo submódulo `game-source`; use `git clone --recurse-submodules` para obter o código completo. A branch `main` original do Jornada 90 continua preservada.
-
-**Atribuição:** o código-base do simulador é de Felipe De Bene (Gandula), sob MIT. Victor Luiz é responsável pela marca Jornada 90 e pelo empacotamento Android, não pela autoria do motor original. A interface inclui um link para o texto completo da licença MIT.
+A branch `main` original do J90 continua preservada.
