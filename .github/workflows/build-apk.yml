@@ -89,8 +89,12 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const html = fs.readFileSync('index.html','utf8');
-          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n');
-          new Function(scripts);
+          const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
+          const scripts = inlineScripts.map(m=>m[1]).join('\n');
+          for (const [i, match] of inlineScripts.entries()) {
+            try { new Function(match[1]); }
+            catch (error) { throw new Error('Inline script #' + (i + 1) + ': ' + error.message); }
+          }
           if (/playerPhotos|j90PlayerPhoto|COMMONS_API|Wikimedia/i.test(scripts)) throw new Error('Player photo code still present.');
           if ((scripts.match(/setInterval\s*\(/g)||[]).length) throw new Error('setInterval detected.');
           console.log('PREFLIGHT_JS=OK');
