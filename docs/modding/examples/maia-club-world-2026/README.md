@@ -18,6 +18,7 @@
 
 - **549 atletas reais foram associados a clubes compatíveis** a partir do dataset Rising Transfers World Cup 2026, que contém nomes, clube reportado, nacionalidade, posição, idade e estimativa de valor. Os dados de jogador preservam atribuição à fonte e licença CC BY 4.0.
 - Os demais **2795 jogadores são gerados pelo jogo** para completar as vagas por posição; não devem ser interpretados como jogadores reais ou elencos oficiais.
+- Nacionalidades do dataset são normalizadas para os códigos internos aceitos pelo jogo (por exemplo, BRA → BR e NED → NL), sem alterar o país do atleta.
 - Apenas associações de clube que coincidem com os clubes deste pacote são usadas. Transferências e elencos podem ter mudado após a captura do dataset de seleção para a Copa de 2026.
 - Não incluímos fotos, escudos ou kits oficiais.
 
