@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -290,6 +290,7 @@ export default function MainMenu() {
   // Installed packages state
   const [installedPackages, setInstalledPackages] = useState<PackageInfo[]>([]);
   const [activePackageIds, setActivePackageIds] = useState<string[]>([]);
+  const defaultPackageAutoSelected = useRef(false);
   const [isInstallingPackage, setIsInstallingPackage] = useState(false);
   const [packageStackErrors, setPackageStackErrors] = useState<PackageIssue[]>([]);
   const [historyDepthYears, setHistoryDepthYears] = useState(initialHistoryDepthYears);
@@ -436,10 +437,19 @@ export default function MainMenu() {
 
   const loadInstalledPackages = async () => {
     try {
-      const pkgs = await invoke<PackageInfo[]>("list_installed_packages");
-      // Tauri commands can resolve to null; never let installedPackages become
-      // null or downstream `.filter` calls (here and in PackageBuildStep) throw.
-      setInstalledPackages(pkgs ?? []);
+      const pkgs = (await invoke<PackageInfo[]>("list_installed_packages")) ?? [];
+      setInstalledPackages(pkgs);
+      // Select the bundled starter database on first entry so new installs do
+      // not land on the empty-package state or silently start a random world.
+      if (!defaultPackageAutoSelected.current) {
+        const starter = pkgs.find(
+          (pkg) => pkg.id === "northshire-mini-league" && pkg.packageType === "database",
+        );
+        if (starter) {
+          setActivePackageIds((current) => current.length > 0 ? current : [starter.id]);
+          defaultPackageAutoSelected.current = true;
+        }
+      }
     } catch (err) {
       console.error("Failed to list packages:", err);
     }
