@@ -1,0 +1,37 @@
+{
+  "schema": "competition",
+  "id": "maia-eredivisie-2026-27",
+  "name": "Eredivisie 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "NL",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-nl-ado-den-haag",
+      "club-nl-afc-ajax",
+      "club-nl-az",
+      "club-nl-fc-groningen",
+      "club-nl-fc-twente-65",
+      "club-nl-fc-utrecht",
+      "club-nl-feyenoord-rotterdam",
+      "club-nl-fortuna-sittard",
+      "club-nl-go-ahead-eagles",
+      "club-nl-nec",
+      "club-nl-pec-zwolle",
+      "club-nl-psv",
+      "club-nl-sbv-excelsior",
+      "club-nl-sc-cambuur-leeuwarden",
+      "club-nl-sc-heerenveen",
+      "club-nl-sparta-rotterdam",
+      "club-nl-telstar-1963",
+      "club-nl-willem-ii-tilburg"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
