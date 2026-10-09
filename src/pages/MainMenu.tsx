@@ -426,7 +426,7 @@ export default function MainMenu() {
       // not land on the empty-package state or silently start a random world.
       if (!defaultPackageAutoSelected.current) {
         const starter = pkgs.find(
-          (pkg) => pkg.id === "maia-world-cup-2026" && pkg.packageType === "database",
+          (pkg) => pkg.id === "maia-club-world-2026" && pkg.packageType === "database",
         );
         if (starter) {
           setActivePackageIds((current) => current.length > 0 ? current : [starter.id]);
