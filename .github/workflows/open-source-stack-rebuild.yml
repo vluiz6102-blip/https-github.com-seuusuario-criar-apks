@@ -1,0 +1,182 @@
+name: Rebuild from untouched open-source football projects
+
+on:
+  push:
+    branches:
+      - rebuild/open-source-game
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-test-and-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout rebuild branch
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Replace the existing project with pinned upstream source trees
+        shell: bash
+        env:
+          OFM_SHA: 90b05fdb50a7865e19f087e0b0447bdcc272bc0f
+          SOCCER_JS_SHA: 38970e0dade0865078c9e84bc1ecfd72aaa02fde
+        run: |
+          set -euo pipefail
+          work="$GITHUB_WORKSPACE"
+          tmp="$RUNNER_TEMP/open-source-import"
+          ofm="$tmp/openfootmanager"
+          soccer="$tmp/soccer-js"
+          mkdir -p "$tmp"
+
+          # Keep this orchestration workflow outside the workspace while the old
+          # project tree is removed. The imported upstream files stay untouched.
+          cp "$work/.github/workflows/open-source-stack-rebuild.yml" "$tmp/open-source-stack-rebuild.yml"
+
+          mkdir -p "$ofm" "$soccer"
+          git -C "$ofm" init
+          git -C "$ofm" remote add origin https://github.com/openfootmanager/openfootmanager.git
+          git -C "$ofm" fetch --depth 1 origin "$OFM_SHA"
+          git -C "$ofm" checkout --detach FETCH_HEAD
+          test "$(git -C "$ofm" rev-parse HEAD)" = "$OFM_SHA"
+
+          git -C "$soccer" init
+          git -C "$soccer" remote add origin https://github.com/haeretici/soccer-js.git
+          git -C "$soccer" fetch --depth 1 origin "$SOCCER_JS_SHA"
+          git -C "$soccer" checkout --detach FETCH_HEAD
+          test "$(git -C "$soccer" rev-parse HEAD)" = "$SOCCER_JS_SHA"
+
+          # Remove all tracked and untracked files from the old application tree.
+          # Git history is retained; only the branch's current project contents change.
+          git rm -r -f --ignore-unmatch .
+          git clean -fdx
+
+          # Priority base: Openfoot Manager, containing its complete manager,
+          # squad, transfers, scouting, training, finances, news and match workflows.
+          rsync -a --exclude='.git/' "$ofm/" "$work/"
+
+          # Secondary source: the complete soccer-js game engine, placed separately.
+          mkdir -p "$work/vendor/soccer-js"
+          rsync -a --exclude='.git/' "$soccer/" "$work/vendor/soccer-js/"
+
+          # Keep only this import workflow from our orchestration layer.
+          mkdir -p "$work/.github/workflows"
+          cp "$tmp/open-source-stack-rebuild.yml" "$work/.github/workflows/open-source-stack-rebuild.yml"
+
+          cat > "$work/OPEN_SOURCE_ORIGINS.md" <<EOF
+          # Imported open-source game sources
+
+          ## Main game base
+          - Project: Openfoot Manager
+          - Upstream: https://github.com/openfootmanager/openfootmanager
+          - Imported commit: $OFM_SHA
+          - License: GNU GPL v3 or later, as supplied by upstream.
+          - Location: repository root.
+
+          ## Secondary match engine
+          - Project: soccer-js
+          - Upstream: https://github.com/haeretici/soccer-js
+          - Imported commit: $SOCCER_JS_SHA
+          - License: MIT, as supplied by upstream.
+          - Location: \`vendor/soccer-js/\`.
+
+          Imported source files are copied without source edits. This file and the
+          rebuild workflow are project-level integration/automation files, not
+          edits to either upstream source tree. Keep each upstream license and
+          copyright notice with its corresponding source.
+          EOF
+
+          # Verify every file tracked by each upstream commit matches the copy byte-for-byte.
+          verify_copy() {
+            local source="$1" destination="$2" file
+            while IFS= read -r -d '' file; do
+              if [[ ! -e "$destination/$file" ]] || ! cmp -s "$source/$file" "$destination/$file"; then
+                echo "COPY_INTEGRITY_FAILURE: $file" >&2
+                return 1
+              fi
+            done < <(git -C "$source" ls-files -z)
+          }
+          verify_copy "$ofm" "$work"
+          verify_copy "$soccer" "$work/vendor/soccer-js"
+          echo "OPEN_SOURCE_COPY_INTEGRITY=OK"
+          echo "OPENFOOTMANAGER_COMMIT=$OFM_SHA"
+          echo "SOCCER_JS_COMMIT=$SOCCER_JS_SHA"
+
+          git -C "$work" add -A
+          git -C "$work" -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Replace Jornada 90 with untouched open-source football projects"
+          git -C "$work" push origin "HEAD:refs/heads/rebuild/open-source-game"
+
+      - name: Install main game dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build main game
+        run: npm run build
+
+      - name: Test main game
+        run: npm test
+
+      - name: Build and test the untouched secondary match engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/open-source-import/soccer-js"
+          npm install --no-package-lock --no-audit --no-fund
+          npm run build
+          npm test
+
+      - name: Configure Java for Android
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configure Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Rust Android target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install Android SDK and NDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Initialize Tauri Android project
+        run: npm run tauri -- android init --ci --skip-targets-install
+
+      - name: Build Android APK for ARM64
+        run: npm run tauri -- android build --apk --target aarch64 --ci
+
+      - name: Validate APK archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*.apk' -size +5M -print -quit)"
+          test -n "$apk"
+          test -s "$apk"
+          unzip -t "$apk" > "$RUNNER_TEMP/j90-apk-zip-test.txt"
+          mkdir -p artifacts
+          cp "$apk" artifacts/Openfoot-Manager-arm64.apk
+          sha256sum artifacts/Openfoot-Manager-arm64.apk | tee artifacts/Openfoot-Manager-arm64.apk.sha256
+          sha256sum --check artifacts/Openfoot-Manager-arm64.apk.sha256
+          echo "APK_PATH=artifacts/Openfoot-Manager-arm64.apk" >> "$GITHUB_ENV"
+          echo "APK_ARCHIVE_VALID=YES"
+
+      - name: Upload verified Android APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: openfoot-manager-arm64-apk
+          path: |
+            artifacts/Openfoot-Manager-arm64.apk
+            artifacts/Openfoot-Manager-arm64.apk.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
