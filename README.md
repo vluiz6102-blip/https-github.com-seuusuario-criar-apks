@@ -1,19 +1,17 @@
-# Jornada 90
+# Jornada 90 para Android
 
-Esta branch substitui a implementação antiga do J90 por uma base de jogo existente, mantida separadamente em `game-source`:
+Esta branch usa **Gandula** como base de jogo: um manager de futebol brasileiro com interface responsiva para celular, temporadas, três divisões, promoção/rebaixamento, Copa do Brasil, finanças, contratos, mercado de transferências, desenvolvimento de jogadores, clubes rivais com IA e partidas simuladas.
 
-- **Projeto-base:** [OpenComputerFutbolSimulator](https://github.com/antxiko/OpenComputerFutbolSimulator)
-- **Motor:** Godot 4.6.2
-- **Sistemas existentes na base:** gestão de clube, temporadas, mercado de transferências, IA de clubes, simulação de partidas, visualização 2D, interface e salvamento de carreira.
-- **Licença do código da base:** MIT, preservada no submódulo original.
-- **Atribuição:** o autor original e a licença devem permanecer creditados; esta integração não reivindica autoria do código externo.
+- **Base original:** [felipedbene/gandula](https://github.com/felipedbene/gandula)
+- **Licença do projeto-base:** MIT. A licença e os créditos originais são preservados.
+- **Crédito da personalização Android/marca:** Victor Luiz.
+- **Modo de jogo:** offline, carreira e dados locais no navegador/WebView, sem exigir conta nem servidor de jogo.
+- **Alterações funcionais:** nenhuma alteração intencional no motor, na simulação ou nos sistemas de carreira. A pipeline só aplica a marca Jornada 90 e inclui os créditos.
 
-## Compilar APK Android
+## APK Android
 
-A workflow `.github/workflows/build-apk.yml` prepara uma build Android de teste e publica o APK como artifact do GitHub Actions. O APK inicial é de diagnóstico, não uma versão certificada para lançamento.
+O workflow `.github/workflows/build-apk.yml` compila o motor Rust para WebAssembly, executa os testes do projeto, gera o site mobile-first e empacota a aplicação com Capacitor. O APK é disponibilizado como artefato de teste do GitHub Actions.
 
-O repositório upstream deixa claro que os dados de equipes/jogadores incluídos nele são para uso pessoal. Para não redistribuir esse conjunto de dados com direitos de reutilização não confirmados, a workflow substitui os JSON por clubes e atletas fictícios antes da exportação. O motor, as telas e a lógica do jogo são mantidos no código upstream, sem alterações manuais.
+A implementação original é baixada pelo submódulo `game-source`; use `git clone --recurse-submodules` para obter o código completo. A branch `main` original do Jornada 90 continua preservada.
 
-## Clonar
-
-Use `git clone --recurse-submodules` para baixar o código externo. A branch `main` original do Jornada 90 foi preservada; esta substituição fica isolada em `goal/open-source-replacement`.
+**Atribuição:** o código-base do simulador é de Felipe De Bene (Gandula), sob MIT. Victor Luiz é responsável pela marca Jornada 90 e pelo empacotamento Android, não pela autoria do motor original. A interface inclui um link para o texto completo da licença MIT.

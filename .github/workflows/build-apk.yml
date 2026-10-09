@@ -1,4 +1,4 @@
-name: Build Jornada 90 APK from Godot source
+name: Jornada 90 Android APK
 
 on:
   push:
@@ -10,85 +10,102 @@ permissions:
   contents: read
 
 concurrency:
-  group: jornada90-open-source-apk
+  group: jornada90-mobile-apk
   cancel-in-progress: true
 
 jobs:
   android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
-      - name: Checkout including game engine source
+      - name: Checkout Jornada 90 and the original game source
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Java 17
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: game-source/web/package-lock.json
+
+      - name: Set up Rust and WebAssembly target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Test original match and season engine
+        working-directory: game-source
+        run: cargo test --workspace
+
+      - name: Build WebAssembly match engine
+        working-directory: game-source
+        run: wasm-pack build wasm --target web --out-dir ../web/src/wasm
+
+      - name: Install web dependencies
+        working-directory: game-source/web
+        run: npm ci
+
+      - name: Run original web and career tests before branding
+        working-directory: game-source/web
+        run: npm run test:run
+
+      - name: Apply only Jornada 90 name and visible credits
+        run: python3 scripts/prepare-mobile-brand.py
+
+      - name: Build the mobile-first web app
+        working-directory: game-source/web
+        run: npm run build
+
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
-      - name: Configure Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: platform-tools
+          packages: |
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
 
-      - name: Install Android build tools
+      - name: Install Capacitor Android wrapper
+        working-directory: game-source/web
         run: |
           set -euo pipefail
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.1" \
-            "cmake;3.10.2.4988404" \
-            "ndk;28.1.13356709"
-          yes | sdkmanager --licenses >/dev/null || true
+          npm install --no-save --no-package-lock \
+            @capacitor/core@7.4.3 \
+            @capacitor/cli@7.4.3 \
+            @capacitor/android@7.4.3
+          cp ../../capacitor.config.ts ./capacitor.config.ts
+          npx cap add android
+          npx cap sync android
 
-      - name: Download Godot 4.6.2 and matching export templates
+      - name: Build and verify the APK
+        working-directory: game-source/web
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.local/share/godot/export_templates/4.6.2.stable" /tmp/godot
-          curl -fsSL --retry 3 \
-            https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_linux.x86_64.zip \
-            -o /tmp/godot/godot.zip
-          curl -fsSL --retry 3 \
-            https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_export_templates.tpz \
-            -o /tmp/godot/templates.tpz
-          unzip -q /tmp/godot/godot.zip -d /tmp/godot
-          unzip -q /tmp/godot/templates.tpz -d /tmp/godot/template-unpack
-          cp -a /tmp/godot/template-unpack/templates/. "$HOME/.local/share/godot/export_templates/4.6.2.stable/"
-          chmod +x /tmp/godot/Godot_v4.6.2-stable_linux.x86_64
-          echo "/tmp/godot" >> "$GITHUB_PATH"
+          cd android
+          ./gradlew --no-daemon assembleDebug
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          sha256sum "$APK"
+          cp "$APK" "$GITHUB_WORKSPACE/Jornada90-Android-debug.apk"
 
-      - name: Prepare fictional offline data and Android preset
-        run: |
-          set -euo pipefail
-          python3 scripts/prepare-mobile-data.py
-          cp export_presets.android.cfg game-source/export_presets.cfg
-          mkdir -p game-source/build
-
-      - name: Import resources and validate startup scene
-        run: |
-          set -euo pipefail
-          GODOT=/tmp/godot/Godot_v4.6.2-stable_linux.x86_64
-          "$GODOT" --headless --editor --path game-source --import
-          "$GODOT" --headless --path game-source --quit-after 8
-
-      - name: Export Android APK
-        run: |
-          set -euo pipefail
-          /tmp/godot/Godot_v4.6.2-stable_linux.x86_64 \
-            --headless --path game-source \
-            --export-debug "Android" "$GITHUB_WORKSPACE/game-source/build/Jornada90.apk"
-          test -s game-source/build/Jornada90.apk
-          file game-source/build/Jornada90.apk
-          sha256sum game-source/build/Jornada90.apk
-
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Jornada90-Android-debug
-          path: game-source/build/Jornada90.apk
+          path: Jornada90-Android-debug.apk
           if-no-files-found: error
           retention-days: 14
