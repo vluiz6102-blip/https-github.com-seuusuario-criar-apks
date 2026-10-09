@@ -1,5 +1,9 @@
 name: Open-source football manager validation and Android build
 
+concurrency:
+  group: msm-android-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
