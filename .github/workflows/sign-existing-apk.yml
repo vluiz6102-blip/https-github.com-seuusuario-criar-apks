@@ -1,0 +1,109 @@
+name: Sign and validate existing Openfoot APK
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/sign-existing-apk.yml
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful workflow run containing the unsigned Openfoot APK
+        required: false
+        default: '37951072742'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  sign-existing-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SOURCE_RUN_ID: ${{ inputs.run_id || '37951072742' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare Android signing tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          manager="$(find "$sdk/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          test -x "$manager"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$sdk" >> "$GITHUB_ENV"
+          echo "$(dirname "$manager")" >> "$GITHUB_PATH"
+          echo "$sdk/platform-tools" >> "$GITHUB_PATH"
+          echo "ANDROID_SDKMANAGER=$manager" >> "$GITHUB_ENV"
+          set +o pipefail
+          yes | "$manager" --licenses >/dev/null
+          set -o pipefail
+          "$manager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "$sdk/build-tools/35.0.0" >> "$GITHUB_PATH"
+
+      - name: Download previous build artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/unsigned-artifact"
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name openfoot-manager-arm64-apk --dir "$RUNNER_TEMP/unsigned-artifact"
+          apk="$(find "$RUNNER_TEMP/unsigned-artifact" -type f -name 'Openfoot-Manager-arm64.apk' -print -quit)"
+          test -n "$apk"
+          test -s "$apk"
+          echo "UNSIGNED_APK=$apk" >> "$GITHUB_ENV"
+
+      - name: Align and sign APK for sideload installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          test -x "$tools/zipalign"
+          test -x "$tools/apksigner"
+          test -x "$tools/aapt"
+          aligned="$RUNNER_TEMP/Openfoot-Manager-arm64-aligned.apk"
+          mkdir -p artifacts
+          "$tools/zipalign" -f -v 4 "$UNSIGNED_APK" "$aligned"
+
+          key="$RUNNER_TEMP/openfoot-ci-debug.keystore"
+          keytool -genkeypair -noprompt -keystore "$key" -storepass android \
+            -alias androiddebugkey -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keyalg RSA -keysize 2048 -validity 10000
+
+          "$tools/apksigner" sign --ks "$key" --ks-key-alias androiddebugkey \
+            --ks-pass pass:android --key-pass pass:android \
+            --out artifacts/Openfoot-Manager-arm64.apk "$aligned"
+
+          "$tools/zipalign" -c -v 4 artifacts/Openfoot-Manager-arm64.apk
+          "$tools/apksigner" verify --verbose --print-certs artifacts/Openfoot-Manager-arm64.apk
+          "$tools/aapt" dump badging artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
+          grep -q '^package: name=' "$RUNNER_TEMP/apk-badging.txt"
+          unzip -t artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-integrity.txt"
+          (cd artifacts && sha256sum Openfoot-Manager-arm64.apk > Openfoot-Manager-arm64.apk.sha256 && sha256sum --check Openfoot-Manager-arm64.apk.sha256)
+          "$tools/apksigner" verify --verbose artifacts/Openfoot-Manager-arm64.apk 2>&1 | grep -q 'Verified using v2 scheme'
+          echo "APK_SIGNATURE_VALID=YES"
+          echo "APK_ZIPALIGN_VALID=YES"
+          echo "APK_ARCHIVE_VALID=YES"
+
+      - name: Publish signed APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: openfoot-manager-arm64-apk-signed-fixed
+          path: |
+            artifacts/Openfoot-Manager-arm64.apk
+            artifacts/Openfoot-Manager-arm64.apk.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
