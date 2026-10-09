@@ -1,0 +1,39 @@
+{
+  "schema": "competition",
+  "id": "maia-brasileirao-serie-a-2026",
+  "name": "Brasileirão Série A 2026",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "BR",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-br-botafogo-fr",
+      "club-br-ca-mineiro",
+      "club-br-ca-paranaense",
+      "club-br-chapecoense-af",
+      "club-br-clube-do-remo",
+      "club-br-coritiba-fbc",
+      "club-br-cr-flamengo",
+      "club-br-cr-vasco-da-gama",
+      "club-br-cruzeiro-ec",
+      "club-br-ec-bahia",
+      "club-br-ec-vitoria",
+      "club-br-fluminense-fc",
+      "club-br-gremio-fbpa",
+      "club-br-mirassol-fc",
+      "club-br-rb-bragantino",
+      "club-br-santos-fc",
+      "club-br-sao-paulo-fc",
+      "club-br-sc-corinthians-paulista",
+      "club-br-sc-internacional",
+      "club-br-se-palmeiras"
+    ]
+  },
+  "seasonStartMonth": 1,
+  "seasonStartDay": 1
+}

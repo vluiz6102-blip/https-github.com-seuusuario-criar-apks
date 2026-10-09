@@ -1,0 +1,37 @@
+{
+  "schema": "competition",
+  "id": "maia-bundesliga-2026-27",
+  "name": "Bundesliga 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "DE",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-de-1-fc-koln",
+      "club-de-1-fc-union-berlin",
+      "club-de-1-fsv-mainz-05",
+      "club-de-bayer-04-leverkusen",
+      "club-de-borussia-dortmund",
+      "club-de-borussia-monchengladbach",
+      "club-de-eintracht-frankfurt",
+      "club-de-fc-augsburg",
+      "club-de-fc-bayern-munchen",
+      "club-de-fc-schalke-04",
+      "club-de-hamburger-sv",
+      "club-de-rb-leipzig",
+      "club-de-sc-freiburg",
+      "club-de-sc-paderborn-07",
+      "club-de-sv-07-elversberg",
+      "club-de-sv-werder-bremen",
+      "club-de-tsg-1899-hoffenheim",
+      "club-de-vfb-stuttgart"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}

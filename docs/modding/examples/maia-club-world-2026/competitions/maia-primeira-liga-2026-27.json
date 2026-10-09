@@ -1,0 +1,37 @@
+{
+  "schema": "competition",
+  "id": "maia-primeira-liga-2026-27",
+  "name": "Primeira Liga 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "PT",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-pt-academico-de-viseu-fc",
+      "club-pt-casa-pia-ac",
+      "club-pt-cd-nacional",
+      "club-pt-cd-santa-clara",
+      "club-pt-cf-estrela-da-amadora",
+      "club-pt-cs-maritimo",
+      "club-pt-fc-alverca",
+      "club-pt-fc-arouca",
+      "club-pt-fc-famalicao",
+      "club-pt-fc-porto",
+      "club-pt-gd-estoril-praia",
+      "club-pt-gil-vicente-fc",
+      "club-pt-moreirense-fc",
+      "club-pt-rio-ave-fc",
+      "club-pt-sport-lisboa-e-benfica",
+      "club-pt-sporting-clube-de-braga",
+      "club-pt-sporting-clube-de-portugal",
+      "club-pt-vitoria-guimaraes"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}

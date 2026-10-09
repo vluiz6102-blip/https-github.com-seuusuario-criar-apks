@@ -1,5 +1,9 @@
 name: Open-source football manager validation and Android build
 
+concurrency:
+  group: msm-android-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -29,6 +33,9 @@ jobs:
 
       - name: Install manager dependencies
         run: npm ci --no-audit --no-fund
+
+      - name: Validate club database and squad references
+        run: npm run validate:club-world
 
       - name: Build manager frontend
         run: npm run build
@@ -72,6 +79,16 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
+
+      - name: Test career, transfer, save, and match simulation logic
+        working-directory: src-tauri
+        run: cargo test -p domain -p engine -p ofm_core -p db
+
+      - name: Validate bundled club and World Cup packages with the Rust package loader
+        working-directory: src-tauri
+        run: |
+          cargo run -p ofm-cli -- validate ../docs/modding/examples/maia-club-world-2026
+          cargo run -p ofm-cli -- validate ../docs/modding/examples/maia-world-cup-2026
 
       - name: Install Android platform and NDK
         run: |
