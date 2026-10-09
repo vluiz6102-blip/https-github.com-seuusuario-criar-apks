@@ -180,7 +180,7 @@
 
     m._pitch=o;return o;
   }  function worldPoint(x,y,cameraX,cameraY,mode,zoom){
-    x=clamp(Number(x)||.5,0,1);y=clamp(Number(y)||.5,0,1);
+    x=clamp(Number.isFinite(Number(x))?Number(x):.5,0,1);y=clamp(Number.isFinite(Number(y))?Number(y):.5,0,1);
     // Original J90 isometric projection. No borrowed engine or image assets.
     var px=480+(x-y)*405,py=265+(x+y-1)*175;
     var panX=(Number(cameraX)||0)*100,panY=(Number(cameraY)||0)*66;
@@ -231,7 +231,7 @@
     var pos=worldPoint(p&&p.x,p&&p.y,cam.x,cam.y,cam.mode,cam.zoom);
     var id=String(p&&p.id||p&&p.name||'player'),num=String(p&&p.number!=null?p.number:'');
     var h=hash(id),pc=colors(side==='home'?m.home:m.away),role=String(p&&p.position||p&&p.role||'').toUpperCase();
-    var keeper=/GOL|GK|KEEP/.test(role),depth=clamp(((Number(p&&p.x)||.5)+(Number(p&&p.y)||.5))*.5,.05,.95);
+    var keeper=/GOL|GK|KEEP/.test(role),px=Number(p&&p.x),py=Number(p&&p.y),depth=clamp(((Number.isFinite(px)?px:.5)+(Number.isFinite(py)?py:.5))*.5,.05,.95);
     var s=(.83+.20*depth)*(cam.mode==='close'?1.08:cam.mode==='tactical'?.94:1);
     var x=Math.round(pos.x),y=Math.round(pos.y);
     var act=actionFor(p,m,now,low),f=act[1];
