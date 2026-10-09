@@ -190,7 +190,7 @@
     px=480+(px-panX-480)*z;
     py=265+(py-panY-265)*z;
     return {x:px,y:py};
-  }  function cameraState(
+  }
 
   function cameraState(m){
     var bx=Number(m.ball&&m.ball.x),by=Number(m.ball&&m.ball.y);
@@ -298,7 +298,7 @@
     g.fillRect(Math.round(p.x-1),Math.round(p.y-1),2,2);
     g.fillRect(Math.round(p.x-r*.55),Math.round(p.y-r*.4),2,2);
     g.fillRect(Math.round(p.x+r*.25),Math.round(p.y+r*.25),2,2);
-  }  function drawTVOverlay(
+  }
 
   function drawTVOverlay(g,m,cam){
     g.save();
