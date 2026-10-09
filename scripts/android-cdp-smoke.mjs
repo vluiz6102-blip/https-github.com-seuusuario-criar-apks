@@ -56,7 +56,28 @@ class CDP{
   async shot(path){const r=await this.call('Page.captureScreenshot',{format:'png',fromSurface:true});fs.writeFileSync(path,Buffer.from(r.data,'base64'))}
   close(){try{this.ws.close()}catch{}}
 }
-async function connect(){const t=await target();const c=new CDP(t.webSocketDebuggerUrl);await c.connect();await c.call('Runtime.enable');await c.call('Page.enable');try{await c.call('Log.enable')}catch(e){}return c}
+async function connect(){
+  let lastError=null;
+  for(let attempt=1;attempt<=6;attempt++){
+    let c=null;
+    try{
+      const t=await target();
+      const url=String(t.webSocketDebuggerUrl||'');
+      if(!/^wss?:\\/\\//.test(url))throw Error('Invalid CDP target websocket URL: '+url);
+      c=new CDP(url);
+      await c.connect();
+      await c.call('Runtime.enable');
+      await c.call('Page.enable');
+      try{await c.call('Log.enable')}catch(e){}
+      return c;
+    }catch(e){
+      lastError=e;
+      try{if(c)c.close()}catch{}
+      if(attempt<6)await sleep(Math.min(2000,250*attempt));
+    }
+  }
+  throw Error('CDP target connection failed after 6 fresh-target attempts: '+(lastError?.message||String(lastError)));
+}
 async function wait(c,expr,ms=15000){const end=Date.now()+ms;while(Date.now()<end){try{if(await c.eval(expr))return}catch{}await sleep(250)}throw Error('Timeout: '+expr)}
 
 async function rendererDiag(c){
