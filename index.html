@@ -1657,7 +1657,7 @@ function startJ90Atmosphere(){
     j90AtmoNodes.forEach(draw);
    }
   }
-  if(typeof S!=='undefined'&&S&&S.manager&&S.match2d&&S.match2d.paused){j90AtmoFrame=0;j90AtmoStarted=false;return}
+  if(typeof S!=='undefined'&&S&&S.manager&&(!S.match2d||S.match2d.paused)){j90AtmoFrame=0;j90AtmoStarted=false;return}
   j90AtmoFrame=requestAnimationFrame(frame);
  };
  j90AtmoLoop=frame;
