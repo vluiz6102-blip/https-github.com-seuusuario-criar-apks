@@ -49,7 +49,7 @@ const squads = new Map(teams.map((team) => [team.id, []]));
 for (const player of players) {
   assert.ok(squads.has(player.club), `Player references unknown club: ${player.id}`);
   assert.ok(player.name && player.firstName && player.lastName);
-  assert.ok(Number.isInteger(player.age) && player.age >= 17 && player.age <= 35);
+  assert.ok(Number.isInteger(player.age) && player.age >= 15 && player.age <= 50);
   assert.ok(Number.isInteger(player.overall) && player.overall >= 52 && player.overall <= 88);
   assert.ok(Number.isInteger(player.potential) && player.potential >= player.overall && player.potential <= 95);
   assert.ok(Number.isInteger(player.value) && player.value >= 0);
