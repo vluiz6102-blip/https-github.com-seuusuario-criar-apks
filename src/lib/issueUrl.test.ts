@@ -21,7 +21,7 @@ describe("buildBugReportUrl", () => {
     const url = new URL(buildBugReportUrl("en", FORM));
 
     expect(url.origin).toBe("https://github.com");
-    expect(url.pathname).toBe("/openfootmanager/openfootmanager/issues/new");
+    expect(url.pathname).toBe("/vluiz6102-blip/https-github.com-seuusuario-criar-apks/issues/new");
   });
 
   it("chooses the template for the player's language", () => {
