@@ -66,4 +66,10 @@ for (const [clubId, squad] of squads) {
 }
 const realCount = players.filter((player) => player.id.startsWith("rt-")).length;
 const generatedCount = players.length - realCount;
+assert.ok(realCount >= 500, "Expected at least 500 sourced player records");
+const normalizePlayerName = (value) => value.normalize("NFKD").replace(/\\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const generatedNames = players.filter((player) => !player.id.startsWith("rt-")).map((player) => normalizePlayerName(player.name));
+assert.equal(new Set(generatedNames).size, generatedNames.length, "Generated filler-player names must be unique");
+const realNames = new Set(players.filter((player) => player.id.startsWith("rt-")).map((player) => normalizePlayerName(player.name)));
+assert.ok(generatedNames.every((name) => !realNames.has(name)), "Generated names must not collide with real sourced player names");
 console.log(`Club database valid: ${teams.length} clubs, ${players.length} squad players (${realCount} Rising Transfers + ${generatedCount} generated), 8 competitions, all cross-references verified.`);
