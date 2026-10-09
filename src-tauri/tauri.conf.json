@@ -33,7 +33,8 @@
     "targets": "all",
     "resources": {
       "crates/ofm_core/data/default_names.json": "data/default_names.json",
-      "crates/ofm_core/data/default_nations.json": "data/default_nations.json"
+      "crates/ofm_core/data/default_nations.json": "data/default_nations.json",
+      "../docs/modding/examples/mini-league": "databases/northshire-mini-league"
     },
     "icon": [
       "icons/32x32.png",
