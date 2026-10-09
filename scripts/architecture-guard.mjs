@@ -45,10 +45,12 @@ check(/window\.J90AI2\s*=/.test(ai), 'AI 2.0 export exists');
 check(!/\b(?:window\.)?mgrMatchTick\s*=\s*[^=]/.test(ai), 'AI 2.0 does not replace mgrMatchTick');
 
 const match2d = read('src/j90-match2d-v3.js');
+const androidSmoke = read('scripts/android-cdp-smoke.mjs');
 const commentary = read('src/j90-commentary.js');
 const buildScript = read('scripts/build.mjs');
 check(!/requestAnimationFrame\s*\(|cancelAnimationFrame\s*\(|setInterval\s*\(/.test(match2d), 'Match 2D has no private loop');
 check(/version:'4\.1'/.test(match2d), 'Match 2D circular renderer version 4.1 is present');
+check(androidSmoke.includes("window.J90Match2DV3?.version==='4.1'") && !androidSmoke.includes("window.J90Match2DV3?.version==='4.0'"), 'Android smoke expects the same renderer version 4.1');
 check(/function\s+fieldCache\s*\(/.test(match2d), 'Match 2D pre-renders the field into a cache canvas');
 check(/function\s+buildPitch\s*\(/.test(match2d)===false, 'Legacy per-frame buildPitch renderer is absent');
 check(/window\.J90Commentary/.test(commentary)&&/sourceArchitecture:'Global Soccer Manager'/.test(commentary), 'Global Soccer Manager-inspired offline commentary is present');
