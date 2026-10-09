@@ -1,0 +1,37 @@
+{
+  "schema": "competition",
+  "id": "maia-ligue-1-2026-27",
+  "name": "Ligue 1 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "FR",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-fr-aj-auxerre",
+      "club-fr-angers-sco",
+      "club-fr-as-monaco-fc",
+      "club-fr-es-troyes-ac",
+      "club-fr-fc-lorient",
+      "club-fr-le-havre-ac",
+      "club-fr-le-mans-fc",
+      "club-fr-lille-osc",
+      "club-fr-ogc-nice",
+      "club-fr-olympique-de-marseille",
+      "club-fr-olympique-lyonnais",
+      "club-fr-paris-fc",
+      "club-fr-paris-saint-germain-fc",
+      "club-fr-racing-club-de-lens",
+      "club-fr-rc-strasbourg-alsace",
+      "club-fr-stade-brestois-29",
+      "club-fr-stade-rennais-fc-1901",
+      "club-fr-toulouse-fc"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
