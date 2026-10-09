@@ -17,6 +17,9 @@ jobs:
   build:
     name: Prepare and export Android APK
     runs-on: ubuntu-24.04
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - name: Checkout replacement branch and pinned game source
         uses: actions/checkout@v4
@@ -30,21 +33,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Godot Android toolchain
+      - name: Install Android SDK packages
         shell: bash
         run: |
           set -euo pipefail
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
-          sdkmanager --sdk_root="$ANDROID_HOME" \
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" \
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.1" \
             "cmdline-tools;latest" \
             "cmake;3.10.2.4988404" \
             "ndk;28.1.13356709"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/build-tools/35.0.1" >> "$GITHUB_PATH"
 
       - name: Install Godot 4.6.2 and export templates
         uses: chickensoft-games/setup-godot@v2
