@@ -227,7 +227,7 @@ export default function NationalTeamCareerView({
             <Text fw={600} mt="sm">{selectedXI.length}/11 selecionados</Text>
             <Divider my="sm" />
             <Stack gap="xs">
-              {nation.roster.map((player) => (
+              {(nation.roster as NationalPlayer[]).map((player) => (
                 <Checkbox
                   key={player.id}
                   checked={selectedXI.includes(player.id)}
