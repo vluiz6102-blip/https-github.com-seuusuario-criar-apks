@@ -41,7 +41,6 @@ jobs:
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.1" \
-            "cmdline-tools;latest" \
             "cmake;3.10.2.4988404" \
             "ndk;28.1.13356709"
           yes | sdkmanager --licenses >/dev/null || true
@@ -81,7 +80,7 @@ jobs:
           set -euo pipefail
           /tmp/godot/Godot_v4.6.2-stable_linux.x86_64 \
             --headless --path game-source \
-            --export-debug "Android" game-source/build/Jornada90.apk
+            --export-debug "Android" "$GITHUB_WORKSPACE/game-source/build/Jornada90.apk"
           test -s game-source/build/Jornada90.apk
           file game-source/build/Jornada90.apk
           sha256sum game-source/build/Jornada90.apk
