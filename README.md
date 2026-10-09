@@ -1,25 +1,19 @@
 # Jornada 90
 
-**Jornada 90** agora usa uma base de simulador de futebol open-source em Godot, com gestão de clube, temporadas, transferências, IA de partidas, banco de dados e visualização 2D.
+Esta branch substitui a implementação antiga do J90 por uma base de jogo existente, mantida separadamente em `game-source`:
 
-## Base técnica
+- **Projeto-base:** [OpenComputerFutbolSimulator](https://github.com/antxiko/OpenComputerFutbolSimulator)
+- **Motor:** Godot 4.6.2
+- **Sistemas existentes na base:** gestão de clube, temporadas, mercado de transferências, IA de clubes, simulação de partidas, visualização 2D, interface e salvamento de carreira.
+- **Licença do código da base:** MIT, preservada no submódulo original.
+- **Atribuição:** o autor original e a licença devem permanecer creditados; esta integração não reivindica autoria do código externo.
 
-- **Projeto-base:** [OpenComputerFutbolSimulator](https://github.com/antxiko/OpenComputerFutbolSimulator), fixado em um commit específico no submódulo `game/`.
-- **Motor:** Godot 4.6.2, GDScript e renderer GL Compatibility.
-- **Plataforma de entrega deste branch:** APK Android para aparelhos ARM.
-- **Dados deste build:** 42 clubes fictícios e 924 jogadores fictícios gerados no processo de compilação. Escudos do projeto original e dados de times/jogadores com restrições próprias não são incluídos no APK.
-- **Créditos e licença:** consulte `THIRD_PARTY_NOTICES.md` e `game/LICENSE`.
+## Compilar APK Android
 
-## Gerar o APK
+A workflow `.github/workflows/build-apk.yml` prepara uma build Android de teste e publica o APK como artifact do GitHub Actions. O APK inicial é de diagnóstico, não uma versão certificada para lançamento.
 
-O workflow **Jornada 90 Android APK** compila este branch no GitHub Actions. Faça push para `goal/open-source-replacement` ou inicie o workflow manualmente pela aba Actions. O artefato inclui `Jornada90.apk` e os avisos de licença.
+O repositório upstream deixa claro que os dados de equipes/jogadores incluídos nele são para uso pessoal. Para não redistribuir esse conjunto de dados com direitos de reutilização não confirmados, a workflow substitui os JSON por clubes e atletas fictícios antes da exportação. O motor, as telas e a lógica do jogo são mantidos no código upstream, sem alterações manuais.
 
-O APK gerado nesta etapa é uma compilação de validação para instalação direta, ainda não uma certificação de release nem uma publicação na Play Store. O build usa o preset Android do Godot com suporte a Android 7.0/API 24 ou superior, incluindo Android 13–17 em termos de versão mínima declarada; compatibilidade real precisa ser confirmada em aparelhos/emuladores.
+## Clonar
 
-## Por que o projeto original não foi apagado
-
-Este é um branch separado de migração. A branch `main` do repositório J90 continua intacta para permitir recuperação imediata caso a nova base não compile ou não funcione como esperado.
-
-## Avisos legais
-
-O código-fonte-base é distribuído sob MIT. A licença do upstream distingue explicitamente código e dados: por isso, os dados de clubes e jogadores e os escudos do upstream são substituídos antes de gerar o APK. O mecanismo de geração usa nomes fictícios, cores e escudos novos. Consulte os avisos de terceiros antes de redistribuir o jogo.
+Use `git clone --recurse-submodules` para baixar o código externo. A branch `main` original do Jornada 90 foi preservada; esta substituição fica isolada em `goal/open-source-replacement`.

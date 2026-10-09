@@ -1,6 +1,0 @@
-# Build output and editor cache
-dist/
-game/build/
-game/.godot/
-__pycache__/
-*.pyc
