@@ -3,7 +3,7 @@ import {
   Badge, Box, Button, Checkbox, Divider, Group, Paper, Stack, Table, Text, Title,
 } from "@mantine/core";
 import { run_season } from "../wasm/gandula_wasm.js";
-import type { Match, SeasonRecord, TeamStats } from "../types";
+import type { SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import { NATIONAL_TEAMS, type NationalTeam, type NationalPlayer } from "../nationalTeams";
 
@@ -40,11 +40,6 @@ function roundTitle(teamCount: number): string {
   if (teamCount === 4) return "Semifinais";
   return "Final";
 }
-function averageGoals(result: SeasonRecord, teamId: number): number {
-  const stats = result.standings.find((x) => x.team_id === teamId);
-  return stats ? stats.goals_for : 0;
-}
-
 export default function NationalTeamCareerView({
   teamId,
   onBack,
