@@ -475,18 +475,47 @@ jobs:
           retention-days: 30
           if: always()
 
-      # Disponibiliza o instalável também no Artifacts. O download do
-      # artifact é um ZIP externo do GitHub Actions, então o APK precisa ser
-      # extraído antes da instalação. A Release continua sendo a opção
-      # preferencial para baixar o .apk diretamente.
+      # Prepara uma pasta limpa para o download. O build grava o APK dentro
+      # de android/app/build/outputs/apk/debug, enquanto SHA e metadados da
+      # auditoria ficam na pasta android. Copiamos e recalculamos o SHA para
+      # que o ZIP do Actions contenha os três arquivos diretamente na raiz.
+      - name: Preparar APK para download do Actions
+        run: |
+          set -euo pipefail
+          apk_src="android/app/build/outputs/apk/debug/Jornada-90-Manager.apk"
+          sha_src="android/Jornada-90-Manager.apk.sha256"
+          info_src="android/Jornada-90-Manager-release.txt"
+
+          test -s "$apk_src"
+          test -s "$sha_src"
+          test -s "$info_src"
+
+          size_bytes=$(stat -c%s "$apk_src")
+          echo "ARTIFACT_APK_SIZE_BYTES=$size_bytes"
+          test "$size_bytes" -ge $((60 * 1024 * 1024))
+
+          actual_sha=$(sha256sum "$apk_src" | cut -d' ' -f1)
+          audited_sha=$(sed -n 's/^SHA256=//p' "$info_src" | head -n1)
+          test -n "$audited_sha"
+          test "$actual_sha" = "$audited_sha"
+
+          mkdir -p artifacts/apk
+          cp "$apk_src" artifacts/apk/Jornada-90-Manager.apk
+          cp "$info_src" artifacts/apk/Jornada-90-Manager-release.txt
+          (
+            cd artifacts/apk
+            sha256sum Jornada-90-Manager.apk > Jornada-90-Manager.apk.sha256
+            sha256sum --check Jornada-90-Manager.apk.sha256
+            unzip -t Jornada-90-Manager.apk > /tmp/j90-artifact-apk-crc.txt
+          )
+          echo "APK_ARTIFACT_STAGING=OK"
+          echo "APK_ARTIFACT_SHA256=$actual_sha"
+
       - name: Publicar APK + integridade como artefato
         uses: actions/upload-artifact@v7
         with:
           name: jornada-90-manager-apk
-          path: |
-            android/Jornada-90-Manager.apk
-            android/Jornada-90-Manager.apk.sha256
-            android/Jornada-90-Manager-release.txt
+          path: artifacts/apk/*
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
