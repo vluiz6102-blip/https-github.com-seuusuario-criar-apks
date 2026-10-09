@@ -937,6 +937,17 @@
   }
 
   function tick(m,now){
+    // mgrMatchTick is called by the shared RAF with a timestamp, while this AI
+    // routine needs the live match object plus that timestamp. Accept both
+    // signatures so the AI never treats a performance timestamp as match state.
+    if(!m||typeof m!=='object'){
+      var frameStamp=Number(m);
+      var liveState=window.S;
+      m=liveState&&liveState.match2d;
+      now=Number.isFinite(frameStamp)?frameStamp:performance.now();
+    }
+    if(!m||typeof m!=='object'||m.paused)return;
+    now=Number.isFinite(Number(now))?Number(now):performance.now();
     ensureMatch(m);
     var p=window.__J90_PERF||j90PerfState(),prev=m._lastTick||now,dt=Math.max(1,Math.min(50,now-prev));
     m._lastTick=now;
