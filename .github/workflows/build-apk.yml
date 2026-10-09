@@ -63,6 +63,22 @@ jobs:
       - name: Add national-team mode and CC0 World Cup squads
         run: node scripts/patch-national-teams.mjs
 
+      - name: Import real club, player and market-value database (CC0)
+        run: python3 scripts/build-real-football-data.py
+
+      - name: Apply club-career, manager profile, news, audio and branding improvements
+        run: node scripts/patch-experience.mjs
+
+      - name: Download licensed relaxing soundtrack (CC0)
+        run: |
+          set -euo pipefail
+          mkdir -p game-source/web/public/audio
+          curl -fL --retry 4 --retry-delay 2 --retry-all-errors \
+            "https://opengameart.org/sites/default/files/relax_background1_0.ogg" \
+            -o game-source/web/public/audio/relax_background1_0.ogg
+          test -s game-source/web/public/audio/relax_background1_0.ogg
+          file game-source/web/public/audio/relax_background1_0.ogg
+
       - name: Build the mobile-first web app
         working-directory: game-source/web
         run: npm run build
@@ -93,6 +109,9 @@ jobs:
           cp ../../capacitor.config.ts ./capacitor.config.ts
           npx cap add android
           npx cap sync android
+
+      - name: Install modern Jornada 90 Android launcher icon
+        run: bash scripts/install-android-icon.sh "$GITHUB_WORKSPACE/game-source/web/android"
 
       - name: Build and verify the APK
         working-directory: game-source/web
