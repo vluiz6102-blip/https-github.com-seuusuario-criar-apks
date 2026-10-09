@@ -1,0 +1,24 @@
+{
+  "schema": "world",
+  "id": "maia-club-world-2026",
+  "name": "Maia Soccer Manager • Clubes do Mundo 2026/27",
+  "description": "152 clubes de 8 ligas nacionais para carreiras 2026 e 2026/27. Dados de clubes baseados em dados públicos CC0; elencos de jogadores gerados para gameplay, não são plantéis reais verificados.",
+  "version": "1.0.0",
+  "author": "Victor Luiz / Maia Soccer Manager",
+  "license": "CC0-1.0",
+  "packageType": "database",
+  "gameMinVersion": "0.3.0",
+  "formatVersion": 1,
+  "baseYear": 2026,
+  "defaultActiveRegions": [],
+  "defaultActiveCompetitions": [
+    "maia-premier-league-2026-27",
+    "maia-la-liga-2026-27",
+    "maia-bundesliga-2026-27",
+    "maia-serie-a-2026-27",
+    "maia-ligue-1-2026-27",
+    "maia-brasileirao-serie-a-2026",
+    "maia-primeira-liga-2026-27",
+    "maia-eredivisie-2026-27"
+  ]
+}
