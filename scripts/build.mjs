@@ -2,7 +2,8 @@ import { mkdirSync, copyFileSync, readFileSync, existsSync, cpSync, writeFileSyn
 import { join } from 'node:path';
 
 const source = readFileSync('index.html', 'utf8');
-const scripts = [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
+const inlineScripts = [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
+const scripts = inlineScripts.map(match => match[1]).join('\n');
 if (!scripts.includes('menuTime') || !scripts.includes('j90SoundscapeStart')) throw new Error('Canonical index.html is missing the Jornada 90 environment core.');
 if (/j90Music(Start|Stop|Track|Notes|Timer|Nodes)/.test(scripts)) throw new Error('Obsolete menu music engine detected in canonical index.html.');
 
@@ -38,7 +39,7 @@ try { contentManifest = JSON.parse(readFileSync(contentManifestPath, 'utf8')); }
 
 const soundscape = soundscapeSource.replace('__J90_AUDIO_MANIFEST__', JSON.stringify(manifest));
 const syntaxUnits = [
-  ['index-inline-scripts', scripts],
+  ...inlineScripts.map((match, index) => ['index-inline-script-' + (index + 1), match[1]]),
   ['j90-soundscape.js', soundscape],
   ['j90-expansion.js', expansionSource],
   ['j90-ai2.js', aiSource],
@@ -63,7 +64,8 @@ try {
     try { new Function(code); }
     catch (error) { throw new Error(name + ': ' + error.message); }
   }
-  new Function(scripts + '\n' + soundscape + '\n' + expansionSource + '\n' + aiSource + '\n' + tacticsSource + '\n' + match2dSource + '\n' + comfortSource + '\n' + matchEventsSource + '\n' + squadCardsSource + '\n' + lineupAiSource + '\n' + replaySource + '\n' + teamTacticalAiSource + '\n' + managerStatsSource + '\n' + copaBrasilSource + '\n' + managerAiSource + '\n' + lifecycleSource + '\n' + autoHealSource);
+  // Each script tag and runtime file is parsed exactly as the browser loads it.
+  // Concatenating classic scripts can create false syntax errors at async function boundaries.
 } catch (error) { throw new Error('JavaScript syntax validation failed: ' + error.message); }
 
 mkdirSync('www', { recursive: true });
