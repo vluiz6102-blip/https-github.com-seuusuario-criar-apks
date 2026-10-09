@@ -1,0 +1,39 @@
+{
+  "schema": "competition",
+  "id": "maia-premier-league-2026-27",
+  "name": "Premier League 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "ENG",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-eng-afc-bournemouth",
+      "club-eng-arsenal-fc",
+      "club-eng-aston-villa-fc",
+      "club-eng-brentford-fc",
+      "club-eng-brighton-hove-albion-fc",
+      "club-eng-chelsea-fc",
+      "club-eng-coventry-city-fc",
+      "club-eng-crystal-palace-fc",
+      "club-eng-everton-fc",
+      "club-eng-fulham-fc",
+      "club-eng-hull-city-afc",
+      "club-eng-ipswich-town-fc",
+      "club-eng-leeds-united-fc",
+      "club-eng-liverpool-fc",
+      "club-eng-manchester-city-fc",
+      "club-eng-manchester-united-fc",
+      "club-eng-newcastle-united-fc",
+      "club-eng-nottingham-forest-fc",
+      "club-eng-sunderland-afc",
+      "club-eng-tottenham-hotspur-fc"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
