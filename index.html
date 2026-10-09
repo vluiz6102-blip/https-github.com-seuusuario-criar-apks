@@ -2541,7 +2541,7 @@ function mgrMoment(kind,p){
 }
 function mgrAdd(p){S.roster.push(p);S.finance.budget-=Math.round(p.ovr*3.1);S.transferHistory.unshift({y:S.year,type:'IN',player:p.name,ovr:p.ovr,value:Math.round(p.ovr*3.1)});if(p.star||p.ovr>=84)mgrMoment('starIn',p)}
 function mgrRemove(p,reason){var i=S.roster.findIndex(function(x){return x.id===p.id});if(i<0)return;S.roster.splice(i,1);var fee=Math.max(8,Math.round(p.ovr*3.2));S.finance.budget+=fee;S.transferHistory.unshift({y:S.year,type:'OUT',player:p.name,ovr:p.ovr,value:fee,reason:reason});if(p.important||p.star||p.ovr>=82)mgrMoment('starOut',p)}
-const J90_ONLINE_URL='https://raw.githubusercontent.com/vluiz6102-blip/https-github.com-seuusuario-criar-apks/main/assets/j90-online/content-manifest.json';
+const J90_ONLINE_URL='https://raw.githubusercontent.com/vluiz6102-blip/https-github.com-seuusuario-criar-apks/j90-fusion-manager-2d/assets/j90-online/content-manifest.json';
 var j90OnlineBusy=false;
 async function j90OnlineSync(show){
  if(j90OnlineBusy)return;
