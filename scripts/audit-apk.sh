@@ -21,11 +21,15 @@ echo "APK_SIZE_MIB=$mib"
 unzip -t "$apk" >/tmp/j90-unzip-test.txt
 
 # 2) Minimum APK structure.
-unzip -l "$apk" | grep -q 'AndroidManifest.xml'
-unzip -l "$apk" | grep -q 'resources.arsc'
-unzip -l "$apk" | grep -q 'classes.dex'
-unzip -l "$apk" | grep -q 'j90-content/content-manifest.json'
-if unzip -l "$apk" | grep -q 'j90-content/players/'; then
+# Save the listing once. Piping unzip directly to grep -q can make grep close
+# early, causing unzip to receive SIGPIPE (141) under set -o pipefail.
+apk_listing=/tmp/j90-apk-listing.txt
+unzip -l "$apk" > "$apk_listing"
+grep -q 'AndroidManifest.xml' "$apk_listing"
+grep -q 'resources.arsc' "$apk_listing"
+grep -q 'classes.dex' "$apk_listing"
+grep -q 'j90-content/content-manifest.json' "$apk_listing"
+if grep -q 'j90-content/players/' "$apk_listing"; then
   echo "PLAYER_PHOTOS_DIRECTORY_DETECTED" >&2
   exit 1
 fi
