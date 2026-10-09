@@ -164,23 +164,58 @@
     m.ball.x=Number.isFinite(+m.ball.x)?+m.ball.x:.5;m.ball.y=Number.isFinite(+m.ball.y)?+m.ball.y:.5;m.ball.tx=Number.isFinite(+m.ball.tx)?+m.ball.tx:m.ball.x;m.ball.ty=Number.isFinite(+m.ball.ty)?+m.ball.ty:m.ball.y;
     rebuildRuntime(m);
     var needsRender=false;
-    if(m.j90ResumeOnRestore){delete m.j90ResumeOnRestore;m.paused=false;m.startedAt=Date.now()-m.elapsed*1000;m._lastTick=performance.now();m._simAcc=0;needsRender=true}
+    if(m.j90ResumeOnRestore){
+      delete m.j90ResumeOnRestore;
+      m.paused=false;
+      m.startedAt=Date.now()-m.elapsed*1000;
+      m._lastTick=performance.now();
+      m._simAcc=0;
+      needsRender=true;
+    }
     if(m.elapsed>=m.duration){
       if(m.half===1){m.half=2;m.elapsed=0;m.startedAt=Date.now();m.paused=true}
       else{if(typeof window.mgrMatchFinish==='function')window.mgrMatchFinish();return false}
     }
     if(!m.startedAt)m.startedAt=Date.now()-m.elapsed*1000;
-    if(m&&m.home&&m.away){try{if(typeof introStep!=='undefined'&&introStep===0){introStep=1;menuScreen='game';tab='game';needsRender=true}}catch(e){}}
+    if(m&&m.home&&m.away){
+      try{if(typeof introStep!=='undefined'&&introStep===0){introStep=1;menuScreen='game';tab='game';needsRender=true}}catch(e){}
+    }
+    // A persisted live-match object is not enough: a WebView reload also needs
+    // the match-only DOM (including #j90MatchCanvas) to be rebuilt.
+    if(!document.getElementById('j90MatchCanvas'))needsRender=true;
     syncScene();
-    if(needsRender)try{if(typeof window.render==='function')window.render(1)}catch(e){}
-    if(document.visibilityState==='visible'&&!m.paused)try{if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,80)}catch(e){}
+    if(needsRender){
+      try{if(typeof window.render==='function')window.render(1)}catch(e){}
+    }
+    if(document.visibilityState==='visible'&&!m.paused){
+      try{if(typeof window.mgrMatchStartTimer==='function')setTimeout(window.mgrMatchStartTimer,80)}catch(e){}
+    }
     return true;
   }
 
-  function install(){syncScene();ensureRecoveredMatch()}
+  var bootRecoveryTimers=[];
+  function scheduleBootRecovery(){
+    // The legacy manager script restores localStorage state during startup. On
+    // slow Android WebViews its startup can finish after DOMContentLoaded, so
+    // retry recovery briefly instead of leaving a saved match without its UI.
+    [80,220,500,1000,1800,3000,5000].forEach(function(delay){
+      var timer=setTimeout(function(){
+        try{
+          var s=getState();
+          if(s&&s.manager){
+            ensureRecoveredMatch();
+            var m=match();
+            if(m&&document.getElementById('j90MatchCanvas'))return;
+          }
+        }catch(e){}
+      },delay);
+      bootRecoveryTimers.push(timer);
+    });
+  }
+  function install(){syncScene();ensureRecoveredMatch();scheduleBootRecovery()}
   addEventListener('visibilitychange',function(){if(document.hidden){pauseForBackground();syncScene()}else{resumeAfterForeground();ensureRecoveredMatch();syncScene()}},{passive:true});
   addEventListener('pagehide',function(){pauseForBackground();syncScene()},{passive:true});
-  addEventListener('pageshow',function(){ensureRecoveredMatch();syncScene()},{passive:true});
+  addEventListener('pageshow',function(){ensureRecoveredMatch();syncScene();scheduleBootRecovery()},{passive:true});
   addEventListener('hashchange',syncScene,{passive:true});addEventListener('popstate',syncScene,{passive:true});
   if(window.MutationObserver){try{var mo=new MutationObserver(function(){syncScene()});mo.observe(document.body,{childList:true})}catch(e){}}
 
