@@ -83,6 +83,7 @@ writeFileSync('www/j90-team-tactical-ai.js', teamTacticalAiSource);
 writeFileSync('www/j90-manager-stats.js', managerStatsSource);
 writeFileSync('www/j90-copa-do-brasil.js', copaBrasilSource);
 writeFileSync('www/j90-manager-ai.js', managerAiSource);
+writeFileSync('www/j90-commentary.js', commentarySource);
 writeFileSync('www/j90-match-lifecycle.js', lifecycleSource);
 writeFileSync('www/j90-auto-heal.js', autoHealSource);
 writeFileSync('www/j90-perf.js', perfSource);
