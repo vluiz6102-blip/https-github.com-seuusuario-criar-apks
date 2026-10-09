@@ -435,6 +435,7 @@ jobs:
           script: bash scripts/android-emulator-smoke.sh
 
       - name: Publicar baseline Fase 0 de performance
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: j90-phase0-baseline
@@ -459,7 +460,6 @@ jobs:
           if-no-files-found: warn
           compression-level: 0
           retention-days: 30
-          if: always()
 
       # Disponibiliza o instalável também no Artifacts. O download do
       # artifact é um ZIP externo do GitHub Actions, então o APK precisa ser
