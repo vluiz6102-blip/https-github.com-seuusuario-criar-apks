@@ -30,6 +30,9 @@ jobs:
       - name: Install manager dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Validate club database and squad references
+        run: npm run validate:club-world
+
       - name: Build manager frontend
         run: npm run build
 
