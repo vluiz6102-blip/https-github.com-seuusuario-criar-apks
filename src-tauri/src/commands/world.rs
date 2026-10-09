@@ -322,6 +322,70 @@ pub fn install_package(
     })
 }
 
+const BUILTIN_DATABASE_ID: &str = "northshire-mini-league";
+const BUILTIN_DATABASE_SEED_MARKER: &str = ".builtin-database-seeded";
+
+/// Ensure a small, CC0-licensed playable world is available on first launch.
+/// The source package is bundled as resources, then packed with the exact same
+/// .ofm writer used by the in-app editor. A marker preserves a user's choice to
+/// uninstall it later instead of silently reinstalling it on every menu visit.
+fn ensure_builtin_database(
+    app_handle: &tauri::AppHandle,
+    packages_dir: &std::path::Path,
+) -> Result<(), String> {
+    std::fs::create_dir_all(packages_dir)
+        .map_err(|_| "be.error.package.installFailed".to_string())?;
+    let marker = packages_dir.join(BUILTIN_DATABASE_SEED_MARKER);
+    if marker.exists() {
+        return Ok(());
+    }
+
+    let destination = packages_dir.join(format!("{BUILTIN_DATABASE_ID}.ofm"));
+    if destination.exists() {
+        std::fs::write(&marker, b"installed\\n")
+            .map_err(|_| "be.error.package.installFailed".to_string())?;
+        return Ok(());
+    }
+
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|_| "be.error.package.installFailed".to_string())?;
+    let source = resource_dir
+        .join("databases")
+        .join(BUILTIN_DATABASE_ID);
+    if !source.is_dir() {
+        // Keep app startup usable if a platform packager omitted the optional
+        // resource; the normal generated-world mode remains available.
+        warn!("[packages] bundled starter database is missing at {:?}", source);
+        return Ok(());
+    }
+
+    ofm_core::generator::export_directory_to_ofm(&source, &destination)
+        .map_err(|error| {
+            let _ = std::fs::remove_file(&destination);
+            warn!("[packages] could not create bundled starter database: {error}");
+            "be.error.package.installFailed".to_string()
+        })?;
+
+    let (package, errors) = ofm_core::generator::load_world_package_from_ofm(&destination);
+    if let Some(error) = errors.first() {
+        let _ = std::fs::remove_file(&destination);
+        warn!("[packages] bundled starter database failed validation: {}", error.code);
+        return Err(error.code.clone());
+    }
+    if let Some(error) = ofm_core::generator::validate_references(&package).first() {
+        let _ = std::fs::remove_file(&destination);
+        warn!("[packages] bundled starter database has invalid references: {}", error.code);
+        return Err(error.code.clone());
+    }
+
+    std::fs::write(&marker, b"installed\\n")
+        .map_err(|_| "be.error.package.installFailed".to_string())?;
+    info!("[packages] installed bundled starter database {}", BUILTIN_DATABASE_ID);
+    Ok(())
+}
+
 /// List all installed `.ofm` packages in the user's packages directory.
 #[tauri::command]
 pub fn list_installed_packages(
@@ -329,6 +393,7 @@ pub fn list_installed_packages(
 ) -> Result<Vec<ofm_core::generator::PackageInfo>, String> {
     info!("[cmd] list_installed_packages");
     let packages_dir = packages_dir(&app_handle)?;
+    ensure_builtin_database(&app_handle, &packages_dir)?;
     if !packages_dir.exists() {
         return Ok(Vec::new());
     }
