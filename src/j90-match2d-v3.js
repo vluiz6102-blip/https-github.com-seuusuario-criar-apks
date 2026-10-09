@@ -82,84 +82,115 @@
   function fieldCache(m){
     if(m._pitch)return m._pitch;
     var o=document.createElement('canvas');o.width=W;o.height=H;
-    var g=o.getContext('2d',{alpha:false});g.imageSmoothingEnabled=true;
-
+    var g=o.getContext('2d',{alpha:false});g.imageSmoothingEnabled=false;
     g.fillStyle='#071017';g.fillRect(0,0,W,H);
-    var sky=g.createLinearGradient(0,0,0,220);
-    sky.addColorStop(0,'#07121b');sky.addColorStop(.52,'#10222a');sky.addColorStop(1,'#29443c');
-    g.fillStyle=sky;g.fillRect(0,0,W,245);
 
-    g.fillStyle='#05080a';g.beginPath();g.moveTo(0,30);g.quadraticCurveTo(480,-35,960,30);g.lineTo(960,115);g.quadraticCurveTo(480,72,0,115);g.closePath();g.fill();
-    g.fillStyle='#10181c';g.beginPath();g.moveTo(0,74);g.quadraticCurveTo(480,10,960,74);g.lineTo(960,240);g.quadraticCurveTo(480,190,0,240);g.closePath();g.fill();
+    var sky=g.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#101f2c');sky.addColorStop(.55,'#101b22');sky.addColorStop(1,'#071015');
+    g.fillStyle=sky;g.fillRect(0,0,W,H);
 
-    var rowColors=['#243238','#2d3d42','#34484b','#26373b','#3b4d50'];
-    for(var r=0;r<13;r++){
-      var y=95+r*11;
-      for(var x=0;x<64;x++){
-        var seatX=7+x*15+(r%2)*4,py=y+((x*7+r*13)%5);
-        var h=hash(x+'|'+r+'|'+String(m.home||''))+x+r*11;
-        g.fillStyle=rowColors[(h>>>0)%rowColors.length];
-        g.fillRect(seatX,py,6,5);
-        if((h%11)===0){g.fillStyle='#d8bf63';g.fillRect(seatX,py,6,2)}
+    // Stadium bowl and tiny, deterministic crowd pixels. This is original J90 artwork.
+    g.fillStyle='#050a0e';g.beginPath();g.moveTo(0,78);g.lineTo(290,55);g.lineTo(480,78);g.lineTo(670,55);g.lineTo(960,78);g.lineTo(960,470);g.lineTo(700,493);g.lineTo(480,474);g.lineTo(260,493);g.lineTo(0,470);g.closePath();g.fill();
+    g.fillStyle='#18262d';g.beginPath();g.moveTo(0,95);g.lineTo(295,72);g.lineTo(480,92);g.lineTo(665,72);g.lineTo(960,95);g.lineTo(960,450);g.lineTo(700,475);g.lineTo(480,455);g.lineTo(260,475);g.lineTo(0,450);g.closePath();g.fill();
+
+    var seatColors=['#34454b','#43565a','#23363d','#536267','#75694d','#243f45','#4a3c3b'];
+    for(var row=0;row<24;row++){
+      var sy=79+row*15;
+      var half=0;
+      if(sy>=90&&sy<=440)half=Math.max(0,Math.min((sy-90)*2.31,(440-sy)*2.31));
+      for(var side=0;side<2;side++){
+        var start=side===0?8:952,step=side===0?9:-9;
+        for(var q=0;q<106;q++){
+          var sx=start+step*q;
+          if(sy>=90&&sy<=440){
+            if(side===0&&sx>480-half-10)break;
+            if(side===1&&sx<480+half+10)break;
+          }
+          var h=hash('crowd:'+row+':'+q+':'+side+':'+String(m.home||''));
+          g.fillStyle=seatColors[h%seatColors.length];
+          g.fillRect(sx,sy+((h>>>5)%4),4,4);
+          if((h%17)===0){g.fillStyle='#c1a95f';g.fillRect(sx,sy+1,4,2)}
+        }
       }
     }
 
-    g.fillStyle='#132019';g.fillRect(0,223,W,22);
-    for(x=0;x<16;x++){g.fillStyle=x%3===0?'#d8b94f':x%3===1?'#2e9762':'#17334a';g.fillRect(x*60,226,47,14)}
+    // Roofline and floodlights.
+    g.fillStyle='#03070a';g.fillRect(0,62,960,10);
+    g.fillStyle='#d8e7de';
+    for(var lx=0;lx<8;lx++)g.fillRect(70+lx*118,70,3,2);
+    var lamp=g.createRadialGradient(90,116,2,90,116,80);
+    lamp.addColorStop(0,'rgba(255,239,185,.18)');lamp.addColorStop(1,'rgba(255,239,185,0)');
+    g.fillStyle=lamp;g.fillRect(15,68,150,150);
+    var lamp2=g.createRadialGradient(870,116,2,870,116,80);
+    lamp2.addColorStop(0,'rgba(255,239,185,.18)');lamp2.addColorStop(1,'rgba(255,239,185,0)');
+    g.fillStyle=lamp2;g.fillRect(795,68,150,150);
 
-    var TLx=220,TRx=740,Ty=247,BLx=78,BRx=882,By=530;
-    var grass=g.createLinearGradient(0,Ty,0,By);
-    grass.addColorStop(0,'#2c7d48');grass.addColorStop(.45,'#2f8b4c');grass.addColorStop(1,'#206438');
-    g.fillStyle=grass;g.beginPath();g.moveTo(TLx,Ty);g.lineTo(TRx,Ty);g.lineTo(BRx,By);g.lineTo(BLx,By);g.closePath();g.fill();
-
-    for(r=0;r<12;r++){
-      var yy=Ty+r*(By-Ty)/12,yy2=Ty+(r+1)*(By-Ty)/12;
-      var l=lerp(TLx,BLx,r/12),rr=lerp(TRx,BRx,r/12),l2=lerp(TLx,BLx,(r+1)/12),rr2=lerp(TRx,BRx,(r+1)/12);
-      if(r%2===0){g.fillStyle='rgba(255,255,255,.025)';g.beginPath();g.moveTo(l,yy);g.lineTo(rr,yy);g.lineTo(rr2,yy2);g.lineTo(l2,yy2);g.closePath();g.fill()}
+    function p(x,y){return {x:480+(x-y)*405,y:265+(x+y-1)*175}}
+    function polygon(points,fill,stroke,width){
+      g.beginPath();g.moveTo(points[0].x,points[0].y);
+      for(var i=1;i<points.length;i++)g.lineTo(points[i].x,points[i].y);
+      g.closePath();if(fill){g.fillStyle=fill;g.fill()}
+      if(stroke){g.strokeStyle=stroke;g.lineWidth=width||2;g.stroke()}
     }
 
-    var white='rgba(242,247,240,.86)';
-    g.strokeStyle=white;g.lineWidth=3;
-    function line(x1,y1,x2,y2){g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
-    function px(v,y){return lerp(lerp(TLx,TRx,v),lerp(BLx,BRx,v),clamp((y-Ty)/(By-Ty),0,1))}
-    line(px(0,Ty),Ty,px(1,Ty),Ty);line(px(0,By),By,px(1,By),By);
-    var midY=Ty+(By-Ty)*.5;
-    line(px(0,midY),midY,px(1,midY),midY);line(px(.5,Ty),Ty,px(.5,By),By);
-    g.beginPath();g.ellipse(px(.5,midY),midY,72,36,0,0,Math.PI*2);g.stroke();
+    var turf=g.createLinearGradient(120,90,820,452);
+    turf.addColorStop(0,'#277b45');turf.addColorStop(.5,'#309050');turf.addColorStop(1,'#1d6438');
+    polygon([p(0,0),p(1,0),p(1,1),p(0,1)],turf,'#a7c9aa',2);
 
-    function area(side){
-      var y1=Ty+(By-Ty)*.28,y2=Ty+(By-Ty)*.72,inner=side===0?.15:.85;
-      var spread=side===0?86:-86;
-      line(px(side===0?0:1,y1),y1,px(inner,y1)+spread,y1);
-      line(px(side===0?0:1,y2),y2,px(inner,y2)+spread,y2);
-      line(px(inner,y1)+spread,y1,px(inner,y2)+spread,y2);
-      var s1=Ty+(By-Ty)*.40,s2=Ty+(By-Ty)*.60;
-      line(px(side===0?.05:.95,s1),s1,px(side===0?.05:.95,s2),s2);
+    // Alternating bands are cached once, so the live renderer stays lightweight.
+    for(var band=0;band<10;band++){
+      if(band%2===0){
+        polygon([p(0,band/10),p(1,band/10),p(1,(band+1)/10),p(0,(band+1)/10)],'rgba(230,255,227,.045)');
+      }
     }
-    area(0);area(1);
 
-    g.strokeStyle='rgba(248,250,246,.92)';g.lineWidth=4;
-    g.strokeRect(TLx-23,Ty+62,23,62);g.strokeRect(TRx,Ty+62,23,62);
-    g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=1;
-    for(r=0;r<10;r++){line(TLx-22,Ty+62+r*6,TLx,Ty+62+r*6);line(TRx,Ty+62+r*6,TRx+22,Ty+62+r*6)}
-    g.fillStyle='#f4d66a';g.fillRect(TLx+4,Ty+4,5,18);g.fillRect(TRx-9,Ty+4,5,18);g.fillRect(BLx+7,By-21,5,18);g.fillRect(BRx-12,By-21,5,18);
+    var white='rgba(242,249,238,.92)';
+    function line(a,b,w){g.strokeStyle=white;g.lineWidth=w||2;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke()}
+    // Touchlines, goal lines, halfway line and lengthwise centre guide.
+    line(p(0,0),p(1,0),2.6);line(p(1,0),p(1,1),2.6);
+    line(p(1,1),p(0,1),2.6);line(p(0,1),p(0,0),2.6);
+    line(p(0,.5),p(1,.5),2.2);
+    line(p(.5,0),p(.5,1),1.7);
+
+    g.strokeStyle=white;g.lineWidth=2;
+    g.beginPath();g.ellipse(480,265,47,21,0,0,Math.PI*2);g.stroke();
+    var centre=p(.5,.5);g.fillStyle=white;g.fillRect(centre.x-2,centre.y-2,4,4);
+    g.fillRect(p(.5,.12).x-2,p(.5,.12).y-2,4,4);g.fillRect(p(.5,.88).x-2,p(.5,.88).y-2,4,4);
+
+    // Penalty areas, six-yard boxes and goals, all positioned in pitch coordinates.
+    polygon([p(.24,0),p(.76,0),p(.76,.17),p(.24,.17)],null,white,2);
+    polygon([p(.39,0),p(.61,0),p(.61,.065),p(.39,.065)],null,white,1.8);
+    polygon([p(.24,.83),p(.76,.83),p(.76,1),p(.24,1)],null,white,2);
+    polygon([p(.39,.935),p(.61,.935),p(.61,1),p(.39,1)],null,white,1.8);
+
+    // Pixel-clean nets extend just outside the end lines.
+    polygon([p(.42,-.035),p(.58,-.035),p(.58,.005),p(.42,.005)],'rgba(220,236,226,.12)',white,1.8);
+    polygon([p(.42,.995),p(.58,.995),p(.58,1.035),p(.42,1.035)],'rgba(220,236,226,.12)',white,1.8);
+    g.strokeStyle='rgba(238,247,239,.4)';g.lineWidth=1;
+    for(var net=0;net<5;net++){
+      var nx=.42+net*.04;
+      line(p(nx,-.03),p(nx,.004),1);
+      line(p(nx,.996),p(nx,1.03),1);
+    }
+
+    // Corner flags make the pitch readable on small portrait screens.
+    [[0,0],[1,0],[0,1],[1,1]].forEach(function(c){
+      var cp=p(c[0],c[1]);g.fillStyle='#eee5b2';g.fillRect(Math.round(cp.x)-2,Math.round(cp.y)-2,4,4);
+    });
 
     m._pitch=o;return o;
-  }
-
-  function worldPoint(x,y,cameraX,cameraY,mode,zoom){
+  }  function worldPoint(x,y,cameraX,cameraY,mode,zoom){
     x=clamp(Number(x)||.5,0,1);y=clamp(Number(y)||.5,0,1);
-    var depth=.05+.95*y;
-    var left=lerp(220,78,depth),right=lerp(740,882,depth),py=247+depth*260,px=lerp(left,right,x);
-    var panX=cameraX*80*(.35+.65*y);
-    var panY=cameraY*30*(.25+.75*y);
-    if(mode==='close'){panX*=1.35;panY*=1.15}
-    if(mode==='tactical'){panX*=.72;panY*=.65}
+    // Original J90 isometric projection. No borrowed engine or image assets.
+    var px=480+(x-y)*405,py=265+(x+y-1)*175;
+    var panX=(Number(cameraX)||0)*100,panY=(Number(cameraY)||0)*66;
+    if(mode==='close'){panX*=1.25;panY*=1.2}
+    if(mode==='tactical'){panX*=.65;panY*=.65}
     var z=clamp(Number(zoom)||1,.88,1.14);
     px=480+(px-panX-480)*z;
-    py=390+(py-panY-390)*z;
+    py=265+(py-panY-265)*z;
     return {x:px,y:py};
-  }
+  }  function cameraState(
 
   function cameraState(m){
     var bx=Number(m.ball&&m.ball.x),by=Number(m.ball&&m.ball.y);
@@ -167,8 +198,8 @@
     var dangerHome=Number(m.danger&&m.danger.home)||.5,dangerAway=Number(m.danger&&m.danger.away)||.5;
     var totalDanger=dangerHome+dangerAway;
     var activeDanger=totalDanger>0?Math.max(dangerHome,dangerAway)/totalDanger:.5;
-    var desiredX=clamp((bx-.5)*.86,-.22,.22);
-    var desiredY=clamp((by-.5)*.56,-.22,.22);
+    var desiredX=clamp(((bx-.5)-(by-.5))*.56,-.32,.32);
+    var desiredY=clamp(((bx-.5)+(by-.5))*.42,-.32,.32);
     var attacking=String(m.action&&m.action.name||'').toLowerCase();
     var eventZoom=/shot|chute|goal|cross|corner|free|penalty|final/.test(attacking)?1.10:(activeDanger>.62?1.06:.98);
     var mode=m.cameraMode||'tv';
@@ -197,51 +228,77 @@
   }
 
   function drawPlayer(g,p,side,m,now,low,cam){
-    var pos=worldPoint(p&&p.x,p&&p.y,cam.x,cam.y,cam.mode,cam.zoom),id=String(p&&p.id||p&&p.name||'player'),num=String(p&&p.number!=null?p.number:'');
+    var pos=worldPoint(p&&p.x,p&&p.y,cam.x,cam.y,cam.mode,cam.zoom);
+    var id=String(p&&p.id||p&&p.name||'player'),num=String(p&&p.number!=null?p.number:'');
     var h=hash(id),pc=colors(side==='home'?m.home:m.away),role=String(p&&p.position||p&&p.role||'').toUpperCase();
-    var keeper=/GOL|GK|KEEP/.test(role),depth=clamp(Number(p&&p.y)||.5,.05,.95),s=(.63+.62*depth)*(cam.mode==='close'?1.08:cam.mode==='tactical'?.94:1);
-    var x=pos.x,y=pos.y;
-    var act=actionFor(p,m,now,low),f=act[1],lean=act[0]==='run'?(f%2?-1:1)*2:act[0]==='kick'?3:0;
-    var skin=['#70422f','#915538','#b8734e','#d89a72','#ebb18d'][h%5],hair=['#171717','#38251c','#5b3724','#8a572c','#c8c8c8'][(h>>>5)%5];
-    var kit=keeper?'#e4a62d':pc[0],short=keeper?'#d99d28':pc[2]||pc[1];
+    var keeper=/GOL|GK|KEEP/.test(role),depth=clamp(((Number(p&&p.x)||.5)+(Number(p&&p.y)||.5))*.5,.05,.95);
+    var s=(.83+.20*depth)*(cam.mode==='close'?1.08:cam.mode==='tactical'?.94:1);
+    var x=Math.round(pos.x),y=Math.round(pos.y);
+    var act=actionFor(p,m,now,low),f=act[1];
+    var skin=['#70422f','#915538','#b8734e','#d89a72','#ebb18d'][h%5];
+    var hair=['#171717','#38251c','#5b3724','#8a572c','#c8c8c8'][(h>>>5)%5];
+    var kit=keeper?'#e4a62d':pc[0],short=keeper?'#d99d28':(pc[2]||pc[1]||'#263747');
+    var armStep=act[0]==='run'&&!low?(f%2?2:0):act[0]==='kick'?2:0;
+    var legStep=act[0]==='run'&&!low?(f%2?2:0):act[0]==='kick'?2:0;
 
     g.save();g.translate(x,y);g.scale(s,s);
-    g.fillStyle='rgba(0,0,0,.28)';g.beginPath();g.ellipse(0,4,13,4,0,0,Math.PI*2);g.fill();
+    // Small pixel-art characters: crisp rectangles, deterministic palettes, no external sprites.
+    g.fillStyle='rgba(0,0,0,.32)';g.beginPath();g.ellipse(0,3,10,4,0,0,Math.PI*2);g.fill();
     var owner=m.possessionTeam===side&&m.possessionPlayerId===p.id;
-    if(owner){g.strokeStyle='#ffe48a';g.lineWidth=2.2;g.beginPath();g.ellipse(0,2,15,5,0,0,Math.PI*2);g.stroke();if(!low){g.fillStyle='rgba(255,225,133,.22)';g.beginPath();g.arc(0,1,20,0,Math.PI*2);g.fill()}}
+    if(owner){
+      g.strokeStyle='#ffe58a';g.lineWidth=1.5;g.beginPath();g.ellipse(0,2,12,4.5,0,0,Math.PI*2);g.stroke();
+      if(!low){g.fillStyle='rgba(255,225,133,.13)';g.fillRect(-10,-1,20,5)}
+    }
 
-    g.strokeStyle='#e9e9e4';g.lineWidth=4;g.lineCap='round';
-    var stride=act[0]==='run'?(f%2?5:-5):act[0]==='kick'?6:0;
-    g.beginPath();g.moveTo(-4+lean,12);g.lineTo(-5+stride,25);g.moveTo(4+lean,12);g.lineTo(5-stride,25);g.stroke();
-    g.fillStyle='#171717';g.fillRect(-9+stride,23,7,4);g.fillRect(3-stride,23,7,4);
-    g.fillStyle=short;g.fillRect(-9+lean,7,18,9);
-    g.fillStyle=kit;g.beginPath();g.roundRect(-10+lean,-7,20,18,4);g.fill();
-    g.fillStyle=pc[1];g.fillRect(-2+lean,-7,4,18);
-    g.strokeStyle=skin;g.lineWidth=4.2;
-    var arm=act[0]==='run'?(f%2?5:-5):act[0]==='kick'?5:0;
-    g.beginPath();g.moveTo(-10+lean,-2);g.lineTo(-16+arm,7);g.moveTo(10+lean,-2);g.lineTo(16-arm,7);g.stroke();
-    g.fillStyle=skin;g.beginPath();g.arc(0,-15,8.5,0,Math.PI*2);g.fill();
-    g.fillStyle=hair;g.beginPath();g.arc(0,-17,8.8,Math.PI,Math.PI*2);g.fill();g.fillRect(-8.5,-17,17,4);
+    // Boots, socks and alternating running legs.
+    g.fillStyle='#e8e6d7';
+    g.fillRect(-4+legStep,3,3,7);g.fillRect(1-legStep,3,3,7);
+    g.fillStyle='#161d20';g.fillRect(-5+legStep,9,4,2);g.fillRect(1-legStep,9,4,2);
+    g.fillStyle=short;g.fillRect(-5,0,10,4);
 
-    if(num&&depth>.25){g.fillStyle='#f7f8f5';g.font='700 7px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(num.slice(0,2),lean,1)}
+    // Arms behind the shirt.
+    g.fillStyle=skin;
+    g.fillRect(-8-armStep,-8,3,9);g.fillRect(5+armStep,-8,3,9);
+    g.fillStyle='#e5dfd2';g.fillRect(-8-armStep,-1,3,3);g.fillRect(5+armStep,-1,3,3);
+
+    // Shirt body and sleeves. A central stripe differentiates the club kit.
+    g.fillStyle=kit;g.fillRect(-6,-11,12,12);
+    g.fillStyle=pc[1]||'#f2f2f2';g.fillRect(-1,-10,2,10);
+    g.fillStyle=keeper?'#f3c96d':pc[2]||'#183044';g.fillRect(-6,-2,12,3);
+    g.fillStyle=kit;g.fillRect(-8,-9,3,6);g.fillRect(5,-9,3,6);
+    g.fillStyle='#f4f1e7';g.fillRect(-6,-11,12,1);
+
+    // Neck, face and hair are individually shaded pixel blocks.
+    g.fillStyle=skin;g.fillRect(-2,-14,4,3);g.fillRect(-4,-19,8,6);
+    g.fillStyle=hair;g.fillRect(-4,-20,8,2);g.fillRect(-5,-18,2,3);
+    g.fillStyle='#30251f';g.fillRect(-2,-17,1,1);g.fillRect(2,-17,1,1);
+    if(num&&depth>.34){
+      g.fillStyle='#ffffff';g.font='bold 5px monospace';g.textAlign='center';g.textBaseline='middle';g.fillText(num.slice(0,2),0,-6);
+    }
     if(owner&&!low){
-      g.fillStyle='rgba(5,11,14,.78)';g.beginPath();g.roundRect(-35,-44,70,12,6);g.fill();
-      g.fillStyle='#f7f7f3';g.font='700 7px system-ui';g.textAlign='center';g.textBaseline='middle';
-      var label=String(p&&p.name||'Jogador');if(label.length>14)label=label.slice(0,13)+'…';g.fillText(label,0,-38);
+      g.fillStyle='rgba(5,11,14,.86)';g.fillRect(-26,-31,52,9);
+      g.fillStyle='#f7f7f3';g.font='bold 6px system-ui';g.textAlign='center';g.textBaseline='middle';
+      var label=String(p&&p.name||'Jogador');if(label.length>12)label=label.slice(0,11)+'…';g.fillText(label,0,-26.5);
     }
     g.restore();
-  }
-
-  function drawBall(g,m,low,cam){
-    var p=worldPoint(m.ball&&m.ball.x,m.ball&&m.ball.y,cam.x,cam.y,cam.mode,cam.zoom),r=3.8+(Number(m.ball&&m.ball.z)||0)*2;
-    g.fillStyle='rgba(0,0,0,.36)';g.beginPath();g.ellipse(p.x,p.y+4,7,2.5,0,0,Math.PI*2);g.fill();
+  }  function drawBall(g,m,low,cam){
+    var p=worldPoint(m.ball&&m.ball.x,m.ball&&m.ball.y,cam.x,cam.y,cam.mode,cam.zoom);
+    var z=Number(m.ball&&m.ball.z)||0,r=3.1+Math.max(0,z)*1.6;
+    g.fillStyle='rgba(0,0,0,.38)';g.beginPath();g.ellipse(p.x,p.y+4,5.5,2,0,0,Math.PI*2);g.fill();
     if(m.ball&&m.ball.flight&&!low){
-      var f=m.ball.flight;g.strokeStyle='rgba(255,255,255,.25)';g.lineWidth=2;g.beginPath();g.moveTo(p.x,p.y);
-      g.lineTo(lerp(f.from[0],f.to[0],.35)*960-cam.x*70,lerp(f.from[1],f.to[1],.35)*540);g.stroke();
+      var f=m.ball.flight;
+      if(Array.isArray(f.from)&&Array.isArray(f.to)){
+        var a=worldPoint(f.from[0],f.from[1],cam.x,cam.y,cam.mode,cam.zoom);
+        var b=worldPoint(f.to[0],f.to[1],cam.x,cam.y,cam.mode,cam.zoom);
+        g.strokeStyle='rgba(255,255,255,.36)';g.lineWidth=1.5;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();
+      }
     }
-    g.fillStyle='#ffffff';g.beginPath();g.arc(p.x,p.y-r*.15,r,0,Math.PI*2);g.fill();
-    g.fillStyle='#283235';g.beginPath();g.arc(p.x-1,p.y-1,r*.38,0,Math.PI*2);g.fill();
-  }
+    g.fillStyle='#fffdf1';g.beginPath();g.arc(p.x,p.y-r*.2,r,0,Math.PI*2);g.fill();
+    g.fillStyle='#253137';
+    g.fillRect(Math.round(p.x-1),Math.round(p.y-1),2,2);
+    g.fillRect(Math.round(p.x-r*.55),Math.round(p.y-r*.4),2,2);
+    g.fillRect(Math.round(p.x+r*.25),Math.round(p.y+r*.25),2,2);
+  }  function drawTVOverlay(
 
   function drawTVOverlay(g,m,cam){
     g.save();
