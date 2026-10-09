@@ -1,0 +1,39 @@
+{
+  "schema": "competition",
+  "id": "maia-serie-a-2026-27",
+  "name": "Serie A 2026/27",
+  "type": "League",
+  "scope": "Domestic",
+  "countryId": "IT",
+  "priority": 10,
+  "format": {
+    "kind": "LeagueTable",
+    "legs": 2
+  },
+  "participants": {
+    "explicit": [
+      "club-it-ac-milan",
+      "club-it-ac-monza",
+      "club-it-acf-fiorentina",
+      "club-it-as-roma",
+      "club-it-atalanta-bc",
+      "club-it-bologna-fc-1909",
+      "club-it-cagliari-calcio",
+      "club-it-como-1907",
+      "club-it-fc-internazionale-milano",
+      "club-it-frosinone-calcio",
+      "club-it-genoa-cfc",
+      "club-it-juventus-fc",
+      "club-it-parma-calcio-1913",
+      "club-it-ss-lazio",
+      "club-it-ssc-napoli",
+      "club-it-torino-fc",
+      "club-it-udinese-calcio",
+      "club-it-us-lecce",
+      "club-it-us-sassuolo-calcio",
+      "club-it-venezia-fc"
+    ]
+  },
+  "seasonStartMonth": 8,
+  "seasonStartDay": 1
+}
