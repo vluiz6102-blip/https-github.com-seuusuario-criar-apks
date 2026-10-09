@@ -100,6 +100,13 @@ def build_team(name: str, division: str, number: int, player_count: int) -> dict
 def main() -> None:
     if not (ROOT / "project.godot").is_file():
         raise SystemExit("Godot submodule not found; checkout with submodules enabled.")
+    # Remove upstream club crests; the UI has a built-in color/initials fallback.
+    # This avoids redistributing branded media with unclear reuse rights.
+    logos_dir = ROOT / "assets" / "logos"
+    if logos_dir.is_dir():
+        for logo in logos_dir.iterdir():
+            if logo.is_file() and logo.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+                logo.unlink()
     for division in ("primera", "segunda"):
         target = BASE / division
         target.mkdir(parents=True, exist_ok=True)
