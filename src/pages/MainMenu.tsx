@@ -700,7 +700,7 @@ export default function MainMenu() {
         <div className="bg-white dark:bg-navy-800 p-8 rounded-b-2xl shadow-xl dark:shadow-2xl border border-gray-200 dark:border-navy-600 border-t-0 transition-all duration-500">
           {/* Logo */}
           <img
-            src="/openfootlogo.svg"
+            src="/maia-soccer-manager.svg"
             alt={t("app.name")}
             className="text-center w-full h-full object-cover"
           />
@@ -913,9 +913,11 @@ export default function MainMenu() {
         </button>
       </div>
 
-      {/* Version */}
-      <div className="absolute bottom-4 right-4 text-gray-400 dark:text-gray-600 text-xs font-heading uppercase tracking-widest transition-colors">
-        {formatAppVersion()}
+      {/* Maia Soccer Manager credits and version */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-gray-500 dark:text-gray-400 text-xs font-heading tracking-wide transition-colors">
+        <div className="font-semibold">Maia Soccer Manager (MSM)</div>
+        <div>Produzido por Victor Luiz</div>
+        <div className="mt-1 opacity-75">{formatAppVersion()}</div>
       </div>
 
       {reportingBug && <ReportBugModal onClose={() => setReportingBug(false)} />}

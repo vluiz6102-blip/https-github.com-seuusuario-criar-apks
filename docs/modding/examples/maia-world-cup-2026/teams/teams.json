@@ -1,0 +1,965 @@
+{
+  "schema": "team",
+  "items": [
+    {
+      "id": "national-sco",
+      "name": "Scotland",
+      "shortName": "SCO",
+      "city": "Scotland",
+      "country": "SCO",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-can",
+      "name": "Canada",
+      "shortName": "CAN",
+      "city": "Canada",
+      "country": "CAN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-cro",
+      "name": "Croatia",
+      "shortName": "CRO",
+      "city": "Croatia",
+      "country": "CRO",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-eng",
+      "name": "England",
+      "shortName": "ENG",
+      "city": "England",
+      "country": "ENG",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-por",
+      "name": "Portugal",
+      "shortName": "POR",
+      "city": "Portugal",
+      "country": "POR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-cuw",
+      "name": "Curacao",
+      "shortName": "CUW",
+      "city": "Curacao",
+      "country": "CUW",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-nzl",
+      "name": "New Zealand",
+      "shortName": "NZL",
+      "city": "New Zealand",
+      "country": "NZL",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-ned",
+      "name": "Netherlands",
+      "shortName": "NED",
+      "city": "Netherlands",
+      "country": "NED",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-dza",
+      "name": "Algeria",
+      "shortName": "DZA",
+      "city": "Algeria",
+      "country": "DZA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-bel",
+      "name": "Belgium",
+      "shortName": "BEL",
+      "city": "Belgium",
+      "country": "BEL",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-sen",
+      "name": "Senegal",
+      "shortName": "SEN",
+      "city": "Senegal",
+      "country": "SEN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-gha",
+      "name": "Ghana",
+      "shortName": "GHA",
+      "city": "Ghana",
+      "country": "GHA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-usa",
+      "name": "United States",
+      "shortName": "USA",
+      "city": "United States",
+      "country": "USA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-aut",
+      "name": "Austria",
+      "shortName": "AUT",
+      "city": "Austria",
+      "country": "AUT",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-fra",
+      "name": "France",
+      "shortName": "FRA",
+      "city": "France",
+      "country": "FRA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-ecu",
+      "name": "Ecuador",
+      "shortName": "ECU",
+      "city": "Ecuador",
+      "country": "ECU",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-arg",
+      "name": "Argentina",
+      "shortName": "ARG",
+      "city": "Argentina",
+      "country": "ARG",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-swe",
+      "name": "Sweden",
+      "shortName": "SWE",
+      "city": "Sweden",
+      "country": "SWE",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-bih",
+      "name": "Bosnia and Herzegovina",
+      "shortName": "BIH",
+      "city": "Bosnia and Herzegovina",
+      "country": "BIH",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-cod",
+      "name": "Congo DR",
+      "shortName": "COD",
+      "city": "Congo DR",
+      "country": "COD",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-col",
+      "name": "Colombia",
+      "shortName": "COL",
+      "city": "Colombia",
+      "country": "COL",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-sui",
+      "name": "Switzerland",
+      "shortName": "SUI",
+      "city": "Switzerland",
+      "country": "SUI",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-esp",
+      "name": "Spain",
+      "shortName": "ESP",
+      "city": "Spain",
+      "country": "ESP",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-egy",
+      "name": "Egypt",
+      "shortName": "EGY",
+      "city": "Egypt",
+      "country": "EGY",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-kor",
+      "name": "Korea Republic",
+      "shortName": "KOR",
+      "city": "Korea Republic",
+      "country": "KOR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-uru",
+      "name": "Uruguay",
+      "shortName": "URU",
+      "city": "Uruguay",
+      "country": "URU",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-cze",
+      "name": "Czech Republic",
+      "shortName": "CZE",
+      "city": "Czech Republic",
+      "country": "CZE",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-aus",
+      "name": "Australia",
+      "shortName": "AUS",
+      "city": "Australia",
+      "country": "AUS",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-ger",
+      "name": "Germany",
+      "shortName": "GER",
+      "city": "Germany",
+      "country": "GER",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-civ",
+      "name": "Côte d'Ivoire",
+      "shortName": "CIV",
+      "city": "Côte d'Ivoire",
+      "country": "CIV",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-cpv",
+      "name": "Cape Verde Islands",
+      "shortName": "CPV",
+      "city": "Cape Verde Islands",
+      "country": "CPV",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-nor",
+      "name": "Norway",
+      "shortName": "NOR",
+      "city": "Norway",
+      "country": "NOR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-irn",
+      "name": "Iran",
+      "shortName": "IRN",
+      "city": "Iran",
+      "country": "IRN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-mar",
+      "name": "Morocco",
+      "shortName": "MAR",
+      "city": "Morocco",
+      "country": "MAR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-tur",
+      "name": "Türkiye",
+      "shortName": "TUR",
+      "city": "Türkiye",
+      "country": "TUR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-tun",
+      "name": "Tunisia",
+      "shortName": "TUN",
+      "city": "Tunisia",
+      "country": "TUN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-bra",
+      "name": "Brazil",
+      "shortName": "BRA",
+      "city": "Brazil",
+      "country": "BRA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-qat",
+      "name": "Qatar",
+      "shortName": "QAT",
+      "city": "Qatar",
+      "country": "QAT",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-hti",
+      "name": "Haiti",
+      "shortName": "HTI",
+      "city": "Haiti",
+      "country": "HTI",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-pan",
+      "name": "Panama",
+      "shortName": "PAN",
+      "city": "Panama",
+      "country": "PAN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-irq",
+      "name": "Iraq",
+      "shortName": "IRQ",
+      "city": "Iraq",
+      "country": "IRQ",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-mex",
+      "name": "Mexico",
+      "shortName": "MEX",
+      "city": "Mexico",
+      "country": "MEX",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-pry",
+      "name": "Paraguay",
+      "shortName": "PRY",
+      "city": "Paraguay",
+      "country": "PRY",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-jpn",
+      "name": "Japan",
+      "shortName": "JPN",
+      "city": "Japan",
+      "country": "JPN",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-ksa",
+      "name": "Saudi Arabia",
+      "shortName": "KSA",
+      "city": "Saudi Arabia",
+      "country": "KSA",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-zaf",
+      "name": "South Africa",
+      "shortName": "ZAF",
+      "city": "South Africa",
+      "country": "ZAF",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-uzb",
+      "name": "Uzbekistan",
+      "shortName": "UZB",
+      "city": "Uzbekistan",
+      "country": "UZB",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    },
+    {
+      "id": "national-jor",
+      "name": "Jordan",
+      "shortName": "JOR",
+      "city": "Jordan",
+      "country": "JOR",
+      "colors": {
+        "primary": "#14532d",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        500,
+        850
+      ],
+      "financeRange": [
+        1000000,
+        10000000
+      ]
+    }
+  ]
+}

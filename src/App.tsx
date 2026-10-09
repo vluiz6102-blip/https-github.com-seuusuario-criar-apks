@@ -44,7 +44,7 @@ function App() {
     void (async () => {
       try {
         const { getCurrentWindow } = await import("@tauri-apps/api/window");
-        await getCurrentWindow().setTitle(`Openfoot Manager ${formatAppVersion()}`);
+        await getCurrentWindow().setTitle(`Maia Soccer Manager (MSM) ${formatAppVersion()}`);
       } catch (error) {
         console.error("Failed to set window title:", error);
       }

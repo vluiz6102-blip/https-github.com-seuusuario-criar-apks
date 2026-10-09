@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Openfoot Manager",
+  "productName": "Maia Soccer Manager",
   "version": "0.3.0",
   "identifier": "com.sturdyrobot.openfootmanager",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Openfoot Manager",
+        "title": "Maia Soccer Manager (MSM)",
         "width": 1280,
         "height": 800,
         "minWidth": 960,
@@ -24,7 +24,10 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/generated-player-portraits/**", "$APPDATA/package-assets/**"]
+        "scope": [
+          "$APPDATA/generated-player-portraits/**",
+          "$APPDATA/package-assets/**"
+        ]
       }
     }
   },
@@ -34,7 +37,7 @@
     "resources": {
       "crates/ofm_core/data/default_names.json": "data/default_names.json",
       "crates/ofm_core/data/default_nations.json": "data/default_nations.json",
-      "../docs/modding/examples/mini-league": "databases/northshire-mini-league"
+      "../docs/modding/examples/maia-world-cup-2026": "databases/northshire-mini-league"
     },
     "icon": [
       "icons/32x32.png",
