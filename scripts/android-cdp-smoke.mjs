@@ -103,6 +103,8 @@ async function waitForRendererFrames(c,target=8,timeoutMs=90000){
 let c=await connect();
 await wait(c,"!!document.body");
 await wait(c,"!!window.J90Perf",10000);
+// Fail before navigating through the career flow if the renderer bundle is missing or stale.
+await wait(c,"window.J90Match2DV3?.version==='4.1'",10000);
 await c.eval("window.J90Perf.enable()");
 if(await c.eval("!!document.getElementById('j90CinematicIntro')"))await c.eval("document.getElementById('j90CinematicIntro').click()");
 await wait(c,"!!window.J90AutoHealAI&&!!window.J90BugGuard");
