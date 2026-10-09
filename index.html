@@ -1657,6 +1657,7 @@ function startJ90Atmosphere(){
     j90AtmoNodes.forEach(draw);
    }
   }
+  if(typeof S!=='undefined'&&S&&S.manager&&S.match2d&&S.match2d.paused){j90AtmoFrame=0;j90AtmoStarted=false;return}
   j90AtmoFrame=requestAnimationFrame(frame);
  };
  j90AtmoLoop=frame;
@@ -3064,7 +3065,15 @@ function render(still){
  var A=$('app');A.className=still?'still':'';
  if(!S){A.innerHTML=intro();if(!j90IntroActive){startJ90Atmosphere();j90SyncSoundscape()}return}
  if(introStep===0){A.innerHTML=menuV();refreshJ90AtmosphereNodes();startJ90Atmosphere();j90SyncSoundscape();return}
- if(S.manager){if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}j90AtmoStarted=false;renderManagerPartial(still);j90SyncSoundscape();return}
+ if(S.manager){
+  if(!S.match2d||S.match2d.paused){
+   if(j90AtmoFrame){cancelAnimationFrame(j90AtmoFrame);j90AtmoFrame=0}
+   j90AtmoStarted=false;
+  }
+  renderManagerPartial(still);j90SyncSoundscape();
+  if(S.match2d&&!S.match2d.paused&&!j90AtmoFrame){j90AtmoStarted=false;startJ90Atmosphere()}
+  return
+}
  var h=head()+tabs()+(tab==='game'?gameV():tab==='tbl'?tblV():tab==='news'?newsV():tab==='ply'?playerV():careerV());
  A.innerHTML=h;startJ90Atmosphere();save();j90SyncSoundscape();if(!still)window.scrollTo(0,0)
 }
