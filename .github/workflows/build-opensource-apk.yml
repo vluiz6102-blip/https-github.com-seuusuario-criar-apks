@@ -92,7 +92,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p game/build dist
-          godot --headless --path game --export-debug "Android" build/Jornada90.apk
+          godot --headless --path game --install-android-build-template --export-debug "Android" build/Jornada90.apk
           test -s game/build/Jornada90.apk
           file game/build/Jornada90.apk
           sha256sum game/build/Jornada90.apk | tee dist/SHA256SUMS.txt
