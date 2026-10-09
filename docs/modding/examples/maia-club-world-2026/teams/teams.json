@@ -1,0 +1,3045 @@
+{
+  "schema": "team",
+  "items": [
+    {
+      "id": "club-eng-afc-bournemouth",
+      "name": "AFC Bournemouth",
+      "shortName": "BOU",
+      "city": "Bournemouth",
+      "country": "ENG",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-arsenal-fc",
+      "name": "Arsenal FC",
+      "shortName": "ARS",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-eng-aston-villa-fc",
+      "name": "Aston Villa FC",
+      "shortName": "AVI",
+      "city": "Birmingham",
+      "country": "ENG",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-brentford-fc",
+      "name": "Brentford FC",
+      "shortName": "BRE",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-brighton-hove-albion-fc",
+      "name": "Brighton & Hove Albion FC",
+      "shortName": "BHA",
+      "city": "Falmer",
+      "country": "ENG",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-chelsea-fc",
+      "name": "Chelsea FC",
+      "shortName": "CHE",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-eng-coventry-city-fc",
+      "name": "Coventry City FC",
+      "shortName": "CCI",
+      "city": "Coventry",
+      "country": "ENG",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-eng-crystal-palace-fc",
+      "name": "Crystal Palace FC",
+      "shortName": "CPA",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-everton-fc",
+      "name": "Everton FC",
+      "shortName": "EVE",
+      "city": "Liverpool",
+      "country": "ENG",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-fulham-fc",
+      "name": "Fulham FC",
+      "shortName": "FUL",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-hull-city-afc",
+      "name": "Hull City AFC",
+      "shortName": "HCI",
+      "city": "Hull",
+      "country": "ENG",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-eng-ipswich-town-fc",
+      "name": "Ipswich Town FC",
+      "shortName": "ITO",
+      "city": "Ipswich",
+      "country": "ENG",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-eng-leeds-united-fc",
+      "name": "Leeds United FC",
+      "shortName": "LUN",
+      "city": "Leeds",
+      "country": "ENG",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-eng-liverpool-fc",
+      "name": "Liverpool FC",
+      "shortName": "LIV",
+      "city": "Liverpool",
+      "country": "ENG",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-eng-manchester-city-fc",
+      "name": "Manchester City FC",
+      "shortName": "MCI",
+      "city": "Manchester",
+      "country": "ENG",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-eng-manchester-united-fc",
+      "name": "Manchester United FC",
+      "shortName": "MUN",
+      "city": "Manchester",
+      "country": "ENG",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-eng-newcastle-united-fc",
+      "name": "Newcastle United FC",
+      "shortName": "NUN",
+      "city": "Newcastle upon Tyne",
+      "country": "ENG",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-nottingham-forest-fc",
+      "name": "Nottingham Forest FC",
+      "shortName": "NFO",
+      "city": "West Bridgford",
+      "country": "ENG",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-eng-sunderland-afc",
+      "name": "Sunderland AFC",
+      "shortName": "SUN",
+      "city": "Sunderland",
+      "country": "ENG",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-eng-tottenham-hotspur-fc",
+      "name": "Tottenham Hotspur FC",
+      "shortName": "THO",
+      "city": "London",
+      "country": "ENG",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-athletic-club",
+      "name": "Athletic Club",
+      "shortName": "ACL",
+      "city": "Bilbao",
+      "country": "ES",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-ca-osasuna",
+      "name": "CA Osasuna",
+      "shortName": "OSA",
+      "city": "Pamplona",
+      "country": "ES",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-club-atletico-de-madrid",
+      "name": "Club Atlético de Madrid",
+      "shortName": "CAD",
+      "city": "Madrid",
+      "country": "ES",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-deportivo-alaves",
+      "name": "Deportivo Alavés",
+      "shortName": "DAL",
+      "city": "Vitoria",
+      "country": "ES",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-elche-cf",
+      "name": "Elche CF",
+      "shortName": "ELC",
+      "city": "Elche",
+      "country": "ES",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-fc-barcelona",
+      "name": "FC Barcelona",
+      "shortName": "BAR",
+      "city": "Barcelona",
+      "country": "ES",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-es-getafe-cf",
+      "name": "Getafe CF",
+      "shortName": "GET",
+      "city": "Madrid",
+      "country": "ES",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-levante-ud",
+      "name": "Levante UD",
+      "shortName": "LEV",
+      "city": "Valencia",
+      "country": "ES",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-malaga-cf",
+      "name": "Málaga CF",
+      "shortName": "MAL",
+      "city": "Málaga",
+      "country": "ES",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-rayo-vallecano-de-madrid",
+      "name": "Rayo Vallecano de Madrid",
+      "shortName": "RVD",
+      "city": "Madrid",
+      "country": "ES",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-rc-celta-de-vigo",
+      "name": "RC Celta de Vigo",
+      "shortName": "CDV",
+      "city": "Vigo",
+      "country": "ES",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-rc-deportivo-la-coruna",
+      "name": "RC Deportivo La Coruña",
+      "shortName": "DLC",
+      "city": "La Coruña",
+      "country": "ES",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-rcd-espanyol-de-barcelona",
+      "name": "RCD Espanyol de Barcelona",
+      "shortName": "RED",
+      "city": "Barcelona",
+      "country": "ES",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-es-real-betis-balompie",
+      "name": "Real Betis Balompié",
+      "shortName": "RBB",
+      "city": "Sevilla",
+      "country": "ES",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-real-madrid-cf",
+      "name": "Real Madrid CF",
+      "shortName": "RMA",
+      "city": "Madrid",
+      "country": "ES",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-es-real-racing-club-de-santander",
+      "name": "Real Racing Club de Santander",
+      "shortName": "RRC",
+      "city": "Santander",
+      "country": "ES",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-es-real-sociedad-de-futbol",
+      "name": "Real Sociedad de Fútbol",
+      "shortName": "RSD",
+      "city": "San Sebastián",
+      "country": "ES",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-sevilla-fc",
+      "name": "Sevilla FC",
+      "shortName": "SEV",
+      "city": "Sevilla",
+      "country": "ES",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-valencia-cf",
+      "name": "Valencia CF",
+      "shortName": "VAL",
+      "city": "Valencia",
+      "country": "ES",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-es-villarreal-cf",
+      "name": "Villarreal CF",
+      "shortName": "VIL",
+      "city": "Villarreal",
+      "country": "ES",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-1-fc-koln",
+      "name": "1. FC Köln",
+      "shortName": "1KO",
+      "city": "Köln",
+      "country": "DE",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-1-fc-union-berlin",
+      "name": "1. FC Union Berlin",
+      "shortName": "1UB",
+      "city": "Berlin",
+      "country": "DE",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-1-fsv-mainz-05",
+      "name": "1. FSV Mainz 05",
+      "shortName": "1FM",
+      "city": "Mainz",
+      "country": "DE",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-bayer-04-leverkusen",
+      "name": "Bayer 04 Leverkusen",
+      "shortName": "B0L",
+      "city": "Leverkusen",
+      "country": "DE",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-borussia-dortmund",
+      "name": "Borussia Dortmund",
+      "shortName": "BDO",
+      "city": "Dortmund",
+      "country": "DE",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-borussia-monchengladbach",
+      "name": "Borussia Mönchengladbach",
+      "shortName": "BMO",
+      "city": "Mönchengladbach",
+      "country": "DE",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-eintracht-frankfurt",
+      "name": "Eintracht Frankfurt",
+      "shortName": "EFR",
+      "city": "Frankfurt am Main",
+      "country": "DE",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-fc-augsburg",
+      "name": "FC Augsburg",
+      "shortName": "AUG",
+      "city": "Augsburg",
+      "country": "DE",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-fc-bayern-munchen",
+      "name": "FC Bayern München",
+      "shortName": "BMU",
+      "city": "München",
+      "country": "DE",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-de-fc-schalke-04",
+      "name": "FC Schalke 04",
+      "shortName": "S04",
+      "city": "Gelsenkirchen",
+      "country": "DE",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-hamburger-sv",
+      "name": "Hamburger SV",
+      "shortName": "HSV",
+      "city": "Hamburg",
+      "country": "DE",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-rb-leipzig",
+      "name": "RB Leipzig",
+      "shortName": "LEI",
+      "city": "Leipzig",
+      "country": "DE",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-sc-freiburg",
+      "name": "SC Freiburg",
+      "shortName": "FRE",
+      "city": "Freiburg",
+      "country": "DE",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-de-sc-paderborn-07",
+      "name": "SC Paderborn 07",
+      "shortName": "P07",
+      "city": "Paderborn",
+      "country": "DE",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-sv-07-elversberg",
+      "name": "SV 07 Elversberg",
+      "shortName": "S0E",
+      "city": "Neunkirchen",
+      "country": "DE",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-sv-werder-bremen",
+      "name": "SV Werder Bremen",
+      "shortName": "SWB",
+      "city": "Bremen",
+      "country": "DE",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-tsg-1899-hoffenheim",
+      "name": "TSG 1899 Hoffenheim",
+      "shortName": "T1H",
+      "city": "Sinsheim",
+      "country": "DE",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-de-vfb-stuttgart",
+      "name": "VfB Stuttgart",
+      "shortName": "VST",
+      "city": "Stuttgart",
+      "country": "DE",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-ac-milan",
+      "name": "AC Milan",
+      "shortName": "MIL",
+      "city": "Milano",
+      "country": "IT",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-it-ac-monza",
+      "name": "AC Monza",
+      "shortName": "MON",
+      "city": "Monza",
+      "country": "IT",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-acf-fiorentina",
+      "name": "ACF Fiorentina",
+      "shortName": "AFI",
+      "city": "Firenze",
+      "country": "IT",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-as-roma",
+      "name": "AS Roma",
+      "shortName": "ROM",
+      "city": "Roma",
+      "country": "IT",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-atalanta-bc",
+      "name": "Atalanta BC",
+      "shortName": "ATA",
+      "city": "Bergamo",
+      "country": "IT",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-bologna-fc-1909",
+      "name": "Bologna FC 1909",
+      "shortName": "B19",
+      "city": "Bologna",
+      "country": "IT",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-cagliari-calcio",
+      "name": "Cagliari Calcio",
+      "shortName": "CCA",
+      "city": "Cagliari",
+      "country": "IT",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-como-1907",
+      "name": "Como 1907",
+      "shortName": "C19",
+      "city": "Como",
+      "country": "IT",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-fc-internazionale-milano",
+      "name": "FC Internazionale Milano",
+      "shortName": "IMI",
+      "city": "Milano",
+      "country": "IT",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-it-frosinone-calcio",
+      "name": "Frosinone Calcio",
+      "shortName": "FCA",
+      "city": "Frosinone",
+      "country": "IT",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-genoa-cfc",
+      "name": "Genoa CFC",
+      "shortName": "GEN",
+      "city": "Genova",
+      "country": "IT",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-juventus-fc",
+      "name": "Juventus FC",
+      "shortName": "JUV",
+      "city": "Torino",
+      "country": "IT",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-it-parma-calcio-1913",
+      "name": "Parma Calcio 1913",
+      "shortName": "PC1",
+      "city": "Parma",
+      "country": "IT",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-ss-lazio",
+      "name": "SS Lazio",
+      "shortName": "LAZ",
+      "city": "Roma",
+      "country": "IT",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-ssc-napoli",
+      "name": "SSC Napoli",
+      "shortName": "SNA",
+      "city": "Napoli",
+      "country": "IT",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-torino-fc",
+      "name": "Torino FC",
+      "shortName": "TOR",
+      "city": "Torino",
+      "country": "IT",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-it-udinese-calcio",
+      "name": "Udinese Calcio",
+      "shortName": "UCA",
+      "city": "Udine",
+      "country": "IT",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-us-lecce",
+      "name": "US Lecce",
+      "shortName": "ULE",
+      "city": "Lecce",
+      "country": "IT",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-us-sassuolo-calcio",
+      "name": "US Sassuolo Calcio",
+      "shortName": "USC",
+      "city": "Sassuolo",
+      "country": "IT",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-it-venezia-fc",
+      "name": "Venezia FC",
+      "shortName": "VEN",
+      "city": "Venezia",
+      "country": "IT",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-aj-auxerre",
+      "name": "AJ Auxerre",
+      "shortName": "AAU",
+      "city": "Auxerre",
+      "country": "FR",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-angers-sco",
+      "name": "Angers SCO",
+      "shortName": "ASC",
+      "city": "Angers",
+      "country": "FR",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-as-monaco-fc",
+      "name": "AS Monaco FC",
+      "shortName": "MON",
+      "city": "Monaco",
+      "country": "FR",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-es-troyes-ac",
+      "name": "ES Troyes AC",
+      "shortName": "ETR",
+      "city": "Troyes",
+      "country": "FR",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-fc-lorient",
+      "name": "FC Lorient",
+      "shortName": "LOR",
+      "city": "Lorient",
+      "country": "FR",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-le-havre-ac",
+      "name": "Le Havre AC",
+      "shortName": "LHA",
+      "city": "Le Havre",
+      "country": "FR",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-le-mans-fc",
+      "name": "Le Mans FC",
+      "shortName": "LMA",
+      "city": "Le Mans",
+      "country": "FR",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-lille-osc",
+      "name": "Lille OSC",
+      "shortName": "LOS",
+      "city": "Lille",
+      "country": "FR",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-ogc-nice",
+      "name": "OGC Nice",
+      "shortName": "ONI",
+      "city": "Nice",
+      "country": "FR",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-olympique-de-marseille",
+      "name": "Olympique de Marseille",
+      "shortName": "ODM",
+      "city": "Marseille",
+      "country": "FR",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-olympique-lyonnais",
+      "name": "Olympique Lyonnais",
+      "shortName": "OLY",
+      "city": "Lyon",
+      "country": "FR",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-paris-fc",
+      "name": "Paris FC",
+      "shortName": "PAR",
+      "city": "Paris",
+      "country": "FR",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-paris-saint-germain-fc",
+      "name": "Paris Saint-Germain FC",
+      "shortName": "PSG",
+      "city": "Paris",
+      "country": "FR",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-fr-racing-club-de-lens",
+      "name": "Racing Club de Lens",
+      "shortName": "RCD",
+      "city": "Lens",
+      "country": "FR",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-rc-strasbourg-alsace",
+      "name": "RC Strasbourg Alsace",
+      "shortName": "SAL",
+      "city": "Strasbourg",
+      "country": "FR",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-fr-stade-brestois-29",
+      "name": "Stade Brestois 29",
+      "shortName": "SB2",
+      "city": "Brest",
+      "country": "FR",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-stade-rennais-fc-1901",
+      "name": "Stade Rennais FC 1901",
+      "shortName": "SR1",
+      "city": "Rennes",
+      "country": "FR",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-fr-toulouse-fc",
+      "name": "Toulouse FC",
+      "shortName": "TOU",
+      "city": "Toulouse",
+      "country": "FR",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-botafogo-fr",
+      "name": "Botafogo FR",
+      "shortName": "BFR",
+      "city": "Rio de Janeiro",
+      "country": "BR",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-ca-mineiro",
+      "name": "CA Mineiro",
+      "shortName": "MIN",
+      "city": "Belo Horizonte",
+      "country": "BR",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-ca-paranaense",
+      "name": "CA Paranaense",
+      "shortName": "PAR",
+      "city": "Curitiba",
+      "country": "BR",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-chapecoense-af",
+      "name": "Chapecoense AF",
+      "shortName": "CAF",
+      "city": "Chapecó",
+      "country": "BR",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-clube-do-remo",
+      "name": "Clube do Remo",
+      "shortName": "CDR",
+      "city": "Belém",
+      "country": "BR",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-coritiba-fbc",
+      "name": "Coritiba FBC",
+      "shortName": "COR",
+      "city": "Curitiba",
+      "country": "BR",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-cr-flamengo",
+      "name": "CR Flamengo",
+      "shortName": "CFL",
+      "city": "Rio de Janeiro",
+      "country": "BR",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-br-cr-vasco-da-gama",
+      "name": "CR Vasco da Gama",
+      "shortName": "CVD",
+      "city": "Rio de Janeiro",
+      "country": "BR",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-cruzeiro-ec",
+      "name": "Cruzeiro EC",
+      "shortName": "CEC",
+      "city": "Belo Horizonte",
+      "country": "BR",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-ec-bahia",
+      "name": "EC Bahia",
+      "shortName": "EBA",
+      "city": "Salvador",
+      "country": "BR",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-ec-vitoria",
+      "name": "EC Vitória",
+      "shortName": "EVI",
+      "city": "Salvador",
+      "country": "BR",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-fluminense-fc",
+      "name": "Fluminense FC",
+      "shortName": "FLU",
+      "city": "Rio de Janeiro",
+      "country": "BR",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-gremio-fbpa",
+      "name": "Grêmio FBPA",
+      "shortName": "GFB",
+      "city": "Porto Alegre",
+      "country": "BR",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-mirassol-fc",
+      "name": "Mirassol FC",
+      "shortName": "MIR",
+      "city": "Mirassol",
+      "country": "BR",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-rb-bragantino",
+      "name": "RB Bragantino",
+      "shortName": "BRA",
+      "city": "Bragança Paulista",
+      "country": "BR",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-br-santos-fc",
+      "name": "Santos FC",
+      "shortName": "SAN",
+      "city": "Santos",
+      "country": "BR",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-sao-paulo-fc",
+      "name": "São Paulo FC",
+      "shortName": "SPA",
+      "city": "São Paulo",
+      "country": "BR",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-sc-corinthians-paulista",
+      "name": "SC Corinthians Paulista",
+      "shortName": "CPA",
+      "city": "São Paulo",
+      "country": "BR",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-sc-internacional",
+      "name": "SC Internacional",
+      "shortName": "INT",
+      "city": "Porto Alegre",
+      "country": "BR",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-br-se-palmeiras",
+      "name": "SE Palmeiras",
+      "shortName": "PAL",
+      "city": "São Paulo",
+      "country": "BR",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-pt-academico-de-viseu-fc",
+      "name": "Académico de Viseu FC",
+      "shortName": "ADV",
+      "city": "Viseu",
+      "country": "PT",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-casa-pia-ac",
+      "name": "Casa Pia AC",
+      "shortName": "CPI",
+      "city": "Lisboa",
+      "country": "PT",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-cd-nacional",
+      "name": "CD Nacional",
+      "shortName": "NAC",
+      "city": "Funchal",
+      "country": "PT",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-cd-santa-clara",
+      "name": "CD Santa Clara",
+      "shortName": "SCL",
+      "city": "Ponta Delgada",
+      "country": "PT",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-cf-estrela-da-amadora",
+      "name": "CF Estrela da Amadora",
+      "shortName": "EDA",
+      "city": "Amadora",
+      "country": "PT",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-cs-maritimo",
+      "name": "CS Marítimo",
+      "shortName": "CMA",
+      "city": "Funchal",
+      "country": "PT",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-fc-alverca",
+      "name": "FC Alverca",
+      "shortName": "ALV",
+      "city": "Alverca do Ribatejo",
+      "country": "PT",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-fc-arouca",
+      "name": "FC Arouca",
+      "shortName": "ARO",
+      "city": "Arouca",
+      "country": "PT",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-fc-famalicao",
+      "name": "FC Famalicão",
+      "shortName": "FAM",
+      "city": "Vila Nova de Famalicão",
+      "country": "PT",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-pt-fc-porto",
+      "name": "FC Porto",
+      "shortName": "POR",
+      "city": "Porto",
+      "country": "PT",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-pt-gd-estoril-praia",
+      "name": "GD Estoril Praia",
+      "shortName": "EPR",
+      "city": "Estoril",
+      "country": "PT",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-gil-vicente-fc",
+      "name": "Gil Vicente FC",
+      "shortName": "GVI",
+      "city": "Barcelos",
+      "country": "PT",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-moreirense-fc",
+      "name": "Moreirense FC",
+      "shortName": "MOR",
+      "city": "Moreira de Cónegos",
+      "country": "PT",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-rio-ave-fc",
+      "name": "Rio Ave FC",
+      "shortName": "RAV",
+      "city": "Vila do Conde",
+      "country": "PT",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-sport-lisboa-e-benfica",
+      "name": "Sport Lisboa e Benfica",
+      "shortName": "SLE",
+      "city": "Lisboa",
+      "country": "PT",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-pt-sporting-clube-de-braga",
+      "name": "Sporting Clube de Braga",
+      "shortName": "SCD",
+      "city": "Braga",
+      "country": "PT",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-pt-sporting-clube-de-portugal",
+      "name": "Sporting Clube de Portugal",
+      "shortName": "SCD2",
+      "city": "Lisboa",
+      "country": "PT",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-pt-vitoria-guimaraes",
+      "name": "Vitória Guimarães",
+      "shortName": "VGU",
+      "city": "Guimarães",
+      "country": "PT",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-ado-den-haag",
+      "name": "ADO Den Haag",
+      "shortName": "ADH",
+      "city": "Den Haag",
+      "country": "NL",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-afc-ajax",
+      "name": "AFC Ajax",
+      "shortName": "AJA",
+      "city": "Amsterdam",
+      "country": "NL",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-nl-az",
+      "name": "AZ",
+      "shortName": "AZ",
+      "city": "Alkmaar",
+      "country": "NL",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-nl-fc-groningen",
+      "name": "FC Groningen",
+      "shortName": "GRO",
+      "city": "Groningen",
+      "country": "NL",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-fc-twente-65",
+      "name": "FC Twente '65",
+      "shortName": "T65",
+      "city": "Enschede",
+      "country": "NL",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-nl-fc-utrecht",
+      "name": "FC Utrecht",
+      "shortName": "UTR",
+      "city": "Utrecht",
+      "country": "NL",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        650,
+        900
+      ],
+      "financeRange": [
+        35000000,
+        180000000
+      ]
+    },
+    {
+      "id": "club-nl-feyenoord-rotterdam",
+      "name": "Feyenoord Rotterdam",
+      "shortName": "FRO",
+      "city": "Rotterdam",
+      "country": "NL",
+      "colors": {
+        "primary": "#000000",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-nl-fortuna-sittard",
+      "name": "Fortuna Sittard",
+      "shortName": "FSI",
+      "city": "Sittard",
+      "country": "NL",
+      "colors": {
+        "primary": "#eab308",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-go-ahead-eagles",
+      "name": "Go Ahead Eagles",
+      "shortName": "GAE",
+      "city": "Deventer",
+      "country": "NL",
+      "colors": {
+        "primary": "#7c3aed",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-nec",
+      "name": "NEC",
+      "shortName": "NEC",
+      "city": "Nijmegen",
+      "country": "NL",
+      "colors": {
+        "primary": "#0ea5e9",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-pec-zwolle",
+      "name": "PEC Zwolle",
+      "shortName": "PZW",
+      "city": "Zwolle",
+      "country": "NL",
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#fbbf24"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-psv",
+      "name": "PSV",
+      "shortName": "PSV",
+      "city": "Eindhoven",
+      "country": "NL",
+      "colors": {
+        "primary": "#9f1239",
+        "secondary": "#1d4ed8"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        800,
+        1000
+      ],
+      "financeRange": [
+        100000000,
+        650000000
+      ]
+    },
+    {
+      "id": "club-nl-sbv-excelsior",
+      "name": "SBV Excelsior",
+      "shortName": "EXC",
+      "city": "Rotterdam",
+      "country": "NL",
+      "colors": {
+        "primary": "#1e3a5f",
+        "secondary": "#dc2626"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-sc-cambuur-leeuwarden",
+      "name": "SC Cambuur-Leeuwarden",
+      "shortName": "CLE",
+      "city": "Leeuwarden",
+      "country": "NL",
+      "colors": {
+        "primary": "#15803d",
+        "secondary": "#000000"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-sc-heerenveen",
+      "name": "SC Heerenveen",
+      "shortName": "HEE",
+      "city": "Heerenveen",
+      "country": "NL",
+      "colors": {
+        "primary": "#ea580c",
+        "secondary": "#1e3a5f"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-sparta-rotterdam",
+      "name": "Sparta Rotterdam",
+      "shortName": "SRO",
+      "city": "Rotterdam",
+      "country": "NL",
+      "colors": {
+        "primary": "#dc2626",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-telstar-1963",
+      "name": "Telstar 1963",
+      "shortName": "T19",
+      "city": "Velsen",
+      "country": "NL",
+      "colors": {
+        "primary": "#1d4ed8",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    },
+    {
+      "id": "club-nl-willem-ii-tilburg",
+      "name": "Willem II Tilburg",
+      "shortName": "WIT",
+      "city": "Tilburg",
+      "country": "NL",
+      "colors": {
+        "primary": "#16a34a",
+        "secondary": "#ffffff"
+      },
+      "playStyle": "Balanced",
+      "reputationRange": [
+        450,
+        750
+      ],
+      "financeRange": [
+        10000000,
+        90000000
+      ]
+    }
+  ]
+}
