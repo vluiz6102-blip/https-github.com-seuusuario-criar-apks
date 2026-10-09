@@ -80,6 +80,10 @@ jobs:
         working-directory: src-tauri
         run: cargo test -p domain -p engine -p ofm_core -p db
 
+      - name: Validate bundled club package with the Rust package loader
+        working-directory: src-tauri
+        run: cargo run -p ofm-cli -- validate ../docs/modding/examples/maia-club-world-2026
+
       - name: Install Android platform and NDK
         run: |
           # The official setup action tries to install the deprecated "tools"
