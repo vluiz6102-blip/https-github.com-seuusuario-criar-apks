@@ -26,7 +26,7 @@
       "name": "Canada",
       "shortName": "CAN",
       "city": "Canada",
-      "country": "CAN",
+      "country": "CA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -46,7 +46,7 @@
       "name": "Croatia",
       "shortName": "CRO",
       "city": "Croatia",
-      "country": "CRO",
+      "country": "HR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -86,7 +86,7 @@
       "name": "Portugal",
       "shortName": "POR",
       "city": "Portugal",
-      "country": "POR",
+      "country": "PT",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -106,7 +106,7 @@
       "name": "Curacao",
       "shortName": "CUW",
       "city": "Curacao",
-      "country": "CUW",
+      "country": "CW",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -126,7 +126,7 @@
       "name": "New Zealand",
       "shortName": "NZL",
       "city": "New Zealand",
-      "country": "NZL",
+      "country": "NZ",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -146,7 +146,7 @@
       "name": "Netherlands",
       "shortName": "NED",
       "city": "Netherlands",
-      "country": "NED",
+      "country": "NL",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -166,7 +166,7 @@
       "name": "Algeria",
       "shortName": "DZA",
       "city": "Algeria",
-      "country": "DZA",
+      "country": "DZ",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -186,7 +186,7 @@
       "name": "Belgium",
       "shortName": "BEL",
       "city": "Belgium",
-      "country": "BEL",
+      "country": "BE",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -206,7 +206,7 @@
       "name": "Senegal",
       "shortName": "SEN",
       "city": "Senegal",
-      "country": "SEN",
+      "country": "SN",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -226,7 +226,7 @@
       "name": "Ghana",
       "shortName": "GHA",
       "city": "Ghana",
-      "country": "GHA",
+      "country": "GH",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -246,7 +246,7 @@
       "name": "United States",
       "shortName": "USA",
       "city": "United States",
-      "country": "USA",
+      "country": "US",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -266,7 +266,7 @@
       "name": "Austria",
       "shortName": "AUT",
       "city": "Austria",
-      "country": "AUT",
+      "country": "AT",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -286,7 +286,7 @@
       "name": "France",
       "shortName": "FRA",
       "city": "France",
-      "country": "FRA",
+      "country": "FR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -306,7 +306,7 @@
       "name": "Ecuador",
       "shortName": "ECU",
       "city": "Ecuador",
-      "country": "ECU",
+      "country": "EC",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -326,7 +326,7 @@
       "name": "Argentina",
       "shortName": "ARG",
       "city": "Argentina",
-      "country": "ARG",
+      "country": "AR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -346,7 +346,7 @@
       "name": "Sweden",
       "shortName": "SWE",
       "city": "Sweden",
-      "country": "SWE",
+      "country": "SE",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -366,7 +366,7 @@
       "name": "Bosnia and Herzegovina",
       "shortName": "BIH",
       "city": "Bosnia and Herzegovina",
-      "country": "BIH",
+      "country": "BA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -386,7 +386,7 @@
       "name": "Congo DR",
       "shortName": "COD",
       "city": "Congo DR",
-      "country": "COD",
+      "country": "CD",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -406,7 +406,7 @@
       "name": "Colombia",
       "shortName": "COL",
       "city": "Colombia",
-      "country": "COL",
+      "country": "CO",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -426,7 +426,7 @@
       "name": "Switzerland",
       "shortName": "SUI",
       "city": "Switzerland",
-      "country": "SUI",
+      "country": "CH",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -446,7 +446,7 @@
       "name": "Spain",
       "shortName": "ESP",
       "city": "Spain",
-      "country": "ESP",
+      "country": "ES",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -466,7 +466,7 @@
       "name": "Egypt",
       "shortName": "EGY",
       "city": "Egypt",
-      "country": "EGY",
+      "country": "EG",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -486,7 +486,7 @@
       "name": "Korea Republic",
       "shortName": "KOR",
       "city": "Korea Republic",
-      "country": "KOR",
+      "country": "KR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -506,7 +506,7 @@
       "name": "Uruguay",
       "shortName": "URU",
       "city": "Uruguay",
-      "country": "URU",
+      "country": "UY",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -526,7 +526,7 @@
       "name": "Czech Republic",
       "shortName": "CZE",
       "city": "Czech Republic",
-      "country": "CZE",
+      "country": "CZ",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -546,7 +546,7 @@
       "name": "Australia",
       "shortName": "AUS",
       "city": "Australia",
-      "country": "AUS",
+      "country": "AU",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -566,7 +566,7 @@
       "name": "Germany",
       "shortName": "GER",
       "city": "Germany",
-      "country": "GER",
+      "country": "DE",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -586,7 +586,7 @@
       "name": "Côte d'Ivoire",
       "shortName": "CIV",
       "city": "Côte d'Ivoire",
-      "country": "CIV",
+      "country": "CI",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -606,7 +606,7 @@
       "name": "Cape Verde Islands",
       "shortName": "CPV",
       "city": "Cape Verde Islands",
-      "country": "CPV",
+      "country": "CV",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -626,7 +626,7 @@
       "name": "Norway",
       "shortName": "NOR",
       "city": "Norway",
-      "country": "NOR",
+      "country": "NO",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -646,7 +646,7 @@
       "name": "Iran",
       "shortName": "IRN",
       "city": "Iran",
-      "country": "IRN",
+      "country": "IR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -666,7 +666,7 @@
       "name": "Morocco",
       "shortName": "MAR",
       "city": "Morocco",
-      "country": "MAR",
+      "country": "MA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -686,7 +686,7 @@
       "name": "Türkiye",
       "shortName": "TUR",
       "city": "Türkiye",
-      "country": "TUR",
+      "country": "TR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -706,7 +706,7 @@
       "name": "Tunisia",
       "shortName": "TUN",
       "city": "Tunisia",
-      "country": "TUN",
+      "country": "TN",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -726,7 +726,7 @@
       "name": "Brazil",
       "shortName": "BRA",
       "city": "Brazil",
-      "country": "BRA",
+      "country": "BR",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -746,7 +746,7 @@
       "name": "Qatar",
       "shortName": "QAT",
       "city": "Qatar",
-      "country": "QAT",
+      "country": "QA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -766,7 +766,7 @@
       "name": "Haiti",
       "shortName": "HTI",
       "city": "Haiti",
-      "country": "HTI",
+      "country": "HT",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -786,7 +786,7 @@
       "name": "Panama",
       "shortName": "PAN",
       "city": "Panama",
-      "country": "PAN",
+      "country": "PA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -806,7 +806,7 @@
       "name": "Iraq",
       "shortName": "IRQ",
       "city": "Iraq",
-      "country": "IRQ",
+      "country": "IQ",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -826,7 +826,7 @@
       "name": "Mexico",
       "shortName": "MEX",
       "city": "Mexico",
-      "country": "MEX",
+      "country": "MX",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -846,7 +846,7 @@
       "name": "Paraguay",
       "shortName": "PRY",
       "city": "Paraguay",
-      "country": "PRY",
+      "country": "PY",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -866,7 +866,7 @@
       "name": "Japan",
       "shortName": "JPN",
       "city": "Japan",
-      "country": "JPN",
+      "country": "JP",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -886,7 +886,7 @@
       "name": "Saudi Arabia",
       "shortName": "KSA",
       "city": "Saudi Arabia",
-      "country": "KSA",
+      "country": "SA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -906,7 +906,7 @@
       "name": "South Africa",
       "shortName": "ZAF",
       "city": "South Africa",
-      "country": "ZAF",
+      "country": "ZA",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -926,7 +926,7 @@
       "name": "Uzbekistan",
       "shortName": "UZB",
       "city": "Uzbekistan",
-      "country": "UZB",
+      "country": "UZ",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
@@ -946,7 +946,7 @@
       "name": "Jordan",
       "shortName": "JOR",
       "city": "Jordan",
-      "country": "JOR",
+      "country": "JO",
       "colors": {
         "primary": "#14532d",
         "secondary": "#ffffff"
