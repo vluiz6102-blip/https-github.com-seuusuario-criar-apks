@@ -3,8 +3,10 @@ import { resolve } from "node:path";
 
 const dist = resolve("dist");
 const removedPaths = [
-  resolve(dist, "open-source-games/soccer-js"),
+  resolve(dist, "open-source-games"),
   resolve(dist, "j90-open-source-launcher.js"),
+  resolve(dist, "openfootlogo.svg"),
+  resolve(dist, "openfootball.svg"),
 ];
 
 for (const path of removedPaths) {
