@@ -43,13 +43,21 @@ jobs:
       - name: Test manager logic and UI
         run: npm test
 
-      - name: Package and smoke-check the copied 2D match engine
+      - name: Verify original 2D match view and exclude third-party match bundle
         run: |
-          node integration/package-soccer-js.mjs
-          test -s dist/open-source-games/soccer-js/build/app.bundle.js
-          test -s dist/open-source-games/soccer-js/build/app.css
-          node --check integration/package-soccer-js.mjs
-          node --check integration/j90-open-source-launcher.js
+          node scripts/prepare-android-dist.mjs
+          test -s dist/index.html
+          test -s src/components/match/BallMatchPitch.tsx
+          grep -q 'BallMatchPitch' src/components/match/MatchLive.tsx
+          if test -e dist/open-source-games/soccer-js; then
+            echo "Third-party match engine unexpectedly present in Android staging" >&2
+            exit 1
+          fi
+          if test -e dist/j90-open-source-launcher.js; then
+            echo "External match launcher unexpectedly present in Android staging" >&2
+            exit 1
+          fi
+          node --check scripts/prepare-android-dist.mjs
 
       - name: Configure Java
         uses: actions/setup-java@v5
