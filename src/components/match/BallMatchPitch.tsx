@@ -213,13 +213,26 @@ export default function BallMatchPitch({ snapshot, homeColor, awayColor }: BallM
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const snapshotRef = useRef(snapshot);
   const colorsRef = useRef({ homeColor, awayColor });
+  const lineupsRef = useRef({
+    home: positionsForTeam(snapshot.home_team, "home"),
+    away: positionsForTeam(snapshot.away_team, "away"),
+  });
 
   snapshotRef.current = snapshot;
   colorsRef.current = { homeColor, awayColor };
 
   useEffect(() => {
+    lineupsRef.current = {
+      home: positionsForTeam(snapshot.home_team, "home"),
+      away: positionsForTeam(snapshot.away_team, "away"),
+    };
+  }, [snapshot.home_team, snapshot.away_team]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     let frameId = 0;
     let logicalWidth = 0;
@@ -244,8 +257,6 @@ export default function BallMatchPitch({ snapshot, homeColor, awayColor }: BallM
         canvas.height = Math.round(height * ratio);
       }
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
       const current = snapshotRef.current;
@@ -266,10 +277,12 @@ export default function BallMatchPitch({ snapshot, homeColor, awayColor }: BallM
         width: width - marginX * 2,
         height: height - marginY * 2,
       };
-      const home = positionsForTeam(current.home_team, "home");
-      const away = positionsForTeam(current.away_team, "away");
-      for (const player of home) drawPlayer(ctx, player, field, colorsRef.current.homeColor || "#22c55e", time);
-      for (const player of away) drawPlayer(ctx, player, field, colorsRef.current.awayColor || "#f97316", time);
+      for (const player of lineupsRef.current.home) {
+        drawPlayer(ctx, player, field, colorsRef.current.homeColor || "#22c55e", time);
+      }
+      for (const player of lineupsRef.current.away) {
+        drawPlayer(ctx, player, field, colorsRef.current.awayColor || "#f97316", time);
+      }
 
       const bx = field.left + ball.x * field.width;
       const by = field.top + ball.y * field.height;
