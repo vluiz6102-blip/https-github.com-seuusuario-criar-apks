@@ -76,7 +76,7 @@ export default function MatchLive({
       ? settings.match_speed
       : "normal");
   const [speed, setSpeed] = useState<SimSpeed>(initialSpeed);
-  const [activePanel, setActivePanel] = useState<ActivePanel>("events");
+  const [activePanel, setActivePanel] = useState<ActivePanel>("pitch");
   const [isRunning, setIsRunning] = useState(true);
   const [showSubPanel, setShowSubPanel] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -356,9 +356,9 @@ export default function MatchLive({
       }
     >
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         {/* Left Panel: Event Feed + Stats */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex min-h-[420px] min-w-0 flex-1 flex-col">
           <div className="flex bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-navy-700 transition-colors duration-300">
             {[
               {
@@ -420,7 +420,7 @@ export default function MatchLive({
         </div>
 
         {/* Right Panel: Controls */}
-        <aside className="w-72 bg-white dark:bg-navy-800 border-l border-gray-200 dark:border-navy-700 flex flex-col transition-colors duration-300">
+        <aside className="w-full max-h-[42vh] shrink-0 overflow-y-auto bg-white dark:bg-navy-800 border-t border-gray-200 dark:border-navy-700 flex flex-col transition-colors duration-300 lg:max-h-full lg:w-72 lg:border-l lg:border-t-0">
           {/* Speed Controls */}
           <div className="p-4 border-b border-gray-200 dark:border-navy-700">
             <h3 className="text-xs font-heading font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-3">
