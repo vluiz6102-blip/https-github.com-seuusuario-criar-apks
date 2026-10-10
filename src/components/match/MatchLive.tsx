@@ -16,6 +16,7 @@ import { getEventDisplay, getPlayerName, makeTeamFallback, phaseLabel } from "./
 import { Badge, TeamLogo } from "../ui";
 import { useSettingsStore } from "../../store/settingsStore";
 import { EventFeed, MatchStats, Lineups } from "./MatchPanels";
+import BallMatchPitch from "./BallMatchPitch";
 import MatchScreenLayout from "./MatchScreenLayout";
 import { SubPanel } from "./SubPanel";
 import {
@@ -36,7 +37,7 @@ import {
   Flag,
 } from "lucide-react";
 
-type ActivePanel = "events" | "stats" | "lineups";
+type ActivePanel = "events" | "stats" | "lineups" | "pitch";
 
 interface MatchLiveProps {
   snapshot: MatchSnapshot;
@@ -375,6 +376,11 @@ export default function MatchLive({
                 label: t("match.lineups"),
                 icon: <Users className="w-4 h-4" />,
               },
+              {
+                id: "pitch" as ActivePanel,
+                label: "2D",
+                icon: <Target className="w-4 h-4" />,
+              },
             ].map((tab) => (
               <button
                 type="button"
@@ -393,6 +399,13 @@ export default function MatchLive({
           </div>
 
           <div className="flex-1 overflow-auto p-4">
+            {activePanel === "pitch" && (
+              <BallMatchPitch
+                snapshot={snapshot}
+                homeColor={homeTeamColor}
+                awayColor={awayTeamColor}
+              />
+            )}
             {activePanel === "events" && (
               <EventFeed
                 events={importantEvents}
