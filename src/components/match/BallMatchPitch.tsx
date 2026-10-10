@@ -182,12 +182,24 @@ function drawPlayer(
   field: { left: number; top: number; width: number; height: number },
   color: string,
   time: number,
+  ball: Point,
+  hasPossession: boolean,
+  isClosestToBall: boolean,
 ) {
   const sway = Math.sin(time * 0.0013 + point.number * 1.7) * 2.2;
   const attackMotion = Math.sin(time * 0.0007 + point.number * 0.8) * 0.008;
-  const x = field.left + (point.x + sway / field.width) * field.width;
+  const influence = point.player.position === "Goalkeeper"
+    ? 0.008
+    : isClosestToBall
+      ? (hasPossession ? 0.44 : 0.2)
+      : hasPossession
+        ? 0.07
+        : 0.035;
+  const movingX = point.x + (ball.x - point.x) * influence + sway / field.width;
   const direction = point.side === "home" ? -1 : 1;
-  const y = field.top + (point.y + attackMotion * direction) * field.height;
+  const movingY = point.y + (ball.y - point.y) * influence * 0.72 + attackMotion * direction;
+  const x = field.left + movingX * field.width;
+  const y = field.top + movingY * field.height;
   const radius = clamp(field.width * 0.021, 7, 12);
 
   ctx.save();
@@ -277,11 +289,28 @@ export default function BallMatchPitch({ snapshot, homeColor, awayColor }: BallM
         width: width - marginX * 2,
         height: height - marginY * 2,
       };
-      for (const player of lineupsRef.current.home) {
-        drawPlayer(ctx, player, field, colorsRef.current.homeColor || "#22c55e", time);
+      const homeLineup = lineupsRef.current.home;
+      const awayLineup = lineupsRef.current.away;
+      const nearest = (players: PlacedPlayer[]) => players.reduce<PlacedPlayer | null>((best, player) => {
+        if (!best) return player;
+        const distance = (player.x - ball.x) ** 2 + (player.y - ball.y) ** 2;
+        const bestDistance = (best.x - ball.x) ** 2 + (best.y - ball.y) ** 2;
+        return distance < bestDistance ? player : best;
+      }, null);
+      const closestHome = nearest(homeLineup);
+      const closestAway = nearest(awayLineup);
+
+      for (const player of homeLineup) {
+        drawPlayer(
+          ctx, player, field, colorsRef.current.homeColor || "#22c55e", time, ball,
+          current.possession === "Home", player === closestHome,
+        );
       }
-      for (const player of lineupsRef.current.away) {
-        drawPlayer(ctx, player, field, colorsRef.current.awayColor || "#f97316", time);
+      for (const player of awayLineup) {
+        drawPlayer(
+          ctx, player, field, colorsRef.current.awayColor || "#f97316", time, ball,
+          current.possession === "Away", player === closestAway,
+        );
       }
 
       const bx = field.left + ball.x * field.width;
