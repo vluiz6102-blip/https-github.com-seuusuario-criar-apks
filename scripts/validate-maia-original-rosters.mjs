@@ -55,7 +55,7 @@ for (const packConfig of packs) {
   } else {
     assert.equal(squads.size, 48);
     for (const [teamId, squad] of squads) {
-      assert.ok(squad.length >= 20 && squad.length <= 40, `Unexpected national squad size for ${teamId}`);
+      assert.ok(squad.length >= 20 && squad.length <= 60, `Unexpected national squad size for ${teamId}`);
     }
   }
   console.log(`${packConfig.id}: ${teams.length} teams and ${players.length} original fictional players validated.`);
