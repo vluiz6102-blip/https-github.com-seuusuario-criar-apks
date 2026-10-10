@@ -1,5 +1,5 @@
 {
   "build": {
-    "beforeBuildCommand": "npm run build && node integration/package-soccer-js.mjs"
+    "beforeBuildCommand": "npm run build && node scripts/prepare-android-dist.mjs"
   }
 }
