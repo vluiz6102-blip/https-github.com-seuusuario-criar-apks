@@ -1,19 +1,21 @@
-# Open-source game sources
+# Implementation origins and licenses
 
-## Main project: Openfoot Manager
-- Source repository: https://github.com/openfootmanager/openfootmanager
-- Pinned commit: 90b05fdb50a7865e19f087e0b0447bdcc272bc0f
-- Location: repository root
-- License and copyright notice: the original LICENSE.md and upstream notices are preserved.
+## Management and career foundation
 
-This project supplies the priority feature set: career/club management, squad and player data, contracts and transfers, finances, scouting, training, inbox/news, and match workflows.
+The current career-management application still contains code from [Openfoot Manager](https://github.com/openfootmanager/openfootmanager), pinned from commit `90b05fdb50a7865e19f087e0b0447bdcc272bc0f`. The original GPLv3 license and required copyright notices remain in `LICENSE.md` and the source tree.
 
-## Secondary project: soccer-js
-- Source repository: https://github.com/haeretici/soccer-js
-- Pinned commit: 38970e0dade0865078c9e84bc1ecfd72aaa02fde
-- Location: public/open-source-games/soccer-js/
-- License and copyright notice: the original MIT LICENSE and upstream notices are preserved.
+This means the current project is **not yet a fully clean-room rewrite**. Its Openfoot-derived management code cannot legally be presented as wholly original or have required license notices erased. Replacing all of that code would require a much larger, tested rewrite of career management, saves, finances, transfers, simulations, package loading, and related systems.
 
-The secondary project is a complete separate 2D match mode. The original upstream source files are retained byte-for-byte. Integration is provided by files under integration/ and a separate Tauri mobile build config; those additions do not patch upstream source files.
+## Original 2D match view
 
-The upstream Openfoot Manager .github/workflows directory is replaced by one project-specific validation workflow so unrelated upstream CI jobs do not run in this repository. Other upstream .github files remain present.
+`src/components/match/BallMatchPitch.tsx` is a new Canvas 2D renderer written for Maia Soccer Manager. It draws a top-down pitch, animated team dots, and a ball driven by the current match snapshot. It uses no imported match-engine code, sprites, or third-party match assets.
+
+The Android build removes inherited demo engines and logos from the staged application. The older `soccer-js` prototype was removed from the current source tree and is no longer a runtime dependency. Its original MIT notice was present in the historical version that contained that code.
+
+## Database packs
+
+- The club and national-team data packs include records derived from Rising Transfers under CC BY 4.0; attribution and the license link remain in each pack's README.
+- OpenFootball source data used for league/team records is identified as CC0 1.0.
+- Some club-pack roster slots are generated, not verified real-player records. See each database README for coverage and provenance.
+
+Required notices are kept in the source/package documentation rather than presented as promotional branding in the match UI.
