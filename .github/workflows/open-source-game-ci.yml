@@ -37,6 +37,9 @@ jobs:
       - name: Validate club database and squad references
         run: npm run validate:club-world
 
+      - name: Validate original fictional player packs
+        run: npm run validate:original-rosters
+
       - name: Build manager frontend
         run: npm run build
 

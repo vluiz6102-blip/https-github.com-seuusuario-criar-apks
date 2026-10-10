@@ -6,14 +6,12 @@
 
 - **Squad and transfer management:** build a team, negotiate transfers and contracts, and develop players.
 - **Career management:** progress through seasons, manage finances, and follow competitions.
-- **2D retro match mode:** an experimental isometric match engine is packaged separately while integration with the career flow is developed.
+- **2D retro match mode:** an original Canvas 2D pitch of animated player dots and a ball is built into the live-match screen.
 - **Mobile-first release work:** Android ARM64 builds are validated through GitHub Actions.
 
 ## Database packs
 
-The repository includes separate example packs for club football and the 2026 national teams. The club pack contains 152 clubs and 3,344 squad slots; 549 records are real players drawn from the attributed source dataset and the remaining records are generated to complete squads. It is **not** a fully verified official roster for every club.
-
-The national-team pack contains 1,363 player records across 48 teams, based on the Rising Transfers dataset.
+The database packs include 152 clubs, 8 competitions, 48 national teams and 4,707 **fictional player records**. Names, ages, positions, ratings, potential and values are generated specifically for the game. The packs do not contain a real-player database and do not claim to reproduce official rosters.
 
 ## Build and tests
 
@@ -27,7 +25,7 @@ npm test
 cargo test --manifest-path src-tauri/Cargo.toml --workspace
 ```
 
-The Android CI workflow packages the 2D match engine, runs frontend and Rust tests, validates the database packs, and produces a signed debug APK for sideload testing. A debug-signed artifact is not a Play Store release.
+The Android CI workflow validates the original player packs, tests the frontend and Rust simulation, excludes the retired external match demo from the Android bundle, and produces a signed debug APK for sideload testing. A debug-signed artifact is not a Play Store release.
 
 ## Credits and licenses
 

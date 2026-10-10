@@ -1,16 +1,9 @@
-# Maia Soccer Manager: World Cup 2026 database
+# Maia Soccer Manager: Seleções Internacionais 2026
 
-Contains 1,363 real player records for the 48 national squads in the 2026 World Cup dataset. This is an international-team database, not a comprehensive club database.
+This pack contains **48 national teams and 1,363 fictional player records** for an international competition mode.
 
-Data: Rising Transfers — https://risingtransfers.com
-Source repository: https://github.com/risingtransfers/world-cup-2026-data
-License: Creative Commons Attribution 4.0 International (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+All player names, ages, positions, ratings, potential and market values are generated for Maia Soccer Manager. These are fictional athletes, not real-player identities and not official squad lists. Nationality follows the selected team's country code. The tournament is presented in-game as the **Copa Internacional Maia 2026**, an original game competition and not an official licensed event.
 
-Player names, nationalities, positions, ages and estimated values are adapted from the source dataset. Overall and potential ratings in MSM are heuristic game values derived from estimated value and age, not official ratings. Players are assigned to their national squad in this playable package.
+No real-player database, portraits, official crests or official kits are included.
 
-Packaged for Maia Soccer Manager (MSM) by Victor Luiz. Original data attribution remains with Rising Transfers.
-
-
-## Compatibilidade de nacionalidades
-
-Os códigos de nacionalidade e país foram normalizados para o catálogo interno de países do jogo (por exemplo, códigos de três letras da fonte convertidos aos códigos ISO-2 ou códigos futebolísticos aceitos). Os nomes, clubes de origem e a atribuição Rising Transfers foram preservados.
+The deterministic generation logic lives in `scripts/generate-original-player-data.mjs`. Player records are released under **CC0 1.0** for reuse without attribution requirements. The main game's source-code license remains separate.
