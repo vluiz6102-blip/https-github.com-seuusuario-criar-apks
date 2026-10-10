@@ -15,8 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "tauri": "tauri",
-    "preflight": "npm run format:check && npm run lint && npm run knip && npm run validate:club-world && npm run build && npm test",
-    "validate:club-world": "node scripts/validate-maia-club-world.mjs"
+    "preflight": "npm run format:check && npm run lint && npm run knip && npm run validate:club-world && npm run validate:original-rosters && npm run build && npm test",
+    "validate:club-world": "node scripts/validate-maia-club-world.mjs",
+    "validate:original-rosters": "node scripts/validate-maia-original-rosters.mjs"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.2.8",

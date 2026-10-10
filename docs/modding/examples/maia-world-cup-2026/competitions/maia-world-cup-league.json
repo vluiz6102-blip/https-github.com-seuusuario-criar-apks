@@ -1,7 +1,7 @@
 {
   "schema": "competition",
   "id": "maia-world-cup-league",
-  "name": "Seleções Mundiais 2026",
+  "name": "Copa Internacional Maia 2026",
   "type": "League",
   "scope": "International",
   "countryId": "ENG",

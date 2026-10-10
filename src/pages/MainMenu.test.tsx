@@ -858,14 +858,10 @@ describe("MainMenu", () => {
     expect(localStorage.getItem("ofm-generated-history-depth-years")).toBe("12");
   });
 
-  it("opens the Discord invite in the system browser when the Discord link is clicked", async () => {
+  it("does not show the upstream Discord invite in the Maia Soccer Manager menu", () => {
     render(<MainMenu />);
 
-    const discordButton = await screen.findByRole("button", { name: "menu.openDiscord" });
-    fireEvent.click(discordButton);
-
-    expect(openUrlMock).toHaveBeenCalledTimes(1);
-    expect(openUrlMock).toHaveBeenCalledWith("https://discord.gg/2CXaesaukT");
+    expect(screen.queryByRole("button", { name: "menu.openDiscord" })).not.toBeInTheDocument();
   });
 
   it("opens the GitHub repository in the system browser when the GitHub link is clicked", async () => {

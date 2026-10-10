@@ -37,19 +37,30 @@ jobs:
       - name: Validate club database and squad references
         run: npm run validate:club-world
 
+      - name: Validate original fictional player packs
+        run: npm run validate:original-rosters
+
       - name: Build manager frontend
         run: npm run build
 
       - name: Test manager logic and UI
         run: npm test
 
-      - name: Package and smoke-check the copied 2D match engine
+      - name: Verify original 2D match view and exclude third-party match bundle
         run: |
-          node integration/package-soccer-js.mjs
-          test -s dist/open-source-games/soccer-js/build/app.bundle.js
-          test -s dist/open-source-games/soccer-js/build/app.css
-          node --check integration/package-soccer-js.mjs
-          node --check integration/j90-open-source-launcher.js
+          node scripts/prepare-android-dist.mjs
+          test -s dist/index.html
+          test -s src/components/match/BallMatchPitch.tsx
+          grep -q 'BallMatchPitch' src/components/match/MatchLive.tsx
+          if test -e dist/open-source-games/soccer-js; then
+            echo "Third-party match engine unexpectedly present in Android staging" >&2
+            exit 1
+          fi
+          if test -e dist/j90-open-source-launcher.js; then
+            echo "External match launcher unexpectedly present in Android staging" >&2
+            exit 1
+          fi
+          node --check scripts/prepare-android-dist.mjs
 
       - name: Configure Java
         uses: actions/setup-java@v5
@@ -120,28 +131,28 @@ jobs:
           test -x "$build_tools/aapt"
 
           mkdir -p artifacts
-          aligned="$RUNNER_TEMP/Openfoot-Manager-arm64-aligned.apk"
+          aligned="$RUNNER_TEMP/Maia-Soccer-Manager-arm64-aligned.apk"
           "$build_tools/zipalign" -f -v 4 "$unsigned_apk" "$aligned"
 
           # A sideloaded APK must be signed. Use a throwaway debug certificate
           # for CI artifacts; production store releases should use a private release key.
-          key="$RUNNER_TEMP/openfoot-ci-debug.keystore"
+          key="$RUNNER_TEMP/maia-soccer-manager-ci-debug.keystore"
           keytool -genkeypair -noprompt -keystore "$key" -storepass android \
             -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
 
           "$build_tools/apksigner" sign --ks "$key" --ks-key-alias androiddebugkey \
             --ks-pass pass:android --key-pass pass:android \
-            --out artifacts/Openfoot-Manager-arm64.apk "$aligned"
-          "$build_tools/zipalign" -c -v 4 artifacts/Openfoot-Manager-arm64.apk
-          "$build_tools/apksigner" verify --verbose --print-certs artifacts/Openfoot-Manager-arm64.apk
-          "$build_tools/aapt" dump badging artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
+            --out artifacts/Maia-Soccer-Manager-arm64.apk "$aligned"
+          "$build_tools/zipalign" -c -v 4 artifacts/Maia-Soccer-Manager-arm64.apk
+          "$build_tools/apksigner" verify --verbose --print-certs artifacts/Maia-Soccer-Manager-arm64.apk
+          "$build_tools/aapt" dump badging artifacts/Maia-Soccer-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
           grep -q '^package: name=' "$RUNNER_TEMP/apk-badging.txt"
-          unzip -t artifacts/Openfoot-Manager-arm64.apk > "$RUNNER_TEMP/apk-integrity.txt"
+          unzip -t artifacts/Maia-Soccer-Manager-arm64.apk > "$RUNNER_TEMP/apk-integrity.txt"
 
-          (cd artifacts && sha256sum Openfoot-Manager-arm64.apk > Openfoot-Manager-arm64.apk.sha256 && sha256sum --check Openfoot-Manager-arm64.apk.sha256)
-          grep -q 'Verified using v2 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Openfoot-Manager-arm64.apk 2>&1) || \
-            grep -q 'Verified using v1 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Openfoot-Manager-arm64.apk 2>&1)
+          (cd artifacts && sha256sum Maia-Soccer-Manager-arm64.apk > Maia-Soccer-Manager-arm64.apk.sha256 && sha256sum --check Maia-Soccer-Manager-arm64.apk.sha256)
+          grep -q 'Verified using v2 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Maia-Soccer-Manager-arm64.apk 2>&1) || \
+            grep -q 'Verified using v1 scheme' <("$build_tools/apksigner" verify --verbose artifacts/Maia-Soccer-Manager-arm64.apk 2>&1)
           echo "APK_ARCHIVE_VALID=YES"
           echo "APK_SIGNATURE_VALID=YES"
           echo "APK_ZIPALIGN_VALID=YES"
@@ -149,10 +160,10 @@ jobs:
       - name: Upload APK and checksum
         uses: actions/upload-artifact@v7
         with:
-          name: openfoot-manager-arm64-apk
+          name: maia-soccer-manager-arm64-apk
           path: |
-            artifacts/Openfoot-Manager-arm64.apk
-            artifacts/Openfoot-Manager-arm64.apk.sha256
+            artifacts/Maia-Soccer-Manager-arm64.apk
+            artifacts/Maia-Soccer-Manager-arm64.apk.sha256
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
