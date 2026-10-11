@@ -66,7 +66,8 @@ jobs:
         run: |
           set -euo pipefail
           SDK_ROOT=/usr/local/lib/android/sdk
-          if [ -n "$ANDROID_HOME" ]; then SDK_ROOT="$ANDROID_HOME"; fi
+          ANDROID_HOME_VALUE="$(printenv ANDROID_HOME || true)"
+          if [ -n "$ANDROID_HOME_VALUE" ]; then SDK_ROOT="$ANDROID_HOME_VALUE"; fi
           test -d "$SDK_ROOT/cmdline-tools"
           SDKMANAGER="$SDK_ROOT/cmdline-tools/16.0/bin/sdkmanager"
           if [[ ! -x "$SDKMANAGER" ]]; then
@@ -91,8 +92,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sdk="$ANDROID_HOME"
-          if [ -z "$sdk" ]; then sdk="$ANDROID_SDK_ROOT"; fi
+          sdk="$(printenv ANDROID_HOME || true)"
+          if [ -z "$sdk" ]; then sdk="$(printenv ANDROID_SDK_ROOT || true)"; fi
+          test -n "$sdk"
           build_tools="$sdk/build-tools/35.0.0"
           unsigned_apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*unsigned.apk' -size +2M -print -quit)"
           test -n "$unsigned_apk"
