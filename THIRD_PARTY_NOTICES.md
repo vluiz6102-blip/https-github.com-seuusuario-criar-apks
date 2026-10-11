@@ -1,7 +1,15 @@
 # Third-party software notices
 
-The game content in this branch (game logic, interface, original visual treatment, fictional clubs, fictional players and generated match events) is written specifically for Maia Soccer Manager. It does not bundle third-party game code, third-party player databases, real-club crests, licensed kits, player photographs or external game assets.
+## Original game content
 
-The app is built with standard software components, including React, Vite, TypeScript, Tauri and transitive npm/Rust dependencies. These tools are not presented as game content and remain under their own licenses. Their copyright and license terms must be preserved when distributing the relevant binaries or source. The full license texts are provided by the package sources in the dependency installation/build environment; do not remove those license files from distributed dependency bundles.
+The UI, game-state implementation, transfer and training rules, five-minute text match engine, world-directory presentation, fictional career fillers and generated career events in this branch are written for Maia Soccer Manager. The app does not bundle an external game's match engine, official crests, official kits, player photographs or licensed club imagery.
 
-This file is a technical compliance pointer, not an in-game credits screen. It does not replace any license text or notice required by a particular dependency.
+## Curated football facts
+
+`src/data/world-database.ts` contains a limited hand-curated set of factual names, clubs, stadiums, manager assignments and linked news items. These are identified in the data file with source URLs. The database is intentionally incomplete; it is not a complete world roster dump. Player ratings, potential and market-value numbers are gameplay estimates created for the simulation, not official performance statistics or valuations. News items about player moves or footwear partnerships generated during a career are fictional game events, not real-world claims.
+
+## Technical dependencies
+
+The project is built with standard software components, including React, Vite, TypeScript, Tauri and transitive npm/Rust dependencies. These tools are not presented as game content and remain under their own copyright and license terms. Preserve the license texts and notices required by a particular dependency when distributing source or binaries. The full license texts are provided by the dependency packages and their source distributions; this file does not replace those terms.
+
+This is a technical compliance pointer, not an in-game credits screen. It does not erase or replace any notice required by a specific dependency.

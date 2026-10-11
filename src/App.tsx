@@ -14,26 +14,29 @@ import {
   updateTactics
 } from "./game";
 import type { Career, Formation, PlayStyle, Player } from "./game";
+import { WORLD_CLUBS, WORLD_PLAYERS, WORLD_HEADLINES, WORLD_DATA_DATE } from "./data/world-database";
 
-type Screen = "inicio" | "elenco" | "mercado" | "taticas" | "agenda" | "partida";
+type Screen = "inicio" | "elenco" | "mercado" | "mundo" | "taticas" | "agenda" | "partida";
 
-const SAVE_KEY = "maia-soccer-manager-original-save-v1";
+const SAVE_KEY = "maia-soccer-manager-original-save-v2";
 const NAV_ITEMS: { id: Screen; label: string; glyph: string }[] = [
   { id: "inicio", label: "Visão geral", glyph: "⌂" },
   { id: "elenco", label: "Elenco", glyph: "◉" },
   { id: "mercado", label: "Mercado", glyph: "⇄" },
+  { id: "mundo", label: "Mundo", glyph: "◎" },
   { id: "taticas", label: "Táticas", glyph: "⌘" },
   { id: "agenda", label: "Agenda", glyph: "▦" },
-  { id: "partida", label: "Partida 2D", glyph: "▶" }
+  { id: "partida", label: "Partida 5m", glyph: "▶" }
 ];
 
 const PAGE_TITLES: Record<Screen, { title: string; subtitle: string }> = {
   inicio: { title: "Centro de comando", subtitle: "As decisões de hoje constroem a temporada." },
   elenco: { title: "Seu elenco", subtitle: "Desenvolva talentos, mantenha a condição e escolha quem fica." },
   mercado: { title: "Mercado de atletas", subtitle: "Encontre peças para o seu projeto sem estourar o caixa." },
+  mundo: { title: "Mundo do futebol", subtitle: "Clubes, estádios, treinadores e atletas reais num diretório pesquisável." },
   taticas: { title: "Identidade tática", subtitle: "Sua formação e seu plano de jogo influenciam a partida." },
   agenda: { title: "Temporada", subtitle: "Resultados, próximos compromissos e a corrida por pontos." },
-  partida: { title: "Central da partida", subtitle: "Acompanhe o jogo no campo 2D e avance lance a lance." }
+  partida: { title: "Central da partida", subtitle: "Acompanhe cinco minutos de simulação com narração textual, sem campo 2D." }
 };
 
 const FORMATIONS: { id: Formation; label: string; rows: number[]; description: string }[] = [
@@ -51,9 +54,29 @@ const PLAY_STYLES: { id: PlayStyle; label: string; detail: string }[] = [
 
 function readSavedCareer(): Career | null {
   try {
-    const saved = localStorage.getItem(SAVE_KEY);
-    return saved ? JSON.parse(saved) as Career : null;
-  } catch {
+    const saved = window.localStorage.getItem(SAVE_KEY);
+    if (!saved) return null;
+    const candidate: unknown = JSON.parse(saved);
+    if (!candidate || typeof candidate !== "object") throw new Error("Save sem objeto de carreira.");
+    const data = candidate as Partial<Career>;
+    const valid = typeof data.clubId === "string"
+      && ALL_CLUBS.some((club) => club.id === data.clubId)
+      && typeof data.managerName === "string"
+      && Number.isFinite(data.budget)
+      && Array.isArray(data.squad)
+      && Array.isArray(data.market)
+      && Array.isArray(data.history)
+      && typeof data.season === "number"
+      && typeof data.round === "number";
+    if (!valid) throw new Error("Save incompatível com esta versão.");
+    return {
+      ...(data as Career),
+      news: Array.isArray(data.news) ? data.news : [],
+      match: data.match && typeof data.match === "object" ? data.match : null
+    };
+  } catch (error) {
+    try { window.localStorage.removeItem(SAVE_KEY); } catch { /* Storage may be unavailable. */ }
+    console.warn("[startup] Save ignorado por estar inválido ou inacessível.", error);
     return null;
   }
 }
@@ -109,14 +132,14 @@ function StartCareer(props: {
           <p className="start-copy">Monte o projeto, desenvolva jogadores, negocie no mercado e prove que as melhores decisões acontecem antes de a bola rolar.</p>
           <div className="feature-line"><span>01</span><div><b>Construa um elenco</b><small>Contrate, treine e escolha quem entra em campo.</small></div></div>
           <div className="feature-line"><span>02</span><div><b>Comande do seu jeito</b><small>Tática, estilo de jogo e decisões financeiras contam.</small></div></div>
-          <div className="feature-line"><span>03</span><div><b>Jogue a partida</b><small>Um campo 2D original, com relógio e eventos da partida.</small></div></div>
+          <div className="feature-line"><span>03</span><div><b>Jogue a partida</b><small>Simule a partida em cinco minutos, com narração textual e sem campo 2D.</small></div></div>
           <div className="start-signature">CRIADO POR <strong>VICTOR LUIZ</strong><span> · SEM INTERNET OBRIGATÓRIA</span></div>
         </section>
         <section className="start-panel">
           <div className="panel-heading"><span className="panel-step">01 / 02</span><p className="eyebrow">NOVA CARREIRA</p><h2>Assuma o comando.</h2><p>Escolha uma identidade para começar.</p></div>
           <label className="field-label" htmlFor="manager-name">Nome do treinador</label>
           <input id="manager-name" className="manager-input" value={props.managerName} maxLength={24} onChange={(event) => props.onManagerName(event.target.value)} placeholder="Seu nome" />
-          <div className="club-choice-heading"><span className="field-label">Escolha seu clube</span><span>4 PROJETOS</span></div>
+          <div className="club-choice-heading"><span className="field-label">Escolha seu clube</span><span>4 CLUBES REAIS</span></div>
           <div className="club-choice-grid">
             {SELECTABLE_CLUBS.map((club) => (
               <button key={club.id} type="button" className={"club-choice" + (props.selectedClubId === club.id ? " selected" : "")} onClick={() => props.onSelectClub(club.id)} aria-pressed={props.selectedClubId === club.id}>
@@ -126,7 +149,7 @@ function StartCareer(props: {
             ))}
           </div>
           <button type="button" className="button-primary start-button" onClick={props.onStart}>Começar carreira <span>↗</span></button>
-          <p className="privacy-note">A carreira fica salva neste dispositivo. Clubes e atletas são fictícios.</p>
+          <p className="privacy-note">A carreira fica salva neste dispositivo. A base real ainda é parcial; atletas originais do jogo completam elencos incompletos.</p>
         </section>
       </div>
     </div>
@@ -139,6 +162,7 @@ function App() {
   const [selectedClubId, setSelectedClubId] = useState(SELECTABLE_CLUBS[0].id);
   const [managerName, setManagerName] = useState("Victor");
   const [toast, setToast] = useState("");
+  const [worldSearch, setWorldSearch] = useState("");
 
   useEffect(() => {
     try {
@@ -263,7 +287,7 @@ function App() {
       </section>
       <section className="bottom-grid">
         <article className="surface-card momentum-card"><div className="section-title-row"><div><p className="eyebrow">PLANO DA SEMANA</p><h3>Foco do treinador</h3></div><span className="panel-icon">↗</span></div><div className="focus-row"><span className="focus-number">01</span><div><b>Desenvolvimento individual</b><p>Você tem <strong>{career.trainingCredits}</strong> créditos de treino disponíveis para elevar o potencial do elenco.</p></div><button type="button" className="text-action" onClick={() => setScreen("elenco")}>Abrir elenco ↗</button></div><div className="focus-row"><span className="focus-number">02</span><div><b>Planejamento tático</b><p>Seu plano atual é <strong>{PLAY_STYLES.find((style) => style.id === career.style)?.label}</strong> no <strong>{career.formation}</strong>.</p></div><button type="button" className="text-action" onClick={() => setScreen("taticas")}>Editar plano ↗</button></div></article>
-        <article className="surface-card news-card"><div className="section-title-row"><div><p className="eyebrow">BASTIDORES</p><h3>Notas do clube</h3></div><span className="news-count">03</span></div><div className="news-item"><span className="news-time">DIRETORIA</span><p>O orçamento está em <strong>{compactMoney(career.budget)}</strong>. Cada contratação precisa fazer sentido para o projeto.</p></div><div className="news-item"><span className="news-time">COMISSÃO TÉCNICA</span><p>O elenco tem força média de <strong>{teamStrength}</strong>. Treino individual pode mudar o equilíbrio.</p></div><div className="news-item"><span className="news-time">CENTRAL DE DADOS</span><p>Esta carreira funciona offline e usa atletas e clubes fictícios criados para o jogo.</p></div></article>
+        <article className="surface-card news-card"><div className="section-title-row"><div><p className="eyebrow">NOTÍCIAS DA SUA CARREIRA</p><h3>O clube em movimento</h3></div><span className="news-count">{String((career.news ?? []).length).padStart(2, "0")}</span></div>{(career.news ?? []).slice(0, 3).map((item) => <div className="news-item" key={item.id}><span className="news-time">{item.category === "mercado" ? "MERCADO" : item.category === "patrocinio" ? "PARCERIA SIMULADA" : item.category === "partida" ? "RESULTADO" : "BASTIDORES"}</span><p><strong>{item.headline}</strong><br />{item.detail}</p></div>)}<p className="simulation-disclaimer">Transferências e patrocínios gerados durante a carreira são eventos fictícios do jogo, não notícias reais.</p></article>
       </section>
     </>
   );
@@ -273,7 +297,7 @@ function App() {
       <section className="page-summary-row"><div className="summary-stat"><strong>{career.squad.length}</strong><span>ATLETAS</span></div><div className="summary-stat"><strong>{teamStrength}</strong><span>FORÇA MÉDIA</span></div><div className="summary-stat"><strong>{career.trainingCredits}</strong><span>TREINOS</span></div><div className="summary-actions"><button type="button" className="button-secondary" onClick={() => setScreen("taticas")}>Ver tática ↗</button></div></section>
       <section className="surface-card squad-surface"><div className="section-title-row"><div><p className="eyebrow">GRUPO PRINCIPAL</p><h3>Atletas do clube</h3></div><span className="status-pill">ELENCO ATIVO</span></div><div className="squad-column-labels"><span>JOGADOR</span><span>FUNÇÃO</span><span>NOTA</span><span>CONDIÇÃO</span><span>AÇÕES</span></div><div className="squad-list">
         {career.squad.slice().sort((a, b) => b.rating - a.rating).map((player, index) => <article className="player-row" key={player.id}>
-          <span className="player-number">{String(index + 1).padStart(2, "0")}</span><span className="player-avatar" style={{ borderColor: player.rating >= 72 ? club.primary : "#294047" }}>{initials(player.name)}</span><div className="player-identity"><b>{player.name}</b><small>{player.age} anos · POT {player.potential} · {ratingLabel(player.rating)}</small></div><span className="position-chip">{player.position}</span><span className={"rating-chip" + (player.rating >= 72 ? " rating-strong" : "")}>{player.rating}</span><div className="condition-cell"><div className="condition-track"><span style={{ width: player.condition + "%" }} /></div><small>{player.condition}%</small></div><div className="player-actions"><button type="button" className="mini-action" onClick={() => train(player)} disabled={career.trainingCredits <= 0 || player.rating >= player.potential}>Treinar +1</button><button type="button" className="mini-action muted-action" onClick={() => release(player)}>Liberar</button></div>
+          <span className="player-number">{String(index + 1).padStart(2, "0")}</span><span className="player-avatar" style={{ borderColor: player.rating >= 72 ? club.primary : "#294047" }}>{initials(player.name)}</span><div className="player-identity"><b>{player.name}</b><small>{player.age} anos · POT {player.potential} · {ratingLabel(player.rating)} · {player.isFictional ? "PERSONAGEM DO JOGO" : (player.nationality ?? "ATLETA REAL")}</small></div><span className="position-chip">{player.position}</span><span className={"rating-chip" + (player.rating >= 72 ? " rating-strong" : "")}>{player.rating}</span><div className="condition-cell"><div className="condition-track"><span style={{ width: player.condition + "%" }} /></div><small>{player.condition}%</small></div><div className="player-actions"><button type="button" className="mini-action" onClick={() => train(player)} disabled={career.trainingCredits <= 0 || player.rating >= player.potential}>Treinar +1</button><button type="button" className="mini-action muted-action" onClick={() => release(player)}>Liberar</button></div>
         </article>)}
       </div><div className="surface-footer"><span>Manter pelo menos 12 atletas protege a rotação.</span><span>Valor estimado e atributos são simulados.</span></div></section>
     </>
@@ -284,7 +308,7 @@ function App() {
       <section className="market-budget-banner"><div><p className="eyebrow">CAIXA PARA NEGOCIAÇÕES</p><strong>{compactMoney(career.budget)}</strong><small>As taxas saem do caixa no momento da contratação.</small></div><div className="budget-gauge"><span style={{ width: Math.min(100, Math.max(5, career.budget / getClub(career.clubId).budget * 100)) + "%" }} /></div><button type="button" className="button-secondary" onClick={() => setScreen("elenco")}>Meu elenco ↗</button></section>
       <div className="section-title-row market-heading"><div><p className="eyebrow">OLHEIRO DIGITAL</p><h3>Oportunidades disponíveis</h3></div><span className="status-pill">{career.market.length} ATLETAS</span></div>
       {career.market.length === 0 ? <section className="surface-card empty-state"><div className="empty-mark">✓</div><h3>Mercado observado.</h3><p>Você contratou todas as oportunidades desta lista. Continue a carreira para abrir novas opções futuramente.</p></section> : <section className="market-grid">
-        {career.market.map((player) => <article className="market-card" key={player.id}><div className="market-card-top"><span className="player-avatar market-avatar">{initials(player.name)}</span><span className="scout-grade">{player.rating >= 70 ? "ALVO A" : player.potential >= 80 ? "JOVEM" : "OPÇÃO"}</span></div><h3>{player.name}</h3><p>{player.position} <span>·</span> {player.age} anos</p><div className="market-rating-row"><div><span>NOTA</span><strong>{player.rating}</strong></div><div><span>POTENCIAL</span><strong>{player.potential}</strong></div><div><span>CONDIÇÃO</span><strong>{player.condition}%</strong></div></div><div className="market-fee"><span>VALOR ESTIMADO</span><strong>{compactMoney(player.value)}</strong></div><button type="button" className="button-primary market-sign-button" onClick={() => sign(player)} disabled={career.budget < player.value || career.squad.length >= 24}>{career.budget < player.value ? "Fora do orçamento" : "Contratar atleta"} <span>＋</span></button></article>)}
+        {career.market.map((player) => <article className="market-card" key={player.id}><div className="market-card-top"><span className="player-avatar market-avatar">{initials(player.name)}</span><span className="scout-grade">{player.rating >= 70 ? "ALVO A" : player.potential >= 80 ? "JOVEM" : "OPÇÃO"}</span></div><h3>{player.name}</h3><p>{player.position} <span>·</span> {player.age} anos <span>·</span> {player.isFictional ? "prospecto original" : "atleta real"}</p><div className="market-rating-row"><div><span>NOTA</span><strong>{player.rating}</strong></div><div><span>POTENCIAL</span><strong>{player.potential}</strong></div><div><span>CONDIÇÃO</span><strong>{player.condition}%</strong></div></div><div className="market-fee"><span>VALOR ESTIMADO</span><strong>{compactMoney(player.value)}</strong></div><button type="button" className="button-primary market-sign-button" onClick={() => sign(player)} disabled={career.budget < player.value || career.squad.length >= 24}>{career.budget < player.value ? "Fora do orçamento" : "Contratar atleta"} <span>＋</span></button></article>)}
       </section>}
       <p className="micro-note market-note">Todos os atletas desta lista são personagens fictícios criados para o jogo.</p>
     </>
@@ -302,6 +326,66 @@ function App() {
     );
   };
 
+  const renderWorld = () => {
+    const query = worldSearch.trim().toLocaleLowerCase("pt-BR");
+    const searchableClubs = WORLD_CLUBS.filter((worldClub) => {
+      const knownPlayers = WORLD_PLAYERS.filter((player) => player.clubId === worldClub.id).map((player) => player.name);
+      const haystack = [worldClub.name, worldClub.country, worldClub.region, worldClub.league, worldClub.stadium, worldClub.manager ?? "", ...knownPlayers].join(" ").toLocaleLowerCase("pt-BR");
+      return haystack.includes(query);
+    });
+    const managerCount = WORLD_CLUBS.filter((worldClub) => Boolean(worldClub.manager)).length;
+    return (
+      <>
+        <section className="world-overview">
+          <div className="world-overview-copy">
+            <p className="eyebrow">WORLD FOOTBALL DIRECTORY · {WORLD_DATA_DATE}</p>
+            <h3>O futebol não cabe numa única liga.</h3>
+            <p>Explore clubes de cinco regiões, nomes de estádios conhecidos, técnicos verificados nesta edição e atletas com fichas reais selecionadas.</p>
+          </div>
+          <div className="world-stats">
+            <div><strong>{WORLD_CLUBS.length}</strong><span>CLUBES CATALOGADOS</span></div>
+            <div><strong>{WORLD_PLAYERS.length}</strong><span>ATLETAS COM FICHA</span></div>
+            <div><strong>{managerCount}</strong><span>TÉCNICOS VERIFICADOS</span></div>
+          </div>
+        </section>
+        <section className="world-search-row">
+          <label htmlFor="world-search">Pesquisar o diretório mundial</label>
+          <input id="world-search" className="world-search-input" value={worldSearch} onChange={(event) => setWorldSearch(event.target.value)} placeholder="Clube, país, liga, estádio, técnico ou atleta..." />
+          <span>{searchableClubs.length} resultados</span>
+        </section>
+        <div className="world-layout">
+          <section className="world-directory">
+            {searchableClubs.length === 0 ? <article className="surface-card world-empty"><h3>Nenhum resultado encontrado</h3><p>Tente o nome de outra equipe, país ou competição.</p></article> : searchableClubs.map((worldClub) => {
+              const knownPlayers = WORLD_PLAYERS.filter((player) => player.clubId === worldClub.id);
+              const rivals = worldClub.rivals.map((id) => WORLD_CLUBS.find((candidate) => candidate.id === id)?.name).filter((name): name is string => Boolean(name));
+              return (
+                <article className="surface-card world-club-card" key={worldClub.id}>
+                  <div className="world-club-heading">
+                    <span className="world-club-crest" style={{ background: "linear-gradient(145deg," + worldClub.colors[0] + "," + worldClub.colors[1] + ")" }}>{worldClub.name.split(" ").map((part) => part[0]).slice(0, 3).join("").toUpperCase()}</span>
+                    <div><span className="world-league-tag">{worldClub.league} · {worldClub.region}</span><h3>{worldClub.name}</h3><p>{worldClub.country}</p></div>
+                  </div>
+                  <div className="world-fact-row"><span>ESTÁDIO</span><strong>{worldClub.stadium}</strong></div>
+                  <div className="world-fact-row"><span>TÉCNICO</span><strong>{worldClub.manager ?? "Não confirmado nesta edição"}</strong></div>
+                  {worldClub.manager ? <div className="world-checked">Técnico verificado em {worldClub.managerChecked}</div> : null}
+                  <div className="world-player-block"><span>ATLETAS CADASTRADOS NESTA VERSÃO</span>{knownPlayers.length > 0 ? <div className="world-player-chips">{knownPlayers.map((player) => <span key={player.id}>{player.name} <small>{player.position}</small></span>)}</div> : <p>O perfil do clube já está no diretório; o elenco real completo ainda precisa ser preenchido.</p>}</div>
+                  {rivals.length > 0 ? <div className="world-rival-line"><span>RIVALIDADES</span>{rivals.slice(0, 3).join(" · ")}</div> : null}
+                </article>
+              );
+            })}
+          </section>
+          <aside className="world-news-column">
+            <article className="surface-card world-snapshot-card">
+              <div className="section-title-row"><div><p className="eyebrow">RECORTE EDITORIAL</p><h3>Notícias do mundo real</h3></div><span className="status-pill">OUT 2026</span></div>
+              {WORLD_HEADLINES.map((headline) => <div className="world-headline" key={headline.id}><div className="world-headline-meta"><span>{headline.category}</span><time>{headline.date}</time></div><h4>{headline.headline}</h4><p>{headline.detail}</p><a href={headline.url} target="_blank" rel="noreferrer">Fonte: {headline.source} ↗</a></div>)}
+              <p className="simulation-disclaimer">Esse recorte contém fatos consultados até {WORLD_DATA_DATE}. Não é um feed automático de notícias ao vivo.</p>
+            </article>
+          </aside>
+        </div>
+        <p className="world-data-note">Base mundial v1: catálogo em expansão, com {WORLD_CLUBS.length} clubes e {WORLD_PLAYERS.length} fichas reais de atletas. Não representa ainda todos os clubes e todos os jogadores profissionais do mundo; os elencos incompletos são identificados explicitamente em vez de inventar dados como se fossem reais.</p>
+      </>
+    );
+  };
+
   const renderAgenda = () => (
     <>
       <section className="season-banner"><div><p className="eyebrow">LINHA DO TEMPO</p><h3>Temporada {career.season}</h3><p>Você está na rodada {career.round} de 10. Cada partida altera pontos, forma do elenco e orçamento.</p></div><div className="season-count"><strong>{career.played}<span>/10</span></strong><small>PARTIDAS</small></div></section>
@@ -315,16 +399,49 @@ function App() {
   const renderMatch = () => {
     const match = career.match;
     if (!match) {
-      return <section className="match-start-panel"><div className="match-start-copy"><p className="eyebrow">DIA DE JOGO · RODADA {career.round}</p><h3>O campo está esperando.</h3><p>Confira o plano tático, prepare o elenco e inicie uma partida simulada em tempo real por etapas de 15 minutos.</p><button type="button" className="button-primary" onClick={() => setCareer(beginMatch(career))}>Apito inicial <span>▶</span></button></div><div className="pre-match-mini-pitch"><div className="mini-pitch-circle" /><div className="mini-pitch-line" /><div className="mini-player a one" /><div className="mini-player a two" /><div className="mini-player a three" /><div className="mini-player b four" /><div className="mini-player b five" /><div className="mini-ball" /></div></section>;
+      return (
+        <section className="match-start-panel text-match-start">
+          <div className="match-start-copy">
+            <p className="eyebrow">DIA DE JOGO · RODADA {career.round}</p>
+            <h3>Noventa minutos condensados em cinco.</h3>
+            <p>A partida é uma simulação rápida de cinco minutos, contada por texto. Cada avanço pode trazer uma jogada, um gol, uma resposta tática ou um momento de pressão. Sem campo 2D, sem animações pesadas.</p>
+            <div className="text-match-facts"><span><b>{career.formation}</b><small>FORMAÇÃO</small></span><span><b>{PLAY_STYLES.find((style) => style.id === career.style)?.label}</b><small>ESTILO</small></span><span><b>{Math.round(calculateTeamStrength(career.squad))}</b><small>FORÇA</small></span></div>
+            <button type="button" className="button-primary" onClick={() => setCareer(beginMatch(career))}>Começar partida <span>▶</span></button>
+          </div>
+          <div className="text-match-cover"><span className="text-match-cover-mark">M.</span><p>MAIA MATCH ENGINE</p><strong>00:00 <i>→</i> 05:00</strong><small>UMA PARTIDA. CINCO AVANÇOS. UM RESULTADO.</small></div>
+        </section>
+      );
     }
     const userGoals = match.isHome ? match.homeGoals : match.awayGoals;
     const opponentGoals = match.isHome ? match.awayGoals : match.homeGoals;
+    const minuteProgress = Math.min(100, (match.minute / 5) * 100);
     return (
       <>
-        <section className="live-score-card"><div className="live-score-top"><span className="hero-tag"><i /> {match.finished ? "PARTIDA ENCERRADA" : "SIMULAÇÃO AO VIVO"}</span><span className="hero-round">RODADA {String(match.round).padStart(2, "0")}</span></div><div className="live-score-main"><div className="live-team"><span className="club-emblem" style={{ background: (match.isHome ? club.primary : getClub(match.opponentId).primary), color: "#0c1719" }}>{match.isHome ? club.shortName.slice(0, 2) : getClub(match.opponentId).shortName.slice(0, 2)}</span><b>{match.homeName}</b><small>{match.isHome ? "SEU CLUBE · CASA" : "ADVERSÁRIO · CASA"}</small></div><div className="live-score-number"><span>{match.homeGoals}</span><i>:</i><span>{match.awayGoals}</span><small>{match.finished ? "90:00 · FINAL" : String(match.minute).padStart(2, "0") + ":00"}</small></div><div className="live-team"><span className="club-emblem opponent-emblem" style={{ borderColor: (match.isHome ? getClub(match.opponentId).primary : club.primary), color: match.isHome ? getClub(match.opponentId).primary : club.primary }}>{match.isHome ? getClub(match.opponentId).shortName.slice(0, 2) : club.shortName.slice(0, 2)}</span><b>{match.awayName}</b><small>{match.isHome ? "ADVERSÁRIO · FORA" : "SEU CLUBE · FORA"}</small></div></div><div className="match-progress"><span style={{ width: match.minute + "%" }} /></div></section>
-        <section className="match-live-layout"><article className="surface-card pitch-card"><div className="section-title-row"><div><p className="eyebrow">VISÃO TÁTICA</p><h3>Campo 2D</h3></div><span className="status-pill">{career.formation}</span></div><div className="match-pitch"><div className="match-pitch-centerline" /><div className="match-pitch-circle" /><div className="match-box match-box-top" /><div className="match-box match-box-bottom" /><div className="match-goal match-goal-top" /><div className="match-goal match-goal-bottom" />{[{x:18,y:22},{x:39,y:16},{x:61,y:20},{x:81,y:17},{x:28,y:39},{x:50,y:33},{x:73,y:40},{x:19,y:63},{x:42,y:68},{x:62,y:61},{x:83,y:70}].map((point, index) => <span key={"my-" + String(index)} className="match-player-dot match-player-home" style={{ left: point.x + "%", top: point.y + "%" }}>{index + 1}</span>)}{[{x:22,y:78},{x:42,y:83},{x:65,y:80},{x:78,y:64},{x:32,y:54},{x:55,y:55},{x:78,y:48},{x:15,y:43},{x:37,y:27},{x:65,y:30},{x:85,y:29}].map((point, index) => <span key={"op-" + String(index)} className="match-player-dot match-player-away" style={{ left: point.x + "%", top: point.y + "%" }}>{index + 1}</span>)}<span className="match-ball" style={{ left: (match.minute % 2 === 0 ? 45 : 56) + "%", top: (match.minute % 3 === 0 ? 47 : 54) + "%" }} /></div><div className="pitch-legend"><span><i className="legend-home" /> {club.name}</span><span><i className="legend-away" /> {match.opponentName}</span><span><i className="legend-ball" /> Bola</span></div></article>
-          <article className="surface-card match-events-card"><div className="section-title-row"><div><p className="eyebrow">RELATO DA PARTIDA</p><h3>O que acontece</h3></div><span className="event-count">{match.events.length} eventos</span></div><div className="event-feed">{[...match.events].reverse().map((event, index) => <div className={"event-item" + (event.includes("GOL!") ? " goal-event" : "")} key={event + "-" + String(index)}><span className="event-time">{event.slice(0, event.indexOf(" ") + 1)}</span><p>{event.slice(event.indexOf(" ") + 1)}</p></div>)}</div><div className="match-control-area">{match.finished ? <><div className="fulltime-message"><b>{userGoals > opponentGoals ? "Vitória importante." : userGoals === opponentGoals ? "Tudo igual no apito final." : "A resposta vem no próximo jogo."}</b><small>Resultado contabilizado. O próximo compromisso já está no calendário.</small></div><button type="button" className="button-primary full-width" onClick={beginNextFixture}>Começar próxima rodada <span>↗</span></button></> : <button type="button" className="button-primary full-width" onClick={advance}>Avançar 15 minutos <span>▶</span></button>}</div></article>
+        <section className="live-score-card text-live-score">
+          <div className="live-score-top"><span className="hero-tag"><i /> {match.finished ? "PARTIDA ENCERRADA" : "SIMULAÇÃO EM ANDAMENTO"}</span><span className="hero-round">RODADA {String(match.round).padStart(2, "0")} / 10</span></div>
+          <div className="live-score-main"><div className="live-team"><span className="text-team-mark" style={{ background: club.primary, color: "#071115" }}>{club.shortName}</span><b>{match.homeName}</b><small>{match.isHome ? "SEU CLUBE · MANDANTE" : "ADVERSÁRIO · MANDANTE"}</small></div><div className="live-score-number"><span>{match.homeGoals}</span><i>:</i><span>{match.awayGoals}</span><small>{String(match.minute).padStart(2, "0")}:00 <span>/ 05:00</span></small></div><div className="live-team"><span className="text-team-mark opponent-text-mark" style={{ borderColor: getClub(match.opponentId).primary, color: getClub(match.opponentId).primary }}>{getClub(match.opponentId).shortName}</span><b>{match.awayName}</b><small>{match.isHome ? "ADVERSÁRIO · VISITANTE" : "SEU CLUBE · VISITANTE"}</small></div></div>
+          <div className="match-progress"><span style={{ width: minuteProgress + "%" }} /></div>
         </section>
+        <div className="match-five-minute-track"><div><span>PROGRESSO DA SIMULAÇÃO</span><strong>{match.minute} de 5 minutos</strong></div><div className="five-minute-dots">{[1,2,3,4,5].map((minute) => <span key={minute} className={match.minute >= minute ? "passed" : ""}>{minute}</span>)}</div></div>
+        <section className="match-narration-layout">
+          <article className="surface-card match-events-card narration-feed-card">
+            <div className="section-title-row"><div><p className="eyebrow">RELATO MINUTO A MINUTO</p><h3>O que acontece em campo</h3></div><span className="event-count">{match.events.length} relatos</span></div>
+            <div className="event-feed narration-feed">{[...match.events].reverse().map((event, index) => {
+              const divider = event.indexOf(" · ");
+              const stamp = divider >= 0 ? event.slice(0, divider) : "PRÉ-JOGO";
+              const description = divider >= 0 ? event.slice(divider + 3) : event;
+              const isGoal = event.includes("GOL!");
+              return <div className={"event-item narration-item" + (isGoal ? " goal-event" : "") + (event.includes("APITO FINAL") ? " final-event" : "")} key={event + "-" + String(index)}><span className="event-time">{stamp}</span><p>{description}</p></div>;
+            })}</div>
+          </article>
+          <aside className="surface-card match-control-card">
+            <p className="eyebrow">BANCO DO TREINADOR</p><h3>{match.finished ? "Resultado confirmado" : "Próximo lance"}</h3>
+            <div className="match-control-score"><span>{match.homeName}</span><strong>{match.homeGoals} <i>:</i> {match.awayGoals}</strong><span>{match.awayName}</span></div>
+            <div className="coach-note"><span>PLANO EM CAMPO</span><b>{career.formation} · {PLAY_STYLES.find((style) => style.id === career.style)?.label}</b><p>As escolhas táticas influenciam a força calculada para esta partida. O relato é gerado pelo motor de simulação.</p></div>
+            {match.finished ? <><div className="fulltime-message"><b>{userGoals > opponentGoals ? "Três pontos no bolso." : userGoals === opponentGoals ? "Um ponto para cada lado." : "Hora de rever as decisões."}</b><small>O resultado foi registrado no calendário, no orçamento e nas notícias da carreira.</small></div><button type="button" className="button-primary full-width" onClick={beginNextFixture}>Próxima rodada <span>↗</span></button></> : <button type="button" className="button-primary full-width" onClick={advance}>Simular próximo minuto <span>▶</span></button>}
+          </aside>
+        </section>
+        <p className="simulation-disclaimer">Esta é uma simulação de futebol dentro do jogo, não transmissão real nem resultado oficial.</p>
       </>
     );
   };
@@ -332,6 +449,7 @@ function App() {
   const content = screen === "inicio" ? renderDashboard()
     : screen === "elenco" ? renderSquad()
     : screen === "mercado" ? renderMarket()
+    : screen === "mundo" ? renderWorld()
     : screen === "taticas" ? renderTactics()
     : screen === "agenda" ? renderAgenda()
     : renderMatch();
@@ -343,7 +461,7 @@ function App() {
         <aside className="desktop-sidebar"><div className="sidebar-block"><p className="eyebrow">CENTRAL DE GESTÃO</p><nav className="side-nav">{NAV_ITEMS.map((item) => <button type="button" key={item.id} className={"nav-item" + (screen === item.id ? " active" : "")} onClick={() => setScreen(item.id)}><span className="nav-glyph">{item.glyph}</span><span>{item.label}</span>{screen === item.id ? <i /> : null}</button>)}</nav></div><div className="sidebar-club-card"><p className="eyebrow">SEU CLUBE</p><div className="sidebar-club-identity"><span className="club-emblem sidebar-emblem" style={{ background: club.primary, color: "#0c1719" }}>{club.shortName.slice(0, 2)}</span><div><b>{club.name}</b><small>{club.stadium}</small></div></div><div className="sidebar-budget"><span>ORÇAMENTO</span><b>{compactMoney(career.budget)}</b></div><div className="sidebar-budget"><span>FORÇA ATUAL</span><b>{teamStrength} / 100</b></div></div><div className="sidebar-footer"><span className="sidebar-dot" /><span>MAIA ORIGINAL ENGINE</span><small>© 2026 Victor Luiz</small></div></aside>
         <main className="content-area"><div className="page-toolbar"><div><p className="eyebrow">PAINEL DO CLUBE <span>/</span> {page.title.toUpperCase()}</p><h1>{page.title}</h1><p>{page.subtitle}</p></div><div className="round-stamp"><span>RODADA</span><strong>{String(career.round).padStart(2, "0")}<small>/10</small></strong></div></div><div className="page-content">{content}</div></main>
       </div>
-      <nav className="mobile-nav">{NAV_ITEMS.map((item) => <button type="button" key={item.id} className={"mobile-nav-item" + (screen === item.id ? " active" : "")} onClick={() => setScreen(item.id)}><span>{item.glyph}</span><small>{item.label === "Visão geral" ? "Início" : item.label === "Partida 2D" ? "Jogo" : item.label}</small></button>)}</nav>
+      <nav className="mobile-nav">{NAV_ITEMS.map((item) => <button type="button" key={item.id} className={"mobile-nav-item" + (screen === item.id ? " active" : "")} onClick={() => setScreen(item.id)}><span>{item.glyph}</span><small>{item.label === "Visão geral" ? "Início" : item.label === "Partida 5m" ? "Jogo" : item.label}</small></button>)}</nav>
       {toast ? <div className="toast-message" role="status"><span>✓</span>{toast}</div> : null}
     </div>
   );

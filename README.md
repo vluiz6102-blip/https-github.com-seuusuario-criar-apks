@@ -1,43 +1,45 @@
 # Maia Soccer Manager
 
-**Jogo original de gestão de futebol. Criado para Victor Luiz.**
+**Jogo de gestão de futebol criado para Victor Luiz.**
 
-Maia Soccer Manager é um manager autoral, offline-first e pensado primeiro para celular. A interface, o motor de jogo, as regras, os clubes fictícios, os jogadores fictícios e a identidade visual desta branch foram escritos especificamente para este projeto. Não usamos escudos, uniformes, fotos, elencos reais, bancos de dados de terceiros nem código de jogos de terceiros no conteúdo do jogo.
+A branch `maia-original-manager` contém uma implementação independente de manager: interface mobile-first, lógica de carreira, eventos, simulação textual de partidas, diretório próprio de clubes e fichas curadas de atletas. Não usa um motor de jogo de terceiros para renderizar partidas.
 
-## O que já dá para jogar
+## O que há nesta versão
 
-- Começar uma carreira com quatro clubes fictícios e identidade própria.
-- Gerir um elenco, treinar atletas e liberar jogadores.
-- Contratar jogadores fictícios com orçamento limitado.
-- Escolher formação e estilo de jogo, com efeitos na simulação.
-- Acompanhar partidas em uma visão de campo 2D, avançando em blocos de 15 minutos.
-- Disputar uma temporada de dez rodadas, acompanhar resultados, pontos, gols e finanças.
-- Manter a carreira no armazenamento local do dispositivo, sem conta ou conexão obrigatória.
+- Quatro clubes reais para iniciar uma carreira: Manchester City, Liverpool, Real Madrid e Palmeiras.
+- Diretório mundial v1 com clubes da Europa, América do Sul, América do Norte, Ásia e África, incluindo ligas, estádios, países, cores informativas e rivalidades.
+- Fichas de atletas reais selecionados com nome, nacionalidade, posição e atributos numéricos usados pelo jogo.
+- Partidas em **cinco minutos de simulação textual**, divididas em cinco avanços. Não há campo 2D, bolinhas, animação do jogo ou canvas na tela de partida.
+- Mercado, treinos, evolução de atletas, formações, estilos de jogo, orçamento, temporada, calendário e resultados.
+- Notícias da carreira para anúncios de contratação, resultados, clássicos e eventos de patrocínio.
+- Diretório editorial separado com notícias factuais e links para as fontes consultadas.
+- Salvamento local com validação e fallback visual de erros React para evitar que uma falha da interface produza apenas uma tela vazia.
 
-## Rodar localmente
+## Importante sobre a base mundial
 
-Requisitos: Node.js 24, Rust e os pré-requisitos do Tauri 2 para a plataforma.
+Esta é a **base mundial v1, ainda incompleta**. Ela não contém todos os clubes e todos os jogadores do mundo, nem todos os elencos profissionais completos. Quando a carreira precisa completar um elenco sem informação real cadastrada, ela usa jogadores originais identificados dentro do jogo. Técnicos sem confirmação nesta edição ficam indicados como não confirmados, em vez de receberem um nome inventado.
+
+Idade, nota, potencial e valor de mercado numérico dos atletas no jogo são parâmetros de simulação, não estatísticas ou avaliações oficiais. Os nomes dos clubes, estádios, pessoas e os factos noticiosos são informações de referência; as parcerias com marcas e as notícias geradas pela carreira são eventos fictícios do save. Uma proposta a Nike, adidas ou PUMA não é apresentada como patrocínio real confirmado.
+
+As notícias reais incluídas são um recorte editorial datado e ligado às fontes, não um feed ao vivo. Consulte os links no diretório para ler a publicação original.
+
+## Desenvolver e testar
+
+Requisitos: Node.js 24, Rust, Android SDK/NDK e as dependências de construção Tauri 2.
 
 ```sh
 npm ci
-npm run dev
 npm run build
 npm test
 ```
 
-Para Android, com o Android SDK e NDK instalados:
+No Android, o workflow GitHub Actions executa também uma verificação de inicialização em emulador x86_64, além de gerar e assinar um APK ARM64 para teste em dispositivo. O teste de emulador verifica se o processo continua em foreground por 12 segundos e guarda logcat e captura de tela para investigação se falhar.
 
-```sh
-npm run tauri -- android init --config src-tauri/tauri.mobile.conf.json
-npm run tauri -- android build --apk --target aarch64 --config src-tauri/tauri.mobile.conf.json
-```
+O APK de debug é para instalação de teste e não é assinado com uma chave de produção para publicar na Play Store.
 
-O workflow **Maia Original Manager** valida o frontend e gera um APK de debug assinado para teste por sideload. Esse APK não é um pacote assinado para publicação na Play Store.
+## Autoria, fontes e licenças
 
-## Autoria e componentes técnicos
-
-- **Jogo, interface, regras e dados fictícios:** © 2026 Victor Luiz. Todos os direitos reservados.
-- **Ferramentas de construção e runtime:** React, Vite, TypeScript, Tauri e suas dependências mantêm as próprias licenças. Os avisos legais ficam separados da interface de jogo em THIRD_PARTY_NOTICES.md.
-- Não há tela de créditos de conteúdo de jogos de terceiros porque o conteúdo do jogo desta branch é original. Os avisos de licenças das ferramentas técnicas não são removidos.
-
-Esta branch é um projeto autoral independente em seu estado atual. A existência de código histórico em outras branches do repositório não significa que esses arquivos estejam incluídos nesta árvore de trabalho.
+- **Implementação original do jogo, UI, motor da simulação e conteúdo original:** © 2026 Victor Luiz.
+- Os dados factuais curados e links de fontes ficam em `src/data/world-database.ts`; veja também os sites oficiais listados nesse arquivo.
+- React, Vite, TypeScript, Tauri e dependências técnicas conservam as próprias licenças. Os avisos técnicos ficam separados da interface em [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Não retire os avisos legais obrigatórios das bibliotecas redistribuídas.
+- Não estão incluídos escudos oficiais, uniformes oficiais, fotografia de atletas ou imagens licenciadas de clubes.

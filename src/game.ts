@@ -2,6 +2,9 @@ export type Formation = "4-3-3" | "4-2-3-1" | "3-5-2";
 export type PlayStyle = "equilibrado" | "posse" | "transicao" | "pressao";
 export type Position = "GOL" | "ZAG" | "LAT" | "VOL" | "MC" | "MEI" | "PE" | "PD" | "CA";
 
+import { WORLD_CLUBS, WORLD_PLAYERS } from "./data/world-database";
+import type { WorldPlayer } from "./data/world-database";
+
 export interface Club {
   id: string;
   name: string;
@@ -12,6 +15,9 @@ export interface Club {
   strength: number;
   stadium: string;
   motto: string;
+  manager?: string;
+  rivals: string[];
+  realWorld: boolean;
 }
 
 export interface Player {
@@ -23,6 +29,8 @@ export interface Player {
   potential: number;
   condition: number;
   value: number;
+  nationality?: string;
+  isFictional?: boolean;
 }
 
 export interface MatchSummary {
@@ -52,6 +60,14 @@ export interface LiveMatch {
   finished: boolean;
 }
 
+export interface CareerNews {
+  id: string;
+  category: "mercado" | "partida" | "bastidores" | "patrocinio";
+  headline: string;
+  detail: string;
+  createdAt: number;
+}
+
 export interface Career {
   clubId: string;
   managerName: string;
@@ -73,23 +89,48 @@ export interface Career {
   transfersMade: number;
   history: MatchSummary[];
   match: LiveMatch | null;
+  news: CareerNews[];
 }
 
-export const SELECTABLE_CLUBS: Club[] = [
-  { id: "aurora", name: "Aurora do Vale FC", shortName: "AVF", city: "Vale do Horizonte", primary: "#a6ef68", budget: 18_400_000, strength: 69, stadium: "Estádio Horizonte", motto: "O futuro começa aqui." },
-  { id: "porto", name: "Porto Dourado AC", shortName: "PDA", city: "Costa Dourada", primary: "#f1c56a", budget: 14_200_000, strength: 67, stadium: "Arena do Porto", motto: "Jogar com coragem." },
-  { id: "serra", name: "União da Serra", shortName: "UDS", city: "Serra Clara", primary: "#83c9ff", budget: 12_600_000, strength: 65, stadium: "Campo das Nuvens", motto: "Raiz forte, sonho alto." },
-  { id: "mare", name: "Maré Alta FC", shortName: "MAF", city: "Baía Serena", primary: "#e3a8ff", budget: 16_000_000, strength: 68, stadium: "Estádio das Marés", motto: "Até o último minuto." }
-];
+const SHORT_NAMES: Record<string, string> = {
+  "man-city":"MCI", "liverpool":"LIV", "arsenal":"ARS", "man-utd":"MUN", "chelsea":"CHE", "tottenham":"TOT",
+  "real-madrid":"RMA", "barcelona":"BAR", "atletico":"ATM", "juventus":"JUV", "inter":"INT", "milan":"MIL",
+  "bayern":"BAY", "dortmund":"DOR", "psg":"PSG", "palmeiras":"PAL", "corinthians":"COR", "flamengo":"FLA",
+  "sao-paulo":"SAO", "santos":"SAN", "river-plate":"RIV", "boca":"BOC", "inter-miami":"MIA", "al-hilal":"HIL",
+  "al-nassr":"NAS", "benfica":"SLB", "porto":"FCP", "sporting":"SCP", "ajax":"AJA", "psv":"PSV"
+};
 
-const EXTRA_CLUBS: Club[] = [
-  { id: "estacao", name: "Estação Central", shortName: "ETC", city: "Vila Central", primary: "#ff9a6b", budget: 10_000_000, strength: 64, stadium: "Parque Central", motto: "Trabalho em cada bola." },
-  { id: "pinhais", name: "Pinhais Atlético", shortName: "PAT", city: "Pinhais do Norte", primary: "#f18d9b", budget: 9_600_000, strength: 62, stadium: "Arena dos Pinhais", motto: "Ninguém joga sozinho." },
-  { id: "bruma", name: "Bruma Esporte Clube", shortName: "BEC", city: "Campo da Bruma", primary: "#b4c6cc", budget: 8_800_000, strength: 61, stadium: "Estádio Neblina", motto: "Silêncio, foco e jogo." },
-  { id: "pedra", name: "Pedra Branca FC", shortName: "PBF", city: "Pedra Branca", primary: "#d5a68c", budget: 11_200_000, strength: 63, stadium: "Arena Pedra Branca", motto: "A força vem de dentro." }
-];
+const ELITE_STRENGTH: Record<string, number> = {
+  "man-city":84, "liverpool":82, "arsenal":83, "real-madrid":86, "barcelona":82, "atletico":81,
+  "bayern":85, "psg":84, "inter":82, "juventus":78, "milan":78, "palmeiras":81,
+  "corinthians":74, "flamengo":82, "benfica":79, "porto":78, "sporting":78, "river-plate":78,
+  "boca":77, "al-hilal":80, "al-nassr":79, "inter-miami":74
+};
 
-export const ALL_CLUBS: Club[] = [...SELECTABLE_CLUBS, ...EXTRA_CLUBS];
+const SELECTABLE_IDS = ["man-city", "liverpool", "real-madrid", "palmeiras"] as const;
+
+function worldClubToGameClub(worldClub: (typeof WORLD_CLUBS)[number], index: number): Club {
+  const strength = ELITE_STRENGTH[worldClub.id] ?? 62 + (index % 13);
+  return {
+    id: worldClub.id,
+    name: worldClub.name,
+    shortName: SHORT_NAMES[worldClub.id] ?? worldClub.name.split(/\s+/).map((part) => part[0]).slice(0, 3).join("").toUpperCase(),
+    city: worldClub.country,
+    primary: worldClub.colors[0],
+    budget: 5_000_000 + strength * 360_000,
+    strength,
+    stadium: worldClub.stadium,
+    motto: worldClub.league + " · " + worldClub.country,
+    manager: worldClub.manager,
+    rivals: worldClub.rivals,
+    realWorld: true
+  };
+}
+
+export const ALL_CLUBS: Club[] = WORLD_CLUBS.map(worldClubToGameClub);
+export const SELECTABLE_CLUBS: Club[] = SELECTABLE_IDS
+  .map((id) => ALL_CLUBS.find((club) => club.id === id))
+  .filter((club): club is Club => Boolean(club));
 
 type PlayerTemplate = Omit<Player, "id" | "condition">;
 
@@ -137,21 +178,57 @@ export function getNextOpponent(clubId: string, round: number): Club {
   return otherClubs[safeIndex];
 }
 
+function mapWorldPosition(position: string, index: number): Position {
+  const normalized = position.toLocaleLowerCase("pt-BR");
+  if (normalized.includes("goleiro")) return "GOL";
+  if (normalized.includes("zagueiro")) return "ZAG";
+  if (normalized.includes("lateral")) return "LAT";
+  if (normalized.includes("meia-atacante")) return "MEI";
+  if (normalized.includes("meio-campista")) return "MC";
+  if (normalized.includes("ponta")) return index % 2 === 0 ? "PE" : "PD";
+  if (normalized.includes("atacante")) return "CA";
+  return "MC";
+}
+
+function worldPlayerToCareerPlayer(player: WorldPlayer, index: number, idPrefix: string): Player {
+  return {
+    id: idPrefix + player.id,
+    name: player.name,
+    position: mapWorldPosition(player.position, index),
+    age: player.age,
+    rating: player.rating,
+    potential: player.potential,
+    condition: 91 + (index % 8),
+    value: player.marketValue,
+    nationality: player.nationality,
+    isFictional: false
+  };
+}
+
 export function createCareer(clubId: string, managerName: string): Career {
   const club = getClub(clubId);
-  const adjustment = Math.round((club.strength - 66) / 4);
-  const squad = SQUAD_TEMPLATE.map((template, index) => ({
+  const realSquad = WORLD_PLAYERS.filter((player) => player.clubId === club.id)
+    .map((player, index) => worldPlayerToCareerPlayer(player, index, "real-"));
+  const generatedCount = Math.max(0, 18 - realSquad.length);
+  const generatedSquad = SQUAD_TEMPLATE.slice(0, generatedCount).map((template, index) => ({
     ...template,
-    id: "s-" + String(index + 1),
-    rating: clamp(template.rating + adjustment, 40, 92),
+    id: "academy-" + String(index + 1),
     value: Math.round(template.value * (1 + (club.strength - 66) / 30)),
-    condition: 88 + (index % 13)
+    condition: 88 + (index % 13),
+    nationality: "Base original do jogo",
+    isFictional: true
   }));
-  const market = MARKET_TEMPLATE.map((template, index) => ({
+  const squad = [...realSquad, ...generatedSquad];
+  const worldMarket = WORLD_PLAYERS.filter((player) => player.clubId !== club.id)
+    .map((player, index) => worldPlayerToCareerPlayer(player, index, "market-world-"));
+  const generatedMarket = MARKET_TEMPLATE.map((template, index) => ({
     ...template,
-    id: "m-" + String(index + 1),
-    condition: 94
+    id: "market-original-" + String(index + 1),
+    condition: 94,
+    nationality: "Base original do jogo",
+    isFictional: true
   }));
+  const market = [...worldMarket, ...generatedMarket];
 
   return {
     clubId: club.id,
@@ -173,7 +250,12 @@ export function createCareer(clubId: string, managerName: string): Career {
     trainingCredits: 3,
     transfersMade: 0,
     history: [],
-    match: null
+    match: null,
+    news: [
+      { id: "kickoff-1", category: "bastidores", headline: "Um novo ciclo começa", detail: "No universo desta carreira, " + (managerName.trim() || "Victor") + " assume o comando de " + club.name + " e inicia o planejamento da temporada.", createdAt: Date.now() },
+      { id: "kickoff-2", category: "mercado", headline: "Observação de mercado iniciada", detail: "O olheiro começa pela base de atletas reais catalogados. Perfis incompletos são identificados e não são tratados como elencos oficiais completos.", createdAt: Date.now() - 1 },
+      { id: "kickoff-3", category: "bastidores", headline: "Comissão define as metas", detail: "O foco inicial será equilibrar resultados, desenvolvimento de atletas e saúde financeira.", createdAt: Date.now() - 2 }
+    ]
   };
 }
 
@@ -183,30 +265,54 @@ export function calculateTeamStrength(squad: Player[]): number {
   return firstEleven.reduce((sum, player) => sum + player.rating, 0) / firstEleven.length;
 }
 
+function addCareerNews(career: Career, item: Omit<CareerNews, "createdAt">): Career {
+  const newsItem: CareerNews = { ...item, createdAt: Date.now() };
+  return { ...career, news: [newsItem, ...(career.news ?? [])].slice(0, 30) };
+}
+
 export function signPlayer(career: Career, playerId: string): Career {
   const player = career.market.find((candidate) => candidate.id === playerId);
   if (!player || career.budget < player.value || career.squad.length >= 24) return career;
 
-  return {
+  const next: Career = {
     ...career,
     budget: career.budget - player.value,
     squad: [...career.squad, { ...player, id: "s-" + String(career.squad.length + 1) + "-" + player.id, condition: 94 }],
     market: career.market.filter((candidate) => candidate.id !== playerId),
     transfersMade: career.transfersMade + 1
   };
+  return addCareerNews(next, {
+    id: "transfer-" + String(next.transfersMade),
+    category: "mercado",
+    headline: player.name + " é anunciado como reforço",
+    detail: player.name + " chega ao " + getClub(career.clubId).name + " por " + player.value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) + ". Notícia simulada desta carreira."
+  });
 }
 
 export function trainPlayer(career: Career, playerId: string): Career {
   const player = career.squad.find((candidate) => candidate.id === playerId);
   if (!player || career.trainingCredits <= 0 || player.rating >= player.potential) return career;
 
-  return {
+  let next: Career = {
     ...career,
     trainingCredits: career.trainingCredits - 1,
     squad: career.squad.map((candidate) => candidate.id === playerId
       ? { ...candidate, rating: Math.min(candidate.potential, candidate.rating + 1), condition: Math.max(55, candidate.condition - 5) }
       : candidate)
   };
+
+  const trainedPlayer = next.squad.find((candidate) => candidate.id === playerId);
+  if (trainedPlayer && player.rating < 70 && trainedPlayer.rating >= 70) {
+    const brands = ["Nike", "adidas", "PUMA"];
+    const brand = brands[(trainedPlayer.name.length + trainedPlayer.age) % brands.length];
+    next = addCareerNews(next, {
+      id: "sponsor-" + trainedPlayer.id + "-" + String(trainedPlayer.rating),
+      category: "patrocinio",
+      headline: brand + " oferece parceria de chuteiras",
+      detail: "Na simulação da carreira, " + trainedPlayer.name + " recebe uma proposta comercial da " + brand + ". É um evento fictício do jogo, não uma notícia sobre patrocínio real."
+    });
+  }
+  return next;
 }
 
 export function releasePlayer(career: Career, playerId: string): Career {
@@ -241,7 +347,7 @@ export function beginMatch(career: Career): Career {
     minute: 0,
     homeGoals: 0,
     awayGoals: 0,
-    events: ["00' Apito inicial se aproxima. As equipes entram em campo."],
+    events: ["Pré-jogo · As equipes estão perfiladas. A partida terá cinco minutos de simulação."],
     finished: false
   };
   const recoveredSquad = career.squad.map((player) => ({
@@ -266,7 +372,7 @@ export function advanceMatch(career: Career): Career {
   const userPower = calculateTeamStrength(career.squad) + tacticalBoost;
   const homePower = current.isHome ? userPower + 2 : opponent.strength + 2;
   const awayPower = current.isHome ? opponent.strength : userPower;
-  const nextMinute = Math.min(90, current.minute + 15);
+  const nextMinute = Math.min(5, current.minute + 1);
   const homeChance = clamp(0.20 + (homePower - awayPower) * 0.0015, 0.095, 0.32);
   const awayChance = clamp(0.19 + (awayPower - homePower) * 0.0015, 0.085, 0.31);
   const homeScored = seededRoll(current.round * 997 + nextMinute * 17 + 7) < homeChance;
@@ -275,8 +381,8 @@ export function advanceMatch(career: Career): Career {
   const awayGoals = current.awayGoals + (awayScored ? 1 : 0);
   const events = [...current.events];
 
-  if (homeScored) events.push(String(nextMinute) + "' GOL! " + current.homeName + " encontra espaço e balança a rede.");
-  if (awayScored) events.push(String(nextMinute) + "' GOL! " + current.awayName + " responde no ataque.");
+  if (homeScored) events.push(String(nextMinute).padStart(2, "0") + ":00 · GOL! " + current.homeName + " encontra espaço e balança a rede.");
+  if (awayScored) events.push(String(nextMinute).padStart(2, "0") + ":00 · GOL! " + current.awayName + " responde no ataque.");
   if (!homeScored && !awayScored) {
     const quietEvents = [
       "As linhas se fecham e o meio-campo vira uma batalha.",
@@ -286,12 +392,12 @@ export function advanceMatch(career: Career): Career {
       "O goleiro acompanha a jogada sem precisar intervir.",
       "A equipe tenta acelerar pelos lados do campo."
     ];
-    const eventIndex = (current.round + nextMinute / 15) % quietEvents.length;
-    events.push(String(nextMinute) + "' " + quietEvents[eventIndex]);
+    const eventIndex = (current.round + nextMinute) % quietEvents.length;
+    events.push(String(nextMinute).padStart(2, "0") + ":00 · " + quietEvents[eventIndex]);
   }
 
-  const finished = nextMinute >= 90;
-  if (finished) events.push("90' Fim de jogo. O resultado está confirmado.");
+  const finished = nextMinute >= 5;
+  if (finished) events.push("05:00 · APITO FINAL! O resultado está confirmado.");
 
   const match: LiveMatch = {
     ...current,
@@ -323,6 +429,9 @@ export function advanceMatch(career: Career): Career {
     season: career.season
   };
 
+  const club = getClub(career.clubId);
+  const isClassic = club.rivals.includes(match.opponentId);
+
   return {
     ...career,
     match,
@@ -338,6 +447,23 @@ export function advanceMatch(career: Career): Career {
     budget: career.budget + reward - 35_000,
     squad: career.squad.map((player) => ({ ...player, condition: Math.max(52, player.condition - 7) })),
     trainingCredits: Math.min(5, career.trainingCredits + 1),
-    history: [summary, ...career.history].slice(0, 20)
+    history: [summary, ...career.history].slice(0, 20),
+    news: [
+      ...(isClassic ? [{
+        id: "classic-" + String(career.season) + "-" + String(match.round),
+        category: "partida" as const,
+        headline: "Clássico regional decide a rodada",
+        detail: match.homeName + " " + homeGoals + " x " + awayGoals + " " + match.awayName + ". A rivalidade mexeu com a torcida neste universo simulado.",
+        createdAt: Date.now() + 1
+      }] : []),
+      {
+        id: "match-" + String(career.season) + "-" + String(match.round),
+        category: "partida" as const,
+        headline: (result === "V" ? "Vitória confirmada" : result === "E" ? "Empate no apito final" : "Derrota e análise para a próxima rodada"),
+        detail: match.homeName + " " + homeGoals + " x " + awayGoals + " " + match.awayName + ". Relato e resultado gerados pela simulação da carreira.",
+        createdAt: Date.now()
+      },
+      ...(career.news ?? [])
+    ].slice(0, 30)
   };
 }

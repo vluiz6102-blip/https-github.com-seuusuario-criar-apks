@@ -60,7 +60,7 @@ jobs:
       - name: Install Rust Android target
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: aarch64-linux-android,x86_64-linux-android
       - name: Configure Android SDK and NDK
         shell: bash
         run: |
@@ -108,10 +108,49 @@ jobs:
           "$build_tools/apksigner" verify --verbose --print-certs artifacts/Maia-Soccer-Manager-arm64.apk
           "$build_tools/aapt" dump badging artifacts/Maia-Soccer-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
           grep -q "com.maiasoccermanager.msm" "$RUNNER_TEMP/apk-badging.txt"
-      - name: Publish debug APK artifact
+      - name: Build x86_64 APK for startup smoke test
+        run: npm run tauri -- android build --apk --target x86_64 --ci --config src-tauri/tauri.mobile.conf.json
+      - name: Sign emulator-only smoke APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="$(printenv ANDROID_HOME || true)"
+          if [ -z "$sdk" ]; then sdk="$(printenv ANDROID_SDK_ROOT || true)"; fi
+          build_tools="$sdk/build-tools/35.0.0"
+          unsigned_smoke="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*unsigned.apk' -size +2M -print -quit)"
+          test -n "$unsigned_smoke"
+          aligned_smoke="$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-aligned.apk"
+          "$build_tools/zipalign" -f -v 4 "$unsigned_smoke" "$aligned_smoke"
+          "$build_tools/apksigner" sign --ks "$RUNNER_TEMP/maia-original-debug.keystore" \
+            --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android \
+            --out "$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk" "$aligned_smoke"
+          "$build_tools/apksigner" verify --verbose "$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk"
+          echo "MAIA_SMOKE_APK=$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk" >> "$GITHUB_ENV"
+      - name: Smoke test startup on an Android emulator
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash scripts/android-startup-smoke.sh
+      - name: Publish signed ARM64 APK artifact
+        if: always() && hashFiles('artifacts/Maia-Soccer-Manager-arm64.apk') != ''
         uses: actions/upload-artifact@v6
         with:
           name: Maia-Soccer-Manager-arm64
           path: artifacts/Maia-Soccer-Manager-arm64.apk
           if-no-files-found: error
+          retention-days: 14
+      - name: Publish Android startup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Maia-Soccer-Manager-android-startup-diagnostics
+          path: |
+            artifacts/android-startup-smoke.log
+            artifacts/android-startup-screen.png
+          if-no-files-found: warn
           retention-days: 14
