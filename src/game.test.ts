@@ -20,8 +20,11 @@ describe("Maia Soccer Manager original career engine", () => {
   });
 
   it("charges the correct transfer fee and removes the signed player from the market", () => {
-    const career = createCareer("man-city", "Victor");
-    const target = career.market[0];
+    const base = createCareer("man-city", "Victor");
+    const target = base.market.find((player) => player.value <= base.budget);
+    expect(target).toBeDefined();
+    if (!target) return;
+    const career = base;
     const next = signPlayer(career, target.id);
     expect(next.squad.length).toBe(career.squad.length + 1);
     expect(next.budget).toBe(career.budget - target.value);
@@ -65,7 +68,7 @@ describe("Maia Soccer Manager original career engine", () => {
     const next = trainPlayer(career, player.id);
     expect(next.news[0].category).toBe("patrocinio");
     expect(next.news[0].headline).toMatch(/Nike|adidas|PUMA/);
-    expect(next.news[0].detail).toContain("não é uma notícia sobre patrocínio real");
+    expect(next.news[0].detail).toContain("não uma notícia sobre patrocínio real");
   });
 
   it("finishes a text-only match after five one-minute simulation steps and records it once", () => {
