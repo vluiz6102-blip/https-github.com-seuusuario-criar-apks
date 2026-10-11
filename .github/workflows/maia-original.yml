@@ -126,9 +126,16 @@ jobs:
             --out "$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk" "$aligned_smoke"
           "$build_tools/apksigner" verify --verbose "$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk"
           echo "MAIA_SMOKE_APK=$RUNNER_TEMP/Maia-Soccer-Manager-x86_64-smoke.apk" >> "$GITHUB_ENV"
+      - name: Prepare startup diagnostics before emulator boot
+        if: always()
+        run: |
+          mkdir -p artifacts
+          printf "Smoke test has not started yet; emulator runner may have timed out during boot.\\n" > artifacts/android-startup-smoke.log
+          rm -f artifacts/android-startup-screen.png
       - name: Smoke test startup on an Android emulator
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
+          emulator-boot-timeout: 900
           api-level: 35
           target: google_apis
           arch: x86_64
