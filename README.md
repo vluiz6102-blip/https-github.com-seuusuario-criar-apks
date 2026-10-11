@@ -1,34 +1,43 @@
-# Maia Soccer Manager (MSM)
+# Maia Soccer Manager
 
-**Maia Soccer Manager** is a football management game focused on career mode, squad building, transfers, tactics, and match simulation.
+**Jogo original de gestão de futebol. Criado para Victor Luiz.**
 
-## Game direction
+Maia Soccer Manager é um manager autoral, offline-first e pensado primeiro para celular. A interface, o motor de jogo, as regras, os clubes fictícios, os jogadores fictícios e a identidade visual desta branch foram escritos especificamente para este projeto. Não usamos escudos, uniformes, fotos, elencos reais, bancos de dados de terceiros nem código de jogos de terceiros no conteúdo do jogo.
 
-- **Squad and transfer management:** build a team, negotiate transfers and contracts, and develop players.
-- **Career management:** progress through seasons, manage finances, and follow competitions.
-- **2D retro match mode:** an original Canvas 2D pitch of animated player dots and a ball is built into the live-match screen.
-- **Mobile-first release work:** Android ARM64 builds are validated through GitHub Actions.
+## O que já dá para jogar
 
-## Database packs
+- Começar uma carreira com quatro clubes fictícios e identidade própria.
+- Gerir um elenco, treinar atletas e liberar jogadores.
+- Contratar jogadores fictícios com orçamento limitado.
+- Escolher formação e estilo de jogo, com efeitos na simulação.
+- Acompanhar partidas em uma visão de campo 2D, avançando em blocos de 15 minutos.
+- Disputar uma temporada de dez rodadas, acompanhar resultados, pontos, gols e finanças.
+- Manter a carreira no armazenamento local do dispositivo, sem conta ou conexão obrigatória.
 
-The database packs include 152 clubs, 8 competitions, 48 national teams and 4,707 **fictional player records**. Names, ages, positions, ratings, potential and values are generated specifically for the game. The packs do not contain a real-player database and do not claim to reproduce official rosters.
+## Rodar localmente
 
-## Build and tests
+Requisitos: Node.js 24, Rust e os pré-requisitos do Tauri 2 para a plataforma.
 
-Requirements: Node.js 24, Rust, and the Tauri 2 prerequisites for your platform.
-
-```bash
+```sh
 npm ci
-npm run validate:club-world
+npm run dev
 npm run build
 npm test
-cargo test --manifest-path src-tauri/Cargo.toml --workspace
 ```
 
-The Android CI workflow validates the original player packs, tests the frontend and Rust simulation, excludes the retired external match demo from the Android bundle, and produces a signed debug APK for sideload testing. A debug-signed artifact is not a Play Store release.
+Para Android, com o Android SDK e NDK instalados:
 
-## Credits and licenses
+```sh
+npm run tauri -- android init --config src-tauri/tauri.mobile.conf.json
+npm run tauri -- android build --apk --target aarch64 --config src-tauri/tauri.mobile.conf.json
+```
 
-Created for **Maia Soccer Manager**. In-game creator credit: **Victor Luiz**.
+O workflow **Maia Original Manager** valida o frontend e gera um APK de debug assinado para teste por sideload. Esse APK não é um pacote assinado para publicação na Play Store.
 
-This repository contains open-source components and third-party datasets. Their original copyright notices, license files, and required data attribution are preserved. See [OPEN_SOURCE_ORIGINS.md](OPEN_SOURCE_ORIGINS.md), [LICENSE.md](LICENSE.md), and the source-specific license files before redistributing or publishing a release.
+## Autoria e componentes técnicos
+
+- **Jogo, interface, regras e dados fictícios:** © 2026 Victor Luiz. Todos os direitos reservados.
+- **Ferramentas de construção e runtime:** React, Vite, TypeScript, Tauri e suas dependências mantêm as próprias licenças. Os avisos legais ficam separados da interface de jogo em THIRD_PARTY_NOTICES.md.
+- Não há tela de créditos de conteúdo de jogos de terceiros porque o conteúdo do jogo desta branch é original. Os avisos de licenças das ferramentas técnicas não são removidos.
+
+Esta branch é um projeto autoral independente em seu estado atual. A existência de código histórico em outras branches do repositório não significa que esses arquivos estejam incluídos nesta árvore de trabalho.

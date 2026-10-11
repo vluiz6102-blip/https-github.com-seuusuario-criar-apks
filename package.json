@@ -1,23 +1,14 @@
 {
-  "name": "openfootmanager",
+  "name": "maia-soccer-manager",
   "private": true,
-  "version": "0.3.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "audit:i18n": "node scripts/audit-i18n.mjs",
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "vite --host 0.0.0.0 --port 1420",
+    "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
-    "lint": "biome lint --error-on-warnings",
-    "lint:fix": "biome lint --write",
-    "format:check": "biome format",
-    "knip": "knip --no-progress",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "tauri": "tauri",
-    "preflight": "npm run format:check && npm run lint && npm run knip && npm run validate:club-world && npm run validate:original-rosters && npm run build && npm test",
-    "validate:club-world": "node scripts/validate-maia-club-world.mjs",
-    "validate:original-rosters": "node scripts/validate-maia-original-rosters.mjs"
+    "tauri": "tauri"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.2.8",

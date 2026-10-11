@@ -1,0 +1,115 @@
+name: Maia Original Manager
+
+on:
+  push:
+    branches:
+      - maia-original-manager
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Original game logic and UI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Compile and bundle the game
+        run: npm run build
+      - name: Test transfer, training, roster and match simulation
+        run: npm test
+      - name: Ensure the production bundle exists
+        run: |
+          test -s dist/index.html
+          test -n "$(find dist/assets -type f -name '*.js' -print -quit)"
+          grep -q "Maia Soccer Manager" dist/index.html
+
+  android:
+    name: ARM64 Android debug APK
+    needs: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Configure Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install Rust Android target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - name: Configure Android SDK and NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT=/usr/local/lib/android/sdk
+          if [ -n "$ANDROID_HOME" ]; then SDK_ROOT="$ANDROID_HOME"; fi
+          test -d "$SDK_ROOT/cmdline-tools"
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/16.0/bin/sdkmanager"
+          if [[ ! -x "$SDKMANAGER" ]]; then
+            SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          fi
+          test -x "$SDKMANAGER"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          echo "ANDROID_SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
+          set +o pipefail
+          yes | "$SDKMANAGER" --licenses >/dev/null
+          set -o pipefail
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+          echo "NDK_HOME=$SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      - name: Initialize Tauri Android project
+        run: npm run tauri -- android init --ci --skip-targets-install --config src-tauri/tauri.mobile.conf.json
+      - name: Build ARM64 APK
+        run: npm run tauri -- android build --apk --target aarch64 --ci --config src-tauri/tauri.mobile.conf.json
+      - name: Align, sign and verify the APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME"
+          if [ -z "$sdk" ]; then sdk="$ANDROID_SDK_ROOT"; fi
+          build_tools="$sdk/build-tools/35.0.0"
+          unsigned_apk="$(find src-tauri/gen/android/app/build/outputs/apk -type f -name '*unsigned.apk' -size +2M -print -quit)"
+          test -n "$unsigned_apk"
+          mkdir -p artifacts
+          aligned="$RUNNER_TEMP/Maia-Soccer-Manager-arm64-aligned.apk"
+          "$build_tools/zipalign" -f -v 4 "$unsigned_apk" "$aligned"
+          key="$RUNNER_TEMP/maia-original-debug.keystore"
+          keytool -genkeypair -noprompt -keystore "$key" -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Maia Soccer Manager,C=BR" -keyalg RSA -keysize 2048 -validity 10000
+          "$build_tools/apksigner" sign --ks "$key" --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out artifacts/Maia-Soccer-Manager-arm64.apk "$aligned"
+          "$build_tools/zipalign" -c -v 4 artifacts/Maia-Soccer-Manager-arm64.apk
+          "$build_tools/apksigner" verify --verbose --print-certs artifacts/Maia-Soccer-Manager-arm64.apk
+          "$build_tools/aapt" dump badging artifacts/Maia-Soccer-Manager-arm64.apk > "$RUNNER_TEMP/apk-badging.txt"
+          grep -q "com.maiasoccermanager.msm" "$RUNNER_TEMP/apk-badging.txt"
+      - name: Publish debug APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Maia-Soccer-Manager-arm64
+          path: artifacts/Maia-Soccer-Manager-arm64.apk
+          if-no-files-found: error
+          retention-days: 14
