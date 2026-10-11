@@ -18,13 +18,14 @@ mkdir -p artifacts
 
 adb wait-for-device
 booted="0"
-for attempt in $(seq 1 60); do
+for attempt in $(seq 1 150); do
   booted="$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
   [ "$booted" = "1" ] && break
   sleep 2
 done
 if [ "$booted" != "1" ]; then
-  echo "FAIL: emulator never completed boot." | tee -a "$LOG"
+  echo "FAIL: emulator never completed boot after 300 seconds." | tee -a "$LOG"
+  adb shell getprop >> "$LOG" 2>&1 || true
   adb logcat -d -v threadtime >> "$LOG" 2>&1 || true
   exit 1
 fi
