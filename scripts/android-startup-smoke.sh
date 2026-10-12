@@ -78,10 +78,19 @@ fi
 # Only classify Java crashes as app failures when AndroidRuntime identifies
 # our package. Other emulator services (for example Bluetooth) can crash in
 # CI and must not cause a false-negative if the game itself stayed alive.
-if grep -A 6 -E "FATAL EXCEPTION" "$LOG" | grep -F -q "Process: $PACKAGE," ||
+# Filter crash evidence to this app only; emulator services may also crash.
+java_crash=0
+if grep -A 6 -E "FATAL EXCEPTION" "$LOG" | grep -F -q "Process: $PACKAGE,"; then
+  java_crash=1
+fi
+native_crash=0
+if grep -F -q ">>> $PACKAGE <<<" "$LOG" || grep -F -q "Cmdline: $PACKAGE" "$LOG"; then
+  native_crash=1
+fi
+if [ "$java_crash" -eq 1 ] || [ "$native_crash" -eq 1 ] ||
    grep -F -q "Force finishing activity $PACKAGE" "$LOG" ||
    grep -F -q "am_crash: $PACKAGE" "$LOG"; then
-  echo "FAIL: Android reported a fatal exception for $PACKAGE." | tee -a "$LOG"
+  echo "FAIL: Android reported a Java or native crash for $PACKAGE." | tee -a "$LOG"
   tail -n 180 "$LOG"
   exit 1
 fi
