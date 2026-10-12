@@ -233,14 +233,13 @@ export function getTeamTalkOptions(t: TFunction): TeamTalkOption[] {
 
 export const SPEED_MS: Record<SimSpeed, number> = {
   paused: 0,
-  slow: 2000,
-  normal: 800,
-  fast: 200,
-  // 100ms, not 10ms. Each tick is two IPC round trips plus a full React render, which cannot
-  // finish in 10ms — so the old value did not simulate faster, it just queued ticks back to back
-  // and left the compositor no idle frames. In the live match, speed comes from MINUTES_PER_TICK
-  // instead. A penalty shootout steps one kick per tick and so is genuinely paced by this value;
-  // 100ms per kick is fast without being a blur.
+  // At normal speed, one simulated minute advances every 4 seconds: 90 minutes take
+  // about 6 real minutes, excluding half-time decisions and any user pauses.
+  slow: 6000,
+  normal: 4000,
+  fast: 2000,
+  // Instant is a one-shot skip/rapid simulation, not the default live-match pace.
+  // Penalty shootouts still reveal one kick per tick so the outcome remains readable.
   instant: 100,
 };
 
