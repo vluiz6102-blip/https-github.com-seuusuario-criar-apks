@@ -29,6 +29,11 @@ describe("match tick pacing", () => {
     }
   });
 
+  it("normal speed plays 90 minutes in about six real minutes", () => {
+    expect(MINUTES_PER_TICK.normal).toBe(1);
+    expect(SPEED_MS.normal * 90).toBe(360_000);
+  });
+
   it("paused never steps", () => {
     expect(MINUTES_PER_TICK.paused).toBe(0);
     expect(SPEED_MS.paused).toBe(0);
