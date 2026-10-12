@@ -29,6 +29,11 @@ describe("match tick pacing", () => {
     }
   });
 
+  it("makes a 90-minute regulation match take about six real minutes at normal speed", () => {
+    expect(90 * SPEED_MS.normal).toBe(6 * 60 * 1000);
+    expect(45 * SPEED_MS.normal).toBe(3 * 60 * 1000);
+  });
+
   it("paused never steps", () => {
     expect(MINUTES_PER_TICK.paused).toBe(0);
     expect(SPEED_MS.paused).toBe(0);

@@ -97,32 +97,32 @@ export const EVENT_ICONS: Record<
   ShotSaved: {
     icon: <Hand className="w-4 h-4" />,
     color: "text-green-700 dark:text-green-400",
-    important: false,
+    important: true,
   },
   ShotOffTarget: {
     icon: <ArrowUpRight className="w-4 h-4" />,
     color: "text-gray-700 dark:text-gray-500",
-    important: false,
+    important: true,
   },
   ShotBlocked: {
     icon: <Shield className="w-4 h-4" />,
     color: "text-gray-700 dark:text-gray-500",
-    important: false,
+    important: true,
   },
   Corner: {
     icon: <CornerDownRight className="w-4 h-4" />,
     color: "text-gray-700 dark:text-gray-500",
-    important: false,
+    important: true,
   },
   FreeKick: {
     icon: <Ruler className="w-4 h-4" />,
     color: "text-gray-700 dark:text-gray-500",
-    important: false,
+    important: true,
   },
   Foul: {
     icon: <AlertTriangle className="w-4 h-4" />,
     color: "text-yellow-700 dark:text-yellow-500",
-    important: false,
+    important: true,
   },
   PenaltyAwarded: {
     icon: <Zap className="w-4 h-4" />,

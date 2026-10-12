@@ -273,7 +273,7 @@ describe("getEventDisplay", () => {
     expect(display.important).toBe(true);
   });
 
-  it("returns known display for ShotSaved (non-important)", () => {
+  it("returns a match-feed display for ShotSaved", () => {
     const display = getEventDisplay({
       minute: 30,
       event_type: "ShotSaved",
@@ -283,7 +283,20 @@ describe("getEventDisplay", () => {
       secondary_player_id: null,
     });
     expect(display.color).toBe("text-green-700 dark:text-green-400");
-    expect(display.important).toBe(false);
+    expect(display.important).toBe(true);
+  });
+
+  it("shows shots, fouls, corners, and free kicks in the text timeline", () => {
+    for (const eventType of ["ShotSaved", "ShotOffTarget", "ShotBlocked", "Foul", "Corner", "FreeKick"]) {
+      expect(getEventDisplay({
+        minute: 35,
+        event_type: eventType,
+        side: "Home",
+        zone: "Box",
+        player_id: "p1",
+        secondary_player_id: null,
+      }).important).toBe(true);
+    }
   });
 
   it("returns default display for unknown event type", () => {
