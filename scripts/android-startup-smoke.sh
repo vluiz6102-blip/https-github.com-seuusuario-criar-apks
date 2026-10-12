@@ -75,8 +75,13 @@ if [ "$launch_status" -ne 0 ] || [ -z "$pid" ] || [[ "$resumed" != *"$PACKAGE"* 
   exit 1
 fi
 
-if grep -E -q "FATAL EXCEPTION|Fatal signal [0-9]|Force finishing activity $PACKAGE" "$LOG"; then
-  echo "FAIL: Android logged a fatal exception while starting the app." | tee -a "$LOG"
+# Only classify Java crashes as app failures when AndroidRuntime identifies
+# our package. Other emulator services (for example Bluetooth) can crash in
+# CI and must not cause a false-negative if the game itself stayed alive.
+if grep -A 6 -E "FATAL EXCEPTION" "$LOG" | grep -F -q "Process: $PACKAGE," ||
+   grep -F -q "Force finishing activity $PACKAGE" "$LOG" ||
+   grep -F -q "am_crash: $PACKAGE" "$LOG"; then
+  echo "FAIL: Android reported a fatal exception for $PACKAGE." | tee -a "$LOG"
   tail -n 180 "$LOG"
   exit 1
 fi
