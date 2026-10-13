@@ -14,7 +14,7 @@ describe("Jornada 90 match engine",()=>{
  it("supports extra time and a shootout in knockout mode",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f={...getNextFixture(c)!,knockout:true,id:"cup-test"},m=createLiveMatch(f,c.clubs),r=()=>.5;
   while(m.phase==="first-half")advanceMinute(m,c.clubs,r);resumeMatch(m);while(m.phase==="second-half")advanceMinute(m,c.clubs,r);
-  expect(m.phase).toBe("extra-time-break");m.homeScore=0;m.awayScore=0;resumeMatch(m);while(m.phase==="extra-time")advanceMinute(m,c.clubs,r);
+  expect(m.phase).toBe("extra-time-break");m.homeScore=0;m.awayScore=0;resumeMatch(m);while(m.phase==="extra-time")advanceMinute(m,c.clubs,r);expect(m.phase).toBe("extra-time-halftime");resumeMatch(m);while(m.phase==="extra-time")advanceMinute(m,c.clubs,r);
   expect(m.phase).toBe("full-time");expect(m.minute).toBe(120);expect(m.events.some(e=>e.text.toLowerCase().includes("pênaltis"))).toBe(true);expect(m.homeScore).not.toBe(m.awayScore);
  });
  it("calculates standings only from completed fixtures",()=>{
