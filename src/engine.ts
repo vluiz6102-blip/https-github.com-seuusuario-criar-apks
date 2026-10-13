@@ -60,7 +60,7 @@ function createFixtures(clubs:Club[],season:number):Fixture[] {
 }
 export function createCareer(managerName:string,managerNickname:string,clubId:string):Career {
  const random=seeded(9031);
- const clubs:Club[]=clubSpecs.map((s,i)=>({...s,formation:i%3===0?"4-3-3":i%3===1?"4-2-3-1":"4-4-2",tactic:"equilibrada",players:makeSquad(s.id,s.strength,random)}));
+ const clubs:Club[]=clubSpecs.map((s,i):Club=>({...s,formation:i%3===0?"4-3-3":i%3===1?"4-2-3-1":"4-4-2",tactic:"equilibrada",players:makeSquad(s.id,s.strength,random)}));
  const transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,57+random()*17,random)).sort((a,b)=>b.overall-a.overall);
  return {schemaVersion:1,season:2026,day:1,managerName:managerName.trim()||"Victor Luiz",managerNickname:managerNickname.trim()||"Mister",clubId,screen:"inicio",clubs,fixtures:createFixtures(clubs,2026),transferMarket,news:[{id:"news-1",day:1,tag:"clube",title:"Uma nova jornada começa",body:"A diretoria apresentou o novo treinador e espera ver uma identidade clara dentro de campo."},{id:"news-2",day:1,tag:"base",title:"Olhos na base",body:"A comissão técnica vai acompanhar os jovens durante os primeiros treinos da temporada."}],currentMatch:null,nextNewsId:3};
 }
