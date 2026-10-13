@@ -2198,7 +2198,7 @@
         "headline": "GOOOOL!",
         "lines": {
           "0": "{{player}} coloca a bola no fundo da rede para o {{team}}!",
-          "1": "É gol! {{player}} finaliza com precisão e marca para o {{team}}!",
+          "1": "É gol! {{player}} finaliza com precisão e marca!",
           "2": "A torcida comemora: {{player}} balança as redes pelo {{team}}!"
         },
         "opener": {
@@ -2255,7 +2255,7 @@
         "headline": "PÊNALTI PERDIDO!",
         "lines": {
           "0": "{{player}} desperdiça a cobrança! O {{opponent}} respira aliviado.",
-          "1": "Não foi dessa vez: {{player}} não converte o pênalti para o {{team}}."
+          "1": "Não foi dessa vez: {{player}} desperdiça a cobrança de pênalti."
         }
       },
       "PenaltyAwarded": {
@@ -2268,7 +2268,7 @@
       "ShotSaved": {
         "headline": "GRANDE DEFESA!",
         "lines": {
-          "0": "{{player}} finaliza, mas o goleiro do {{opponent}} faz a defesa.",
+          "0": "{{player}} finaliza, mas o goleiro faz a defesa.",
           "1": "Boa tentativa de {{player}}! O goleiro evita o gol."
         },
         "routine": {
@@ -2296,8 +2296,8 @@
       "ShotOffTarget": {
         "headline": "QUE PERTO!",
         "lines": {
-          "0": "{{player}} finaliza, mas a bola sai pela linha de fundo.",
-          "1": "A tentativa de {{player}} passa longe do alvo. Tiro de meta para o {{opponent}}."
+          "0": "{{player}} finaliza para o {{team}}, mas a bola sai pela linha de fundo.",
+          "1": "A tentativa de {{player}} passa longe do alvo."
         },
         "speculative": {
           "headline": "FORA",
@@ -2324,7 +2324,7 @@
       "ShotBlocked": {
         "headline": "BLOQUEADO!",
         "lines": {
-          "0": "A defesa do {{opponent}} bloqueia a finalização de {{player}}.",
+          "0": "A defesa bloqueia a finalização de {{player}}.",
           "1": "O chute de {{player}} para na marcação. A defesa afasta o perigo."
         },
         "bigChance": {
@@ -2344,7 +2344,7 @@
         "hard": {
           "headline": "É FALTA",
           "lines": {
-            "0": "Entrada forte de {{player}} em {{victim}}. O árbitro marca falta.",
+            "0": "Entrada forte de {{player}} em {{victim}}. Falta para o {{opponent}}.",
             "1": "{{player}} chega com intensidade sobre {{victim}} e a falta é assinalada."
           }
         },
@@ -2416,8 +2416,7 @@
         "headline": "FIM DE JOGO",
         "lines": {
           "0": "Fim de jogo! O árbitro encerra a partida.",
-          "1": "Apita o árbitro: está encerrado o confronto.",
-          "2": "Não há mais tempo. A partida chega ao fim."
+          "1": "Apita o árbitro: está encerrado o confronto."
         }
       }
     },
