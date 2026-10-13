@@ -8,7 +8,7 @@ export interface Club { id:string; name:string; shortName:string; city:string; s
 export interface Fixture { id:string; round:number; competition:string; homeClubId:string; awayClubId:string; knockout:boolean; played:boolean; homeScore?:number; awayScore?:number; }
 export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card"|"sub"|"chance"|"whistle"|"text"; text:string; teamId?:string; playerId?:string; }
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
-export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homeLineup:string[]; awayLineup:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
+export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
 export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; }
 export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; nextNewsId:number; }
 
@@ -79,7 +79,7 @@ export function createLiveMatch(fixture:Fixture,clubs:Club[]):MatchState{
  const home=clubs.find(c=>c.id===fixture.homeClubId)!,away=clubs.find(c=>c.id===fixture.awayClubId)!;
  const homeLineup=selectLineup(home,home.formation),awayLineup=selectLineup(away,away.formation),condition:Record<string,number>={};
  for(const p of [...home.players,...away.players])condition[p.id]=p.fitness;
- const match:MatchState={fixtureId:fixture.id,homeClubId:home.id,awayClubId:away.id,competition:fixture.competition,knockout:fixture.knockout,minute:0,phase:"first-half",homeScore:0,awayScore:0,homeLineup,awayLineup,condition,homeStats:newStats(),awayStats:newStats(),events:[],homeSubs:0,awaySubs:0,homeTactic:home.tactic,awayTactic:away.tactic,homeFormation:home.formation,awayFormation:away.formation,finishedApplied:false,nextEventId:1};
+ const match:MatchState={fixtureId:fixture.id,homeClubId:home.id,awayClubId:away.id,competition:fixture.competition,knockout:fixture.knockout,minute:0,phase:"first-half",homeScore:0,awayScore:0,homePenaltyScore:0,awayPenaltyScore:0,homeLineup,awayLineup,condition,homeStats:newStats(),awayStats:newStats(),events:[],homeSubs:0,awaySubs:0,homeTactic:home.tactic,awayTactic:away.tactic,homeFormation:home.formation,awayFormation:away.formation,finishedApplied:false,nextEventId:1};
  addEvent(match,"text","As equipes entram em campo. O árbitro autoriza o início da partida.",0);return match;
 }
 function average(a:number[]):number{return a.length?a.reduce((s,v)=>s+v,0)/a.length:60;}
@@ -98,9 +98,9 @@ function scorer(m:MatchState,c:Club,s:"home"|"away",r:()=>number):Player|undefin
 function finish(m:MatchState):void{m.phase="full-time";addEvent(m,"whistle","Fim de jogo. O placar está fechado.");}
 function penalties(m:MatchState,h:Club,a:Club,r:()=>number):void{
  const ha=attackRating(m,h,"home"),aa=attackRating(m,a,"away");
- for(let n=1;n<=5;n++){const hg=r()<clamp(.72+(ha-defenseRating(m,a,"away"))/260,.54,.9),ag=r()<clamp(.72+(aa-defenseRating(m,h,"home"))/260,.54,.9);if(hg)m.homeScore++;if(ag)m.awayScore++;addEvent(m,"text","Pênaltis "+n+": "+h.shortName+(hg?" converte":" desperdiça")+"; "+a.shortName+(ag?" converte.":" desperdiça."),120);if(m.homeScore>m.awayScore+(5-n)||m.awayScore>m.homeScore+(5-n))break;}
- let sudden=0;while(m.homeScore===m.awayScore&&sudden<10){sudden++;if(r()<.72)m.homeScore++;if(r()<.72)m.awayScore++;addEvent(m,"text","Morte súbita "+sudden+": "+h.shortName+" "+m.homeScore+" x "+m.awayScore+" "+a.shortName,120);}
- if(m.homeScore===m.awayScore){if(r()<.5)m.homeScore++;else m.awayScore++;addEvent(m,"text","Uma cobrança extra finalmente desempata a disputa.",120);}
+ for(let n=1;n<=5;n++){const hg=r()<clamp(.72+(ha-defenseRating(m,a,"away"))/260,.54,.9),ag=r()<clamp(.72+(aa-defenseRating(m,h,"home"))/260,.54,.9);if(hg)m.homePenaltyScore++;if(ag)m.awayPenaltyScore++;addEvent(m,"text","Pênaltis "+n+": "+h.shortName+(hg?" converte":" desperdiça")+"; "+a.shortName+(ag?" converte.":" desperdiça."),120);if(m.homePenaltyScore>m.awayPenaltyScore+(5-n)||m.awayPenaltyScore>m.homePenaltyScore+(5-n))break;}
+ let sudden=0;while(m.homePenaltyScore===m.awayPenaltyScore&&sudden<10){sudden++;if(r()<.72)m.homePenaltyScore++;if(r()<.72)m.awayPenaltyScore++;addEvent(m,"text","Morte súbita "+sudden+": "+h.shortName+" "+m.homePenaltyScore+" x "+m.awayPenaltyScore+" "+a.shortName,120);}
+ if(m.homePenaltyScore===m.awayPenaltyScore){if(r()<.5)m.homePenaltyScore++;else m.awayPenaltyScore++;addEvent(m,"text","Uma cobrança extra finalmente desempata a disputa.",120);}
 }
 export function advanceMinute(m:MatchState,clubs:Club[],r:()=>number=Math.random):MatchState{
  if(!["first-half","second-half","extra-time"].includes(m.phase))return m;
