@@ -15,7 +15,7 @@ describe("Jornada 90 match engine",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f={...getNextFixture(c)!,knockout:true,id:"cup-test"},m=createLiveMatch(f,c.clubs),r=()=>.5;
   while(m.phase==="first-half")advanceMinute(m,c.clubs,r);resumeMatch(m);while(m.phase==="second-half")advanceMinute(m,c.clubs,r);
   expect(m.phase).toBe("extra-time-break");m.homeScore=0;m.awayScore=0;resumeMatch(m);while(m.phase==="extra-time")advanceMinute(m,c.clubs,r);expect(m.phase).toBe("extra-time-halftime");resumeMatch(m);while(m.phase==="extra-time")advanceMinute(m,c.clubs,r);
-  expect(m.phase).toBe("full-time");expect(m.minute).toBe(120);expect(m.events.some(e=>e.text.toLowerCase().includes("pênaltis"))).toBe(true);expect(m.homeScore).not.toBe(m.awayScore);
+  expect(m.phase).toBe("full-time");expect(m.minute).toBe(120);expect(m.events.some(e=>e.text.toLowerCase().includes("pênaltis"))).toBe(true);expect(m.homePenaltyScore).not.toBe(m.awayPenaltyScore);expect(m.homeScore).toBe(m.awayScore);
  });
  it("calculates standings only from completed fixtures",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f=c.fixtures[0]!;f.played=true;f.homeScore=2;f.awayScore=0;const rows=getStandings(c);
