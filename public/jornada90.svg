@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<rect width="128" height="128" rx="28" fill="#0b1714"/><path d="M20 25h88v78H20z" fill="#10251e" stroke="#4ae0a0" stroke-width="3"/><path d="M64 25v78M20 64h88M20 43h17v42H20M108 43H91v42h17" fill="none" stroke="#4ae0a0" stroke-width="2" opacity=".75"/><circle cx="64" cy="64" r="15" fill="#4ae0a0"/><path d="M64 52l8 6-3 10h-10l-3-10zM64 52l-9 6M72 58l7-1M69 68l5 6M59 68l-5 6" fill="none" stroke="#0b1714" stroke-width="2.4" stroke-linejoin="round"/><text x="64" y="119" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="800" fill="#eefcf6">J90</text>
+</svg>

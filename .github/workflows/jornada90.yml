@@ -1,0 +1,23 @@
+name: Jornada 90 - build e testes
+on:
+  push:
+    branches: [jornada90-original]
+  pull_request:
+    branches: [jornada90-original]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar dependências
+        run: npm install
+      - name: Testar motor de partidas
+        run: npm test
+      - name: Compilar aplicação
+        run: npm run build
