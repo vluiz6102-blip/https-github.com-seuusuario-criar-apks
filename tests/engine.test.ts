@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advanceMinute, createCareer, createLiveMatch, getNextFixture, getStandings, resumeMatch, simulateFixture } from "../src/engine";
+import { advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStandings, makeSubstitution, resumeMatch, simulateFixture } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with eight original clubs and a balanced double round-robin",()=>{
@@ -24,5 +24,28 @@ describe("Jornada 90 match engine",()=>{
  it("runs a match simulation without rendering a pitch",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f={...getNextFixture(c)!,knockout:false},result=simulateFixture(f,c.clubs,seeded(188));
   expect(result.homeScore).toBeGreaterThanOrEqual(0);expect(result.awayScore).toBeGreaterThanOrEqual(0);expect(result.homeScore).toBeLessThan(20);expect(result.awayScore).toBeLessThan(20);
+ });
+});
+
+describe("Pulso 90 career safeguards",()=>{
+ it("refreshes the transfer market at the start of every new season",()=>{
+  const c=createCareer("Teste","Mister","pato-branco");c.transferMarket=[];advanceSeason(c);
+  expect(c.season).toBe(2027);expect(c.transferMarket).toHaveLength(18);
+  expect(c.transferMarket.every(p=>p.id.startsWith("free-2027-"))).toBe(true);
+  expect(new Set(c.transferMarket.map(p=>p.id)).size).toBe(18);
+ });
+ it("keeps substitutions unique and enforces the five-change limit",()=>{
+  const c=createCareer("Teste","Mister","pato-branco"),m=createLiveMatch(getNextFixture(c)!,c.clubs);
+  for(let i=0;i<5;i++)expect(makeSubstitution(m,c.clubs,"home")).toBe(true);
+  expect(m.homeSubs).toBe(5);expect(new Set(m.homeLineup).size).toBe(11);
+  expect(m.homeLineup.every(id=>c.clubs.find(x=>x.id===m.homeClubId)!.players.some(p=>p.id===id))).toBe(true);
+  expect(makeSubstitution(m,c.clubs,"home")).toBe(false);
+ });
+ it("does not apply an unfinished match or apply a finished round twice",()=>{
+  const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,m=createLiveMatch(f,c.clubs);
+  m.homeScore=1;m.awayScore=0;completeRound(c,m);expect(f.played).toBe(false);
+  m.phase="full-time";completeRound(c,m);const dayAfterFirstApply=c.day,tableAfterFirstApply=getStandings(c);
+  expect(f.played).toBe(true);expect(m.finishedApplied).toBe(true);
+  completeRound(c,m);expect(c.day).toBe(dayAfterFirstApply);expect(getStandings(c)).toEqual(tableAfterFirstApply);
  });
 });
