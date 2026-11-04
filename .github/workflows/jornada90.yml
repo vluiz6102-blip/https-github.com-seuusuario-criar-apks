@@ -133,14 +133,18 @@ jobs:
           echo "APK_ZIPALIGN_VALID=YES"
           echo "APK_ARCHIVE_VALID=YES"
           echo "APK_PACKAGE_ID=com.victorluiz.jornada90"
+          test -s artifacts/Pulso-90-Manager-debug.apk
+          test -s artifacts/Pulso-90-Manager-debug.apk.sha256
+          unzip -t artifacts/Pulso-90-Manager-debug.apk >/dev/null
           stat -c "APK_SIZE_BYTES=%s" artifacts/Pulso-90-Manager-debug.apk
+          echo "APK_ARTIFACT_READY=YES"
 
       - name: Publicar APK e checksum
         uses: actions/upload-artifact@v7
         with:
           name: pulso-90-manager-apk
           path: |
-            artifacts/Jornada-90-Manager-debug.apk
+            artifacts/Pulso-90-Manager-debug.apk
             artifacts/Pulso-90-Manager-debug.apk.sha256
           if-no-files-found: error
           compression-level: 0
