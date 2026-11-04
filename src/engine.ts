@@ -8,7 +8,7 @@ export interface Club { id:string; name:string; shortName:string; city:string; s
 export interface Fixture { id:string; round:number; competition:string; homeClubId:string; awayClubId:string; knockout:boolean; played:boolean; homeScore?:number; awayScore?:number; }
 export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card"|"sub"|"chance"|"whistle"|"text"; text:string; teamId?:string; playerId?:string; }
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
-export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
+export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; participants?:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
 export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; }
 export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; nextNewsId:number; }
 
@@ -79,7 +79,7 @@ export function createLiveMatch(fixture:Fixture,clubs:Club[]):MatchState{
  const home=clubs.find(c=>c.id===fixture.homeClubId)!,away=clubs.find(c=>c.id===fixture.awayClubId)!;
  const homeLineup=selectLineup(home,home.formation),awayLineup=selectLineup(away,away.formation),condition:Record<string,number>={};
  for(const p of [...home.players,...away.players])condition[p.id]=p.fitness;
- const match:MatchState={fixtureId:fixture.id,homeClubId:home.id,awayClubId:away.id,competition:fixture.competition,knockout:fixture.knockout,minute:0,phase:"first-half",homeScore:0,awayScore:0,homePenaltyScore:0,awayPenaltyScore:0,homeLineup,awayLineup,condition,homeStats:newStats(),awayStats:newStats(),events:[],homeSubs:0,awaySubs:0,homeTactic:home.tactic,awayTactic:away.tactic,homeFormation:home.formation,awayFormation:away.formation,finishedApplied:false,nextEventId:1};
+ const match:MatchState={fixtureId:fixture.id,homeClubId:home.id,awayClubId:away.id,competition:fixture.competition,knockout:fixture.knockout,minute:0,phase:"first-half",homeScore:0,awayScore:0,homePenaltyScore:0,awayPenaltyScore:0,homeLineup,awayLineup,participants:[...homeLineup,...awayLineup],condition,homeStats:newStats(),awayStats:newStats(),events:[],homeSubs:0,awaySubs:0,homeTactic:home.tactic,awayTactic:away.tactic,homeFormation:home.formation,awayFormation:away.formation,finishedApplied:false,nextEventId:1};
  addEvent(match,"text","As equipes entram em campo. O árbitro autoriza o início da partida.",0);return match;
 }
 function average(a:number[]):number{return a.length?a.reduce((s,v)=>s+v,0)/a.length:60;}
@@ -136,11 +136,18 @@ export function makeSubstitution(m:MatchState,clubs:Club[],side:"home"|"away"="h
  const lineup=lineupFor(m,side),outIds=lineup.filter(id=>club.players.find(p=>p.id===id)?.position!=="GOL"),outId=outIds.sort((a,b)=>(m.condition[a]??80)-(m.condition[b]??80))[0];if(!outId)return false;
  const out=club.players.find(p=>p.id===outId);if(!out)return false;const active=new Set(lineup),bench=club.players.filter(p=>!active.has(p.id));
  const replacement=bench.filter(p=>p.position===out.position).sort((a,b)=>b.overall-a.overall)[0]??bench.filter(p=>p.position!=="GOL").sort((a,b)=>b.overall-a.overall)[0];if(!replacement)return false;
- lineup[lineup.indexOf(outId)]=replacement.id;m.condition[replacement.id]=replacement.fitness;if(side==="home")m.homeSubs++;else m.awaySubs++;
+ lineup[lineup.indexOf(outId)]=replacement.id;const participants=new Set(m.participants??[...m.homeLineup,...m.awayLineup,outId]);participants.add(outId);participants.add(replacement.id);m.participants=[...participants];m.condition[replacement.id]=replacement.fitness;if(side==="home")m.homeSubs++;else m.awaySubs++;
  addEvent(m,"sub","Substituição em "+club.shortName+": "+replacement.name+" entra no lugar de "+out.name+".",m.minute,club.id);return true;
 }
+function applyPlayerMatchStats(m:MatchState,clubs:Club[]):void{
+ const participants=new Set(m.participants??[...m.homeLineup,...m.awayLineup]);
+ for(const clubId of [m.homeClubId,m.awayClubId]){
+  const club=clubs.find(c=>c.id===clubId);if(!club)continue;
+  for(const p of club.players){const played=participants.has(p.id);p.fitness=Math.round(clamp((m.condition[p.id]??p.fitness)+(played?1:5),40,100));if(played)p.appearances++;}
+ }
+}
 export function simulateFixture(f:Fixture,clubs:Club[],r:()=>number=Math.random):{homeScore:number;awayScore:number}{
- const m=createLiveMatch(f,clubs);let guard=0;while(m.phase!=="full-time"&&guard<130){if(["halftime","extra-time-break","extra-time-halftime"].includes(m.phase))resumeMatch(m);advanceMinute(m,clubs,r);guard++;}return {homeScore:m.homeScore,awayScore:m.awayScore};
+ const m=createLiveMatch(f,clubs);let guard=0;while(m.phase!=="full-time"&&guard<130){if(["halftime","extra-time-break","extra-time-halftime"].includes(m.phase))resumeMatch(m);advanceMinute(m,clubs,r);guard++;}if(m.phase==="full-time")applyPlayerMatchStats(m,clubs);return {homeScore:m.homeScore,awayScore:m.awayScore};
 }
 export function getNextFixture(c:Career):Fixture|undefined{return c.fixtures.filter(f=>!f.played&&(f.homeClubId===c.clubId||f.awayClubId===c.clubId)).sort((a,b)=>a.round-b.round)[0];}
 export function getStandings(c:Career):Array<{club:Club;played:number;wins:number;draws:number;losses:number;goalsFor:number;goalsAgainst:number;points:number}>{
@@ -150,8 +157,8 @@ export function getStandings(c:Career):Array<{club:Club;played:number;wins:numbe
 }
 export function completeRound(c:Career,m:MatchState):void{
  const f=c.fixtures.find(item=>item.id===m.fixtureId);if(!f||f.played||m.phase!=="full-time"||m.finishedApplied)return;f.played=true;f.homeScore=m.homeScore;f.awayScore=m.awayScore;m.finishedApplied=true;
- for(const clubId of [m.homeClubId,m.awayClubId])for(const p of getClub(c,clubId).players){const active=m.homeLineup.includes(p.id)||m.awayLineup.includes(p.id);p.fitness=Math.round(clamp((m.condition[p.id]??p.fitness)+(active?1:5),40,100));if(active)p.appearances++;}
- for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){const score=simulateFixture(other,c.clubs);other.homeScore=score.homeScore;other.awayScore=score.awayScore;other.played=true;for(const id of [other.homeClubId,other.awayClubId])for(const p of getClub(c,id).players)p.fitness=Math.round(clamp(p.fitness+2,40,100));}
+ applyPlayerMatchStats(m,c.clubs);
+ for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){const score=simulateFixture(other,c.clubs);other.homeScore=score.homeScore;other.awayScore=score.awayScore;other.played=true;}
  const home=getClub(c,m.homeClubId),away=getClub(c,m.awayClubId),isWin=m.homeClubId===c.clubId?m.homeScore>m.awayScore:m.awayScore>m.homeScore;
  const outcome=m.homeScore===m.awayScore?"Empate":isWin?"Vitória":"Derrota";c.day++;
  c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag:"partida",title:outcome+" em "+m.competition,body:home.name+" "+m.homeScore+" x "+m.awayScore+" "+away.name+". "+m.events.filter(e=>e.kind==="goal").length+" gol(s) registrados no relato."});c.news=c.news.slice(0,30);
