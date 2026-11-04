@@ -1,10 +1,28 @@
 import "./styles.css";
 import { addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, money, playerPositionLabel, resumeMatch, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
 
-const STORE="jornada90-save-v1",app=document.querySelector<HTMLDivElement>("#app");
+const STORE="jornada90-save-v1",PREFS="pulso90-preferences-v1",app=document.querySelector<HTMLDivElement>("#app");
+type Preferences={sound:boolean};
+let preferences:Preferences=loadPreferences(),introEntered=false,overlay:"settings"|"credits"|null=null;
+let audioContext:AudioContext|null=null;
+function loadPreferences():Preferences{try{const raw=localStorage.getItem(PREFS);if(!raw)return {sound:true};const value=JSON.parse(raw) as Partial<Preferences>;return {sound:value.sound!==false};}catch{return {sound:true};}}
+function savePreferences():void{try{localStorage.setItem(PREFS,JSON.stringify(preferences));}catch(e){console.warn("Não foi possível salvar as preferências.",e);}}
+function playUiSound(kind:"tap"|"goal"="tap"):void{
+ if(!preferences.sound)return;
+ try{
+  const AudioCtor=window.AudioContext;if(!AudioCtor)return;
+  audioContext??=new AudioCtor();
+  if(audioContext.state==="suspended")void audioContext.resume();
+  const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),now=audioContext.currentTime;
+  oscillator.type="sine";oscillator.frequency.setValueAtTime(kind==="goal"?660:kind==="tap"?520:440,now);
+  if(kind==="goal")oscillator.frequency.exponentialRampToValueAtTime(990,now+.16);
+  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(kind==="goal"?.12:.035,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+(kind==="goal"?.28:.09));
+  oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(now);oscillator.stop(now+(kind==="goal"?.3:.11));
+ }catch(e){console.debug("Áudio indisponível neste dispositivo.",e);}
+}
 if(!app)throw new Error("Elemento principal não encontrado.");
 let career=loadCareer();
-function loadCareer():Career|null{try{const raw=localStorage.getItem(STORE);if(!raw)return null;const value=JSON.parse(raw) as Career;return value.schemaVersion===1&&Array.isArray(value.clubs)&&Array.isArray(value.fixtures)?value:null;}catch{return null;}}
+function loadCareer():Career|null{try{const raw=localStorage.getItem(STORE);if(!raw)return null;const value=JSON.parse(raw) as Career;const valid=value?.schemaVersion===1&&Array.isArray(value.clubs)&&value.clubs.length>=2&&Array.isArray(value.fixtures)&&value.clubs.every(c=>typeof c.id==="string"&&Array.isArray(c.players))&&value.clubs.some(c=>c.id===value.clubId)&&value.fixtures.every(f=>typeof f.id==="string"&&typeof f.homeClubId==="string"&&typeof f.awayClubId==="string");return valid?value:null;}catch{return null;}}
 function save():void{if(career)try{localStorage.setItem(STORE,JSON.stringify(career));}catch(e){console.warn("Falha ao salvar a carreira.",e);}}
 function esc(s:string):string{return s.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]??ch));}
 function club():Club{return getManagedClub(career!);}
@@ -14,12 +32,16 @@ function tag(text:string,kind=""):string{return '<span class="badge '+kind+'">'+
 function mark(c:Club,size="normal"):string{return '<span class="club-mark '+size+'">'+esc(c.shortName.slice(0,3))+"</span>";}
 function head(eyebrow:string,title:string,sub=""):string{return '<div class="page-heading"><div><span class="eyebrow">'+esc(eyebrow)+'</span><h1>'+esc(title)+'</h1>'+(sub?'<p>'+esc(sub)+"</p>":"")+"</div></div>";}
 const nav:Array<{id:Screen;label:string;icon:string}>=[{id:"inicio",label:"Início",icon:"⌂"},{id:"elenco",label:"Elenco",icon:"◎"},{id:"taticas",label:"Táticas",icon:"⌘"},{id:"calendario",label:"Jogos",icon:"▦"},{id:"mercado",label:"Mercado",icon:"↔"},{id:"clube",label:"Clube",icon:"▤"}];
-function topbar():string{const c=club();return '<header class="topbar"><button class="brand" data-action="nav" data-value="inicio"><span class="brand-icon">90</span><span class="brand-copy"><strong>JORNADA <b>90</b></strong><small>FUTEBOL MANAGER</small></span></button><div class="top-meta"><span class="season-chip">TEMPORADA '+career!.season+'</span><span class="club-chip">'+mark(c,"tiny")+esc(c.shortName)+'</span><button class="icon-button" data-action="export-save" aria-label="Exportar save" title="Exportar carreira">↗</button></div></header>';}
+function topbar():string{const c=club();return '<header class="topbar"><button class="brand" data-action="nav" data-value="inicio"><span class="brand-icon pulso-mark">P<span>90</span></span><span class="brand-copy"><strong>PULSO <b>90</b></strong><small>FOOTBALL MANAGEMENT</small></span></button><div class="top-meta"><span class="season-chip">TEMPORADA '+career!.season+'</span><span class="club-chip">'+mark(c,"tiny")+esc(c.shortName)+'</span><button class="icon-button" data-action="toggle-sound" aria-label="Alternar efeitos sonoros" aria-pressed="'+preferences.sound+'" title="Som '+(preferences.sound?"ligado":"desligado")+'">'+(preferences.sound?"♫":"♪")+'</button><button class="icon-button" data-action="export-save" aria-label="Exportar save" title="Exportar carreira">↗</button></div></header>';}
 function bottomnav():string{return '<nav class="bottom-nav" aria-label="Navegação principal">'+nav.map(n=>'<button class="nav-item '+(career!.screen===n.id?"active":"")+'" data-action="nav" data-value="'+n.id+'"><span class="nav-icon">'+n.icon+'</span><span>'+n.label+"</span></button>").join("")+"</nav>";}
+function landing():string{
+ const hasCareer=Boolean(career),modal=overlay==="credits"?'<div class="modal-backdrop" data-action="close-overlay"><section class="intro-modal" role="dialog" aria-modal="true" aria-labelledby="credits-title" data-modal="true"><button class="modal-close" data-action="close-overlay" aria-label="Fechar">×</button><span class="eyebrow">OS NOMES POR TRÁS DO JOGO</span><h2 id="credits-title">Créditos</h2><p><strong>PULSO 90</strong><br>Uma experiência original de gestão de futebol.</p><div class="credits-line"><span>Criação e direção do projeto</span><strong>Victor Luiz</strong></div><div class="credits-line"><span>Motor de partidas e gestão</span><strong>Equipe Pulso 90</strong></div><div class="credits-line"><span>Dados de clubes e atletas</span><strong>Conteúdo demonstrativo original</strong></div><p class="modal-note">Feito para quem vive cada decisão dentro e fora de campo.</p></section></div>':overlay==="settings"?'<div class="modal-backdrop" data-action="close-overlay"><section class="intro-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" data-modal="true"><button class="modal-close" data-action="close-overlay" aria-label="Fechar">×</button><span class="eyebrow">PREFERÊNCIAS</span><h2 id="settings-title">Configurações</h2><div class="setting-row"><span><strong>Efeitos sonoros</strong><small>Sons sutis ao navegar e em momentos importantes.</small></span><button class="sound-toggle '+(preferences.sound?"on":"")+'" data-action="toggle-sound" aria-pressed="'+preferences.sound+'">'+(preferences.sound?"Ligado":"Desligado")+'</button></div><p class="modal-note">A preferência fica salva neste dispositivo. O áudio só toca após uma interação sua.</p></section></div>':"";
+ return '<main class="landing-shell"><div class="landing-orbit orbit-one"></div><div class="landing-orbit orbit-two"></div><div class="landing-top"><span class="brand-lockup"><span class="brand-icon pulso-mark">P<span>90</span></span><span class="brand-copy"><strong>PULSO <b>90</b></strong><small>FOOTBALL MANAGEMENT</small></span></span><span class="edition-pill">MODO CARREIRA</span></div><section class="landing-content"><div class="landing-copy"><span class="eyebrow"><i class="live-dot"></i> SUA HISTÓRIA COMEÇA AGORA</span><h1>O futebol não espera.<br><em>Seu legado também não.</em></h1><p>Construa um clube, molde seu estilo e transforme cada rodada em uma decisão que importa.</p><div class="landing-actions">'+(hasCareer?'<button class="button primary landing-primary" data-action="continue-career">Continuar carreira <span>↗</span></button>':'<button class="button primary landing-primary" data-action="start-new">Começar minha carreira <span>↗</span></button>')+(hasCareer?'<button class="button secondary" data-action="start-new">Nova carreira</button>':'')+'</div><div class="landing-footnote"><span>08 CLUBES</span><i></i><span>56 JOGOS POR TEMPORADA</span><i></i><span>SUAS DECISÕES</span></div></div><div class="stadium-art" aria-hidden="true"><div class="stadium-lights"></div><div class="stadium-roof"></div><div class="stadium-bowl"><div class="crowd-lights"></div><div class="pitch"><div class="pitch-line center-line"></div><div class="pitch-circle"></div><div class="pitch-box left-box"></div><div class="pitch-box right-box"></div><div class="pitch-glow"></div></div></div><div class="stadium-wordmark">90<span>′</span></div></div></section><footer class="landing-footer"><span>© 2026 PULSO 90 · PROJETO ORIGINAL</span><div><button data-action="open-settings">Configurações</button><button data-action="open-credits">Créditos</button><button data-action="toggle-sound" aria-pressed="'+preferences.sound+'">Som '+(preferences.sound?"ligado":"desligado")+'</button></div></footer>'+modal+'<div id="toast" class="toast" role="status" aria-live="polite"></div></main>';
+}
 
 function setup():void{
  const draft=createCareer("Victor Luiz","Mister","pato-branco");
- app!.innerHTML='<main class="setup-shell"><div class="setup-glow"></div><div class="setup-brand"><span class="brand-icon large">90</span><span class="brand-copy"><strong>JORNADA <b>90</b></strong><small>SUA CARREIRA. SUAS DECISÕES.</small></span></div><section class="setup-card"><span class="eyebrow">NOVA CARREIRA · TEMPORADA 2026</span><h1>O próximo capítulo<br>começa no banco.</h1><p class="setup-copy">Monte seu elenco, crie uma identidade tática e transforme um clube em uma história que vale a pena lembrar.</p><form id="career-form" class="setup-form"><label>Nome do treinador<input name="manager" maxlength="48" value="Victor Luiz" required autocomplete="name"></label><label>Como a torcida chama você<input name="nickname" maxlength="24" value="Mister" required></label><label>Escolha seu clube<select name="club" required>'+draft.clubs.map(c=>'<option value="'+c.id+'"'+(c.id==="pato-branco"?" selected":"")+">"+esc(c.name+" · "+c.city)+"</option>").join("")+'</select></label><div class="setup-note"><span>✦</span><span>Esta carreira usa clubes e elencos demonstrativos criados para o Jornada 90. O jogo não carrega dados proprietários de outros projetos.</span></div><button class="button primary wide" type="submit">Criar minha carreira <span>↗</span></button></form></section><footer class="setup-footer">UMA EXPERIÊNCIA ORIGINAL DE VICTOR LUIZ <span>•</span> DESENVOLVIMENTO EM ANDAMENTO</footer></main>';
+ app!.innerHTML='<main class="setup-shell"><div class="setup-glow"></div><div class="setup-brand"><span class="brand-icon large">90</span><span class="brand-copy"><strong>PULSO <b>90</b></strong><small>FOOTBALL MANAGEMENT</small></span></div><section class="setup-card"><span class="eyebrow">NOVA CARREIRA · TEMPORADA 2026</span><h1>O próximo capítulo<br>começa no banco.</h1><p class="setup-copy">Monte seu elenco, crie uma identidade tática e transforme um clube em uma história que vale a pena lembrar.</p><form id="career-form" class="setup-form"><label>Nome do treinador<input name="manager" maxlength="48" value="Victor Luiz" required autocomplete="name"></label><label>Como a torcida chama você<input name="nickname" maxlength="24" value="Mister" required></label><label>Escolha seu clube<select name="club" required>'+draft.clubs.map(c=>'<option value="'+c.id+'"'+(c.id==="pato-branco"?" selected":"")+">"+esc(c.name+" · "+c.city)+"</option>").join("")+'</select></label><div class="setup-note"><span>✦</span><span>Esta carreira usa clubes e elencos demonstrativos criados para o Jornada 90. O jogo não carrega dados proprietários de outros projetos.</span></div><button class="button primary wide" type="submit">Criar minha carreira <span>↗</span></button></form></section><footer class="setup-footer">PULSO 90 <span>•</span> UMA EXPERIÊNCIA ORIGINAL</footer></main>';
 }
 function dashboard():string{
  const c=club(),f=next(),opp=f?opponent(f,c.id):null,table=getStandings(career!),place=table.findIndex(r=>r.club.id===c.id)+1,played=career!.fixtures.filter(x=>x.played).length,crow=table.find(r=>r.club.id===c.id),ovr=Math.round(c.players.reduce((s,p)=>s+p.overall,0)/c.players.length),upcoming=career!.fixtures.filter(x=>!x.played&&(x.homeClubId===c.id||x.awayClubId===c.id)).sort((a,b)=>a.round-b.round).slice(0,3);
@@ -64,6 +86,7 @@ function matchPage():string{
 }
 function showToast(message:string):void{const toast=document.querySelector<HTMLDivElement>("#toast");if(!toast)return;toast.textContent=message;toast.classList.add("visible");window.setTimeout(()=>toast.classList.remove("visible"),2300);}
 function render():void{
+ if(!introEntered){app!.innerHTML=landing();return;}
  if(!career){setup();return;}
  let content="";
  switch(career.screen){case"inicio":content=dashboard();break;case"elenco":content=squad();break;case"taticas":content=tacticsPage();break;case"calendario":content=calendar();break;case"mercado":content=market();break;case"clube":content=clubPage();break;case"partida":content=matchPage();break;}
@@ -75,16 +98,22 @@ function startNext():void{
  career.currentMatch=createLiveMatch(fixture,career.clubs);career.screen="partida";render();showToast("Partida pronta. Primeiro tempo em andamento.");
 }
 function finalizeIfNeeded():void{const m=career?.currentMatch;if(m&&m.phase==="full-time"&&!m.finishedApplied)completeRound(career!,m);}
-function tick():void{const m=career?.currentMatch;if(!career||!m)return;if(["first-half","second-half","extra-time"].includes(m.phase)){advanceMinute(m,career.clubs);finalizeIfNeeded();if(career.screen==="partida")render();else save();}}
+function tick():void{const m=career?.currentMatch;if(!career||!m)return;if(["first-half","second-half","extra-time"].includes(m.phase)){const before=m.events.length;advanceMinute(m,career.clubs);if(preferences.sound&&m.events.slice(before).some(event=>event.kind==="goal"))playUiSound("goal");finalizeIfNeeded();if(career.screen==="partida")render();else save();}}
 function setTactic(value:string):void{
  if(!career)return;const allowed:Tactic[]=["equilibrada","ofensiva","defensiva","posse","contra-ataque","pressao"];if(!allowed.includes(value as Tactic))return;
  club().tactic=value as Tactic;const m=career.currentMatch;if(m&&m.phase!=="full-time"){if(m.homeClubId===career.clubId)m.homeTactic=value as Tactic;else m.awayTactic=value as Tactic;}
  save();render();showToast("Plano tático atualizado.");
 }
-function exportSave():void{const blob=new Blob([JSON.stringify(career,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="jornada90-temporada-"+career!.season+".json";a.click();URL.revokeObjectURL(url);showToast("Exportação do save iniciada.");}
+function exportSave():void{const blob=new Blob([JSON.stringify(career,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="pulso90-temporada-"+career!.season+".json";a.click();window.setTimeout(()=>URL.revokeObjectURL(url),1200);showToast("Exportação do save iniciada.");}
 function action(target:HTMLElement):void{
  if(!career)return;const act=target.dataset.action,v=target.dataset.value,id=target.dataset.id;
  switch(act){
+ case"start-new":introEntered=true;career=null;overlay=null;render();break;
+ case"continue-career":introEntered=true;overlay=null;if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";render();break;
+ case"open-settings":overlay="settings";render();break;
+ case"open-credits":overlay="credits";render();break;
+ case"close-overlay":if((eTargetIsModalClose??false)){}overlay=null;render();break;
+ case"toggle-sound":preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();break;
  case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
  case"start-next":startNext();break;
  case"resume-match":if(career.currentMatch){resumeMatch(career.currentMatch);save();render();}break;
@@ -100,9 +129,10 @@ function action(target:HTMLElement):void{
  case"new-season":if(career.fixtures.some(f=>!f.played&&f.competition==="Liga das Araucárias"))showToast("Conclua os jogos da liga antes de iniciar a próxima temporada.");else{career=advanceSeason(career);save();render();}break;
  case"back-dashboard":if(career.currentMatch?.phase!=="full-time")showToast("A partida precisa terminar antes de voltar ao painel.");else{career.screen="inicio";save();render();}break;
  }
+ if(act!=="toggle-sound"&&act!=="open-settings"&&act!=="open-credits"&&act!=="close-overlay"&&preferences.sound)playUiSound();
 }
-app.addEventListener("click",e=>{const t=(e.target as HTMLElement).closest<HTMLElement>("[data-action]");if(t)action(t);});
-app.addEventListener("submit",e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||f.id!=="career-form")return;e.preventDefault();const d=new FormData(f);career=createCareer(String(d.get("manager")??""),String(d.get("nickname")??""),String(d.get("club")??"pato-branco"));save();render();});
+app.addEventListener("click",e=>{const target=e.target as HTMLElement;const t=target.closest<HTMLElement>("[data-action]");if(!t)return;if(t.closest("[data-modal]")&&!t.hasAttribute("data-action"))return;if(t.dataset.action==="close-overlay"&&target.closest("[data-modal]"))return;action(t);});
+app.addEventListener("submit",e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||f.id!=="career-form")return;e.preventDefault();const d=new FormData(f);career=createCareer(String(d.get("manager")??""),String(d.get("nickname")??""),String(d.get("club")??"pato-branco"));introEntered=true;save();render();});
 if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";
 render();
 window.setInterval(tick,4000);
