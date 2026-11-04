@@ -93,7 +93,7 @@ function render():void{
  app!.innerHTML='<div class="app-shell">'+topbar()+'<main class="page '+(career.screen==="partida"?"match-page":"")+'">'+content+'</main>'+(career.screen==="partida"?"":bottomnav())+'<div id="toast" class="toast" role="status" aria-live="polite"></div></div>';save();
 }
 function startNext():void{
- if(!career)return;const fixture=next();if(!fixture){showToast("A temporada terminou. Abra um novo ciclo.");return;}
+ if(!career)return;finalizeIfNeeded();const fixture=next();if(!fixture){showToast("A temporada terminou. Abra um novo ciclo.");return;}
  if(career.currentMatch&&career.currentMatch.phase!=="full-time"){career.screen="partida";render();return;}
  career.currentMatch=createLiveMatch(fixture,career.clubs);career.screen="partida";render();showToast("Partida pronta. Primeiro tempo em andamento.");
 }
@@ -134,6 +134,7 @@ function action(target:HTMLElement):void{
 }
 app.addEventListener("click",e=>{const target=e.target as HTMLElement;const t=target.closest<HTMLElement>("[data-action]");if(!t)return;if(t.closest("[data-modal]")&&!t.hasAttribute("data-action"))return;if(t.classList.contains("modal-backdrop")&&target.closest("[data-modal]"))return;action(t);});
 app.addEventListener("submit",e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||f.id!=="career-form")return;e.preventDefault();const d=new FormData(f);career=createCareer(String(d.get("manager")??""),String(d.get("nickname")??""),String(d.get("club")??"pato-branco"));introEntered=true;save();render();});
+finalizeIfNeeded();
 if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";
 render();
 window.setInterval(tick,4000);
