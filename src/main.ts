@@ -112,7 +112,7 @@ function action(target:HTMLElement):void{
  case"continue-career":introEntered=true;overlay=null;if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";render();break;
  case"open-settings":overlay="settings";render();break;
  case"open-credits":overlay="credits";render();break;
- case"close-overlay":if((eTargetIsModalClose??false)){}overlay=null;render();break;
+ case"close-overlay":overlay=null;render();break;
  case"toggle-sound":preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();break;
  case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
  case"start-next":startNext();break;
@@ -131,7 +131,7 @@ function action(target:HTMLElement):void{
  }
  if(act!=="toggle-sound"&&act!=="open-settings"&&act!=="open-credits"&&act!=="close-overlay"&&preferences.sound)playUiSound();
 }
-app.addEventListener("click",e=>{const target=e.target as HTMLElement;const t=target.closest<HTMLElement>("[data-action]");if(!t)return;if(t.closest("[data-modal]")&&!t.hasAttribute("data-action"))return;if(t.dataset.action==="close-overlay"&&target.closest("[data-modal]"))return;action(t);});
+app.addEventListener("click",e=>{const target=e.target as HTMLElement;const t=target.closest<HTMLElement>("[data-action]");if(!t)return;if(t.closest("[data-modal]")&&!t.hasAttribute("data-action"))return;if(t.classList.contains("modal-backdrop")&&target.closest("[data-modal]"))return;action(t);});
 app.addEventListener("submit",e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||f.id!=="career-form")return;e.preventDefault();const d=new FormData(f);career=createCareer(String(d.get("manager")??""),String(d.get("nickname")??""),String(d.get("club")??"pato-branco"));introEntered=true;save();render();});
 if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";
 render();
