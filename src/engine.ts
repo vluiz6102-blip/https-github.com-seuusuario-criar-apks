@@ -135,7 +135,7 @@ export function makeSubstitution(m:MatchState,clubs:Club[],side:"home"|"away"="h
  const club=clubs.find(c=>c.id===(side==="home"?m.homeClubId:m.awayClubId));if(!club)return false;const used=side==="home"?m.homeSubs:m.awaySubs;if(used>=5||m.phase==="full-time")return false;
  const lineup=lineupFor(m,side),outIds=lineup.filter(id=>club.players.find(p=>p.id===id)?.position!=="GOL"),outId=outIds.sort((a,b)=>(m.condition[a]??80)-(m.condition[b]??80))[0];if(!outId)return false;
  const out=club.players.find(p=>p.id===outId);if(!out)return false;const active=new Set(lineup),bench=club.players.filter(p=>!active.has(p.id));
- const replacement=bench.filter(p=>p.position===out.position).sort((a,b)=>b.overall-a.overall)[0]??bench.sort((a,b)=>b.overall-a.overall)[0];if(!replacement)return false;
+ const replacement=bench.filter(p=>p.position===out.position).sort((a,b)=>b.overall-a.overall)[0]??bench.filter(p=>p.position!=="GOL").sort((a,b)=>b.overall-a.overall)[0];if(!replacement)return false;
  lineup[lineup.indexOf(outId)]=replacement.id;m.condition[replacement.id]=replacement.fitness;if(side==="home")m.homeSubs++;else m.awaySubs++;
  addEvent(m,"sub","Substituição em "+club.shortName+": "+replacement.name+" entra no lugar de "+out.name+".",m.minute,club.id);return true;
 }
@@ -149,7 +149,7 @@ export function getStandings(c:Career):Array<{club:Club;played:number;wins:numbe
  return rows.sort((a,b)=>b.points-a.points||((b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))||b.goalsFor-a.goalsFor||b.club.strength-a.club.strength);
 }
 export function completeRound(c:Career,m:MatchState):void{
- const f=c.fixtures.find(item=>item.id===m.fixtureId);if(!f||f.played)return;f.played=true;f.homeScore=m.homeScore;f.awayScore=m.awayScore;m.finishedApplied=true;
+ const f=c.fixtures.find(item=>item.id===m.fixtureId);if(!f||f.played||m.phase!=="full-time"||m.finishedApplied)return;f.played=true;f.homeScore=m.homeScore;f.awayScore=m.awayScore;m.finishedApplied=true;
  for(const clubId of [m.homeClubId,m.awayClubId])for(const p of getClub(c,clubId).players){const active=m.homeLineup.includes(p.id)||m.awayLineup.includes(p.id);p.fitness=Math.round(clamp((m.condition[p.id]??p.fitness)+(active?1:5),40,100));if(active)p.appearances++;}
  for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){const score=simulateFixture(other,c.clubs);other.homeScore=score.homeScore;other.awayScore=score.awayScore;other.played=true;for(const id of [other.homeClubId,other.awayClubId])for(const p of getClub(c,id).players)p.fitness=Math.round(clamp(p.fitness+2,40,100));}
  const home=getClub(c,m.homeClubId),away=getClub(c,m.awayClubId),isWin=m.homeClubId===c.clubId?m.homeScore>m.awayScore:m.awayScore>m.homeScore;
@@ -158,7 +158,7 @@ export function completeRound(c:Career,m:MatchState):void{
 }
 export function advanceSeason(c:Career):Career{
  c.season++;c.day=1;for(const club of c.clubs){for(const p of club.players){p.age++;p.fitness=Math.round(clamp(p.fitness+14,40,100));if(p.age<24&&p.overall<p.potential&&Math.random()<.55)p.overall=Math.min(p.potential,p.overall+1);}club.budget+=Math.round(club.supporters*28);}
- c.fixtures=createFixtures(c.clubs,c.season);c.transferMarket=c.transferMarket.filter(p=>p.age<35);c.currentMatch=null;c.screen="inicio";c.news.unshift({id:"news-"+c.nextNewsId++,day:1,tag:"clube",title:"Nova temporada, novas metas",body:"A diretoria definiu um novo ciclo. Reavalie o elenco, a folha salarial e os objetivos antes da estreia."});return c;
+ c.fixtures=createFixtures(c.clubs,c.season);const marketRandom=seeded(9031+c.season*7919);c.transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,57+marketRandom()*17,marketRandom)).sort((a,b)=>b.overall-a.overall);c.currentMatch=null;c.screen="inicio";c.news.unshift({id:"news-"+c.nextNewsId++,day:1,tag:"clube",title:"Nova temporada, novas metas",body:"A diretoria definiu um novo ciclo. Reavalie o elenco, a folha salarial e os objetivos antes da estreia."});return c;
 }
 export function money(value:number):string{if(value>=1_000_000)return "R$ "+(value/1_000_000).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";if(value>=1000)return "R$ "+(value/1000).toLocaleString("pt-BR",{maximumFractionDigits:0})+" mil";return "R$ "+Math.round(value).toLocaleString("pt-BR");}
 export function formatScore(home:number|undefined,away:number|undefined):string{return String(home??"–")+" : "+String(away??"–");}
