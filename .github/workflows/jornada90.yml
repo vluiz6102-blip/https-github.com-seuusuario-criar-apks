@@ -1,4 +1,4 @@
-name: Jornada 90 - testes, build web e APK Android
+name: Pulso 90 - testes, build web e APK Android
 
 on:
   push:
@@ -76,6 +76,39 @@ jobs:
           fi
           npx cap sync android
 
+      - name: Aplicar ícones nativos Pulso 90
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin
+          res="android/app/src/main/res"
+          mkdir -p "$res/drawable-nodpi" "$res/mipmap-anydpi-v26"
+          rsvg-convert -w 432 -h 432 public/pulso90.svg -o "$res/drawable-nodpi/ic_launcher_foreground.png"
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"
+            pixels="${spec##*:}"
+            mkdir -p "$res/mipmap-$density"
+            rsvg-convert -w "$pixels" -h "$pixels" public/pulso90.svg -o "$res/mipmap-$density/ic_launcher.png"
+            cp "$res/mipmap-$density/ic_launcher.png" "$res/mipmap-$density/ic_launcher_round.png"
+          done
+          mkdir -p "$res/values"
+          cat > "$res/values/pulso90.xml" <<'EOF'
+          <resources>
+            <color name="pulso90_icon_background">#080F20</color>
+          </resources>
+          EOF
+          for icon in ic_launcher ic_launcher_round; do
+            cat > "$res/mipmap-anydpi-v26/$icon.xml" <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@color/pulso90_icon_background"/>
+            <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+          done
+          test -s "$res/drawable-nodpi/ic_launcher_foreground.png"
+          test -s "$res/mipmap-xxxhdpi/ic_launcher.png"
+
       - name: Gerar APK debug
         run: ./android/gradlew -p android --no-daemon assembleDebug
 
@@ -92,13 +125,13 @@ jobs:
 
           "$tools/zipalign" -c -v 4 "$apk"
           "$tools/apksigner" verify --verbose --print-certs "$apk"
-          "$tools/aapt" dump badging "$apk" > "$RUNNER_TEMP/jornada90-apk-badging.txt"
+          "$tools/aapt" dump badging "$apk" > "$RUNNER_TEMP/pulso90-apk-badging.txt"
           grep -q "^package: name='com.victorluiz.jornada90'" "$RUNNER_TEMP/jornada90-apk-badging.txt"
-          unzip -t "$apk" > "$RUNNER_TEMP/jornada90-apk-integrity.txt"
+          unzip -t "$apk" > "$RUNNER_TEMP/pulso90-apk-integrity.txt"
 
           mkdir -p artifacts
-          cp "$apk" artifacts/Jornada-90-Manager-debug.apk
-          (cd artifacts && sha256sum Jornada-90-Manager-debug.apk > Jornada-90-Manager-debug.apk.sha256)
+          cp "$apk" artifacts/Pulso-90-Manager-debug.apk
+          (cd artifacts && sha256sum Jornada-90-Manager-debug.apk > Pulso-90-Manager-debug.apk.sha256)
           (cd artifacts && sha256sum --check Jornada-90-Manager-debug.apk.sha256)
           echo "APK_SIGNATURE_VALID=YES"
           echo "APK_ZIPALIGN_VALID=YES"
@@ -109,7 +142,7 @@ jobs:
       - name: Publicar APK e checksum
         uses: actions/upload-artifact@v7
         with:
-          name: jornada-90-manager-apk
+          name: pulso-90-manager-apk
           path: |
             artifacts/Jornada-90-Manager-debug.apk
             artifacts/Jornada-90-Manager-debug.apk.sha256
