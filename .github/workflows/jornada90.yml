@@ -126,18 +126,18 @@ jobs:
           "$tools/zipalign" -c -v 4 "$apk"
           "$tools/apksigner" verify --verbose --print-certs "$apk"
           "$tools/aapt" dump badging "$apk" > "$RUNNER_TEMP/pulso90-apk-badging.txt"
-          grep -q "^package: name='com.victorluiz.jornada90'" "$RUNNER_TEMP/jornada90-apk-badging.txt"
+          grep -q "^package: name='com.victorluiz.jornada90'" "$RUNNER_TEMP/pulso90-apk-badging.txt"
           unzip -t "$apk" > "$RUNNER_TEMP/pulso90-apk-integrity.txt"
 
           mkdir -p artifacts
           cp "$apk" artifacts/Pulso-90-Manager-debug.apk
-          (cd artifacts && sha256sum Jornada-90-Manager-debug.apk > Pulso-90-Manager-debug.apk.sha256)
-          (cd artifacts && sha256sum --check Jornada-90-Manager-debug.apk.sha256)
+          (cd artifacts && sha256sum Pulso-90-Manager-debug.apk > Pulso-90-Manager-debug.apk.sha256)
+          (cd artifacts && sha256sum --check Pulso-90-Manager-debug.apk.sha256)
           echo "APK_SIGNATURE_VALID=YES"
           echo "APK_ZIPALIGN_VALID=YES"
           echo "APK_ARCHIVE_VALID=YES"
           echo "APK_PACKAGE_ID=com.victorluiz.jornada90"
-          stat -c "APK_SIZE_BYTES=%s" artifacts/Jornada-90-Manager-debug.apk
+          stat -c "APK_SIZE_BYTES=%s" artifacts/Pulso-90-Manager-debug.apk
 
       - name: Publicar APK e checksum
         uses: actions/upload-artifact@v7
@@ -145,7 +145,7 @@ jobs:
           name: pulso-90-manager-apk
           path: |
             artifacts/Jornada-90-Manager-debug.apk
-            artifacts/Jornada-90-Manager-debug.apk.sha256
+            artifacts/Pulso-90-Manager-debug.apk.sha256
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
