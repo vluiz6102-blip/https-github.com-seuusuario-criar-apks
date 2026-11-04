@@ -107,14 +107,15 @@ function setTactic(value:string):void{
 function exportSave():void{const blob=new Blob([JSON.stringify(career,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="pulso90-temporada-"+career!.season+".json";a.click();window.setTimeout(()=>URL.revokeObjectURL(url),1200);showToast("Exportação do save iniciada.");}
 function action(target:HTMLElement):void{
  const act=target.dataset.action,v=target.dataset.value,id=target.dataset.id;
+ if(act==="start-new"){introEntered=true;career=null;overlay=null;render();if(preferences.sound)playUiSound();return;}
+ if(act==="continue-career"){introEntered=true;overlay=null;if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";render();if(preferences.sound)playUiSound();return;}
+ if(act==="open-settings"){overlay="settings";render();return;}
+ if(act==="open-credits"){overlay="credits";render();return;}
+ if(act==="close-overlay"){overlay=null;render();return;}
+ if(act==="toggle-sound"){preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();return;}
+ if(!career)return;
  switch(act){
- case"start-new":introEntered=true;career=null;overlay=null;render();break;
- case"continue-career":introEntered=true;overlay=null;if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";render();break;
- case"open-settings":overlay="settings";render();break;
- case"open-credits":overlay="credits";render();break;
- case"close-overlay":overlay=null;render();break;
- case"toggle-sound":preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();break;
- case"nav":if(!career)break;if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
+ case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
  case"start-next":startNext();break;
  case"resume-match":if(career.currentMatch){resumeMatch(career.currentMatch);save();render();}break;
  case"substitute":if(career.currentMatch&&makeSubstitution(career.currentMatch,career.clubs,career.currentMatch.homeClubId===career.clubId?"home":"away")){save();render();showToast("Substituição realizada.");}else showToast("Não foi possível substituir. Confira o banco e o limite.");break;
@@ -129,7 +130,7 @@ function action(target:HTMLElement):void{
  case"new-season":if(career.fixtures.some(f=>!f.played&&f.competition==="Liga das Araucárias"))showToast("Conclua os jogos da liga antes de iniciar a próxima temporada.");else{career=advanceSeason(career);save();render();}break;
  case"back-dashboard":if(career.currentMatch?.phase!=="full-time")showToast("A partida precisa terminar antes de voltar ao painel.");else{career.screen="inicio";save();render();}break;
  }
- if(act!=="toggle-sound"&&act!=="open-settings"&&act!=="open-credits"&&act!=="close-overlay"&&preferences.sound)playUiSound();
+ if(preferences.sound)playUiSound();
 }
 app.addEventListener("click",e=>{const target=e.target as HTMLElement;const t=target.closest<HTMLElement>("[data-action]");if(!t)return;if(t.closest("[data-modal]")&&!t.hasAttribute("data-action"))return;if(t.classList.contains("modal-backdrop")&&target.closest("[data-modal]"))return;action(t);});
 app.addEventListener("submit",e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||f.id!=="career-form")return;e.preventDefault();const d=new FormData(f);career=createCareer(String(d.get("manager")??""),String(d.get("nickname")??""),String(d.get("club")??"pato-branco"));introEntered=true;save();render();});
