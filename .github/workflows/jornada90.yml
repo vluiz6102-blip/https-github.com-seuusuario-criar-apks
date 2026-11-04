@@ -84,7 +84,7 @@ jobs:
           sudo apt-get install -y -qq librsvg2-bin
           res="android/app/src/main/res"
           mkdir -p "$res/drawable-nodpi" "$res/mipmap-anydpi-v26"
-          rsvg-convert -w 432 -h 432 public/pulso90.svg -o "$res/drawable-nodpi/ic_launcher_foreground.png"
+          rsvg-convert -w 432 -h 432 public/pulso90-foreground.svg -o "$res/drawable-nodpi/ic_launcher_foreground.png"
           for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
             density="${spec%%:*}"
             pixels="${spec##*:}"
