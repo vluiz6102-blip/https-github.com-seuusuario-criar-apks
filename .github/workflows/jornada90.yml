@@ -80,23 +80,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq librsvg2-bin
           res="android/app/src/main/res"
-          mkdir -p "$res/drawable-nodpi" "$res/mipmap-anydpi-v26"
-          rsvg-convert -w 432 -h 432 public/pulso90-foreground.svg -o "$res/drawable-nodpi/ic_launcher_foreground.png"
-          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
-            density="${spec%%:*}"
-            pixels="${spec##*:}"
-            mkdir -p "$res/mipmap-$density"
-            rsvg-convert -w "$pixels" -h "$pixels" public/pulso90.svg -o "$res/mipmap-$density/ic_launcher.png"
-            cp "$res/mipmap-$density/ic_launcher.png" "$res/mipmap-$density/ic_launcher_round.png"
-          done
-          mkdir -p "$res/values"
+          mkdir -p "$res/drawable" "$res/mipmap-anydpi" "$res/mipmap-anydpi-v26" "$res/values"
+          cat > "$res/drawable/ic_launcher_foreground.xml" <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+            <path android:fillColor="#14233E" android:strokeColor="#B9FF45" android:strokeWidth="2.2" android:pathData="M54,8 L84,20 L79,65 L54,89 L29,65 L24,20 Z"/>
+            <path android:fillColor="#00000000" android:strokeColor="#B9FF45" android:strokeWidth="3.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M34,49 L34,27 L43,27 C52,27 52,39 43,39 L34,39 M57,27 C48,27 48,40 57,40 C66,40 66,27 57,27 M63,35 L52,52 M77,27 C68,27 68,40 77,40 C86,40 86,27 77,27 Z"/>
+            <path android:fillColor="#00000000" android:strokeColor="#F4F7FC" android:strokeWidth="3.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M38,62 L49,71 L70,51"/>
+          </vector>
+          EOF
+          cp "$res/drawable/ic_launcher_foreground.xml" "$res/mipmap-anydpi/ic_launcher.xml"
+          cp "$res/drawable/ic_launcher_foreground.xml" "$res/mipmap-anydpi/ic_launcher_round.xml"
           cat > "$res/values/pulso90.xml" <<'EOF'
-          <resources>
-            <color name="pulso90_icon_background">#080F20</color>
-          </resources>
+          <resources><color name="pulso90_icon_background">#080F20</color></resources>
           EOF
           for icon in ic_launcher ic_launcher_round; do
             cat > "$res/mipmap-anydpi-v26/$icon.xml" <<'EOF'
@@ -106,8 +102,8 @@ jobs:
           </adaptive-icon>
           EOF
           done
-          test -s "$res/drawable-nodpi/ic_launcher_foreground.png"
-          test -s "$res/mipmap-xxxhdpi/ic_launcher.png"
+          test -s "$res/drawable/ic_launcher_foreground.xml"
+          test -s "$res/mipmap-anydpi-v26/ic_launcher.xml"
 
       - name: Gerar APK debug
         run: ./android/gradlew -p android --no-daemon assembleDebug
