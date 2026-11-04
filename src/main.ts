@@ -106,7 +106,7 @@ function setTactic(value:string):void{
 }
 function exportSave():void{const blob=new Blob([JSON.stringify(career,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="pulso90-temporada-"+career!.season+".json";a.click();window.setTimeout(()=>URL.revokeObjectURL(url),1200);showToast("Exportação do save iniciada.");}
 function action(target:HTMLElement):void{
- if(!career)return;const act=target.dataset.action,v=target.dataset.value,id=target.dataset.id;
+ const act=target.dataset.action,v=target.dataset.value,id=target.dataset.id;
  switch(act){
  case"start-new":introEntered=true;career=null;overlay=null;render();break;
  case"continue-career":introEntered=true;overlay=null;if(career?.currentMatch&&career.currentMatch.phase!=="full-time")career.screen="partida";render();break;
@@ -114,7 +114,7 @@ function action(target:HTMLElement):void{
  case"open-credits":overlay="credits";render();break;
  case"close-overlay":overlay=null;render();break;
  case"toggle-sound":preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();break;
- case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
+ case"nav":if(!career)break;if(v&&["inicio","elenco","taticas","calendario","mercado","clube","partida"].includes(v)){career.screen=v as Screen;render();}break;
  case"start-next":startNext();break;
  case"resume-match":if(career.currentMatch){resumeMatch(career.currentMatch);save();render();}break;
  case"substitute":if(career.currentMatch&&makeSubstitution(career.currentMatch,career.clubs,career.currentMatch.homeClubId===career.clubId?"home":"away")){save();render();showToast("Substituição realizada.");}else showToast("Não foi possível substituir. Confira o banco e o limite.");break;
