@@ -21,9 +21,11 @@ describe("Jornada 90 match engine",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f=c.fixtures[0]!;f.played=true;f.homeScore=2;f.awayScore=0;const rows=getStandings(c);
   expect(rows.find(r=>r.club.id===f.homeClubId)?.points).toBe(3);expect(rows.find(r=>r.club.id===f.awayClubId)?.points).toBe(0);expect(rows.reduce((sum,r)=>sum+r.played,0)).toBe(2);
  });
- it("runs a match simulation without rendering a pitch",()=>{
+ it("runs a match simulation and records appearances for both teams",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f={...getNextFixture(c)!,knockout:false},result=simulateFixture(f,c.clubs,seeded(188));
   expect(result.homeScore).toBeGreaterThanOrEqual(0);expect(result.awayScore).toBeGreaterThanOrEqual(0);expect(result.homeScore).toBeLessThan(20);expect(result.awayScore).toBeLessThan(20);
+  const involved=[c.clubs.find(x=>x.id===f.homeClubId)!,c.clubs.find(x=>x.id===f.awayClubId)!];
+  expect(involved.flatMap(x=>x.players).filter(p=>p.appearances===1)).toHaveLength(22);
  });
 });
 
@@ -40,6 +42,17 @@ describe("Pulso 90 career safeguards",()=>{
   expect(m.homeSubs).toBe(5);expect(new Set(m.homeLineup).size).toBe(11);
   expect(m.homeLineup.every(id=>c.clubs.find(x=>x.id===m.homeClubId)!.players.some(p=>p.id===id))).toBe(true);
   expect(makeSubstitution(m,c.clubs,"home")).toBe(false);
+ });
+ it("counts both the substituted starter and the incoming player as appearances",()=>{
+  const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,m=createLiveMatch(f,c.clubs),initial=new Set(m.homeLineup);
+  expect(makeSubstitution(m,c.clubs,"home")).toBe(true);
+  const outgoing=[...initial].find(id=>!m.homeLineup.includes(id))!;
+  const incoming=m.homeLineup.find(id=>!initial.has(id))!;
+  m.phase="full-time";completeRound(c,m);
+  const home=c.clubs.find(x=>x.id===m.homeClubId)!;
+  expect(home.players.find(p=>p.id===outgoing)?.appearances).toBe(1);
+  expect(home.players.find(p=>p.id===incoming)?.appearances).toBe(1);
+  expect(home.players.filter(p=>p.appearances===1)).toHaveLength(12);
  });
  it("does not apply an unfinished match or apply a finished round twice",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,m=createLiveMatch(f,c.clubs);
