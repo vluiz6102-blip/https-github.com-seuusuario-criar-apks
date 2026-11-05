@@ -340,8 +340,11 @@ export function advanceSeason(c:Career):Career{
  }
  if(c.world){
   let targetDivision:string|undefined;
-  if(managedPosition>0&&managedPosition<=2)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
-  else if(managedPosition>=Math.max(5,Math.ceil(c.clubs.length*.85))){
+  const currentDivision=getDivision(c.world.divisionId);
+  const promotionPlaces=currentDivision?.promotionPlaces??2;
+  const relegationPlaces=currentDivision?.relegationPlaces??3;
+  if(promotionPlaces>0&&managedPosition>0&&managedPosition<=promotionPlaces)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
+  else if(relegationPlaces>0&&managedPosition>c.clubs.length-relegationPlaces){
    if(c.world.divisionId==="br-d"){
     const city=getManagedClub(c).city;
     targetDivision=WORLD_DIVISIONS.filter(item=>item.countryCode==="BR"&&item.kind==="state"&&item.id.endsWith("-a"))
