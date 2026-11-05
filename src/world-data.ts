@@ -256,7 +256,6 @@ for (const division of divisions) {
   if (division.id === "br-b") { division.promotionTarget = "br-a"; division.relegationTarget = "br-c"; }
   if (division.id === "br-c") { division.promotionTarget = "br-b"; division.relegationTarget = "br-d"; }
   if (division.id === "br-d") { division.promotionTarget = "br-c"; division.relegationTarget = "br-pr-a"; }
-  if (division.id === "br-pr-a") { division.promotionTarget = "br-d"; division.relegationTarget = "br-varzea-sul"; }
   if (division.id === "br-varzea-sul") division.promotionTarget = "br-pr-a";
   if (division.id.endsWith("-1") && division.countryCode !== "BR") division.relegationTarget = division.countryCode.toLowerCase() + "-2";
   if (division.id.endsWith("-2") && division.countryCode !== "BR") division.promotionTarget = division.countryCode.toLowerCase() + "-1";
