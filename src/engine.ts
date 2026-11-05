@@ -1,7 +1,7 @@
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
 export type Tactic = "equilibrada" | "ofensiva" | "defensiva" | "posse" | "contra-ataque" | "pressao";
-export type Screen = "inicio" | "elenco" | "taticas" | "calendario" | "mercado" | "clube" | "partida";
+export type Screen = "inicio" | "elenco" | "taticas" | "calendario" | "mercado" | "clube" | "jornal" | "partida";
 export type MatchPhase = "first-half" | "halftime" | "second-half" | "extra-time-break" | "extra-time" | "extra-time-halftime" | "full-time";
 export interface Player { id:string; name:string; age:number; position:Position; overall:number; potential:number; finishing:number; passing:number; defending:number; pace:number; stamina:number; handling:number; creativity:number; fitness:number; value:number; wage:number; goals:number; assists:number; appearances:number; clubId:string; }
 export interface Club { id:string; name:string; shortName:string; city:string; stadium:string; strength:number; budget:number; wageBudget:number; supporters:number; formation:Formation; tactic:Tactic; players:Player[]; }
@@ -9,7 +9,7 @@ export interface Fixture { id:string; round:number; competition:string; homeClub
 export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card"|"sub"|"chance"|"whistle"|"text"; text:string; teamId?:string; playerId?:string; }
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
 export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; participants?:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
-export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; }
+export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; source?:string; publisherId?:string; eventId?:string; truthLevel?:"confirmed"|"rumor"|"opinion"; }
 export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; lastRestFixtureId?:string; nextNewsId:number; }
 
 const firstNames = ["Lucas","Gabriel","Mateus","Rafael","Bruno","Caio","Pedro","João","Enzo","Davi","Henrique","André","Miguel","Thiago","Vitor","Felipe","Murilo","Arthur","Cauã","Diego","Samuel","Nicolas","Lorenzo","Gustavo","Luan","Eduardo","Daniel","Yuri","Ícaro","Leandro","Alex","Renan","Heitor","Marcos","Otávio","Wesley"];
@@ -164,12 +164,56 @@ export function getStandings(c:Career):Array<{club:Club;played:number;wins:numbe
  return rows.sort((a,b)=>b.points-a.points||((b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))||b.goalsFor-a.goalsFor||b.club.strength-a.club.strength);
 }
 export function completeRound(c:Career,m:MatchState):void{
- const f=c.fixtures.find(item=>item.id===m.fixtureId);if(!f||f.played||m.phase!=="full-time"||m.finishedApplied)return;f.played=true;f.homeScore=m.homeScore;f.awayScore=m.awayScore;m.finishedApplied=true;
+ const f=c.fixtures.find(item=>item.id===m.fixtureId);
+ if(!f||f.played||m.phase!=="full-time"||m.finishedApplied)return;
+
+ f.played=true;
+ f.homeScore=m.homeScore;
+ f.awayScore=m.awayScore;
+ m.finishedApplied=true;
  applyPlayerMatchStats(m,c.clubs);
- for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){const score=simulateFixture(other,c.clubs);other.homeScore=score.homeScore;other.awayScore=score.awayScore;other.played=true;}
- const home=getClub(c,m.homeClubId),away=getClub(c,m.awayClubId),isWin=m.homeClubId===c.clubId?m.homeScore>m.awayScore:m.awayScore>m.homeScore;
- const outcome=m.homeScore===m.awayScore?"Empate":isWin?"Vitória":"Derrota";c.day++;
- c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag:"partida",title:outcome+" em "+m.competition,body:home.name+" "+m.homeScore+" x "+m.awayScore+" "+away.name+". "+m.events.filter(e=>e.kind==="goal").length+" gol(s) registrados no relato."});c.news=c.news.slice(0,30);
+
+ // The rest of the round is resolved before the newsroom receives its facts.
+ for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){
+  const score=simulateFixture(other,c.clubs);
+  other.homeScore=score.homeScore;
+  other.awayScore=score.awayScore;
+  other.played=true;
+ }
+
+ c.day++;
+ const completed=c.fixtures.filter(item=>item.round===f.round&&item.played&&item.homeScore!==undefined&&item.awayScore!==undefined);
+ for(const item of completed){
+  const home=getClub(c,item.homeClubId),away=getClub(c,item.awayClubId);
+  const eventId=item.id+"-final";
+  if(c.news.some(article=>article.eventId===eventId))continue;
+  const drafts=createMatchNews({
+   eventId,
+   day:c.day,
+   competition:item.competition,
+   homeClubId:home.id,
+   homeClubName:home.name,
+   awayClubId:away.id,
+   awayClubName:away.name,
+   homeGoals:item.homeScore!,
+   awayGoals:item.awayScore!,
+   managedClubId:c.clubId
+  });
+  for(const article of drafts){
+   c.news.unshift({
+    id:"news-"+c.nextNewsId++,
+    day:article.day,
+    tag:article.tag,
+    title:article.title,
+    body:article.body,
+    source:article.source,
+    publisherId:article.publisherId,
+    eventId:article.eventId,
+    truthLevel:article.truthLevel
+   });
+  }
+ }
+ c.news=c.news.slice(0,120);
 }
 export function advanceSeason(c:Career):Career{
  c.season++;c.day=1;for(const club of c.clubs){for(const p of club.players){p.age++;p.fitness=Math.round(clamp(p.fitness+14,40,100));if(p.age<24&&p.overall<p.potential&&Math.random()<.55)p.overall=Math.min(p.potential,p.overall+1);}club.budget+=Math.round(club.supporters*28);}
@@ -177,4 +221,4 @@ export function advanceSeason(c:Career):Career{
 }
 export function money(value:number):string{if(value>=1_000_000)return "R$ "+(value/1_000_000).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";if(value>=1000)return "R$ "+(value/1000).toLocaleString("pt-BR",{maximumFractionDigits:0})+" mil";return "R$ "+Math.round(value).toLocaleString("pt-BR");}
 export function formatScore(home:number|undefined,away:number|undefined):string{return String(home??"–")+" : "+String(away??"–");}
-export function addNews(c:Career,tag:NewsItem["tag"],title:string,body:string):void{c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag,title,body});c.news=c.news.slice(0,30);}
+export function addNews(c:Career,tag:NewsItem["tag"],title:string,body:string):void{c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag,title,body,source:"Jornal do Clube",publisherId:"jornal-do-clube",eventId:"career-"+c.season+"-"+c.day+"-"+c.nextNewsId,truthLevel:"confirmed"});c.news=c.news.slice(0,120);}
