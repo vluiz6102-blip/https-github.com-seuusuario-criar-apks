@@ -273,3 +273,33 @@ describe("Pulso 90 continental club qualification",()=>{
   expect(c.fixtures.filter(fixture=>fixture.competition===cup.competition&&fixture.round===6)).toHaveLength(16);
  });
 });
+
+describe("Pulso 90 multi-competition matchdays",()=>{
+ it("keeps the managed club's cup fixture playable when league and cup share a round number",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
+  const leagueFixture=c.fixtures.find(fixture=>fixture.round===4&&fixture.competition===c.world!.competitionName&&(fixture.homeClubId===c.clubId||fixture.awayClubId===c.clubId))!;
+  const cup=c.cups[0]!;
+  const cupFixture=c.fixtures.find(fixture=>fixture.round===4&&fixture.competition===cup.competition&&(fixture.homeClubId===c.clubId||fixture.awayClubId===c.clubId))!;
+  expect(leagueFixture).toBeDefined();
+  expect(cupFixture).toBeDefined();
+
+  const leagueMatch=createLiveMatch(leagueFixture,c.clubs);
+  leagueMatch.phase="full-time";
+  leagueMatch.homeScore=1;
+  leagueMatch.awayScore=0;
+  completeRound(c,leagueMatch);
+
+  expect(cupFixture.played).toBe(false);
+  expect(getNextFixture(c)?.id).toBe(cupFixture.id);
+
+  const cupMatch=createLiveMatch(cupFixture,c.clubs);
+  cupMatch.phase="full-time";
+  cupMatch.homeScore=2;
+  cupMatch.awayScore=1;
+  completeRound(c,cupMatch);
+
+  expect(cupFixture.played).toBe(true);
+  expect(c.cups[0]!.currentStage).toBe(2);
+  expect(c.fixtures.filter(fixture=>fixture.competition===cup.competition&&fixture.round===8)).toHaveLength(32);
+ });
+});
