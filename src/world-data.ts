@@ -165,7 +165,7 @@ for (const [code, country, leagueName, topNames, cityNames, strength] of interna
  * city/identity lists. The database is intentionally independent of real
  * club badges, trademarks and proprietary player rosters.
  */
-const brazilStates: Array<[string,string,string,string[],number]> = [
+const brazilStates: Array<[string,string,string[],number]> = [
  ["ac","Acre","Rio Branco|Cruzeiro do Sul|Sena Madureira|Tarauacá|Feijó|Brasiléia|Xapuri|Plácido de Castro".split("|"),48],
  ["al","Alagoas","Maceió|Arapiraca|Rio Largo|Palmeira dos Índios|Penedo|União dos Palmares|Delmiro Gouveia|São Miguel dos Campos".split("|"),51],
  ["ap","Amapá","Macapá|Santana|Laranjal do Jari|Oiapoque|Mazagão|Porto Grande|Tartarugalzinho|Calçoene".split("|"),46],

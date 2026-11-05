@@ -59,8 +59,8 @@ describe("Pulso 90 global football simulation",()=>{
 });
 
  it("ships a substantial original playable catalogue",()=>{
-  expect(WORLD_DIVISIONS).toHaveLength(170);
-  expect(WORLD_CLUBS).toHaveLength(1584);
-  expect(WORLD_COMPETITIONS).toHaveLength(186);
+  expect(WORLD_DIVISIONS).toHaveLength(172);
+  expect(WORLD_CLUBS).toHaveLength(1604);
+  expect(WORLD_COMPETITIONS).toHaveLength(188);
   expect(NATIONAL_TEAMS).toHaveLength(48);
  });
