@@ -64,6 +64,9 @@ describe("Pulso 90 global football simulation",()=>{
   expect(WORLD_CLUBS).toHaveLength(4944);
   expect(WORLD_COMPETITIONS).toHaveLength(765);
   expect(NATIONAL_TEAMS).toHaveLength(211);
+  expect(WORLD_DIVISIONS.filter(division=>division.teamType==="selection")).toHaveLength(6);
+  expect(WORLD_CLUBS.filter(club=>club.teamType==="selection")).toHaveLength(211);
+  for(const team of NATIONAL_TEAMS)expect(WORLD_CLUBS.some(club=>club.id==="national-"+team.id&&club.teamType==="selection")).toBe(true);
   expect(new Set(NATIONAL_TEAMS.map(team=>team.id)).size).toBe(211);
   for(const team of NATIONAL_TEAMS){
    expect(WORLD_DIVISIONS.filter(division=>division.country===team.name).length).toBeGreaterThanOrEqual(2);

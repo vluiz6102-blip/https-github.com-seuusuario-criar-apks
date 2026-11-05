@@ -17,6 +17,7 @@ export interface WorldClubSeed {
   supporters: number;
   budget: number;
   project: string;
+  teamType?: "club" | "selection";
 }
 
 export interface WorldDivision {
@@ -32,6 +33,7 @@ export interface WorldDivision {
   promotionTarget?: string;
   relegationTarget?: string;
   kind: "national" | "state" | "regional" | "amateur";
+  teamType?: "club" | "selection";
 }
 
 export interface WorldCompetitionSeed {
@@ -281,6 +283,35 @@ for (const division of divisions) {
   if (division.id.endsWith("-2") && division.countryCode !== "BR") division.promotionTarget = division.countryCode.toLowerCase() + "-1";
 }
 
+const nationalLeagueNames:Record<string,string>={
+ UEFA:"Liga das Nações Europeia",
+ CONMEBOL:"Eliminatórias Sul-Americanas",
+ AFC:"Eliminatórias Asiáticas",
+ CAF:"Eliminatórias Africanas",
+ CONCACAF:"Liga das Nações Concacaf",
+ OFC:"Copa das Nações da Oceania"
+};
+for(const confederation of ["UEFA","CONMEBOL","AFC","CAF","CONCACAF","OFC"]){
+ const teams=NATIONAL_TEAMS.filter(team=>team.confederation===confederation);
+ const divisionId="nat-"+confederation.toLowerCase();
+ const divisionName=nationalLeagueNames[confederation]!;
+ divisions.push({
+  id:divisionId,name:divisionName,countryCode:confederation,country:"Seleções "+confederation,
+  region:confederation,tier:1,clubs:teams.map(team=>"national-"+team.id),
+  promotionPlaces:0,relegationPlaces:0,kind:"national",teamType:"selection"
+ });
+ for(const team of teams){
+  clubs.push({
+   id:"national-"+team.id,name:team.name,shortName:team.name.slice(0,3).toUpperCase(),
+   countryCode:confederation,country:team.name,region:confederation,
+   divisionId,divisionName,tier:1,city:team.name,stadium:"Estádio Nacional",
+   strength:team.strength,supporters:Math.round(team.strength*50000),
+   budget:Math.round(team.strength*180000),
+   project:"Representar "+team.name+" e conquistar títulos internacionais",
+   teamType:"selection"
+  });
+ }
+}
 export const WORLD_DIVISIONS: WorldDivision[] = divisions;
 export const WORLD_CLUBS: WorldClubSeed[] = clubs;
 
@@ -301,12 +332,12 @@ const cupCompetitions: WorldCompetitionSeed[] = [
   { id: "gold-cup", name: "Copa Ouro", countryCode: "CONCACAF", type: "international", participants: 16 },
   { id: "afcon", name: "Copa Africana", countryCode: "CAF", type: "international", participants: 24 },
   { id: "asian-cup", name: "Copa da Ásia", countryCode: "AFC", type: "international", participants: 24 },
-  { id: "uefa-nations-league", name: "Liga das Nações Europeia", countryCode: "UEFA", type: "international", participants: 55 },
-  { id: "concacaf-nations-league", name: "Liga das Nações Concacaf", countryCode: "CONCACAF", type: "international", participants: 35 },
-  { id: "ofc-nations-cup", name: "Copa das Nações da Oceania", countryCode: "OFC", type: "international", participants: 11 },
-  { id: "caf-qualifiers", name: "Eliminatórias Africanas", countryCode: "CAF", type: "international", participants: 54 },
-  { id: "afc-qualifiers", name: "Eliminatórias Asiáticas", countryCode: "AFC", type: "international", participants: 46 },
-  { id: "conmebol-qualifiers", name: "Eliminatórias Sul-Americanas", countryCode: "CONMEBOL", type: "international", participants: 10 }
+  { id: "uefa-nations-league", name: "Liga das Nações Europeia", countryCode: "UEFA", type: "international", participants: 55, divisionId: "nat-uefa" },
+  { id: "concacaf-nations-league", name: "Liga das Nações Concacaf", countryCode: "CONCACAF", type: "international", participants: 35, divisionId: "nat-concacaf" },
+  { id: "ofc-nations-cup", name: "Copa das Nações da Oceania", countryCode: "OFC", type: "international", participants: 11, divisionId: "nat-ofc" },
+  { id: "caf-qualifiers", name: "Eliminatórias Africanas", countryCode: "CAF", type: "international", participants: 54, divisionId: "nat-caf" },
+  { id: "afc-qualifiers", name: "Eliminatórias Asiáticas", countryCode: "AFC", type: "international", participants: 46, divisionId: "nat-afc" },
+  { id: "conmebol-qualifiers", name: "Eliminatórias Sul-Americanas", countryCode: "CONMEBOL", type: "international", participants: 10, divisionId: "nat-conmebol" }
 ];
 
 export const WORLD_COMPETITIONS: WorldCompetitionSeed[] = [
