@@ -1,6 +1,7 @@
 import {
   getDivisionClubs,
   getWorldClub,
+  MANAGER_PRESETS,
   PROJECT_TEMPLATES,
   SPONSOR_CATALOG,
   type Difficulty,
@@ -148,6 +149,7 @@ export function createWorldState(
     .sort((a, b) => b.strength - a.strength)
     .slice(0, 5)
     .map((candidate, index) => makeJobOffer(candidate, day, seed + index * 97));
+  const selectedManager=MANAGER_PRESETS.find(preset=>preset.id===managerProfileId);
   return {
     version: 1,
     difficulty,
@@ -156,7 +158,7 @@ export function createWorldState(
     competitionName: club.divisionName,
     countryCode: club.countryCode,
     managerProfileId,
-    managerReputation: managerProfileId === "pep-guardiola" ? 98 : managerProfileId === "manager-elite" ? 90 : managerProfileId === "manager-national" ? 82 : managerProfileId === "former-player" ? 42 : managerProfileId === "manager-rising" ? 55 : managerProfileId === "manager-lower" ? 24 : 25,
+    managerReputation: selectedManager?.reputation ?? (managerProfileId.startsWith("retired-") ? 60 : 25),
     investorMode: false,
     fanMood: 56,
     fanReaction: "A torcida espera conhecer a nova comissão técnica.",
