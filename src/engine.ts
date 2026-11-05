@@ -7,7 +7,7 @@ export type Tactic = "equilibrada" | "ofensiva" | "defensiva" | "posse" | "contr
 export type Screen = "inicio" | "elenco" | "taticas" | "calendario" | "mercado" | "clube" | "jornal" | "mundo" | "partida";
 export type MatchPhase = "first-half" | "halftime" | "second-half" | "extra-time-break" | "extra-time" | "extra-time-halftime" | "full-time";
 export interface Player { id:string; name:string; age:number; position:Position; overall:number; potential:number; finishing:number; passing:number; defending:number; pace:number; stamina:number; handling:number; creativity:number; fitness:number; value:number; wage:number; goals:number; assists:number; appearances:number; clubId:string; }
-export interface Club { id:string; name:string; shortName:string; city:string; stadium:string; strength:number; budget:number; wageBudget:number; supporters:number; formation:Formation; tactic:Tactic; players:Player[]; }
+export interface Club { id:string; name:string; shortName:string; city:string; stadium:string; strength:number; budget:number; wageBudget:number; supporters:number; formation:Formation; tactic:Tactic; players:Player[]; startingXI?:string[]; }
 export interface Fixture { id:string; round:number; competition:string; homeClubId:string; awayClubId:string; knockout:boolean; played:boolean; homeScore?:number; awayScore?:number; }
 export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card"|"sub"|"chance"|"whistle"|"text"; text:string; teamId?:string; playerId?:string; }
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
@@ -56,7 +56,9 @@ function stableSeed(value:string):number{let hash=2166136261;for(let i=0;i<value
 function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,random:()=>number,managerClub:boolean,difficulty:Difficulty):Club {
  const adjustment=managerClub?0:getDifficultyStrengthAdjustment(difficulty);
  const strength=clamp(Math.round(seed.strength+adjustment),30,98);
- return {id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random)};
+ const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random)};
+ club.startingXI=selectLineup(club,club.formation);
+ return club;
 }
 export function createCareer(managerName:string,managerNickname:string,clubId:string,options:CareerOptions={}):Career {
  const fallbackId="br-d-p4t0-br4nc0-fc";
@@ -102,6 +104,15 @@ export function migrateCareer(career:Career):Career {
  return career;
 }
 export function getClub(career:Career,id:string):Club{return career.clubs.find(c=>c.id===id)??career.clubs[0]!;}
+export function syncWorldNews(c:Career):void{
+ if(!c.world)return;
+ for(const item of [...c.world.worldNews].reverse()){
+  if(c.news.some(article=>article.eventId===item.id))continue;
+  const tag:NewsItem["tag"]=item.category==="mercado"?"mercado":item.category==="mundo"?"partida":"clube";
+  c.news.unshift({id:"news-"+c.nextNewsId++,day:item.day,tag,title:item.title,body:item.body,source:item.source,publisherId:item.source.toLowerCase().replace(/[^a-z0-9]+/g,"-"),eventId:item.id,truthLevel:"confirmed"});
+ }
+ c.news=c.news.slice(0,120);
+}
 export function getManagedClub(career:Career):Club{return getClub(career,career.clubId);}
 export function playerPositionLabel(pos:Position):string{return ({GOL:"Goleiro",DEF:"Defensor",MEI:"Meio-campista",ATA:"Atacante"})[pos];}
 function formationCounts(f:Formation):Record<Position,number>{const p=f.split("-").map(Number);if(f==="4-2-3-1")return {GOL:1,DEF:4,MEI:5,ATA:1};return {GOL:1,DEF:p[0]??4,MEI:p[1]??3,ATA:p[2]??3};}
@@ -110,11 +121,45 @@ function selectLineup(club:Club,formation:Formation):string[]{
  for(const pos of ["GOL","DEF","MEI","ATA"] as const){const candidates=remaining.filter(p=>p.position===pos).slice(0,count[pos]);selected.push(...candidates);for(const player of candidates){const index=remaining.findIndex(p=>p.id===player.id);if(index>=0)remaining.splice(index,1);}}
  while(selected.length<11&&remaining.length)selected.push(remaining.shift()!);return selected.slice(0,11).map(p=>p.id);
 }
+function lineupPosition(formation:Formation,slot:number):Position{
+ if(slot===0)return "GOL";
+ const count=formationCounts(formation);
+ if(slot<=count.DEF)return "DEF";
+ if(slot<=count.DEF+count.MEI)return "MEI";
+ return "ATA";
+}
+function validLineup(club:Club,ids:string[]):boolean{
+ return ids.length===11&&new Set(ids).size===11&&ids.every((id,index)=>{
+  const player=club.players.find(item=>item.id===id);
+  return Boolean(player&&player.position===lineupPosition(club.formation,index));
+ });
+}
+function resolveLineup(club:Club):string[]{
+ if(club.startingXI&&validLineup(club,club.startingXI))return [...club.startingXI];
+ club.startingXI=selectLineup(club,club.formation);
+ return [...club.startingXI];
+}
+export function getStartingLineup(club:Club):Player[]{
+ const ids=resolveLineup(club);
+ return ids.map(id=>club.players.find(player=>player.id===id)!).filter(Boolean);
+}
+export function setStartingPlayer(c:Career,slot:number,playerId:string):boolean{
+ if(!Number.isInteger(slot)||slot<0||slot>=11)return false;
+ if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
+ const managed=getManagedClub(c),player=managed.players.find(item=>item.id===playerId);
+ if(!player||player.position!==lineupPosition(managed.formation,slot))return false;
+ const ids=resolveLineup(managed);
+ if(ids.some((id,index)=>id===playerId&&index!==slot))return false;
+ ids[slot]=playerId;
+ if(!validLineup(managed,ids))return false;
+ managed.startingXI=ids;
+ return true;
+}
 function newStats():MatchStats{return {shots:0,onTarget:0,possession:0,passes:0,corners:0,fouls:0,yellowCards:0};}
 function addEvent(match:MatchState,kind:MatchEvent["kind"],text:string,minute=match.minute,teamId?:string,playerId?:string):void{match.events.push({id:"e"+match.nextEventId++,minute,kind,text,teamId,playerId});if(match.events.length>100)match.events.shift();}
 export function createLiveMatch(fixture:Fixture,clubs:Club[]):MatchState{
  const home=clubs.find(c=>c.id===fixture.homeClubId)!,away=clubs.find(c=>c.id===fixture.awayClubId)!;
- const homeLineup=selectLineup(home,home.formation),awayLineup=selectLineup(away,away.formation),condition:Record<string,number>={};
+ const homeLineup=resolveLineup(home),awayLineup=resolveLineup(away),condition:Record<string,number>={};
  for(const p of [...home.players,...away.players])condition[p.id]=p.fitness;
  const match:MatchState={fixtureId:fixture.id,homeClubId:home.id,awayClubId:away.id,competition:fixture.competition,knockout:fixture.knockout,minute:0,phase:"first-half",homeScore:0,awayScore:0,homePenaltyScore:0,awayPenaltyScore:0,homeLineup,awayLineup,participants:[...homeLineup,...awayLineup],condition,homeStats:newStats(),awayStats:newStats(),events:[],homeSubs:0,awaySubs:0,homeTactic:home.tactic,awayTactic:away.tactic,homeFormation:home.formation,awayFormation:away.formation,finishedApplied:false,nextEventId:1};
  addEvent(match,"text","As equipes entram em campo. O árbitro autoriza o início da partida.",0);return match;
@@ -191,7 +236,7 @@ export function restManagedSquad(c:Career):boolean{
  if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
  const fixture=getNextFixture(c);if(!fixture||c.lastRestFixtureId===fixture.id)return false;
  for(const p of getManagedClub(c).players)p.fitness=Math.min(100,p.fitness+9);
- c.lastRestFixtureId=fixture.id;c.day++;if(c.world)advanceWorldDay(c.world,c.clubId);
+ c.lastRestFixtureId=fixture.id;c.day++;if(c.world){advanceWorldDay(c.world,c.clubId);syncWorldNews(c);}
  addNews(c,"clube","Sessão regenerativa concluída","A comissão deu prioridade à recuperação física do elenco.");
  return true;
 }
@@ -262,6 +307,7 @@ export function completeRound(c:Career,m:MatchState):void{
   c.world.managerReputation=clamp(c.world.managerReputation+(goalsFor>goalsAgainst?1:goalsFor<goalsAgainst?-1:0),0,100);
   if(c.world.activeSponsor)getManagedClub(c).budget+=Math.round(c.world.activeSponsor.amount/14);
   advanceWorldDay(c.world,c.clubId);
+  syncWorldNews(c);
  }
 }
 export function advanceSeason(c:Career):Career{
@@ -317,6 +363,7 @@ export function advanceSeason(c:Career):Career{
   }
   refreshWorldOffers(c.world,c.clubId);
  }
+ if(c.world)syncWorldNews(c);
  c.fixtures=createFixtures(c.clubs,c.season,c.world?.competitionName??"Liga das Araucárias");
  const marketRandom=seeded(9031+c.season*7919);
  c.transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+marketRandom()*33,marketRandom)).sort((a,b)=>b.overall-a.overall);
@@ -335,7 +382,8 @@ export function acceptJobOffer(c:Career,offerId:string):boolean{
  const newClub=getManagedClub(c);
  c.world.managerReputation=clamp(c.world.managerReputation+2,0,100);
  c.world.jobOffers=c.world.jobOffers.filter(item=>item.id!==offerId);
- addNews(c,"clube","Novo desafio profissional",c.managerName+" deixa "+oldClub.name+" e assume o projeto do "+newClub.name+".");
+ c.world.worldNews.unshift({id:"job-accepted-"+c.world.worldDay+"-"+offer.id,day:c.world.worldDay,source:"Central 90",title:c.managerName+" assume o "+newClub.name,body:"O treinador deixa "+oldClub.name+" e passa a liderar o projeto de "+newClub.name+": "+offer.project+".",category:"carreira"});
+ syncWorldNews(c);
  return true;
 }
 export function acceptSponsorOffer(c:Career,offerId:string):boolean{
@@ -345,14 +393,14 @@ export function acceptSponsorOffer(c:Career,offerId:string):boolean{
  const managed=getManagedClub(c);
  managed.budget+=offer.upfront;
  if(c.world.investorMode)managed.budget=999999999999;
- addNews(c,"mercado","Patrocínio fechado com "+offer.brand,offer.brand+" investirá "+money(offer.amount)+" no projeto do "+managed.name+".");
+ syncWorldNews(c);
  return true;
 }
 export function toggleCareerInvestors(c:Career):boolean{
  if(!c.world)return false;
  const enabled=toggleInvestor(c.world);
  if(enabled)getManagedClub(c).budget=999999999999;
- addNews(c,"clube",enabled?"Investidores liberam capital ilimitado":"Modo Investidores desativado",enabled?"O caixa foi ampliado para permitir testes de contratações e reconstruções.":"O saldo já disponível permanece no caixa; novas injeções foram interrompidas.");
+ syncWorldNews(c);
  return enabled;
 }
 export function setCareerDifficulty(c:Career,difficulty:Difficulty):void{
