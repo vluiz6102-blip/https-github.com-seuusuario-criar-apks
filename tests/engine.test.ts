@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldNews } from "../src/engine";
+import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
@@ -152,5 +152,22 @@ describe("Pulso 90 automatic lineup",()=>{
   const rebuilt=getStartingLineup(managed);
   expect(rebuilt.some(player=>player.id===weaker.id)).toBe(false);
   expect(rebuilt).toHaveLength(11);
+ });
+});
+
+describe("Pulso 90 worldwide manager market",()=>{
+ it("offers jobs outside the starting division and moves the career into the selected league",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc",{managerProfileId:"manager-lower"});
+  const oldDivision=c.world!.divisionId;
+  const offer=c.world!.jobOffers.find(item=>item.divisionId!==oldDivision)!;
+  expect(offer).toBeDefined();
+  expect(acceptJobOffer(c,offer.id)).toBe(true);
+  expect(c.clubId).toBe(offer.clubId);
+  expect(c.world!.divisionId).toBe(offer.divisionId);
+  expect(c.world!.competitionName).toBe(offer.divisionName);
+  expect(c.fixtures.length).toBeGreaterThan(0);
+  expect(c.fixtures.every(fixture=>fixture.competition===offer.divisionName)).toBe(true);
+  expect(c.world!.globalLeagues.find(league=>league.divisionId===oldDivision)?.standings.length).toBeGreaterThan(0);
+  expect(c.world!.globalLeagues.find(league=>league.divisionId===offer.divisionId)?.matchday).toBe(0);
  });
 });

@@ -82,6 +82,7 @@ export function createCareer(managerName:string,managerNickname:string,clubId:st
   ],
   currentMatch:null,nextNewsId:3,world
  };
+ syncWorldLeagueFromCareer(career);
  return career;
 }
 export function migrateCareer(career:Career):Career {
@@ -104,6 +105,17 @@ export function migrateCareer(career:Career):Career {
  return career;
 }
 export function getClub(career:Career,id:string):Club{return career.clubs.find(c=>c.id===id)??career.clubs[0]!;}
+export function syncWorldLeagueFromCareer(c:Career):void{
+ if(!c.world)return;
+ const table=getStandings(c);
+ const completed=c.fixtures.filter(item=>item.competition===c.world!.competitionName&&item.played&&item.homeScore!==undefined&&item.awayScore!==undefined);
+ const standings=table.map(row=>({clubId:row.club.id,played:row.played,wins:row.wins,draws:row.draws,losses:row.losses,goalsFor:row.goalsFor,goalsAgainst:row.goalsAgainst,points:row.points}));
+ const recentResults=completed.slice(-20).map(item=>({matchday:item.round,homeClubId:item.homeClubId,awayClubId:item.awayClubId,homeGoals:item.homeScore!,awayGoals:item.awayScore!}));
+ const matchday=completed.reduce((max,item)=>Math.max(max,item.round),0);
+ const state=c.world.globalLeagues.find(item=>item.divisionId===c.world!.divisionId);
+ if(state){state.season=c.season;state.matchday=matchday;state.standings=standings;state.recentResults=recentResults;}
+ else c.world.globalLeagues.push({divisionId:c.world.divisionId,season:c.season,matchday,standings,recentResults});
+}
 export function syncWorldNews(c:Career):void{
  if(!c.world)return;
  for(const item of [...c.world.worldNews].reverse()){
@@ -262,7 +274,7 @@ export function completeRound(c:Career,m:MatchState):void{
  applyPlayerMatchStats(m,c.clubs);
 
  // The rest of the round is resolved before the newsroom receives its facts.
- for(const other of c.fixtures.filter(item=>item.round===f.round&&!item.played&&item.id!==f.id)){
+ for(const other of c.fixtures.filter(item=>item.round===f.round&&item.competition===f.competition&&!item.played&&item.id!==f.id)){
   const score=simulateFixture(other,c.clubs);
   other.homeScore=score.homeScore;
   other.awayScore=score.awayScore;
@@ -302,6 +314,7 @@ export function completeRound(c:Career,m:MatchState):void{
   }
  }
  c.news=c.news.slice(0,120);
+ syncWorldLeagueFromCareer(c);
  const managedFixture=completed.find(item=>item.homeClubId===c.clubId||item.awayClubId===c.clubId);
  if(c.world&&managedFixture){
   const home=getClub(c,managedFixture.homeClubId),away=getClub(c,managedFixture.awayClubId);
@@ -380,6 +393,7 @@ export function advanceSeason(c:Career):Career{
  }
  if(c.world)syncWorldNews(c);
  c.fixtures=createFixtures(c.clubs,c.season,c.world?.competitionName??"Liga das Araucárias");
+ syncWorldLeagueFromCareer(c);
  const marketRandom=seeded(9031+c.season*7919);
  c.transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+marketRandom()*33,marketRandom)).sort((a,b)=>b.overall-a.overall);
  c.currentMatch=null;c.screen="inicio";
@@ -391,13 +405,32 @@ export function advanceSeason(c:Career):Career{
 export function acceptJobOffer(c:Career,offerId:string):boolean{
  if(!c.world)return false;
  const offer=c.world.jobOffers.find(item=>item.id===offerId);
- if(!offer||!c.clubs.some(club=>club.id===offer.clubId))return false;
+ if(!offer)return false;
+ const targetSeed=getWorldClub(offer.clubId),targetDivision=getDivision(offer.divisionId);
+ if(!targetSeed||!targetDivision)return false;
  const oldClub=getManagedClub(c);
- c.clubId=offer.clubId;
- const newClub=getManagedClub(c);
+ syncWorldLeagueFromCareer(c);
+ const peers=getDivisionClubs(targetDivision.id);
+ const destinationSeeds=[targetSeed,...peers.filter(item=>item.id!==targetSeed.id).slice(0,Math.max(0,targetDivision.clubs.length-1))];
+ const previousClubs=new Map(c.clubs.map(club=>[club.id,club]));
+ const destinationClubs=destinationSeeds.map(seed=>{
+  const existing=previousClubs.get(seed.id);
+  return existing??clubFromWorldSeed(seed,seeded(c.season*73+stableSeed(seed.id)),seed.id===targetSeed.id,c.world!.difficulty);
+ });
+ const newClub=destinationClubs.find(club=>club.id===targetSeed.id);
+ if(!newClub||destinationClubs.length!==targetDivision.clubs.length)return false;
+ c.clubs=destinationClubs;
+ c.clubId=newClub.id;
+ c.world.divisionId=targetDivision.id;
+ c.world.competitionName=targetDivision.name;
+ c.world.countryCode=targetDivision.countryCode;
+ c.fixtures=createFixtures(c.clubs,c.season,targetDivision.name);
+ c.currentMatch=null;
+ c.screen="inicio";
  c.world.managerReputation=clamp(c.world.managerReputation+2,0,100);
- c.world.jobOffers=c.world.jobOffers.filter(item=>item.id!==offerId);
  c.world.worldNews.unshift({id:"job-accepted-"+c.world.worldDay+"-"+offer.id,day:c.world.worldDay,source:"Central 90",title:c.managerName+" assume o "+newClub.name,body:"O treinador deixa "+oldClub.name+" e passa a liderar o projeto de "+newClub.name+": "+offer.project+".",category:"carreira"});
+ refreshWorldOffers(c.world,c.clubId);
+ syncWorldLeagueFromCareer(c);
  syncWorldNews(c);
  return true;
 }

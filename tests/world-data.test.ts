@@ -45,6 +45,7 @@ describe("Pulso 90 global football simulation",()=>{
   const world=createWorldState("br-d-p4t0-br4nc0-fc");
   const league=world.globalLeagues.find(item=>item.divisionId==="en-1")!;
   expect(league).toBeDefined();
+  expect(world.globalLeagues).toHaveLength(WORLD_DIVISIONS.length);
   for(let day=0;day<2;day++)advanceWorldDay(world,"br-d-p4t0-br4nc0-fc");
   expect(league.matchday).toBe(1);
   expect(league.recentResults).toHaveLength(5);

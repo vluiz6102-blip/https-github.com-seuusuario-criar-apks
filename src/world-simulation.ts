@@ -1,6 +1,7 @@
 import {
   getDivisionClubs,
   getWorldClub,
+  WORLD_CLUBS,
   WORLD_DIVISIONS,
   MANAGER_PRESETS,
   PROJECT_TEMPLATES,
@@ -14,6 +15,7 @@ export interface JobOffer {
   clubId: string;
   clubName: string;
   divisionName: string;
+  divisionId: string;
   project: string;
   salary: number;
   expectedReputation: number;
@@ -134,12 +136,22 @@ function makeJobOffer(club: WorldClubSeed, day: number, seed: number): JobOffer 
     clubId: club.id,
     clubName: club.name,
     divisionName: club.divisionName,
+    divisionId: club.divisionId,
     project,
     salary: Math.max(1200, Math.round(club.strength * club.strength * (club.tier <= 2 ? 3.4 : 1.1))),
     expectedReputation: Math.max(10, club.strength - 25),
     boardPatience: 35 + Math.floor(random() * 55),
     expiresDay: day + 14
   };
+}
+
+function createWorldJobOffers(clubId:string,day:number,seed:number,managerReputation:number):JobOffer[]{
+ const minStrength=Math.max(31,managerReputation-40);
+ const maxStrength=Math.min(98,managerReputation+36);
+ const eligible=WORLD_CLUBS.filter(club=>club.id!==clubId&&club.strength>=minStrength&&club.strength<=maxStrength);
+ const pool=eligible.length>=5?eligible:WORLD_CLUBS.filter(club=>club.id!==clubId);
+ const random=randomFrom(seed);
+ return [...pool].sort(()=>random()-.5).slice(0,5).map((club,index)=>makeJobOffer(club,day,seed+index*97));
 }
 
 function makeSponsorOffers(club: WorldClubSeed, day: number, seed: number): SponsorOffer[] {
@@ -163,8 +175,8 @@ function makeSponsorOffers(club: WorldClubSeed, day: number, seed: number): Spon
   });
 }
 
-function createGlobalLeagueStates(currentDivisionId:string):GlobalLeagueState[]{
- return WORLD_DIVISIONS.filter(division=>division.id!==currentDivisionId).map(division=>({
+function createGlobalLeagueStates():GlobalLeagueState[]{
+ return WORLD_DIVISIONS.map(division=>({
   divisionId:division.id,
   season:2026,
   matchday:0,
@@ -185,22 +197,19 @@ export function createWorldState(
   const day = 1;
   const seed = stableSeed(club.id + "-" + managerProfileId + "-" + difficulty);
   const divisionClubs = getDivisionClubs(club.divisionId);
-  const jobs = divisionClubs
-    .filter(candidate => candidate.id !== club.id)
-    .sort((a, b) => b.strength - a.strength)
-    .slice(0, 5)
-    .map((candidate, index) => makeJobOffer(candidate, day, seed + index * 97));
   const selectedManager=MANAGER_PRESETS.find(preset=>preset.id===managerProfileId);
+  const managerReputation=selectedManager?.reputation ?? (managerProfileId.startsWith("retired-") ? 60 : 25);
+  const jobs=createWorldJobOffers(club.id,day,seed,managerReputation);
   return {
     version: 1,
-    globalLeagues: createGlobalLeagueStates(club.divisionId),
+    globalLeagues: createGlobalLeagueStates(),
     difficulty,
     pace,
     divisionId: club.divisionId,
     competitionName: club.divisionName,
     countryCode: club.countryCode,
     managerProfileId,
-    managerReputation: selectedManager?.reputation ?? (managerProfileId.startsWith("retired-") ? 60 : 25),
+    managerReputation,
     investorMode: false,
     fanMood: 56,
     fanReaction: "A torcida espera conhecer a nova comissão técnica.",
@@ -224,23 +233,8 @@ export function createWorldState(
 }
 
 export function updateWorldJobMarket(world: WorldState, clubs: Array<{id:string;name:string;strength:number}>): void {
-  const random = randomFrom(world.randomSeed + world.worldDay * 31);
-  world.jobOffers = clubs
-    .filter(club => club.id !== "")
-    .filter(() => random() > 0.3)
-    .slice(0, 5)
-    .map((club, index) => {
-      const seedClub = getWorldClub(club.id);
-      if (seedClub) return makeJobOffer(seedClub, world.worldDay, world.randomSeed + world.worldDay + index);
-      const fallback: WorldClubSeed = {
-        id: club.id, name: club.name, shortName: club.name.slice(0, 7), countryCode: "BR",
-        country: "Brasil", region: "Nacional", divisionId: world.divisionId,
-        divisionName: world.competitionName, tier: 4, city: "Brasil",
-        stadium: "Estádio Municipal", strength: club.strength, supporters: 8000,
-        budget: 1000000, project: "Reconstruir o elenco"
-      };
-      return makeJobOffer(fallback, world.worldDay, world.randomSeed + index);
-    });
+  const currentClubId=clubs[0]?.id??"";
+  world.jobOffers=createWorldJobOffers(currentClubId,world.worldDay,world.randomSeed+world.worldDay*31,world.managerReputation);
 }
 
 export function refreshWorldOffers(world: WorldState, clubId: string): void {
@@ -248,10 +242,7 @@ export function refreshWorldOffers(world: WorldState, clubId: string): void {
   if (!club) return;
   const seed = world.randomSeed + world.worldDay * 131;
   world.sponsorOffers = makeSponsorOffers(club, world.worldDay, seed);
-  const pool = getDivisionClubs(world.divisionId).filter(item => item.id !== clubId);
-  const random = randomFrom(seed + 1);
-  world.jobOffers = pool.sort(() => random() - 0.5).slice(0, 5)
-    .map((item, index) => makeJobOffer(item, world.worldDay, seed + index * 17));
+  world.jobOffers=createWorldJobOffers(clubId,world.worldDay,seed+1,world.managerReputation);
 }
 
 export function acceptSponsor(world: WorldState, offerId: string): SponsorOffer | undefined {
@@ -331,7 +322,7 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
  for(const league of world.globalLeagues){
   if(league.divisionId===world.divisionId||stableSeed(league.divisionId)%2!==dayBucket)continue;
   const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
-  const teams=getDivisionClubs(league.divisionId);
+  const teams=league.standings.map(row=>getWorldClub(row.clubId)).filter((club):club is WorldClubSeed=>club!==undefined);
   const count=teams.length;
   if(!division||count<4||count%2!==0)continue;
   const rounds=count-1;
@@ -453,14 +444,17 @@ export function getDifficultyStrengthAdjustment(difficulty: Difficulty): number 
 
 export function migrateWorldState(world: Partial<WorldState> | undefined, clubId: string): WorldState {
   if (world && world.version === 1 && typeof world.divisionId === "string") {
+    const defaults=createWorldState(clubId,world.managerProfileId??"custom",world.difficulty??"medio",world.pace??"normal");
+    const existing=Array.isArray(world.globalLeagues)?world.globalLeagues:[];
+    const byDivision=new Map(existing.map(league=>[league.divisionId,league]));
     return {
-      ...createWorldState(clubId, world.managerProfileId ?? "custom", world.difficulty ?? "medio", world.pace ?? "normal"),
+      ...defaults,
       ...world,
       sponsorOffers: Array.isArray(world.sponsorOffers) ? world.sponsorOffers : [],
       jobOffers: Array.isArray(world.jobOffers) ? world.jobOffers : [],
       retiredPlayers: Array.isArray(world.retiredPlayers) ? world.retiredPlayers : [],
       worldNews: Array.isArray(world.worldNews) ? world.worldNews : [],
-      globalLeagues: Array.isArray(world.globalLeagues) ? world.globalLeagues : createGlobalLeagueStates(world.divisionId),
+      globalLeagues: defaults.globalLeagues.map(league=>byDivision.get(league.divisionId)??league),
       activeSponsor: world.activeSponsor ?? null
     } as WorldState;
   }
