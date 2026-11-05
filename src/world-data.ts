@@ -24,6 +24,7 @@ export interface WorldDivision {
   name: string;
   countryCode: string;
   country: string;
+  region: string;
   tier: number;
   clubs: string[];
   promotionPlaces?: number;
@@ -85,7 +86,7 @@ function buildDivision(
   });
   clubs.forEach(club => { club.divisionName = name; });
   return { division: {
-    id, name, countryCode, country, tier, clubs: clubs.map(c => c.id), kind,
+    id, name, countryCode, country, region, tier, clubs: clubs.map(c => c.id), kind,
     promotionPlaces: tier===1?0:tier<=4?4:tier===5?1:2,
     relegationPlaces: tier===1?4:tier<=4?4:tier===5||tier===6?2:0
   }, clubs };

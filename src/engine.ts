@@ -1,6 +1,6 @@
 import { createMatchNews } from "./newsroom";
-import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, WORLD_DIVISIONS, type Difficulty } from "./world-data";
-import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type CareerPace, type WorldState } from "./world-simulation";
+import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, WORLD_DIVISIONS, type CareerPace, type Difficulty } from "./world-data";
+import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type WorldState } from "./world-simulation";
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
 export type Tactic = "equilibrada" | "ofensiva" | "defensiva" | "posse" | "contra-ataque" | "pressao";

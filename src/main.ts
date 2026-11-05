@@ -221,7 +221,7 @@ function action(target:HTMLElement):void{
   c.budget-=p.value;p.clubId=c.id;c.players.push(p);career.transferMarket=career.transferMarket.filter(candidate=>candidate.id!==id);addNews(career,"mercado","Novo reforço anunciado",p.name+" chega ao "+c.name+" por "+money(p.value)+".");save();render();showToast(p.name+" contratado.");break;}
  case"rest-squad":if(restManagedSquad(career)){save();render();showToast("O elenco recuperou parte da energia.");}else showToast("Recuperação indisponível: use apenas uma vez antes de cada jogo e fora de partidas em andamento.");break;
  case"export-save":exportSave();break;
- case"new-season":if(career.fixtures.some(f=>!f.played&&f.competition===(career.world?.competitionName??"Liga das Araucárias")))showToast("Conclua os jogos da liga antes de iniciar a próxima temporada.");else{career=advanceSeason(career);save();render();}break;
+ case"new-season":{const activeCareer=career;if(!activeCareer)break;if(activeCareer.fixtures.some(f=>!f.played&&f.competition===(activeCareer.world?.competitionName??"Liga das Araucárias")))showToast("Conclua os jogos da liga antes de iniciar a próxima temporada.");else{career=advanceSeason(activeCareer);save();render();}break;}
  case"back-dashboard":if(career.currentMatch?.phase!=="full-time")showToast("A partida precisa terminar antes de voltar ao painel.");else{career.screen="inicio";save();render();}break;
  }
  if(preferences.sound)playUiSound();

@@ -227,7 +227,7 @@ export function updateWorldJobMarket(world: WorldState, clubs: Array<{id:string;
   const random = randomFrom(world.randomSeed + world.worldDay * 31);
   world.jobOffers = clubs
     .filter(club => club.id !== "")
-    .filter(club => random() > 0.3)
+    .filter(() => random() > 0.3)
     .slice(0, 5)
     .map((club, index) => {
       const seedClub = getWorldClub(club.id);
