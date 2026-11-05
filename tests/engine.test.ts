@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStandings, makeSubstitution, restManagedSquad, resumeMatch, simulateFixture } from "../src/engine";
+import { acceptSponsorOffer, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
@@ -99,5 +99,30 @@ describe("Pulso 90 event-based newspaper integration",()=>{
   const count=c.news.length;
   completeRound(c,m);
   expect(c.news).toHaveLength(count);
+ });
+});
+
+
+describe("Pulso 90 lineup management",()=>{
+ it("starts with eleven unique, position-compatible starters and persists a manual selection into matches",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc"),managed=c.clubs.find(item=>item.id===c.clubId)!;
+  const initial=getStartingLineup(managed);
+  expect(initial).toHaveLength(11);
+  expect(new Set(initial.map(player=>player.id)).size).toBe(11);
+  expect(initial[0]?.position).toBe("GOL");
+  const bench=managed.players.find(player=>player.position==="ATA"&&!initial.some(starter=>starter.id===player.id))!;
+  expect(setStartingPlayer(c,8,bench.id)).toBe(true);
+  expect(setStartingPlayer(c,9,bench.id)).toBe(false);
+  const fixture=getNextFixture(c)!;
+  const match=createLiveMatch(fixture,c.clubs);
+  expect(match.homeLineup).toContain(bench.id);
+ });
+ it("rejects an out-of-position goalkeeper and lineup changes during a live match",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc"),managed=c.clubs.find(item=>item.id===c.clubId)!;
+  const keeper=managed.players.find(player=>player.position==="GOL")!;
+  expect(setStartingPlayer(c,1,keeper.id)).toBe(false);
+  const match=createLiveMatch(getNextFixture(c)!,c.clubs);c.currentMatch=match;
+  const bench=managed.players.find(player=>player.position==="DEF"&&!getStartingLineup(managed).some(starter=>starter.id===player.id))!;
+  expect(setStartingPlayer(c,1,bench.id)).toBe(false);
  });
 });
