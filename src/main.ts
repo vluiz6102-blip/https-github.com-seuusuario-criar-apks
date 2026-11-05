@@ -133,7 +133,7 @@ function action(target:HTMLElement):void{
  case"tactic":if(v)setTactic(v);break;
  case"sign-player":{
   const c=club(),p=career.transferMarket.find(candidate=>candidate.id===id);
-  if(!p||c.budget<p.value||c.players.length>=25||wages+p.wage>c.wageBudget||c.players.reduce((sum,player)=>sum+player.wage,0)+p.wage>c.wageBudget){showToast("Orçamento de transferência, folha salarial ou vagas insuficientes.");break;}
+  if(!p||c.budget<p.value||c.players.length>=25||c.players.reduce((sum,player)=>sum+player.wage,0)+p.wage>c.wageBudget){showToast("Orçamento de transferência, folha salarial ou vagas insuficientes.");break;}
   c.budget-=p.value;p.clubId=c.id;c.players.push(p);career.transferMarket=career.transferMarket.filter(candidate=>candidate.id!==id);addNews(career,"mercado","Novo reforço anunciado",p.name+" chega ao "+c.name+" por "+money(p.value)+".");save();render();showToast(p.name+" contratado.");break;}
  case"rest-squad":if(restManagedSquad(career)){save();render();showToast("O elenco recuperou parte da energia.");}else showToast("Recuperação indisponível: use apenas uma vez antes de cada jogo e fora de partidas em andamento.");break;
  case"export-save":exportSave();break;
