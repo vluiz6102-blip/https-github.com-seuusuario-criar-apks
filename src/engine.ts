@@ -38,7 +38,7 @@ function makePlayer(id:string,clubId:string,position:Position,target:number,rand
  const handling=clamp(overall+(position==="GOL"?17:-25)+Math.round(random()*8-4),25,96);
  const playerAge=age??17+Math.floor(random()*18);
  const value=Math.round(Math.pow(Math.max(1,overall-35),2.1)*680+Math.max(0,potential-overall)*28000);
- return {id,name:playerName(random),age:playerAge,position,overall,potential,finishing,passing,defending,pace:clamp(overall+Math.round(random()*16-8),32,96),stamina:clamp(overall+Math.round(random()*14-7),35,96),handling,creativity:clamp(overall+Math.round(random()*16-8),30,96),fitness:82+Math.floor(random()*19),value,wage:Math.max(900,Math.round(overall*overall*6.2)),goals:0,assists:0,appearances:0,clubId};
+ return {id,name:playerName(random),age:playerAge,position,overall,potential,finishing,passing,defending,pace:clamp(overall+Math.round(random()*16-8),32,96),stamina:clamp(overall+Math.round(random()*14-7),35,96),handling,creativity:clamp(overall+Math.round(random()*16-8),30,96),fitness:82+Math.floor(random()*19),value,wage:Math.max(900,Math.round(overall*overall*2)),goals:0,assists:0,appearances:0,clubId};
 }
 function makeSquad(clubId:string,strength:number,random:()=>number):Player[] {
  const positions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
