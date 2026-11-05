@@ -282,6 +282,7 @@ describe("Pulso 90 multi-competition matchdays",()=>{
   const cupFixture=c.fixtures.find(fixture=>fixture.round===4&&fixture.competition===cup.competition&&(fixture.homeClubId===c.clubId||fixture.awayClubId===c.clubId))!;
   expect(leagueFixture).toBeDefined();
   expect(cupFixture).toBeDefined();
+  for(const earlier of c.fixtures.filter(fixture=>fixture.round<4&&(fixture.homeClubId===c.clubId||fixture.awayClubId===c.clubId)))earlier.played=true;
 
   const leagueMatch=createLiveMatch(leagueFixture,c.clubs);
   leagueMatch.phase="full-time";
