@@ -17,19 +17,21 @@ const baseEvent: MatchNewsInput = {
 describe("Pulso 90 newsroom", () => {
   it("publishes the same confirmed result through different fictional outlets", () => {
     const articles = createMatchNews(baseEvent);
-    expect(articles).toHaveLength(3);
-    expect(new Set(articles.map(article => article.publisherId)).size).toBe(3);
+    expect(articles).toHaveLength(5);
+    expect(new Set(articles.map(article => article.publisherId)).size).toBe(5);
     for (const article of articles) {
       expect(article.eventId).toBe(baseEvent.eventId);
       expect(article.day).toBe(baseEvent.day);
       expect(article.truthLevel).toBe("confirmed");
       expect(article.body).toContain("Pato Branco FC 2 x 1 Aurora Esporte Clube");
     }
+    expect(articles.map(article=>article.source)).toEqual(expect.arrayContaining(["P90 Agência","Central 90","TV Campo","Diário da Bola","Jornal do Clube"]));
+    }
   });
 
   it("does not publish a club-specific article for a match without the managed club", () => {
     const articles = createMatchNews({ ...baseEvent, managedClubId: "other-club" });
-    expect(articles).toHaveLength(2);
+    expect(articles).toHaveLength(4);
     expect(articles.every(article => article.publisherId !== "jornal-do-clube")).toBe(true);
   });
 

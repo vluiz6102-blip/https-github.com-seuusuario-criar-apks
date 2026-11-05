@@ -57,6 +57,18 @@ export function createMatchNews(event: MatchNewsInput): NewsArticleDraft[] {
 
   const score = scoreLine(event);
   const result = resultLine(event);
+  const goalDifference=Math.abs(event.homeGoals-event.awayGoals);
+  const totalGoals=event.homeGoals+event.awayGoals;
+  const broadcastHeadline=totalGoals>=5
+    ? "Noite de muitos gols em "+event.competition
+    : goalDifference>=3
+      ? "Vitória por margem ampla em "+event.competition
+      : goalDifference===0
+        ? "Placar termina igual em "+event.competition
+        : "Partida decidida por um gol em "+event.competition;
+  const dailyHeadline=event.homeGoals===event.awayGoals
+    ? "Pontos divididos em "+event.competition
+    : result+" movimenta "+event.competition;
   const articles: NewsArticleDraft[] = [
     {
       eventId: event.eventId,
@@ -77,6 +89,26 @@ export function createMatchNews(event: MatchNewsInput): NewsArticleDraft[] {
       truthLevel: "confirmed",
       title: result + " em " + event.competition,
       body: score + ". O resultado foi registrado na competição."
+    },
+    {
+      eventId: event.eventId,
+      day: event.day,
+      tag: "partida",
+      publisherId: "tv-campo",
+      source: "TV Campo",
+      truthLevel: "confirmed",
+      title: broadcastHeadline,
+      body: score + ". " + result + "."
+    },
+    {
+      eventId: event.eventId,
+      day: event.day,
+      tag: "partida",
+      publisherId: "diario-da-bola",
+      source: "Diário da Bola",
+      truthLevel: "confirmed",
+      title: dailyHeadline,
+      body: "Placar final confirmado: " + score + "."
     }
   ];
 

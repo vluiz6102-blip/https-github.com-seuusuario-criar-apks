@@ -1,3 +1,4 @@
+import { createMatchNews } from "./newsroom";
 import {
   getDivisionClubs,
   getWorldClub,
@@ -390,7 +391,7 @@ export function processGlobalPromotions(world:WorldState):void{
 }
 
 function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
- const featured: Array<{divisionId:string;divisionName:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
+ const featured: Array<{divisionId:string;divisionName:string;homeClubId:string;awayClubId:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
  const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1"];
  for(const league of world.globalLeagues){
   if(league.divisionId===world.divisionId||league.seasonComplete||stableSeed(league.divisionId)%2!==dayBucket)continue;
@@ -422,7 +423,7 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
    else if(homeGoals<awayGoals){awayRow.wins++;homeRow.losses++;awayRow.points+=3;}
    else{homeRow.draws++;awayRow.draws++;homeRow.points++;awayRow.points++;}
    if((featuredIds.includes(league.divisionId)||featured.length===0)&&pair===0){
-    featured.push({divisionId:league.divisionId,divisionName:division.name,homeName:home.name,awayName:away.name,homeGoals,awayGoals,season:league.season,matchday:league.matchday+1});
+    featured.push({divisionId:league.divisionId,divisionName:division.name,homeClubId:home.id,awayClubId:away.id,homeName:home.name,awayName:away.name,homeGoals,awayGoals,season:league.season,matchday:league.matchday+1});
    }
   }
   league.recentResults=[...league.recentResults,...results].slice(-20);
@@ -436,15 +437,9 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
  }
  processGlobalPromotions(world);
  for(const item of featured){
-  const source=item.divisionId==="br-a"||item.divisionId==="br-b"?"P90 Futebol Brasil":"Central 90";
-  world.worldNews.unshift({
-   id:"global-match-"+item.divisionId+"-"+item.season+"-"+item.matchday,
-   day:world.worldDay,
-   source,
-   title:item.homeGoals===item.awayGoals?"Empate movimenta "+item.divisionName:item.homeGoals>item.awayGoals?item.homeName+" vence na "+item.divisionName:item.awayName+" surpreende na "+item.divisionName,
-   body:item.homeName+" "+item.homeGoals+" x "+item.awayGoals+" "+item.awayName+". Resultado da rodada "+item.matchday+" da "+item.divisionName+".",
-   category:"mundo"
-  });
+  const eventId="global-match-"+item.divisionId+"-"+item.season+"-"+item.matchday+"-"+item.homeClubId+"-"+item.awayClubId;
+  const drafts=createMatchNews({eventId,day:world.worldDay,competition:item.divisionName,homeClubId:item.homeClubId,homeClubName:item.homeName,awayClubId:item.awayClubId,awayClubName:item.awayName,homeGoals:item.homeGoals,awayGoals:item.awayGoals});
+  for(const article of drafts)world.worldNews.unshift({id:eventId+"-"+article.publisherId,day:article.day,source:article.source,title:article.title,body:article.body,category:"mundo"});
  }
 }
 
