@@ -152,6 +152,105 @@ for (const [code, country, leagueName, topNames, cityNames, strength] of interna
   addDivision(code + "-2", country + " Segunda Divisão", code.toUpperCase(), country, "Nacional", 2, "national", lower.join("|"), cities.join("|"), strength - 13);
 }
 
+
+/*
+ * Expanded original world database.
+ * These clubs and competition names are fictional and generated from curated
+ * city/identity lists. The database is intentionally independent of real
+ * club badges, trademarks and proprietary player rosters.
+ */
+const brazilStates: Array<[string,string,string,string[],number]> = [
+ ["ac","Acre","Rio Branco|Cruzeiro do Sul|Sena Madureira|Tarauacá|Feijó|Brasiléia|Xapuri|Plácido de Castro".split("|"),48],
+ ["al","Alagoas","Maceió|Arapiraca|Rio Largo|Palmeira dos Índios|Penedo|União dos Palmares|Delmiro Gouveia|São Miguel dos Campos".split("|"),51],
+ ["ap","Amapá","Macapá|Santana|Laranjal do Jari|Oiapoque|Mazagão|Porto Grande|Tartarugalzinho|Calçoene".split("|"),46],
+ ["am","Amazonas","Manaus|Parintins|Itacoatiara|Manacapuru|Coari|Tefé|Tabatinga|Maués".split("|"),54],
+ ["df","Distrito Federal","Brasília|Ceilândia|Taguatinga|Gama|Planaltina|Sobradinho|Samambaia|Guará".split("|"),56],
+ ["es","Espírito Santo","Vitória|Vila Velha|Serra|Cariacica|Linhares|Colatina|Guarapari|Cachoeiro de Itapemirim".split("|"),57],
+ ["go","Goiás","Goiânia|Anápolis|Aparecida de Goiânia|Rio Verde|Catalão|Jataí|Itumbiara|Formosa".split("|"),58],
+ ["ma","Maranhão","São Luís|Imperatriz|Caxias|Timon|Codó|Bacabal|Balsas|Pinheiro".split("|"),52],
+ ["mt","Mato Grosso","Cuiabá|Várzea Grande|Rondonópolis|Sinop|Tangará da Serra|Cáceres|Sorriso|Lucas do Rio Verde".split("|"),55],
+ ["ms","Mato Grosso do Sul","Campo Grande|Dourados|Três Lagoas|Corumbá|Ponta Porã|Naviraí|Nova Andradina|Aquidauana".split("|"),53],
+ ["pa","Pará","Belém|Santarém|Marabá|Ananindeua|Castanhal|Altamira|Parauapebas|Tucuruí".split("|"),56],
+ ["pb","Paraíba","João Pessoa|Campina Grande|Patos|Sousa|Cajazeiras|Bayeux|Guarabira|Cabedelo".split("|"),55],
+ ["pe","Pernambuco","Recife|Caruaru|Petrolina|Garanhuns|Serra Talhada|Arcoverde|Goiana|Vitória de Santo Antão".split("|"),59],
+ ["pi","Piauí","Teresina|Parnaíba|Picos|Floriano|Piripiri|Campo Maior|Barras|Oeiras".split("|"),50],
+ ["rn","Rio Grande do Norte","Natal|Mossoró|Parnamirim|Caicó|Assú|Currais Novos|Macau|Pau dos Ferros".split("|"),53],
+ ["ro","Rondônia","Porto Velho|Ji-Paraná|Ariquemes|Cacoal|Vilhena|Jaru|Rolim de Moura|Guajará-Mirim".split("|"),49],
+ ["rr","Roraima","Boa Vista|Rorainópolis|Caracaraí|Alto Alegre|Mucajaí|Bonfim|Pacaraima|Cantá".split("|"),45],
+ ["se","Sergipe","Aracaju|Itabaiana|Lagarto|Estância|Nossa Senhora do Socorro|São Cristóvão|Propriá|Tobias Barreto".split("|"),52],
+ ["to","Tocantins","Palmas|Araguaína|Gurupi|Porto Nacional|Paraíso do Tocantins|Colinas|Guaraí|Dianópolis".split("|"),50]
+];
+const stateClubPrefixes = ["União","Atlético","Estrela","Nacional","Vila","Real","Operário","Racing"];
+for (const [uf,state,cities,strength] of brazilStates) {
+ const existingTop = divisions.find(item=>item.id==="br-"+uf+"-a");
+ if (!existingTop) {
+  const topNames = cities.map((city,index)=>stateClubPrefixes[index]+" "+city);
+  addDivision("br-"+uf+"-a","Campeonato "+state+" · Divisão Principal","BR","Brasil",state,5,"state",topNames.join("|"),cities.join("|"),strength);
+ }
+ const accessNames = cities.map((city,index)=>["Boreal","Pioneiros","Portuária","Ferroviário","Ribeira","Central","Montanha","Horizonte"][index]+" "+city);
+ addDivision("br-"+uf+"-b","Campeonato "+state+" · Divisão de Acesso","BR","Brasil",state,6,"state",accessNames.join("|"),cities.join("|"),strength-7);
+ const amateurNames = cities.map((city,index)=>["Raiz","Bairro","Várzea","Juventude","Campo","Parque","Comunidade","Esperança"][index]+" "+city);
+ addDivision("br-varzea-"+uf,"Liga de Várzea "+state,"BR","Brasil",state,7,"amateur",amateurNames.join("|"),cities.join("|"),strength-16);
+}
+for (const division of divisions) {
+ if (division.countryCode==="BR" && division.kind==="state") {
+  const uf=division.id.slice(3,-2);
+  if (division.id.endsWith("-a")) {
+   division.promotionTarget="br-d";
+   division.relegationTarget="br-"+uf+"-b";
+  } else if (division.id.endsWith("-b")) {
+   division.promotionTarget="br-"+uf+"-a";
+   division.relegationTarget="br-varzea-"+uf;
+  }
+ }
+ if (division.id.startsWith("br-varzea-") && division.id!=="br-varzea-sul") {
+  const uf=division.id.slice("br-varzea-".length);
+  division.promotionTarget="br-"+uf+"-b";
+ }
+}
+
+const expandedNations: Array<[string,string,string[],number]> = [
+ ["uy","Uruguai","Montevidéu|Salto|Paysandú|Maldonado|Rivera|Colonia|Durazno|Tacuarembó|Rocha|Mercedes".split("|"),77],
+ ["cl","Chile","Santiago|Valparaíso|Concepción|Antofagasta|Temuco|Rancagua|Iquique|Talca|La Serena|Puerto Montt".split("|"),78],
+ ["ec","Equador","Quito|Guayaquil|Cuenca|Ambato|Manta|Loja|Riobamba|Ibarra|Machala|Esmeraldas".split("|"),78],
+ ["py","Paraguai","Assunção|Ciudad del Este|Encarnación|Luque|San Lorenzo|Capiatá|Pedro Juan Caballero|Villarrica|Caaguazú|Concepción".split("|"),74],
+ ["pe","Peru","Lima|Arequipa|Cusco|Trujillo|Chiclayo|Piura|Iquitos|Huancayo|Tacna|Puno".split("|"),76],
+ ["be","Bélgica","Bruxelas|Antuérpia|Bruges|Gent|Liège|Genk|Leuven|Mechelen|Charleroi|Namur".split("|"),80],
+ ["hr","Croácia","Zagreb|Split|Rijeka|Osijek|Zadar|Pula|Varaždin|Šibenik|Karlovac|Dubrovnik".split("|"),77],
+ ["ch","Suíça","Zurique|Basileia|Genebra|Berna|Lausanne|Lugano|Lucerna|Sion|St. Gallen|Thun".split("|"),79],
+ ["dk","Dinamarca","Copenhague|Aarhus|Odense|Aalborg|Esbjerg|Randers|Vejle|Horsens|Herning|Kolding".split("|"),78],
+ ["no","Noruega","Oslo|Bergen|Trondheim|Stavanger|Drammen|Tromsø|Bodø|Kristiansand|Ålesund|Molde".split("|"),79],
+ ["tr","Turquia","Istambul|Ancara|Esmirna|Bursa|Trabzon|Adana|Antália|Konya|Gaziantep|Samsun".split("|"),81],
+ ["ua","Ucrânia","Kyiv|Lviv|Odesa|Kharkiv|Dnipro|Poltava|Lutsk|Rivne|Uzhhorod|Chernihiv".split("|"),78],
+ ["pl","Polônia","Varsóvia|Cracóvia|Gdańsk|Poznań|Wrocław|Łódź|Szczecin|Lublin|Białystok|Katowice".split("|"),79],
+ ["se","Suécia","Estocolmo|Gotemburgo|Malmö|Uppsala|Västerås|Örebro|Linköping|Helsingborg|Jönköping|Kalmar".split("|"),79],
+ ["at","Áustria","Viena|Graz|Linz|Salzburgo|Innsbruck|Klagenfurt|Villach|Wels|Bregenz|Leoben".split("|"),78],
+ ["gr","Grécia","Atenas|Salônica|Patras|Heraclião|Larissa|Volos|Ioannina|Kavala|Rodes|Kalamata".split("|"),77],
+ ["kr","Coreia do Sul","Seul|Busan|Incheon|Daegu|Daejeon|Ulsan|Suwon|Jeonju|Pohang|Gwangju".split("|"),81],
+ ["au","Austrália","Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra|Newcastle|Wollongong|Geelong|Darwin".split("|"),80],
+ ["ir","Irã","Teerã|Isfahan|Shiraz|Tabriz|Mashhad|Ahvaz|Rasht|Qom|Kerman|Yazd".split("|"),76],
+ ["ma","Marrocos","Casablanca|Rabat|Marrakech|Tânger|Fez|Agadir|Oujda|Meknès|Tetuão|Safi".split("|"),81],
+ ["sn","Senegal","Dakar|Thiès|Saint-Louis|Kaolack|Ziguinchor|Diourbel|Louga|Tambacounda|Mbour|Kolda".split("|"),75],
+ ["ng","Nigéria","Lagos|Abuja|Kano|Ibadan|Benin City|Enugu|Jos|Kaduna|Warri|Port Harcourt".split("|"),78],
+ ["eg","Egito","Cairo|Alexandria|Gizé|Port Said|Suez|Luxor|Aswan|Tanta|Mansoura|Ismailia".split("|"),79],
+ ["za","África do Sul","Joanesburgo|Cidade do Cabo|Durban|Pretória|Soweto|Polokwane|Bloemfontein|Nelspruit|Kimberley|East London".split("|"),79],
+ ["gh","Gana","Acra|Kumasi|Tamale|Takoradi|Cape Coast|Tema|Sunyani|Obuasi|Koforidua|Ho".split("|"),75],
+ ["ca","Canadá","Toronto|Montreal|Vancouver|Calgary|Ottawa|Edmonton|Winnipeg|Hamilton|Quebec|Halifax".split("|"),78],
+ ["cr","Costa Rica","San José|Alajuela|Cartago|Heredia|Liberia|Puntarenas|Limón|Escazú|San Carlos|Grecia".split("|"),72],
+ ["nz","Nova Zelândia","Auckland|Wellington|Christchurch|Hamilton|Dunedin|Tauranga|Napier|Nelson|Rotorua|Invercargill".split("|"),71],
+ ["sa","Arábia Saudita","Riade|Jidá|Meca|Medina|Dammam|Taif|Tabuk|Abha|Buraidah|Jubail".split("|"),78],
+ ["qa","Catar","Doha|Al Rayyan|Al Wakrah|Al Khor|Lusail|Umm Salal|Dukhan|Mesaieed|Al Daayen|Al Shahaniya".split("|"),73],
+ ["cn","China","Xangai|Pequim|Guangzhou|Shenzhen|Chengdu|Wuhan|Tianjin|Nanjing|Hangzhou|Qingdao".split("|"),79]
+];
+const worldTopPrefixes=["Aurora","Atlântico","Horizonte","Estrela","Vanguarda","Portuária","União","Boreal","Nacional","Vértice"];
+const worldLowerPrefixes=["Vale","Pioneiros","Central","Ribeira","Imperial","Montanha","Fênix","Litorânea","Bairro","Racing"];
+for (const [code,country,cities,strength] of expandedNations) {
+ const topNames=cities.map((city,index)=>worldTopPrefixes[index]+" "+city);
+ const lowerNames=cities.map((city,index)=>worldLowerPrefixes[index]+" "+city);
+ addDivision(code+"-1",country+" · Liga Nacional",code.toUpperCase(),country,"Nacional",1,"national",topNames.join("|"),cities.join("|"),strength);
+ addDivision(code+"-2",country+" · Segunda Liga",code.toUpperCase(),country,"Nacional",2,"national",lowerNames.join("|"),cities.join("|"),strength-12);
+}
+
 for (const division of divisions) {
   if (division.id === "br-a") division.relegationTarget = "br-b";
   if (division.id === "br-b") { division.promotionTarget = "br-a"; division.relegationTarget = "br-c"; }
