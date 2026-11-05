@@ -198,7 +198,7 @@ describe("Pulso 90 save migration",()=>{
 describe("Pulso 90 national cup engine",()=>{
  it("creates a Brazilian national cup with 107 clubs while keeping the league table separate",()=>{
   const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
-  expect(c.cups).toHaveLength(2);
+  expect(c.cups).toHaveLength(1);
   expect(c.cups[0]!.participants).toHaveLength(107);
   expect(c.fixtures.filter(f=>f.competition===c.cups[0]!.competition&&f.round===4)).toHaveLength(43);
   expect(c.cups[0]!.byes).toHaveLength(21);
@@ -207,7 +207,7 @@ describe("Pulso 90 national cup engine",()=>{
  it("creates a national cup for an international career",()=>{
   const japan=WORLD_CLUBS.find(club=>club.country==="Japão")!;
   const c=createCareer("Teste","Mister",japan.id);
-  expect(c.cups).toHaveLength(1);
+  expect(c.cups).toHaveLength(2);
   expect(c.cups[0]!.countryCode).toBe(japan.countryCode);
   expect(c.cups[0]!.participants.length).toBeGreaterThanOrEqual(16);
   expect(c.cups.some(cup=>cup.id==="afc-champions")).toBe(true);
