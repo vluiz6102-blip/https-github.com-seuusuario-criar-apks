@@ -488,7 +488,7 @@ export function advanceWorldDay(world: WorldState, clubId: string): void {
       category:"mercado"
     });
   }
-  world.worldNews = world.worldNews.slice(0, 40);
+  world.worldNews = world.worldNews.slice(0, 80);
 }
 
 export function getFanLabel(mood: number): string {
