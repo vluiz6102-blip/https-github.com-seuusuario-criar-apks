@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStandings, makeSubstitution, resumeMatch, simulateFixture } from "../src/engine";
+import { advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStandings, makeSubstitution, restManagedSquad, resumeMatch, simulateFixture } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with eight original clubs and a balanced double round-robin",()=>{
@@ -53,6 +53,16 @@ describe("Pulso 90 career safeguards",()=>{
   expect(home.players.find(p=>p.id===outgoing)?.appearances).toBe(1);
   expect(home.players.find(p=>p.id===incoming)?.appearances).toBe(1);
   expect(home.players.filter(p=>p.appearances===1)).toHaveLength(12);
+ });
+ it("limits squad recovery to once per fixture and blocks it during a live match",()=>{
+  const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,initialDay=c.day;
+  const initialFitness=c.clubs.find(x=>x.id===c.clubId)!.players.map(p=>p.fitness);
+  expect(restManagedSquad(c)).toBe(true);expect(c.day).toBe(initialDay+1);
+  const recovered=c.clubs.find(x=>x.id===c.clubId)!.players.map(p=>p.fitness);
+  expect(recovered.every((value,i)=>value>=initialFitness[i]!&&value<=Math.min(100,initialFitness[i]!+9))).toBe(true);
+  expect(restManagedSquad(c)).toBe(false);expect(c.day).toBe(initialDay+1);
+  const m=createLiveMatch(f,c.clubs);c.currentMatch=m;expect(restManagedSquad(c)).toBe(false);
+  m.phase="full-time";completeRound(c,m);expect(restManagedSquad(c)).toBe(true);
  });
  it("does not apply an unfinished match or apply a finished round twice",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,m=createLiveMatch(f,c.clubs);
