@@ -83,7 +83,7 @@ describe("Pulso 90 event-based newspaper integration",()=>{
   completeRound(c,m);
 
   const completedRound=c.fixtures.filter(item=>item.round===f.round&&item.played);
-  expect(completedRound).toHaveLength(4);
+  expect(completedRound).toHaveLength(10);
   for(const fixture of completedRound){
    const eventId=fixture.id+"-final";
    const articles=c.news.filter(article=>article.eventId===eventId);
