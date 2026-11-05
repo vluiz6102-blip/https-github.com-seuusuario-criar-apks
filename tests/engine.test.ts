@@ -247,17 +247,20 @@ describe("Pulso 90 state club cup access",()=>{
 
 describe("Pulso 90 national team career mode",()=>{
  it("allows a manager to take charge of a national team with a 23-player squad",()=>{
-  const seed=WORLD_CLUBS.find(club=>club.teamType==="selection"&&club.divisionId==="nat-uefa")!;
+  const seed=WORLD_CLUBS.filter(club=>club.teamType==="selection"&&club.divisionId==="nat-uefa").sort((a,b)=>b.strength-a.strength)[0]!;
   const c=createCareer("Teste","Mister",seed.id);
   expect(c.world!.divisionId).toBe("nat-uefa");
   expect(c.world!.competitionName).toBe("Liga das Nações Europeia");
-  expect(c.clubs).toHaveLength(55);
+  expect(c.clubs.length).toBeGreaterThanOrEqual(55);
   expect(c.clubs[0]!.players).toHaveLength(23);
-  expect(c.fixtures).toHaveLength(2993);
+  expect(c.fixtures).toHaveLength(3009);
   expect(c.fixtures.every(fixture=>fixture.homeClubId!==fixture.awayClubId)).toBe(true);
-  expect(c.cups).toHaveLength(1);
+  expect(c.cups).toHaveLength(2);
   expect(c.cups[0]!.id).toBe("euro");
   expect(c.cups[0]!.participants).toHaveLength(55);
+  expect(c.cups[1]!.id).toBe("fifa-world-cup");
+  expect(c.cups[1]!.participants).toHaveLength(48);
+  expect(c.fixtures.filter(fixture=>fixture.competition===c.cups[1]!.competition&&fixture.round===28)).toHaveLength(16);
   expect(c.fixtures.filter(fixture=>fixture.competition===c.cups[0]!.competition&&fixture.round===4)).toHaveLength(23);
   expect(getStandings(c)).toHaveLength(55);
  });

@@ -194,6 +194,31 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
   for(let i=0;i<playing.length/2;i++)fixtures.push({id:"cup-"+c.season+"-"+cup.id+"-stage-1-"+i,round:fixtureRound,competition:cup.name,homeClubId:playing[i]!.id,awayClubId:playing[playing.length-1-i]!.id,knockout:true,played:false});
   c.cups=[{id:cup.id,competition:cup.name,countryCode:cup.countryCode,participants:participants.map(seed=>seed.id),byes,currentStage:1,fixtureRound,finished:false}];
   c.fixtures.push(...fixtures);
+
+  // The global national-team tournament is held every four seasons, starting in 2026.
+  if(c.season%4===2){
+   const worldCupSeed=WORLD_COMPETITIONS.find(item=>item.id==="fifa-world-cup");
+   const managedNationalTeam=NATIONAL_TEAMS.find(team=>"national-"+team.id===c.clubId);
+   const managedStrength=Math.round(getManagedClub(c).players.reduce((sum,player)=>sum+player.overall,0)/Math.max(1,getManagedClub(c).players.length));
+   if(worldCupSeed&&managedNationalTeam&&managedStrength>=55){
+    const worldTeams=[...NATIONAL_TEAMS].sort((a,b)=>b.strength-a.strength).slice(0,worldCupSeed.participants);
+    if(!worldTeams.some(team=>team.id===managedNationalTeam.id))worldTeams[worldTeams.length-1]=managedNationalTeam;
+    worldTeams.sort((a,b)=>b.strength-a.strength);
+    const worldSeeds=worldTeams.map(team=>getWorldClub("national-"+team.id)).filter((seed):seed is NonNullable<typeof seed>=>Boolean(seed));
+    const worldCache=new Map(previousClubs??[]);
+    for(const club of c.clubs)worldCache.set(club.id,club);
+    for(const seed of worldSeeds)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(worldCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*419+stableSeed(seed.id)),false,c.world!.difficulty));
+    const worldBracketSize=2**Math.floor(Math.log2(worldSeeds.length));
+    const worldByeCount=worldSeeds.length>worldBracketSize?2*worldBracketSize-worldSeeds.length:0;
+    const worldByes=worldSeeds.slice(0,worldByeCount).map(seed=>seed.id);
+    const worldPlaying=worldSeeds.slice(worldByeCount);
+    const worldRound=28;
+    const worldFixtures:Fixture[]=[];
+    for(let i=0;i<worldPlaying.length/2;i++)worldFixtures.push({id:"cup-"+c.season+"-fifa-world-cup-stage-1-"+i,round:worldRound,competition:worldCupSeed.name,homeClubId:worldPlaying[i]!.id,awayClubId:worldPlaying[worldPlaying.length-1-i]!.id,knockout:true,played:false});
+    c.cups.push({id:worldCupSeed.id,competition:worldCupSeed.name,countryCode:worldCupSeed.countryCode,participants:worldSeeds.map(seed=>seed.id),byes:worldByes,currentStage:1,fixtureRound:worldRound,finished:false});
+    c.fixtures.push(...worldFixtures);
+   }
+  }
   return;
  }
  const cup= WORLD_COMPETITIONS.find(item=>item.type==="cup"&&item.countryCode===c.world!.countryCode&&!["br-super","br-estaduais"].includes(item.id));

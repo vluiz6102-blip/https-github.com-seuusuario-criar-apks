@@ -149,3 +149,6 @@ Quando a carreira começa em uma divisão estadual abaixo dos campeões, o clube
 
 
 As seleções nacionais também podem ser escolhidas como carreira: cada confederação tem uma liga internacional jogável, elenco de 23 atletas e calendário próprio. O mercado de transferências é ocultado nesse modo, pois treinadores de seleções trabalham com convocação e elenco nacional.
+
+
+Em temporadas de Copa do Mundo (2026 e a cada quatro anos), seleções qualificadas disputam o Mundial de Seleções P90 em chave eliminatória de 48 equipes. A fase de grupos oficial ainda é uma etapa futura do motor de torneios; o formato atual é um mata-mata de entrada e chave principal.
