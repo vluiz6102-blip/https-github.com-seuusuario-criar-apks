@@ -215,11 +215,11 @@ function action(target:HTMLElement):void{
  case"accept-sponsor":if(id&&acceptSponsorOffer(career,id)){save();render();showToast("Patrocínio assinado.");}else showToast("Essa proposta não está mais disponível.");break;
  case"toggle-investors":toggleCareerInvestors(career);save();render();showToast(career.world?.investorMode?"Modo Investidores ativado.":"Modo Investidores desativado.");break;
  case"retired-manager":{const retired=career.world?.retiredPlayers.find(item=>item.id===id);if(retired){career.managerName=retired.name;career.managerNickname="Mister";if(career.world){career.world.managerProfileId="retired-"+retired.id;career.world.managerReputation=Math.max(career.world.managerReputation,Math.min(75,retired.overall));}addNews(career,"clube","Um ex-atleta assume a prancheta",retired.name+" inicia uma nova etapa como treinador após se aposentar no "+retired.formerClubName+".");save();render();showToast("Perfil de treinador atualizado.");}break;}
- case"quick-next":if(simulateNextFixtureFast(career)){save();render();showToast("Partida simulada. Resultado e notícias registrados.");}else showToast("Não foi possível simular a próxima partida.");break;
- case"accept-job":if(id&&acceptJobOffer(career,id)){career.screen="inicio";save();render();showToast("Novo projeto assumido.");}else showToast("Essa vaga não está mais disponível.");break;
- case"accept-sponsor":if(id&&acceptSponsorOffer(career,id)){save();render();showToast("Patrocínio assinado.");}else showToast("Essa proposta não está mais disponível.");break;
- case"toggle-investors":toggleCareerInvestors(career);save();render();showToast(career.world?.investorMode?"Modo Investidores ativado.":"Modo Investidores desativado.");break;
- case"retired-manager":{const retired=career.world?.retiredPlayers.find(item=>item.id===id);if(retired){career.managerName=retired.name;career.managerNickname="Mister";if(career.world){career.world.managerProfileId="retired-"+retired.id;career.world.managerReputation=Math.max(career.world.managerReputation,Math.min(75,retired.overall));}addNews(career,"clube","Um ex-atleta assume a prancheta",retired.name+" inicia uma nova etapa como treinador após se aposentar no "+retired.formerClubName+".");save();render();showToast("Perfil de treinador atualizado.");}break;}
+ 
+ 
+ 
+ 
+ 
  case"resume-match":if(career.currentMatch){resumeMatch(career.currentMatch);save();render();}break;
  case"substitute":if(career.currentMatch&&makeSubstitution(career.currentMatch,career.clubs,career.currentMatch.homeClubId===career.clubId?"home":"away")){save();render();showToast("Substituição realizada.");}else showToast("Não foi possível substituir. Confira o banco e o limite.");break;
  case"formation":if(v&&["4-3-3","4-4-2","3-5-2","4-2-3-1"].includes(v)){club().formation=v as Club["formation"];club().startingXI=undefined;getStartingLineup(club());save();render();showToast("Formação salva e escalação recomendada atualizada.");}break;
