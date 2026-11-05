@@ -156,7 +156,7 @@ function render():void{
  app!.innerHTML='<div class="app-shell">'+topbar()+'<main class="page '+(career.screen==="partida"?"match-page":"")+'">'+content+'</main>'+(career.screen==="partida"?"":bottomnav())+'<div id="toast" class="toast" role="status" aria-live="polite"></div></div>';save();
 }
 function startNext():void{
- if(!career)return;finalizeIfNeeded();const fixture=next();if(!fixture){showToast("A temporada terminou. Abra um novo ciclo.");return;}
+ if(!career)return;finalizeIfNeeded();if(career.world?.pace!=="normal"){if(simulateNextFixtureFast(career)){save();render();showToast("Carreira avançada. A simulação cuidou da partida.");}return;}const fixture=next();if(!fixture){showToast("A temporada terminou. Abra um novo ciclo.");return;}
  if(career.currentMatch&&career.currentMatch.phase!=="full-time"){career.screen="partida";render();return;}
  career.currentMatch=createLiveMatch(fixture,career.clubs);career.screen="partida";render();showToast("Partida pronta. Primeiro tempo em andamento.");
 }
