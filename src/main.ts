@@ -1,5 +1,5 @@
 import "./styles.css";
-import { addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, money, playerPositionLabel, resumeMatch, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
+import { addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, money, playerPositionLabel, restManagedSquad, resumeMatch, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
 
 const STORE="jornada90-save-v1",PREFS="pulso90-preferences-v1",app=document.querySelector<HTMLDivElement>("#app");
 type Preferences={sound:boolean};
@@ -125,7 +125,7 @@ function action(target:HTMLElement):void{
   const c=club(),p=career.transferMarket.find(candidate=>candidate.id===id);
   if(!p||c.budget<p.value||c.players.length>=25){showToast("Orçamento ou vagas insuficientes.");break;}
   c.budget-=p.value;p.clubId=c.id;c.players.push(p);career.transferMarket=career.transferMarket.filter(candidate=>candidate.id!==id);addNews(career,"mercado","Novo reforço anunciado",p.name+" chega ao "+c.name+" por "+money(p.value)+".");save();render();showToast(p.name+" contratado.");break;}
- case"rest-squad":for(const p of club().players)p.fitness=Math.min(100,p.fitness+9);career.day++;addNews(career,"clube","Sessão regenerativa concluída","A comissão deu prioridade à recuperação física do elenco.");save();render();showToast("O elenco recuperou parte da energia.");break;
+ case"rest-squad":if(restManagedSquad(career)){save();render();showToast("O elenco recuperou parte da energia.");}else showToast("Recuperação indisponível: use apenas uma vez antes de cada jogo e fora de partidas em andamento.");break;
  case"export-save":exportSave();break;
  case"new-season":if(career.fixtures.some(f=>!f.played&&f.competition==="Liga das Araucárias"))showToast("Conclua os jogos da liga antes de iniciar a próxima temporada.");else{career=advanceSeason(career);save();render();}break;
  case"back-dashboard":if(career.currentMatch?.phase!=="full-time")showToast("A partida precisa terminar antes de voltar ao painel.");else{career.screen="inicio";save();render();}break;
