@@ -1,6 +1,5 @@
 import "./styles.css";
 import { addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, money, playerPositionLabel, restManagedSquad, resumeMatch, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
-import { createMatchNews } from "./newsroom";
 
 const STORE="jornada90-save-v1",PREFS="pulso90-preferences-v1",app=document.querySelector<HTMLDivElement>("#app");
 type Preferences={sound:boolean};
