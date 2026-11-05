@@ -207,10 +207,11 @@ describe("Pulso 90 national cup engine",()=>{
  it("creates a national cup for an international career",()=>{
   const japan=WORLD_CLUBS.find(club=>club.country==="Japão")!;
   const c=createCareer("Teste","Mister",japan.id);
-  expect(c.cups).toHaveLength(2);
+  expect(c.cups).toHaveLength(3);
   expect(c.cups[0]!.countryCode).toBe(japan.countryCode);
   expect(c.cups[0]!.participants.length).toBeGreaterThanOrEqual(16);
   expect(c.cups.some(cup=>cup.id==="afc-champions")).toBe(true);
+  expect(c.cups.some(cup=>cup.id==="fifa-club-world")).toBe(true);
  });
 });
 
