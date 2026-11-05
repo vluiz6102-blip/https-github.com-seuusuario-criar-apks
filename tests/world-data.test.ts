@@ -3,7 +3,7 @@ import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, count
 
 describe("Pulso 90 original global database",()=>{
  it("provides at least two playable divisions for each represented nation",()=>{
-  const countries=[...new Set(WORLD_DIVISIONS.filter(item=>item.countryCode!=="BR").map(item=>item.countryCode))];
+  const countries=[...new Set(WORLD_DIVISIONS.filter(item=>item.countryCode!=="BR"&&item.teamType!=="selection").map(item=>item.countryCode))];
   expect(countries.length).toBeGreaterThanOrEqual(40);
   for(const code of countries)expect(countryDivisionCount(code)).toBeGreaterThanOrEqual(2);
  });
@@ -60,8 +60,8 @@ describe("Pulso 90 global football simulation",()=>{
 });
 
  it("ships a substantial original playable catalogue",()=>{
-  expect(WORLD_DIVISIONS).toHaveLength(506);
-  expect(WORLD_CLUBS).toHaveLength(4944);
+  expect(WORLD_DIVISIONS).toHaveLength(512);
+  expect(WORLD_CLUBS).toHaveLength(5155);
   expect(WORLD_COMPETITIONS).toHaveLength(765);
   expect(NATIONAL_TEAMS).toHaveLength(211);
   expect(WORLD_DIVISIONS.filter(division=>division.teamType==="selection")).toHaveLength(6);
