@@ -219,7 +219,7 @@ export function acceptSponsor(world: WorldState, offerId: string): SponsorOffer 
     id: "sponsor-signed-" + offer.id,
     day: world.worldDay,
     source: "Mercado & Negócios",
-    title: offer.brand + fecha acordo com o clube",
+    title: offer.brand + " fecha acordo com o clube",
     body: "O contrato de patrocínio com a empresa do setor de " + offer.sector.toLowerCase() + " foi assinado por uma temporada.",
     category: "mercado"
   });
