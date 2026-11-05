@@ -300,7 +300,13 @@ const cupCompetitions: WorldCompetitionSeed[] = [
   { id: "euro", name: "Euro Continental", countryCode: "UEFA", type: "international", participants: 24 },
   { id: "gold-cup", name: "Copa Ouro", countryCode: "CONCACAF", type: "international", participants: 16 },
   { id: "afcon", name: "Copa Africana", countryCode: "CAF", type: "international", participants: 24 },
-  { id: "asian-cup", name: "Copa da Ásia", countryCode: "AFC", type: "international", participants: 24 }
+  { id: "asian-cup", name: "Copa da Ásia", countryCode: "AFC", type: "international", participants: 24 },
+  { id: "uefa-nations-league", name: "Liga das Nações Europeia", countryCode: "UEFA", type: "international", participants: 55 },
+  { id: "concacaf-nations-league", name: "Liga das Nações Concacaf", countryCode: "CONCACAF", type: "international", participants: 35 },
+  { id: "ofc-nations-cup", name: "Copa das Nações da Oceania", countryCode: "OFC", type: "international", participants: 11 },
+  { id: "caf-qualifiers", name: "Eliminatórias Africanas", countryCode: "CAF", type: "international", participants: 54 },
+  { id: "afc-qualifiers", name: "Eliminatórias Asiáticas", countryCode: "AFC", type: "international", participants: 46 },
+  { id: "conmebol-qualifiers", name: "Eliminatórias Sul-Americanas", countryCode: "CONMEBOL", type: "international", participants: 10 }
 ];
 
 export const WORLD_COMPETITIONS: WorldCompetitionSeed[] = [
@@ -555,14 +561,21 @@ const representedCountries=new Set(WORLD_DIVISIONS.map(division=>division.countr
 const generatedLeagueCompetitions:WorldCompetitionSeed[]=[];
 const generatedNationalCups:WorldCompetitionSeed[]=[];
 const cityLabels=["Capital","Porto","Vale","Costa","Norte","Sul","Leste","Oeste","Central","Serra"];
-const firstClubNames=["Aurora","União","Atlético","Estrela","Nacional","Horizonte","Vanguarda","Portuária","Racing","Central"];
-const secondClubNames=["Boreal","Pioneiros","Vale","Fênix","Montanha","Ribeira","Litorânea","Bairro","Imperial","Juventude"];
+const clubNamesByConfederation:Record<string,{top:string[];second:string[]}>={
+ UEFA:{top:["Athletic","United","Sporting","Racing","Dynamo","Olympique","Real","City","Inter","Union"],second:["County","Town","Academy","Rovers","Albion","Wanderers","Borough","Phoenix","Metro","Athletic Club"]},
+ CONMEBOL:{top:["Atlético","Deportivo","Nacional","Independiente","Racing","Estudiantes","Unión","Sportivo","Juventud","Ferro"],second:["Huracán","Defensores","San Martín","Belgrano","Central","River","Newell's","Colón","Lanús","Gimnasia"]},
+ AFC:{top:["Capital FC","United","Sporting","City","Stars","Warriors","Dynasty","Falcons","Rangers","Athletic"],second:["Royal","Shah","Tigers","Dragons","Phoenix","Eagles","Olympic","Wolves","Rovers","Harbor"]},
+ CAF:{top:["AS","Racing","United","Stars","Warriors","Eagles","Elephants","Sporting","Lions","Leopards"],second:["Black","Green","Red","Golden","Young","Real","Olympic","City","Falcons","Rovers"]},
+ CONCACAF:{top:["United","FC","SC","Athletic","City","Real","Deportivo","Racing","Islanders","Stars"],second:["Port","Harbor","Metro","County","Academy","Rovers","Wanderers","Albion","Phoenix","Lakeside"]},
+ OFC:{top:["FC","United","Warriors","Island","Rovers","City","Athletic","Stars","Pacific","Lagoon"],second:["Coastal","Harbor","Tropical","Rangers","Phoenix","Eagles","Rovers","Wanderers","Tigers","Mariners"]}
+};
 for(const team of NATIONAL_TEAMS){
  if(representedCountries.has(team.name.toLocaleLowerCase()))continue;
  const countrySlug=slug(team.name),countryCode="FIFA-"+countrySlug.toUpperCase();
  const cities=cityLabels.map(label=>label+" de "+team.name);
- const topNames=firstClubNames.map(prefix=>prefix+" "+team.name);
- const accessNames=secondClubNames.map(prefix=>prefix+" "+team.name);
+ const naming=clubNamesByConfederation[team.confederation]??clubNamesByConfederation.CONMEBOL!;
+ const topNames=naming.top.map(prefix=>prefix+" "+team.name);
+ const accessNames=naming.second.map(prefix=>prefix+" "+team.name);
  const topId="fifa-"+countrySlug+"-1",accessId="fifa-"+countrySlug+"-2";
  addDivision(topId,"Liga Nacional P90 · "+team.name,countryCode,team.name,"Nacional",1,"national",topNames.join("|"),cities.join("|"),Math.max(42,team.strength-8));
  addDivision(accessId,"Segunda Divisão P90 · "+team.name,countryCode,team.name,"Nacional",2,"national",accessNames.join("|"),cities.join("|"),Math.max(31,team.strength-20));
@@ -570,7 +583,17 @@ for(const team of NATIONAL_TEAMS){
   {id:"league-"+topId,name:"Liga Nacional P90 · "+team.name,countryCode,type:"league",divisionId:topId,participants:10},
   {id:"league-"+accessId,name:"Segunda Divisão P90 · "+team.name,countryCode,type:"league",divisionId:accessId,participants:10}
  );
- generatedNationalCups.push({id:"fifa-cup-"+countrySlug,name:"Copa Nacional P90 · "+team.name,countryCode,type:"cup",participants:20});
+
+}
+const nationalCupCountryCodes=new Set(WORLD_COMPETITIONS.filter(competition=>competition.type==="cup").map(competition=>competition.countryCode));
+for(const team of NATIONAL_TEAMS){
+ const countryDivision=WORLD_DIVISIONS.find(division=>division.country===team.name);
+ const countryCode=countryDivision?.countryCode??"FIFA-"+slug(team.name).toUpperCase();
+ if(nationalCupCountryCodes.has(countryCode))continue;
+ const countryDivisions=WORLD_DIVISIONS.filter(division=>division.country===team.name);
+ const participants=countryDivisions.slice(0,2).reduce((total,division)=>total+division.clubs.length,0);
+ generatedNationalCups.push({id:"national-cup-"+slug(team.name),name:"Copa Nacional P90 · "+team.name,countryCode,type:"cup",participants:Math.max(16,participants)});
+ nationalCupCountryCodes.add(countryCode);
 }
 const generatedStateCups:WorldCompetitionSeed[]=WORLD_DIVISIONS
  .filter(division=>division.countryCode==="BR"&&division.kind==="state"&&division.id.endsWith("-a"))

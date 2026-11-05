@@ -62,10 +62,14 @@ describe("Pulso 90 global football simulation",()=>{
  it("ships a substantial original playable catalogue",()=>{
   expect(WORLD_DIVISIONS).toHaveLength(506);
   expect(WORLD_CLUBS).toHaveLength(4944);
-  expect(WORLD_COMPETITIONS).toHaveLength(716);
+  expect(WORLD_COMPETITIONS).toHaveLength(765);
   expect(NATIONAL_TEAMS).toHaveLength(211);
   expect(new Set(NATIONAL_TEAMS.map(team=>team.id)).size).toBe(211);
-  for(const team of NATIONAL_TEAMS)expect(WORLD_DIVISIONS.filter(division=>division.country===team.name).length).toBeGreaterThanOrEqual(2);
+  for(const team of NATIONAL_TEAMS){
+   expect(WORLD_DIVISIONS.filter(division=>division.country===team.name).length).toBeGreaterThanOrEqual(2);
+   const countryCode=WORLD_DIVISIONS.find(division=>division.country===team.name)!.countryCode;
+   expect(WORLD_COMPETITIONS.some(competition=>competition.type==="cup"&&competition.countryCode===countryCode)).toBe(true);
+  }
   expect(new Set(WORLD_COMPETITIONS.map(item=>item.id)).size).toBe(WORLD_COMPETITIONS.length);
  });
 

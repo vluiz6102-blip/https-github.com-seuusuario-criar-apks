@@ -132,9 +132,9 @@ Cada fase precisa de testes e build Android antes da próxima expansão de dados
 
 A base original atual contém:
 - 211 associações nacionais filiadas à FIFA, cada uma com duas divisões nacionais no universo P90.
-- 27 estruturas estaduais brasileiras, cada uma com divisão principal, acesso, liga de várzea e copa estadual.
+- 27 estruturas estaduais brasileiras, cada uma com divisão principal, acesso, liga de várzea e copa estadual. Cada associação também possui uma Copa Nacional P90 fictícia quando não há uma competição nacional específica no catálogo.
 - 4 divisões nacionais brasileiras (Série A, B, C e D).
-- 506 divisões, 4.944 clubes originais, 716 competições catalogadas e 211 seleções.
+- 506 divisões, 4.944 clubes originais, 765 competições catalogadas e 211 seleções.
 - Simulação diária escalonada das ligas globais: cada dia de carreira atualiza metade das divisões, mantendo resultados e tabelas persistidos no save. As manchetes globais são criadas a partir dos placares calculados.
 
 A lista das 211 associações segue a relação pública da FIFA em https://inside.fifa.com/associations; as divisões e copas genéricas acrescentadas aos países sem pacote específico são conteúdo fictício P90, e as forças são parâmetros de equilíbrio, não o ranking oficial da FIFA.
