@@ -146,3 +146,6 @@ A Copa Nacional do Brasil reúne os 80 clubes das Séries A, B, C e D e os 27 ca
 
 
 Quando a carreira começa em uma divisão estadual abaixo dos campeões, o clube escolhido ganha uma vaga adicional na Copa Nacional do Brasil, sem retirar nenhum dos 27 campeões estaduais.
+
+
+As seleções nacionais também podem ser escolhidas como carreira: cada confederação tem uma liga internacional jogável, elenco de 23 atletas e calendário próprio. O mercado de transferências é ocultado nesse modo, pois treinadores de seleções trabalham com convocação e elenco nacional.

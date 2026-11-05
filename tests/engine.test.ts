@@ -243,3 +243,18 @@ describe("Pulso 90 state club cup access",()=>{
   expect(c.cups[0]!.participants).toContain(stateClub.id);
  });
 });
+
+describe("Pulso 90 national team career mode",()=>{
+ it("allows a manager to take charge of a national team with a 23-player squad",()=>{
+  const seed=WORLD_CLUBS.find(club=>club.teamType==="selection"&&club.divisionId==="nat-uefa")!;
+  const c=createCareer("Teste","Mister",seed.id);
+  expect(c.world!.divisionId).toBe("nat-uefa");
+  expect(c.world!.competitionName).toBe("Liga das Nações Europeia");
+  expect(c.clubs).toHaveLength(55);
+  expect(c.clubs[0]!.players).toHaveLength(23);
+  expect(c.fixtures).toHaveLength(2970);
+  expect(c.fixtures.every(fixture=>fixture.homeClubId!==fixture.awayClubId)).toBe(true);
+  expect(c.cups).toHaveLength(0);
+  expect(getStandings(c)).toHaveLength(55);
+ });
+});

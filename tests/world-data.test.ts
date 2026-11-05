@@ -97,3 +97,17 @@ describe("Pulso 90 global promotion and relegation",()=>{
   expect(world.worldNews.some(item=>item.id.startsWith("global-promotion-en-2-"))).toBe(true);
  });
 });
+
+describe("Pulso 90 national team divisions",()=>{
+ it("simulates odd-sized confederation leagues with a bye instead of self-matches",()=>{
+  const world=createWorldState("br-d-p4t0-br4nc0-fc");
+  const league=world.globalLeagues.find(item=>item.divisionId==="nat-uefa")!;
+  expect(league.standings).toHaveLength(55);
+  for(let day=0;day<2;day++)advanceWorldDay(world,"br-d-p4t0-br4nc0-fc");
+  expect(league.matchday).toBe(1);
+  expect(league.recentResults).toHaveLength(27);
+  expect(league.standings.reduce((sum,row)=>sum+row.played,0)).toBe(54);
+  expect(league.recentResults.every(result=>result.homeClubId!==result.awayClubId)).toBe(true);
+  expect(world.worldNews.some(item=>item.id.startsWith("global-match-nat-uefa-"))).toBe(true);
+ });
+});
