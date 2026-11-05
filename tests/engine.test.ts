@@ -252,9 +252,12 @@ describe("Pulso 90 national team career mode",()=>{
   expect(c.world!.competitionName).toBe("Liga das Nações Europeia");
   expect(c.clubs).toHaveLength(55);
   expect(c.clubs[0]!.players).toHaveLength(23);
-  expect(c.fixtures).toHaveLength(2970);
+  expect(c.fixtures).toHaveLength(2993);
   expect(c.fixtures.every(fixture=>fixture.homeClubId!==fixture.awayClubId)).toBe(true);
-  expect(c.cups).toHaveLength(0);
+  expect(c.cups).toHaveLength(1);
+  expect(c.cups[0]!.id).toBe("euro");
+  expect(c.cups[0]!.participants).toHaveLength(55);
+  expect(c.fixtures.filter(fixture=>fixture.competition===c.cups[0]!.competition&&fixture.round===4)).toHaveLength(23);
   expect(getStandings(c)).toHaveLength(55);
  });
 });

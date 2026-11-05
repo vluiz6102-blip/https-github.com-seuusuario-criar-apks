@@ -137,7 +137,28 @@ function publishMatchNews(c:Career,fixtures:Fixture[]):void{
 }
 
 export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
- if(!c.world||c.world.divisionId==="legacy"||getWorldClub(c.clubId)?.teamType==="selection")return;
+ if(!c.world||c.world.divisionId==="legacy")return;
+ const managedSeed=getWorldClub(c.clubId);
+ if(managedSeed?.teamType==="selection"){
+  const cupIdByConfederation:Record<string,string>={UEFA:"euro",CONMEBOL:"copa-america",AFC:"asian-cup",CAF:"afcon",CONCACAF:"gold-cup",OFC:"ofc-nations-cup"};
+  const cup=WORLD_COMPETITIONS.find(item=>item.id===cupIdByConfederation[c.world!.countryCode]);
+  if(!cup)return;
+  const participants=getDivisionClubs(c.world.divisionId).sort((a,b)=>b.strength-a.strength);
+  if(participants.length<4)return;
+  const clubCache=new Map(previousClubs??[]);
+  for(const club of c.clubs)clubCache.set(club.id,club);
+  for(const seed of participants)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(clubCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*157+stableSeed(seed.id)),false,c.world.difficulty));
+  const bracketSize=2**Math.floor(Math.log2(participants.length));
+  const byeCount=Math.max(0,2*bracketSize-participants.length);
+  const byes=participants.slice(0,byeCount).map(seed=>seed.id);
+  const playing=participants.slice(byeCount);
+  const fixtureRound=4;
+  const fixtures:Fixture[]=[];
+  for(let i=0;i<playing.length/2;i++)fixtures.push({id:"cup-"+c.season+"-"+cup.id+"-stage-1-"+i,round:fixtureRound,competition:cup.name,homeClubId:playing[i]!.id,awayClubId:playing[playing.length-1-i]!.id,knockout:true,played:false});
+  c.cups=[{id:cup.id,competition:cup.name,countryCode:cup.countryCode,participants:participants.map(seed=>seed.id),byes,currentStage:1,fixtureRound,finished:false}];
+  c.fixtures.push(...fixtures);
+  return;
+ }
  const cup= WORLD_COMPETITIONS.find(item=>item.type==="cup"&&item.countryCode===c.world!.countryCode&&!["br-super","br-estaduais"].includes(item.id));
  if(!cup)return;
  let seeds:ReturnType<typeof getDivisionClubs>=[];
@@ -196,7 +217,7 @@ export function advanceCupTournaments(c:Career,completedRound:number):Fixture[]{
    if(winners.length===1){
     cup.finished=true;cup.championId=winners[0]!;
     const champion=getClub(c,winners[0]!);
-    const article={id:"cup-champion-"+cup.id+"-"+c.season,day:c.day,tag:"clube" as const,title:champion.name+" conquista "+cup.competition,body:"O clube venceu a final e levantou a taça nacional após uma campanha eliminatória.",source:"Central 90",publisherId:"central-90",eventId:"cup-winner-"+cup.id+"-"+c.season,truthLevel:"confirmed" as const};
+    const article={id:"cup-champion-"+cup.id+"-"+c.season,day:c.day,tag:"clube" as const,title:champion.name+" conquista "+cup.competition,body:"A equipe venceu a final e conquistou o título após uma campanha eliminatória.",source:"Central 90",publisherId:"central-90",eventId:"cup-winner-"+cup.id+"-"+c.season,truthLevel:"confirmed" as const};
     c.news.unshift(article);
     c.world?.worldNews.unshift({id:article.id,day:c.world.worldDay,source:"Central 90",title:article.title,body:article.body,category:"mundo"});
     c.news=c.news.slice(0,120);
