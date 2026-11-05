@@ -129,7 +129,7 @@ addDivision("br-varzea-sul", "Taça Várzea Sul", "BR", "Brasil", "Regional Sul"
 "UNIÃO DO BAIRRO|ATLÉTICO DA PONTE|REAL VILA NOVA|JUVENTUDE DO PARQUE|GRÊMIO DA ESTAÇÃO|ESTRELA AZUL|AMIGOS DO CAMPO|NACIONAL DO MORRO|VILA OPERÁRIA|RACING DO SUL|GUERREIROS FC|BOLA DE OURO|INDEPENDENTE DA SERRA|FAMÍLIA FC|SÃO JORGE|EXPRESSO VERDE",
 "Pato Branco|Pato Branco|Francisco Beltrão|Dois Vizinhos|Clevelândia|Coronel Vivida|Palmas|Itapejara d'Oeste|Mariópolis|Vitorino|Pato Branco|Mangueirinha|Chopinzinho|São João|Bom Sucesso do Sul|Pato Branco", 38);
 
-const international: Array<[string,string,string,string,string,string,number]> = [
+const international: Array<[string,string,string,string,string,number]> = [
 ["en","Inglaterra","Premier Orbit League","M4NCH3STER BLU3|M4NCH3STER R3D|L1V3RP00L|ARS3NAL|CH3LS3A|T0TT3NH4M|N3WC4STL3|AST0N V1LLA|EV3RT0N|W3ST H4M","Manchester|Manchester|Liverpool|London|London|London|Newcastle|Birmingham|Liverpool|London",88],
 ["es","Espanha","Liga Ibérica Ouro","R3AL M4DR1D|B4RCEL0NA|ATL3T1C0 M4DR1D|S3V1LLA|VAL3NC1A|V1LL4RREAL|R3AL S0C13D4D|B3T1S|G3T4F3|G1R0N4","Madrid|Barcelona|Madrid|Sevilla|Valencia|Villarreal|San Sebastián|Sevilla|Getafe|Girona",87],
 ["de","Alemanha","Bundesliga Central","B4Y3RN MÜNCH3N|D0RTMUND|L31PZ1G|L3V3RKUS3N|FR31BURG|STUTTG4RT|FR4NKFURT|W0LFSBURG|BR3M3N|H0FF3NH31M","Munich|Dortmund|Leipzig|Leverkusen|Freiburg|Stuttgart|Frankfurt|Wolfsburg|Bremen|Hoffenheim",86],
