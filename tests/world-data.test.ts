@@ -39,7 +39,7 @@ describe("Pulso 90 original global database",()=>{
   expect(getDivision("br-varzea-pr")?.promotionPlaces).toBe(2);
  });
 
-import { advanceWorldDay, createWorldState } from "../src/world-simulation";
+import { advanceWorldDay, createWorldState, processGlobalPromotions } from "../src/world-simulation";
 describe("Pulso 90 global football simulation",()=>{
  it("simulates global league rounds and publishes headlines tied to real saved scores",()=>{
   const world=createWorldState("br-d-p4t0-br4nc0-fc");
@@ -68,3 +68,25 @@ describe("Pulso 90 global football simulation",()=>{
   for(const team of NATIONAL_TEAMS)expect(WORLD_DIVISIONS.filter(division=>division.country===team.name).length).toBeGreaterThanOrEqual(2);
   expect(new Set(WORLD_COMPETITIONS.map(item=>item.id)).size).toBe(WORLD_COMPETITIONS.length);
  });
+
+describe("Pulso 90 global promotion and relegation",()=>{
+ it("swaps the promoted clubs with the relegated clubs when both divisions finish",()=>{
+  const world=createWorldState("br-d-p4t0-br4nc0-fc");
+  const upper=world.globalLeagues.find(item=>item.divisionId==="en-1")!;
+  const lower=world.globalLeagues.find(item=>item.divisionId==="en-2")!;
+  lower.standings=lower.standings.map((row,index)=>({...row,points:100-index,goalsFor:60-index,goalsAgainst:10}));
+  upper.standings=upper.standings.map((row,index)=>({...row,points:index<6?80-index:10-(index-6),goalsFor:40-index,goalsAgainst:20}));
+  lower.seasonComplete=true;
+  upper.seasonComplete=true;
+  const promoted=[...lower.standings].sort((a,b)=>b.points-a.points).slice(0,4).map(row=>row.clubId);
+  const relegated=[...upper.standings].sort((a,b)=>b.points-a.points).slice(-4).map(row=>row.clubId);
+  processGlobalPromotions(world);
+  expect(promoted.every(id=>upper.standings.some(row=>row.clubId===id))).toBe(true);
+  expect(relegated.every(id=>lower.standings.some(row=>row.clubId===id))).toBe(true);
+  expect(lower.seasonComplete).toBe(false);
+  expect(upper.seasonComplete).toBe(false);
+  expect(lower.matchday).toBe(0);
+  expect(upper.matchday).toBe(0);
+  expect(world.worldNews.some(item=>item.id.startsWith("global-promotion-en-2-"))).toBe(true);
+ });
+});

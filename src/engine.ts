@@ -113,7 +113,7 @@ export function syncWorldLeagueFromCareer(c:Career):void{
  const recentResults=completed.slice(-20).map(item=>({matchday:item.round,homeClubId:item.homeClubId,awayClubId:item.awayClubId,homeGoals:item.homeScore!,awayGoals:item.awayScore!}));
  const matchday=completed.reduce((max,item)=>Math.max(max,item.round),0);
  const state=c.world.globalLeagues.find(item=>item.divisionId===c.world!.divisionId);
- if(state){state.season=c.season;state.matchday=matchday;state.standings=standings;state.recentResults=recentResults;}
+ if(state){state.season=c.season;state.matchday=matchday;state.standings=standings;state.recentResults=recentResults;state.seasonComplete=false;}
  else c.world.globalLeagues.push({divisionId:c.world.divisionId,season:c.season,matchday,standings,recentResults});
 }
 export function syncWorldNews(c:Career):void{

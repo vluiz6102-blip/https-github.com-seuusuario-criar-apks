@@ -84,6 +84,7 @@ export interface GlobalLeagueState {
   matchday: number;
   standings: GlobalLeagueStanding[];
   recentResults: GlobalLeagueResult[];
+  seasonComplete?: boolean;
 }
 
 export interface WorldState {
@@ -183,7 +184,8 @@ function createGlobalLeagueStates():GlobalLeagueState[]{
   standings:getDivisionClubs(division.id).map(club=>({
    clubId:club.id,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0
   })),
-  recentResults:[]
+  recentResults:[],
+  seasonComplete:false
  }));
 }
 
@@ -315,11 +317,83 @@ export function applyFanMatchReaction(
   return article;
 }
 
+function resetGlobalLeagueSeason(league:GlobalLeagueState,nextSeason?:number):void{
+ const clubIds=league.standings.map(row=>row.clubId);
+ league.season=nextSeason??league.season+1;
+ league.matchday=0;
+ league.seasonComplete=false;
+ league.standings=clubIds.map(clubId=>({clubId,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0}));
+ league.recentResults=[];
+}
+
+export function processGlobalPromotions(world:WorldState):void{
+ const processed=new Set<string>();
+ for(const lowerDivision of WORLD_DIVISIONS){
+  const upperId=lowerDivision.promotionTarget;
+  if(!upperId)continue;
+  const upperDivision=WORLD_DIVISIONS.find(item=>item.id===upperId);
+  if(!upperDivision||upperDivision.relegationTarget!==lowerDivision.id)continue;
+  const lower=world.globalLeagues.find(item=>item.divisionId===lowerDivision.id);
+  const upper=world.globalLeagues.find(item=>item.divisionId===upperId);
+  if(!lower?.seasonComplete||!upper?.seasonComplete)continue;
+  if(lower.divisionId===world.divisionId||upper.divisionId===world.divisionId){
+   if(lower.divisionId!==world.divisionId)resetGlobalLeagueSeason(lower);
+   if(upper.divisionId!==world.divisionId)resetGlobalLeagueSeason(upper);
+   processed.add(lower.divisionId);processed.add(upper.divisionId);
+   continue;
+  }
+  const promotionPlaces=lowerDivision.promotionPlaces??0;
+  const relegationPlaces=upperDivision.relegationPlaces??0;
+  if(promotionPlaces<=0||promotionPlaces!==relegationPlaces||lower.standings.length<promotionPlaces||upper.standings.length<relegationPlaces){
+   resetGlobalLeagueSeason(lower);resetGlobalLeagueSeason(upper);
+   processed.add(lower.divisionId);processed.add(upper.divisionId);
+   continue;
+  }
+  const lowerSorted=[...lower.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst));
+  const upperSorted=[...upper.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst));
+  const lowerIds=lowerSorted.map(row=>row.clubId),upperIds=upperSorted.map(row=>row.clubId);
+  const promoted=lowerIds.slice(0,promotionPlaces);
+  const relegated=upperIds.slice(-relegationPlaces);
+  for(let i=0;i<promotionPlaces;i++){
+   lowerIds[i]=relegated[i]!;
+   upperIds[upperIds.length-relegationPlaces+i]=promoted[i]!;
+  }
+  const nextSeason=Math.max(lower.season,upper.season)+1;
+  lower.standings=lowerIds.map(clubId=>({clubId,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0}));
+  upper.standings=upperIds.map(clubId=>({clubId,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0}));
+  resetGlobalLeagueSeason(lower,nextSeason);
+  resetGlobalLeagueSeason(upper,nextSeason);
+  const promotedNames=promoted.map(id=>getWorldClub(id)?.name??id);
+  const relegatedNames=relegated.map(id=>getWorldClub(id)?.name??id);
+  world.worldNews.unshift({
+   id:"global-promotion-"+lower.divisionId+"-"+nextSeason,
+   day:world.worldDay,
+   source:"Central 90",
+   title:"Acesso e rebaixamento definidos em "+upperDivision.country,
+   body:promotedNames.join(", ")+" sobem para "+upperDivision.name+". "+relegatedNames.join(", ")+" descem para "+lowerDivision.name+".",
+   category:"mundo"
+  });
+  processed.add(lower.divisionId);processed.add(upper.divisionId);
+ }
+ for(const league of world.globalLeagues){
+  if(!league.seasonComplete||league.divisionId===world.divisionId||processed.has(league.divisionId))continue;
+  const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
+  const partnerId=division?.promotionTarget??division?.relegationTarget;
+  const partner=partnerId?world.globalLeagues.find(item=>item.divisionId===partnerId):undefined;
+  const partnerDivision=partnerId?WORLD_DIVISIONS.find(item=>item.id===partnerId):undefined;
+  const reciprocal=division?.promotionTarget
+   ? partnerDivision?.relegationTarget===division.id
+   : partnerDivision?.promotionTarget===division?.id;
+  if(partner&&reciprocal&&partner.divisionId!==world.divisionId&&!partner.seasonComplete)continue;
+  resetGlobalLeagueSeason(league);
+ }
+}
+
 function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
  const featured: Array<{divisionId:string;divisionName:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
  const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1"];
  for(const league of world.globalLeagues){
-  if(league.divisionId===world.divisionId||stableSeed(league.divisionId)%2!==dayBucket)continue;
+  if(league.divisionId===world.divisionId||league.seasonComplete||stableSeed(league.divisionId)%2!==dayBucket)continue;
   const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
   const teams=league.standings.map(row=>getWorldClub(row.clubId)).filter((club):club is WorldClubSeed=>club!==undefined);
   const count=teams.length;
@@ -357,12 +431,10 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
    const champion=[...league.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))[0];
    const championName=teams.find(team=>team.id===champion?.clubId)?.name??"Um clube";
    world.worldNews.unshift({id:"global-champion-"+league.divisionId+"-"+league.season,day:world.worldDay,source:"Central 90",title:championName+" conquista "+division.name,body:"A equipe encerrou a temporada simulada com "+(champion?.points??0)+" pontos e terminou na liderança da competição.",category:"mundo"});
-   league.season++;
-   league.matchday=0;
-   league.standings=teams.map(team=>({clubId:team.id,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0}));
-   league.recentResults=[];
+   league.seasonComplete=true;
   }
  }
+ processGlobalPromotions(world);
  for(const item of featured){
   const source=item.divisionId==="br-a"||item.divisionId==="br-b"?"P90 Futebol Brasil":"Central 90";
   world.worldNews.unshift({
@@ -453,7 +525,7 @@ export function migrateWorldState(world: Partial<WorldState> | undefined, clubId
       jobOffers: Array.isArray(world.jobOffers) ? world.jobOffers : [],
       retiredPlayers: Array.isArray(world.retiredPlayers) ? world.retiredPlayers : [],
       worldNews: Array.isArray(world.worldNews) ? world.worldNews : [],
-      globalLeagues: defaults.globalLeagues.map(league=>byDivision.get(league.divisionId)??league),
+      globalLeagues: defaults.globalLeagues.map(league=>{const existingLeague=byDivision.get(league.divisionId);return existingLeague?{...league,...existingLeague,seasonComplete:existingLeague.seasonComplete??false}:league;}),
       activeSponsor: world.activeSponsor ?? null
     } as WorldState;
   }
