@@ -1,8 +1,10 @@
 import { createMatchNews } from "./newsroom";
+import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, type Difficulty } from "./world-data";
+import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type CareerPace, type WorldState } from "./world-simulation";
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
 export type Tactic = "equilibrada" | "ofensiva" | "defensiva" | "posse" | "contra-ataque" | "pressao";
-export type Screen = "inicio" | "elenco" | "taticas" | "calendario" | "mercado" | "clube" | "jornal" | "partida";
+export type Screen = "inicio" | "elenco" | "taticas" | "calendario" | "mercado" | "clube" | "jornal" | "mundo" | "partida";
 export type MatchPhase = "first-half" | "halftime" | "second-half" | "extra-time-break" | "extra-time" | "extra-time-halftime" | "full-time";
 export interface Player { id:string; name:string; age:number; position:Position; overall:number; potential:number; finishing:number; passing:number; defending:number; pace:number; stamina:number; handling:number; creativity:number; fitness:number; value:number; wage:number; goals:number; assists:number; appearances:number; clubId:string; }
 export interface Club { id:string; name:string; shortName:string; city:string; stadium:string; strength:number; budget:number; wageBudget:number; supporters:number; formation:Formation; tactic:Tactic; players:Player[]; }
@@ -11,20 +13,11 @@ export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
 export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; participants?:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
 export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; source?:string; publisherId?:string; eventId?:string; truthLevel?:"confirmed"|"rumor"|"opinion"; }
-export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; lastRestFixtureId?:string; nextNewsId:number; }
+export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; lastRestFixtureId?:string; nextNewsId:number; world?:WorldState; }
+export interface CareerOptions { difficulty?:Difficulty; pace?:CareerPace; managerProfileId?:string; }
 
 const firstNames = ["Lucas","Gabriel","Mateus","Rafael","Bruno","Caio","Pedro","João","Enzo","Davi","Henrique","André","Miguel","Thiago","Vitor","Felipe","Murilo","Arthur","Cauã","Diego","Samuel","Nicolas","Lorenzo","Gustavo","Luan","Eduardo","Daniel","Yuri","Ícaro","Leandro","Alex","Renan","Heitor","Marcos","Otávio","Wesley"];
 const lastNames = ["Almeida","Barbosa","Cardoso","Dias","Ferreira","Gomes","Lopes","Mendes","Nunes","Oliveira","Pereira","Ramos","Ribeiro","Silva","Souza","Teixeira","Vieira","Costa","Martins","Azevedo","Rocha","Freitas","Campos","Machado","Monteiro","Moraes","Farias","Borges","Prado","Tavares","Batista","Melo"];
-const clubSpecs = [
-{id:"pato-branco",name:"Pato Branco FC",shortName:"PATO",city:"Pato Branco",stadium:"Arena das Araucárias",strength:69,budget:8200000,wageBudget:245000,supporters:18500},
-{id:"aurora",name:"Aurora Esporte Clube",shortName:"AUR",city:"Curitiba",stadium:"Estádio Aurora",strength:78,budget:14500000,wageBudget:410000,supporters:68000},
-{id:"serrano",name:"Atlético Serrano",shortName:"SER",city:"Guarapuava",stadium:"Caldeirão Serrano",strength:66,budget:6700000,wageBudget:210000,supporters:23000},
-{id:"vale",name:"União do Vale",shortName:"UNI",city:"Cascavel",stadium:"Parque do Vale",strength:64,budget:6100000,wageBudget:180000,supporters:21000},
-{id:"oeste",name:"Estrela do Oeste",shortName:"EST",city:"Toledo",stadium:"Estádio das Estrelas",strength:62,budget:5200000,wageBudget:165000,supporters:16000},
-{id:"central",name:"Ferroviário Central",shortName:"FER",city:"Londrina",stadium:"Vila Central",strength:74,budget:10700000,wageBudget:315000,supporters:44000},
-{id:"araucarias",name:"Real das Araucárias",shortName:"REA",city:"Ponta Grossa",stadium:"Bosque Real",strength:71,budget:9300000,wageBudget:285000,supporters:36000},
-{id:"vila-nova",name:"Vila Nova do Sul",shortName:"VNS",city:"Francisco Beltrão",stadium:"Estádio da Vila",strength:59,budget:4600000,wageBudget:142000,supporters:12500}
-] as const;
 
 function seeded(seed:number):()=>number { let state=seed>>>0; return ()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;}; }
 function clamp(value:number,min:number,max:number):number{return Math.max(min,Math.min(max,value));}
@@ -45,25 +38,53 @@ function makeSquad(clubId:string,strength:number,random:()=>number):Player[] {
  const positions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
  return positions.map((pos,i)=>makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,pos,strength+(i<11?3:-3),random));
 }
-function createFixtures(clubs:Club[],season:number):Fixture[] {
+function createFixtures(clubs:Club[],season:number,competitionName="Liga das Araucárias"):Fixture[] {
  const ids=clubs.map(c=>c.id),fixtures:Fixture[]=[];
  for(let leg=0;leg<2;leg++){
   const rotation=[...ids],n=ids.length,half=n/2;
   for(let round=0;round<n-1;round++){
    for(let i=0;i<half;i++){
     const first=rotation[i]!,second=rotation[n-1-i]!,flip=(round+i+leg)%2===1;
-    fixtures.push({id:"s"+season+"-r"+(leg*(n-1)+round+1)+"-"+i,round:leg*(n-1)+round+1,competition:"Liga das Araucárias",homeClubId:flip?second:first,awayClubId:flip?first:second,knockout:false,played:false});
+    fixtures.push({id:"s"+season+"-r"+(leg*(n-1)+round+1)+"-"+i,round:leg*(n-1)+round+1,competition:competitionName,homeClubId:flip?second:first,awayClubId:flip?first:second,knockout:false,played:false});
    }
    const last=rotation.pop()!;rotation.splice(1,0,last);
   }
  }
  return fixtures;
 }
-export function createCareer(managerName:string,managerNickname:string,clubId:string):Career {
- const random=seeded(9031);
- const clubs:Club[]=clubSpecs.map((s,i):Club=>({...s,formation:i%3===0?"4-3-3":i%3===1?"4-2-3-1":"4-4-2",tactic:"equilibrada",players:makeSquad(s.id,s.strength,random)}));
- const transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,57+random()*17,random)).sort((a,b)=>b.overall-a.overall);
- return {schemaVersion:1,season:2026,day:1,managerName:managerName.trim()||"Victor Luiz",managerNickname:managerNickname.trim()||"Mister",clubId,screen:"inicio",clubs,fixtures:createFixtures(clubs,2026),transferMarket,news:[{id:"news-1",day:1,tag:"clube",title:"Uma nova jornada começa",body:"A diretoria apresentou o novo treinador e espera ver uma identidade clara dentro de campo."},{id:"news-2",day:1,tag:"base",title:"Olhos na base",body:"A comissão técnica vai acompanhar os jovens durante os primeiros treinos da temporada."}],currentMatch:null,nextNewsId:3};
+function stableSeed(value:string):number{let hash=2166136261;for(let i=0;i<value.length;i++)hash=Math.imul(hash^value.charCodeAt(i),16777619);return hash>>>0;}
+function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,random:()=>number,managerClub:boolean,difficulty:Difficulty):Club {
+ const adjustment=managerClub?0:getDifficultyStrengthAdjustment(difficulty);
+ const strength=clamp(Math.round(seed.strength+adjustment),30,98);
+ return {id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random)};
+}
+export function createCareer(managerName:string,managerNickname:string,clubId:string,options:CareerOptions={}):Career {
+ const fallbackId="br-d-p4t0-br4nc0-fc";
+ const selected=getWorldClub(clubId)??getWorldClub(fallbackId)??getDivisionClubs("br-d")[0]!;
+ const difficulty=options.difficulty??"medio";
+ const world=createWorldState(selected.id,options.managerProfileId??"custom",difficulty,options.pace??"normal");
+ const peers=getDivisionClubs(selected.divisionId);
+ const chosen=[selected,...peers.filter(item=>item.id!==selected.id)].slice(0,8);
+ const clubs:Club[]=chosen.map((seed,i)=>clubFromWorldSeed(seed,seeded(9031+stableSeed(seed.id)),i===0,difficulty));
+ const effectiveClubId=selected.id;
+ const transferRandom=seeded(9031+stableSeed(effectiveClubId+"-market"));
+ const transferMarket=Array.from({length:28},(_,i)=>makePlayer("free-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+transferRandom()*31,transferRandom)).sort((a,b)=>b.overall-a.overall);
+ updateWorldJobMarket(world,clubs.map(club=>({id:club.id,name:club.name,strength:club.strength})));
+ const career:Career={
+  schemaVersion:1,season:2026,day:1,managerName:managerName.trim()||"Victor Luiz",
+  managerNickname:managerNickname.trim()||"Mister",clubId:effectiveClubId,screen:"inicio",clubs,
+  fixtures:createFixtures(clubs,2026,world.competitionName),transferMarket,
+  news:[
+   {id:"news-1",day:1,tag:"clube",title:"Uma nova jornada começa",body:"A diretoria apresentou o novo treinador e espera ver uma identidade clara dentro de campo.",source:"Jornal do Clube",publisherId:"jornal-do-clube",eventId:"career-start-"+effectiveClubId,truthLevel:"confirmed"},
+   {id:"news-2",day:1,tag:"base",title:"Olhos na base",body:"A comissão técnica vai acompanhar os jovens durante os primeiros treinos da temporada.",source:"Central 90",publisherId:"central-90",eventId:"academy-start-"+effectiveClubId,truthLevel:"confirmed"}
+  ],
+  currentMatch:null,nextNewsId:3,world
+ };
+ return career;
+}
+export function migrateCareer(career:Career):Career {
+ career.world=migrateWorldState(career.world,career.clubId);
+ return career;
 }
 export function getClub(career:Career,id:string):Club{return career.clubs.find(c=>c.id===id)??career.clubs[0]!;}
 export function getManagedClub(career:Career):Club{return getClub(career,career.clubId);}
@@ -155,13 +176,13 @@ export function restManagedSquad(c:Career):boolean{
  if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
  const fixture=getNextFixture(c);if(!fixture||c.lastRestFixtureId===fixture.id)return false;
  for(const p of getManagedClub(c).players)p.fitness=Math.min(100,p.fitness+9);
- c.lastRestFixtureId=fixture.id;c.day++;
+ c.lastRestFixtureId=fixture.id;c.day++;if(c.world)advanceWorldDay(c.world,c.clubId);
  addNews(c,"clube","Sessão regenerativa concluída","A comissão deu prioridade à recuperação física do elenco.");
  return true;
 }
 export function getStandings(c:Career):Array<{club:Club;played:number;wins:number;draws:number;losses:number;goalsFor:number;goalsAgainst:number;points:number}>{
  const rows=c.clubs.map(club=>({club,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0})),map=new Map(rows.map(row=>[row.club.id,row]));
- for(const f of c.fixtures){if(!f.played||f.competition!=="Liga das Araucárias"||f.homeScore===undefined||f.awayScore===undefined)continue;const h=map.get(f.homeClubId),a=map.get(f.awayClubId);if(!h||!a)continue;h.played++;a.played++;h.goalsFor+=f.homeScore;h.goalsAgainst+=f.awayScore;a.goalsFor+=f.awayScore;a.goalsAgainst+=f.homeScore;if(f.homeScore>f.awayScore){h.wins++;a.losses++;h.points+=3;}else if(f.homeScore<f.awayScore){a.wins++;h.losses++;a.points+=3;}else{h.draws++;a.draws++;h.points++;a.points++;}}
+ for(const f of c.fixtures){if(!f.played||f.competition!==(c.world?.competitionName??"Liga das Araucárias")||f.homeScore===undefined||f.awayScore===undefined)continue;const h=map.get(f.homeClubId),a=map.get(f.awayClubId);if(!h||!a)continue;h.played++;a.played++;h.goalsFor+=f.homeScore;h.goalsAgainst+=f.awayScore;a.goalsFor+=f.awayScore;a.goalsAgainst+=f.homeScore;if(f.homeScore>f.awayScore){h.wins++;a.losses++;h.points+=3;}else if(f.homeScore<f.awayScore){a.wins++;h.losses++;a.points+=3;}else{h.draws++;a.draws++;h.points++;a.points++;}}
  return rows.sort((a,b)=>b.points-a.points||((b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))||b.goalsFor-a.goalsFor||b.club.strength-a.club.strength);
 }
 export function completeRound(c:Career,m:MatchState):void{
@@ -215,11 +236,132 @@ export function completeRound(c:Career,m:MatchState):void{
   }
  }
  c.news=c.news.slice(0,120);
+ const managedFixture=completed.find(item=>item.homeClubId===c.clubId||item.awayClubId===c.clubId);
+ if(c.world&&managedFixture){
+  const home=getClub(c,managedFixture.homeClubId),away=getClub(c,managedFixture.awayClubId);
+  const managedIsHome=managedFixture.homeClubId===c.clubId;
+  const goalsFor=managedIsHome?managedFixture.homeScore!:managedFixture.awayScore!;
+  const goalsAgainst=managedIsHome?managedFixture.awayScore!:managedFixture.homeScore!;
+  const reaction=applyFanMatchReaction(c.world,getManagedClub(c).name,managedIsHome?away.name:home.name,goalsFor,goalsAgainst,c.day);
+  c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag:"clube",title:reaction.title,body:reaction.body,source:reaction.source,publisherId:"voz-arquibancada",eventId:reaction.id,truthLevel:"confirmed"});
+  c.world.managerReputation=clamp(c.world.managerReputation+(goalsFor>goalsAgainst?1:goalsFor<goalsAgainst?-1:0),0,100);
+  if(c.world.activeSponsor)getManagedClub(c).budget+=Math.round(c.world.activeSponsor.amount/14);
+  advanceWorldDay(c.world,c.clubId);
+ }
 }
 export function advanceSeason(c:Career):Career{
- c.season++;c.day=1;for(const club of c.clubs){for(const p of club.players){p.age++;p.fitness=Math.round(clamp(p.fitness+14,40,100));if(p.age<24&&p.overall<p.potential&&Math.random()<.55)p.overall=Math.min(p.potential,p.overall+1);}club.budget+=Math.round(club.supporters*28);}
- c.fixtures=createFixtures(c.clubs,c.season);const marketRandom=seeded(9031+c.season*7919);c.transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,57+marketRandom()*17,marketRandom)).sort((a,b)=>b.overall-a.overall);c.currentMatch=null;c.screen="inicio";c.news.unshift({id:"news-"+c.nextNewsId++,day:1,tag:"clube",title:"Nova temporada, novas metas",body:"A diretoria definiu um novo ciclo. Reavalie o elenco, a folha salarial e os objetivos antes da estreia."});return c;
+ const previousSeason=c.season;
+ const finalTable=getStandings(c);
+ const managedPosition=finalTable.findIndex(row=>row.club.id===c.clubId)+1;
+ c.season++;c.day=1;
+ const seasonRandom=seeded(9031+c.season*7919);
+ for(const club of c.clubs){
+  const survivors:Player[]=[];
+  for(const p of club.players){
+   p.age++;
+   p.fitness=Math.round(clamp(p.fitness+14,40,100));
+   if(p.age<24&&p.overall<p.potential&&seasonRandom()<.55)p.overall=Math.min(p.potential,p.overall+1);
+   const retire=p.age>=38||(p.age>=35&&seasonRandom()<.22);
+   if(retire&&club.players.length-survivors.length>16){
+    if(c.world){const record=toRetiredPlayerRecord(p,club,previousSeason);c.world.retiredPlayers.unshift(record);if(record.canBecomeManager)c.world.worldNews.unshift({id:"retire-"+p.id,day:1,source:"Central 90",title:p.name+" encerra a carreira",body:p.name+" pendura as chuteiras no "+club.name+". O ex-atleta poderá iniciar uma carreira como treinador.",category:"carreira"});}
+   }else survivors.push(p);
+  }
+  club.players=survivors;
+  let academyIndex=0;
+  while(club.players.length<18){
+   const position=(["GOL","DEF","MEI","ATA"] as Position[])[club.players.length%4]!;
+   club.players.push(makePlayer("academy-"+c.season+"-"+club.id+"-"+academyIndex++,club.id,position,club.strength-15,seasonRandom,16+Math.floor(seasonRandom()*3)));
+  }
+  club.budget+=Math.round(club.supporters*28);
+  if(c.world?.investorMode)club.budget=999999999999;
+ }
+ if(c.world){
+  let targetDivision:string|undefined;
+  if(managedPosition>0&&managedPosition<=2)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
+  else if(managedPosition>=7)targetDivision=getAdjacentDivision(c.world.divisionId,"down");
+  if(targetDivision){
+   const target=getDivision(targetDivision);
+   const managed=getManagedClub(c);
+   const source=getWorldClub(managed.id);
+   const peers=getDivisionClubs(targetDivision);
+   if(target&&source){
+    const movedSeed={...source,divisionId:target.id,divisionName:target.name,tier:target.tier};
+    const seeds=[movedSeed,...peers.filter(item=>item.id!==managed.id)].slice(0,8);
+    const previousClubs=new Map(c.clubs.map(club=>[club.id,club]));
+    c.clubs=seeds.map(seed=>{
+     const existing=previousClubs.get(seed.id);
+     if(existing)return existing;
+     return clubFromWorldSeed(seed,seeded(c.season*73+stableSeed(seed.id)),false,c.world!.difficulty);
+    });
+    c.world.divisionId=target.id;c.world.competitionName=target.name;c.world.countryCode=target.countryCode;
+    c.world.worldNews.unshift({id:"movement-"+c.season+"-"+managed.id,day:1,source:"Central 90",title:managed.name+" muda de divisão",body:managedPosition<=2?"O clube conquistou o acesso e vai disputar "+target.name+".":"O clube sofreu o rebaixamento e disputará "+target.name+".",category:"mundo"});
+   }
+  }
+  refreshWorldOffers(c.world,c.clubId);
+ }
+ c.fixtures=createFixtures(c.clubs,c.season,c.world?.competitionName??"Liga das Araucárias");
+ const marketRandom=seeded(9031+c.season*7919);
+ c.transferMarket=Array.from({length:36},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+marketRandom()*33,marketRandom)).sort((a,b)=>b.overall-a.overall);
+ c.currentMatch=null;c.screen="inicio";
+ c.news.unshift({id:"news-"+c.nextNewsId++,day:1,tag:"clube",title:"Nova temporada, novas metas",body:"A diretoria definiu um novo ciclo. Reavalie o elenco, a folha salarial e os objetivos antes da estreia.",source:"Jornal do Clube",publisherId:"jornal-do-clube",eventId:"season-"+c.season,truthLevel:"confirmed"});
+ c.news=c.news.slice(0,120);
+ return c;
 }
+
+export function acceptJobOffer(c:Career,offerId:string):boolean{
+ if(!c.world)return false;
+ const offer=c.world.jobOffers.find(item=>item.id===offerId);
+ if(!offer||!c.clubs.some(club=>club.id===offer.clubId))return false;
+ const oldClub=getManagedClub(c);
+ c.clubId=offer.clubId;
+ const newClub=getManagedClub(c);
+ c.world.managerReputation=clamp(c.world.managerReputation+2,0,100);
+ c.world.jobOffers=c.world.jobOffers.filter(item=>item.id!==offerId);
+ addNews(c,"clube","Novo desafio profissional",c.managerName+" deixa "+oldClub.name+" e assume o projeto do "+newClub.name+".");
+ return true;
+}
+export function acceptSponsorOffer(c:Career,offerId:string):boolean{
+ if(!c.world)return false;
+ const offer=acceptSponsor(c.world,offerId);
+ if(!offer)return false;
+ const managed=getManagedClub(c);
+ managed.budget+=offer.upfront;
+ if(c.world.investorMode)managed.budget=999999999999;
+ addNews(c,"mercado","Patrocínio fechado com "+offer.brand,offer.brand+" investirá "+money(offer.amount)+" no projeto do "+managed.name+".");
+ return true;
+}
+export function toggleCareerInvestors(c:Career):boolean{
+ if(!c.world)return false;
+ const enabled=toggleInvestor(c.world);
+ if(enabled)getManagedClub(c).budget=999999999999;
+ addNews(c,"clube",enabled?"Investidores liberam capital ilimitado":"Modo Investidores desativado",enabled?"O caixa foi ampliado para permitir testes de contratações e reconstruções.":"O saldo já disponível permanece no caixa; novas injeções foram interrompidas.");
+ return enabled;
+}
+export function setCareerDifficulty(c:Career,difficulty:Difficulty):void{
+ if(!c.world)return;
+ c.world.difficulty=difficulty;
+ for(const team of c.clubs)if(team.id!==c.clubId){const base=getWorldClub(team.id)?.strength??team.strength;team.strength=clamp(base+getDifficultyStrengthAdjustment(difficulty),30,98);}
+ addNews(c,"clube","Dificuldade ajustada","A carreira agora está no modo "+({facil:"Fácil",medio:"Médio",dificil:"Difícil","quase-impossivel":"Quase impossível"}[difficulty])+".");
+}
+export function setCareerPace(c:Career,pace:CareerPace):void{if(c.world)c.world.pace=pace;}
+export function simulateNextFixtureFast(c:Career):boolean{
+ const fixture=getNextFixture(c);
+ if(!fixture||c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
+ const match=createLiveMatch(fixture,c.clubs);
+ c.currentMatch=match;
+ const random=seeded(stableSeed(fixture.id+"-"+c.season+"-"+c.day));
+ let guard=0;
+ while(match.phase!=="full-time"&&guard<130){
+  if(["halftime","extra-time-break","extra-time-halftime"].includes(match.phase))resumeMatch(match);
+  advanceMinute(match,c.clubs,random);
+  guard++;
+ }
+ if(match.phase!=="full-time")return false;
+ completeRound(c,match);
+ c.screen="inicio";
+ return true;
+}
+
 export function money(value:number):string{if(value>=1_000_000)return "R$ "+(value/1_000_000).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";if(value>=1000)return "R$ "+(value/1000).toLocaleString("pt-BR",{maximumFractionDigits:0})+" mil";return "R$ "+Math.round(value).toLocaleString("pt-BR");}
 export function formatScore(home:number|undefined,away:number|undefined):string{return String(home??"–")+" : "+String(away??"–");}
 export function addNews(c:Career,tag:NewsItem["tag"],title:string,body:string):void{c.news.unshift({id:"news-"+c.nextNewsId++,day:c.day,tag,title,body,source:"Jornal do Clube",publisherId:"jornal-do-clube",eventId:"career-"+c.season+"-"+c.day+"-"+c.nextNewsId,truthLevel:"confirmed"});c.news=c.news.slice(0,120);}
