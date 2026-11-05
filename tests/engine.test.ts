@@ -72,3 +72,32 @@ describe("Pulso 90 career safeguards",()=>{
   completeRound(c,m);expect(c.day).toBe(dayAfterFirstApply);expect(getStandings(c)).toEqual(tableAfterFirstApply);
  });
 });
+
+
+describe("Pulso 90 event-based newspaper integration",()=>{
+ it("publishes the completed round through multiple outlets using saved results",()=>{
+  const c=createCareer("Teste","Mister","pato-branco"),f=getNextFixture(c)!,m=createLiveMatch(f,c.clubs);
+  m.phase="full-time";
+  m.homeScore=2;
+  m.awayScore=1;
+  completeRound(c,m);
+
+  const completedRound=c.fixtures.filter(item=>item.round===f.round&&item.played);
+  expect(completedRound).toHaveLength(4);
+  for(const fixture of completedRound){
+   const eventId=fixture.id+"-final";
+   const articles=c.news.filter(article=>article.eventId===eventId);
+   expect(articles.length).toBeGreaterThanOrEqual(2);
+   expect(new Set(articles.map(article=>article.publisherId)).size).toBe(articles.length);
+   const home=c.clubs.find(club=>club.id===fixture.homeClubId)!;
+   const away=c.clubs.find(club=>club.id===fixture.awayClubId)!;
+   const factualScore=home.name+" "+fixture.homeScore+" x "+fixture.awayScore+" "+away.name;
+   expect(articles.every(article=>article.body.includes(factualScore))).toBe(true);
+   expect(articles.every(article=>article.truthLevel==="confirmed")).toBe(true);
+  }
+
+  const count=c.news.length;
+  completeRound(c,m);
+  expect(c.news).toHaveLength(count);
+ });
+});
