@@ -10,7 +10,7 @@ export interface MatchEvent { id:string; minute:number; kind:"goal"|"shot"|"card
 export interface MatchStats { shots:number; onTarget:number; possession:number; passes:number; corners:number; fouls:number; yellowCards:number; }
 export interface MatchState { fixtureId:string; homeClubId:string; awayClubId:string; competition:string; knockout:boolean; minute:number; phase:MatchPhase; homeScore:number; awayScore:number; homePenaltyScore:number; awayPenaltyScore:number; homeLineup:string[]; awayLineup:string[]; participants?:string[]; condition:Record<string,number>; homeStats:MatchStats; awayStats:MatchStats; events:MatchEvent[]; homeSubs:number; awaySubs:number; homeTactic:Tactic; awayTactic:Tactic; homeFormation:Formation; awayFormation:Formation; finishedApplied:boolean; nextEventId:number; }
 export interface NewsItem { id:string; day:number; title:string; body:string; tag:"clube"|"mercado"|"partida"|"base"; }
-export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; nextNewsId:number; }
+export interface Career { schemaVersion:1; season:number; day:number; managerName:string; managerNickname:string; clubId:string; screen:Screen; clubs:Club[]; fixtures:Fixture[]; transferMarket:Player[]; news:NewsItem[]; currentMatch:MatchState|null; lastRestFixtureId?:string; nextNewsId:number; }
 
 const firstNames = ["Lucas","Gabriel","Mateus","Rafael","Bruno","Caio","Pedro","João","Enzo","Davi","Henrique","André","Miguel","Thiago","Vitor","Felipe","Murilo","Arthur","Cauã","Diego","Samuel","Nicolas","Lorenzo","Gustavo","Luan","Eduardo","Daniel","Yuri","Ícaro","Leandro","Alex","Renan","Heitor","Marcos","Otávio","Wesley"];
 const lastNames = ["Almeida","Barbosa","Cardoso","Dias","Ferreira","Gomes","Lopes","Mendes","Nunes","Oliveira","Pereira","Ramos","Ribeiro","Silva","Souza","Teixeira","Vieira","Costa","Martins","Azevedo","Rocha","Freitas","Campos","Machado","Monteiro","Moraes","Farias","Borges","Prado","Tavares","Batista","Melo"];
@@ -150,6 +150,14 @@ export function simulateFixture(f:Fixture,clubs:Club[],r:()=>number=Math.random)
  const m=createLiveMatch(f,clubs);let guard=0;while(m.phase!=="full-time"&&guard<130){if(["halftime","extra-time-break","extra-time-halftime"].includes(m.phase))resumeMatch(m);advanceMinute(m,clubs,r);guard++;}if(m.phase==="full-time")applyPlayerMatchStats(m,clubs);return {homeScore:m.homeScore,awayScore:m.awayScore};
 }
 export function getNextFixture(c:Career):Fixture|undefined{return c.fixtures.filter(f=>!f.played&&(f.homeClubId===c.clubId||f.awayClubId===c.clubId)).sort((a,b)=>a.round-b.round)[0];}
+export function restManagedSquad(c:Career):boolean{
+ if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
+ const fixture=getNextFixture(c);if(!fixture||c.lastRestFixtureId===fixture.id)return false;
+ for(const p of getManagedClub(c).players)p.fitness=Math.min(100,p.fitness+9);
+ c.lastRestFixtureId=fixture.id;c.day++;
+ addNews(c,"clube","Sessão regenerativa concluída","A comissão deu prioridade à recuperação física do elenco.");
+ return true;
+}
 export function getStandings(c:Career):Array<{club:Club;played:number;wins:number;draws:number;losses:number;goalsFor:number;goalsAgainst:number;points:number}>{
  const rows=c.clubs.map(club=>({club,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0})),map=new Map(rows.map(row=>[row.club.id,row]));
  for(const f of c.fixtures){if(!f.played||f.competition!=="Liga das Araucárias"||f.homeScore===undefined||f.awayScore===undefined)continue;const h=map.get(f.homeClubId),a=map.get(f.awayClubId);if(!h||!a)continue;h.played++;a.played++;h.goalsFor+=f.homeScore;h.goalsAgainst+=f.awayScore;a.goalsFor+=f.awayScore;a.goalsAgainst+=f.homeScore;if(f.homeScore>f.awayScore){h.wins++;a.losses++;h.points+=3;}else if(f.homeScore<f.awayScore){a.wins++;h.losses++;a.points+=3;}else{h.draws++;a.draws++;h.points++;a.points++;}}
