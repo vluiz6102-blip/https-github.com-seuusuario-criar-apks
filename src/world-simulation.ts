@@ -298,7 +298,29 @@ export function advanceWorldDay(world: WorldState, clubId: string): void {
       });
     }
   }
-  if (world.worldDay % 14 === 0) refreshWorldOffers(world, clubId);
+  if (world.worldDay % 14 === 0) {
+    refreshWorldOffers(world, clubId);
+    const openJobs=world.jobOffers.slice(0,3).map(offer=>offer.clubName);
+    world.worldNews.unshift({
+      id:"jobs-market-"+world.worldDay,
+      day:world.worldDay,
+      source:"Central 90",
+      title:"Mercado de treinadores abre novas vagas",
+      body:openJobs.length
+        ? "Clubes como "+openJobs.join(", ")+" procuram profissionais para seus projetos. As oportunidades já estão disponíveis na central de empregos."
+        : "Novas oportunidades estão sendo avaliadas pelos clubes. A central de empregos será atualizada em breve.",
+      category:"mercado"
+    });
+    const sponsorNames=world.sponsorOffers.slice(0,3).map(offer=>offer.brand);
+    if(sponsorNames.length)world.worldNews.unshift({
+      id:"sponsor-interest-"+world.worldDay,
+      day:world.worldDay,
+      source:"Mercado & Negócios",
+      title:"Marcas analisam novos projetos esportivos",
+      body:sponsorNames.join(", ")+" demonstraram interesse comercial e enviaram propostas ao clube.",
+      category:"mercado"
+    });
+  }
   world.worldNews = world.worldNews.slice(0, 40);
 }
 
