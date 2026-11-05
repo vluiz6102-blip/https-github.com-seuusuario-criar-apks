@@ -1,4 +1,4 @@
-import { WORLD_CLUBS } from "../src/world-data";
+import { WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
 import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
@@ -188,7 +188,7 @@ describe("Pulso 90 save migration",()=>{
   const legacy={...current,world:{...current.world!,globalLeagues:current.world!.globalLeagues.slice(0,2),jobOffers:current.world!.jobOffers.map(offer=>({...offer,divisionId:undefined as unknown as string}))}} as Career;
   const migrated=migrateCareer(legacy);
   expect(migrated.clubId).toBe(current.clubId);
-  expect(migrated.world!.globalLeagues).toHaveLength(WORLD_CLUBS.length?506:0);
+  expect(migrated.world!.globalLeagues).toHaveLength(WORLD_DIVISIONS.length);
   expect(migrated.world!.jobOffers.every(offer=>Boolean(offer.divisionId))).toBe(true);
   expect(migrated.world!.globalLeagues.find(league=>league.divisionId===migrated.world!.divisionId)?.standings.length).toBeGreaterThan(0);
  });
