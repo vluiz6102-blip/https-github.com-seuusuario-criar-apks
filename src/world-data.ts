@@ -98,16 +98,16 @@ function addDivision(
   clubs.push(...result.clubs);
 }
 
-addDivision("br-a", "Liga Nacional Primeira", "BR", "Brasil", "Nacional", 1, "national",
+addDivision("br-a", "Brasileirão Série A", "BR", "Brasil", "Nacional", 1, "national",
 "FL4MENGO|PALME1RAS|C0R1NTHIANS|S4O PAUL0|SANT0S|B0TAF0G0|FLUM1NENSE|V4SC0 DA G4MA|GRÊM1O|1NTERNAC10NAL|ATLÉT1C0-MG|CRUZ31R0|B4H1A|V1T0R1A|F0RT4LEZA|C3ARÁ|ATHLET1C0-PR|BR4GANT1N0|G0IÁS|CUI4BÁ",
 "Rio de Janeiro|São Paulo|São Paulo|São Paulo|Santos|Rio de Janeiro|Rio de Janeiro|Rio de Janeiro|Porto Alegre|Porto Alegre|Belo Horizonte|Belo Horizonte|Salvador|Salvador|Fortaleza|Fortaleza|Curitiba|Bragança Paulista|Goiânia|Cuiabá", 87);
-addDivision("br-b", "Liga Nacional Segunda", "BR", "Brasil", "Nacional", 2, "national",
+addDivision("br-b", "Brasileirão Série B", "BR", "Brasil", "Nacional", 2, "national",
 "C0R1T1BA|AVA1|CH4PEC0ENSE|V1LA N0VA|N4UT1C0|SP0RT REC1FE|P0NTE PRETA|GU4R4N1|B0T4F0G0-SP|AMÉR1CA-MG|ATHL3T1C0-G0|L0ND R1NA|CR1C1ÚMA|JUV3NTUDE|P4YS4NDU|REM0|V1T0R1A-BA|ABC FC|C0NF1ANÇA|M4R1NGÁ",
 "Curitiba|Florianópolis|Chapecó|Goiânia|Recife|Recife|Campinas|Campinas|Ribeirão Preto|Belo Horizonte|Goiânia|Londrina|Criciúma|Caxias do Sul|Belém|Belém|Salvador|Natal|Aracaju|Maringá", 77);
-addDivision("br-c", "Liga Nacional Terceira", "BR", "Brasil", "Nacional", 3, "national",
+addDivision("br-c", "Brasileirão Série C", "BR", "Brasil", "Nacional", 3, "national",
 "F3RR0V1ÁR10|B0T4F0G0-PB|M4N4US FC|S4MPA10|Y P1R4NG4|F1GUE1R3NSE|C4X1AS|M0T0 CLUBE|0PERÁR10|T0MBENSE|BRUSQUE|S4NTA CRUZ|1T4B41ANA|P0RTUGUESA|C4MP1NENSE|S4O B3RN4RD0|F3RROV1ÁR10-CE|M4R4NHÃO|P4R4NÁ CLUBE|V0LTA RED0NDA",
 "João Pessoa|João Pessoa|Manaus|São Luís|Ponta Grossa|Florianópolis|Caxias do Sul|Campina Grande|Ponta Grossa|Tombos|Brusque|Recife|Itabaiana|São Paulo|Campina Grande|São Bernardo do Campo|Fortaleza|São Luís|Curitiba|Volta Redonda", 67);
-addDivision("br-d", "Liga Nacional Quarta", "BR", "Brasil", "Nacional", 4, "national",
+addDivision("br-d", "Brasileirão Série D", "BR", "Brasil", "Nacional", 4, "national",
 "ÁGUIA DE MARABÁ|T0CANT1NÓP0L1S|M4RCÍL10 D1AS|P0RT0 V3LH0|1P4T1NG4|G4L0 MAR1NGÁ|N0V0 H4MBURG0|S4O R4YMUND0|C4SC4V3L FC|P4TR10TAS|P0US0 AL3GR3|C4T4NDUV3NS3|S4NTA CRUZ-RN|4NÁP0L1S FC|TUP1N4MBÁS|1GUA TU|G3NUS|P4R4C4TU|P4T0 BR4NC0 FC|C4N0AS",
 "Marabá|Tocantinópolis|Maringá|Porto Velho|Ipatinga|Maringá|Novo Hamburgo|Boa Vista|Cascavel|Pato Branco|Pouso Alegre|Catanduva|Natal|Anápolis|Juiz de Fora|Iguatu|Porto Velho|Paracatu|Pato Branco|Canoas", 55);
 
