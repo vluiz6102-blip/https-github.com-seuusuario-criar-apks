@@ -50,3 +50,11 @@ describe("Pulso 90 newsroom", () => {
     expect(() => createMatchNews({ ...baseEvent, day: 0 })).toThrow();
   });
 });
+
+describe("Pulso 90 penalty shootouts",()=>{
+ it("reports the penalty winner without changing the regulation score",()=>{
+  const articles=createMatchNews({...baseEvent,homeGoals:1,awayGoals:1,homePenaltyScore:5,awayPenaltyScore:4});
+  expect(articles[1]?.title).toContain("Pato Branco FC venceu nos pênaltis");
+  expect(articles[0]?.body).toContain("(pênaltis 5-4)");
+ });
+});

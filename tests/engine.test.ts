@@ -193,3 +193,21 @@ describe("Pulso 90 save migration",()=>{
   expect(migrated.world!.globalLeagues.find(league=>league.divisionId===migrated.world!.divisionId)?.standings.length).toBeGreaterThan(0);
  });
 });
+
+describe("Pulso 90 national cup engine",()=>{
+ it("creates a Brazilian national cup with 92 clubs while keeping the league table separate",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
+  expect(c.cups).toHaveLength(1);
+  expect(c.cups[0]!.participants).toHaveLength(92);
+  expect(c.fixtures.filter(f=>f.competition===c.cups[0]!.competition&&f.round===4)).toHaveLength(28);
+  expect(c.cups[0]!.byes).toHaveLength(36);
+  expect(getStandings(c)).toHaveLength(20);
+ });
+ it("creates a national cup for an international career",()=>{
+  const japan=WORLD_CLUBS.find(club=>club.country==="Japão")!;
+  const c=createCareer("Teste","Mister",japan.id);
+  expect(c.cups).toHaveLength(1);
+  expect(c.cups[0]!.countryCode).toBe(japan.countryCode);
+  expect(c.cups[0]!.participants.length).toBeGreaterThanOrEqual(16);
+ });
+});

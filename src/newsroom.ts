@@ -8,6 +8,8 @@ export interface MatchNewsInput {
   awayClubName: string;
   homeGoals: number;
   awayGoals: number;
+  homePenaltyScore?: number;
+  awayPenaltyScore?: number;
   managedClubId?: string;
 }
 
@@ -23,12 +25,18 @@ export interface NewsArticleDraft {
 }
 
 function scoreLine(event: MatchNewsInput): string {
-  return event.homeClubName + " " + event.homeGoals + " x " + event.awayGoals + " " + event.awayClubName;
+  const penalties=event.homeGoals===event.awayGoals&&event.homePenaltyScore!==undefined&&event.awayPenaltyScore!==undefined
+    ? " (pênaltis "+event.homePenaltyScore+"-"+event.awayPenaltyScore+")"
+    : "";
+  return event.homeClubName + " " + event.homeGoals + " x " + event.awayGoals + " " + event.awayClubName + penalties;
 }
 
 function resultLine(event: MatchNewsInput): string {
   if (event.homeGoals > event.awayGoals) return event.homeClubName + " venceu";
   if (event.awayGoals > event.homeGoals) return event.awayClubName + " venceu";
+  if(event.homePenaltyScore!==undefined&&event.awayPenaltyScore!==undefined&&event.homePenaltyScore!==event.awayPenaltyScore){
+    return (event.homePenaltyScore>event.awayPenaltyScore?event.homeClubName:event.awayClubName)+" venceu nos pênaltis";
+  }
   return "A partida terminou empatada";
 }
 
@@ -59,14 +67,17 @@ export function createMatchNews(event: MatchNewsInput): NewsArticleDraft[] {
   const result = resultLine(event);
   const goalDifference=Math.abs(event.homeGoals-event.awayGoals);
   const totalGoals=event.homeGoals+event.awayGoals;
-  const broadcastHeadline=totalGoals>=5
-    ? "Noite de muitos gols em "+event.competition
-    : goalDifference>=3
-      ? "Vitória por margem ampla em "+event.competition
-      : goalDifference===0
-        ? "Placar termina igual em "+event.competition
-        : "Partida decidida por um gol em "+event.competition;
-  const dailyHeadline=event.homeGoals===event.awayGoals
+  const penaltyDecision=event.homeGoals===event.awayGoals&&event.homePenaltyScore!==undefined&&event.awayPenaltyScore!==undefined&&event.homePenaltyScore!==event.awayPenaltyScore;
+  const broadcastHeadline=penaltyDecision
+    ? "Decisão por pênaltis em "+event.competition
+    : totalGoals>=5
+      ? "Noite de muitos gols em "+event.competition
+      : goalDifference>=3
+        ? "Vitória por margem ampla em "+event.competition
+        : goalDifference===0
+          ? "Placar termina igual em "+event.competition
+          : "Partida decidida por um gol em "+event.competition;
+  const dailyHeadline=event.homeGoals===event.awayGoals&&!penaltyDecision
     ? "Pontos divididos em "+event.competition
     : result+" movimenta "+event.competition;
   const articles: NewsArticleDraft[] = [
