@@ -49,17 +49,24 @@ function makePlayer(id:string,clubId:string,position:Position,target:number,rand
  const value=Math.round(Math.pow(Math.max(1,overall-35),2.1)*680+Math.max(0,potential-overall)*28000);
  return {id,name:playerName(random,country),age:playerAge,position,overall,potential,finishing,passing,defending,pace:clamp(overall+Math.round(random()*16-8),32,96),stamina:clamp(overall+Math.round(random()*14-7),35,96),handling,creativity:clamp(overall+Math.round(random()*16-8),30,96),fitness:82+Math.floor(random()*19),value,wage:Math.max(900,Math.round(overall*overall*2)),goals:0,assists:0,appearances:0,clubId};
 }
-function makeSquad(clubId:string,strength:number,random:()=>number,country="Brasil"):Player[] {
- const positions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
+function makeSquad(clubId:string,strength:number,random:()=>number,country="Brasil",selection=false):Player[] {
+ const clubPositions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
+ const selectionPositions:Position[]=["GOL","GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA","ATA"];
+ const positions=selection?selectionPositions:clubPositions;
  return positions.map((pos,i)=>makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,pos,strength+(i<11?3:-3),random,undefined,country));
 }
 function createFixtures(clubs:Club[],season:number,competitionName="Liga das Araucárias"):Fixture[] {
  const ids=clubs.map(c=>c.id),fixtures:Fixture[]=[];
+ const baseRotation:Array<string|null>=[...ids];
+ if(baseRotation.length%2===1)baseRotation.push(null);
+ const n=baseRotation.length,half=n/2;
  for(let leg=0;leg<2;leg++){
-  const rotation=[...ids],n=ids.length,half=n/2;
+  const rotation=[...baseRotation];
   for(let round=0;round<n-1;round++){
    for(let i=0;i<half;i++){
-    const first=rotation[i]!,second=rotation[n-1-i]!,flip=(round+i+leg)%2===1;
+    const first=rotation[i],second=rotation[n-1-i];
+    if(!first||!second)continue;
+    const flip=(round+i+leg)%2===1;
     fixtures.push({id:"s"+season+"-r"+(leg*(n-1)+round+1)+"-"+i,round:leg*(n-1)+round+1,competition:competitionName,homeClubId:flip?second:first,awayClubId:flip?first:second,knockout:false,played:false});
    }
    const last=rotation.pop()!;rotation.splice(1,0,last);
@@ -71,7 +78,7 @@ function stableSeed(value:string):number{let hash=2166136261;for(let i=0;i<value
 function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,random:()=>number,managerClub:boolean,difficulty:Difficulty):Club {
  const adjustment=managerClub?0:getDifficultyStrengthAdjustment(difficulty);
  const strength=clamp(Math.round(seed.strength+adjustment),30,98);
- const players=makeSquad(seed.id,strength,random,seed.country);
+ const players=makeSquad(seed.id,strength,random,seed.country,seed.teamType==="selection");
  const payroll=players.reduce((total,player)=>total+player.wage,0);
  const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.max(Math.round(seed.budget/36),Math.ceil(payroll*1.15)),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players};
  club.startingXI=selectLineup(club,club.formation);
@@ -130,7 +137,7 @@ function publishMatchNews(c:Career,fixtures:Fixture[]):void{
 }
 
 export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
- if(!c.world||c.world.divisionId==="legacy")return;
+ if(!c.world||c.world.divisionId==="legacy"||getWorldClub(c.clubId)?.teamType==="selection")return;
  const cup= WORLD_COMPETITIONS.find(item=>item.type==="cup"&&item.countryCode===c.world!.countryCode&&!["br-super","br-estaduais"].includes(item.id));
  if(!cup)return;
  let seeds:ReturnType<typeof getDivisionClubs>=[];
