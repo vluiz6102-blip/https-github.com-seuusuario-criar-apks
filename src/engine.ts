@@ -136,6 +136,43 @@ function publishMatchNews(c:Career,fixtures:Fixture[]):void{
  c.news=c.news.slice(0,120);
 }
 
+function startContinentalClubCup(c:Career,previousClubs?:Map<string,Club>):void{
+ const managedSeed=getWorldClub(c.clubId),division=c.world?getDivision(c.world.divisionId):undefined;
+ if(!managedSeed||managedSeed.teamType==="selection"||!division||division.kind!=="national"||division.tier!==1)return;
+ const managedClub=getManagedClub(c);
+ const managedStrength=Math.round(managedClub.players.reduce((sum,player)=>sum+player.overall,0)/Math.max(1,managedClub.players.length));
+ const confederation=NATIONAL_TEAMS.find(team=>team.name===managedSeed.country)?.confederation;
+ if(!confederation)return;
+ const thresholds:Record<string,number>={UEFA:72,CONMEBOL:68,AFC:64,CAF:64,CONCACAF:64,OFC:58};
+ if(managedStrength<(thresholds[confederation]??68))return;
+ const cupIds:Record<string,string>={UEFA:"uefa-champions",CONMEBOL:"conmebol-libertadores",AFC:"afc-champions",CAF:"caf-champions",CONCACAF:"concacaf-champions",OFC:"ofc-champions"};
+ const cup=WORLD_COMPETITIONS.find(item=>item.id===cupIds[confederation]);
+ if(!cup)return;
+ const candidates=WORLD_DIVISIONS.filter(item=>item.teamType!=="selection"&&item.kind==="national"&&item.tier===1)
+  .flatMap(item=>getDivisionClubs(item.id))
+  .filter(seed=>NATIONAL_TEAMS.find(team=>team.name===seed.country)?.confederation===confederation)
+  .sort((a,b)=>b.strength-a.strength);
+ const unique=new Map(candidates.slice(0,cup.participants).map(seed=>[seed.id,seed]));
+ if(!unique.has(managedSeed.id)){
+  const weakest=[...unique.values()].sort((a,b)=>a.strength-b.strength)[0];
+  if(weakest)unique.delete(weakest.id);
+  unique.set(managedSeed.id,{...managedSeed,divisionId:c.world!.divisionId,divisionName:c.world!.competitionName,countryCode:c.world!.countryCode});
+ }
+ const participants=[...unique.values()].sort((a,b)=>b.strength-a.strength);
+ const clubCache=new Map(previousClubs??[]);
+ for(const club of c.clubs)clubCache.set(club.id,club);
+ for(const seed of participants)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(clubCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*271+stableSeed(seed.id)),false,c.world!.difficulty));
+ const bracketSize=2**Math.floor(Math.log2(participants.length));
+ const byeCount=Math.max(0,2*bracketSize-participants.length);
+ const byes=participants.slice(0,byeCount).map(seed=>seed.id);
+ const playing=participants.slice(byeCount);
+ const fixtureRound=6;
+ const fixtures:Fixture[]=[];
+ for(let i=0;i<playing.length/2;i++)fixtures.push({id:"cup-"+c.season+"-"+cup.id+"-stage-1-"+i,round:fixtureRound,competition:cup.name,homeClubId:playing[i]!.id,awayClubId:playing[playing.length-1-i]!.id,knockout:true,played:false});
+ c.cups.push({id:cup.id,competition:cup.name,countryCode:cup.countryCode,participants:participants.map(seed=>seed.id),byes,currentStage:1,fixtureRound,finished:false});
+ c.fixtures.push(...fixtures);
+}
+
 export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
  if(!c.world||c.world.divisionId==="legacy")return;
  const managedSeed=getWorldClub(c.clubId);
@@ -195,6 +232,7 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
  }
  c.cups=[{id:cup.id,competition:cup.name,countryCode:cup.countryCode,participants:participants.map(seed=>seed.id),byes,currentStage:1,fixtureRound,finished:false}];
  c.fixtures.push(...fixtures);
+ startContinentalClubCup(c,previousClubs);
 }
 
 export function advanceCupTournaments(c:Career,completedRound:number):Fixture[]{

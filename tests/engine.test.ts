@@ -261,3 +261,14 @@ describe("Pulso 90 national team career mode",()=>{
   expect(getStandings(c)).toHaveLength(55);
  });
 });
+
+describe("Pulso 90 continental club qualification",()=>{
+ it("qualifies a strong first-division club for its confederation tournament",()=>{
+  const seed=getDivisionClubs("br-a").sort((a,b)=>b.strength-a.strength)[0]!;
+  const c=createCareer("Teste","Mister",seed.id);
+  expect(c.cups.map(cup=>cup.id)).toContain("conmebol-libertadores");
+  const cup=c.cups.find(item=>item.id==="conmebol-libertadores")!;
+  expect(cup.participants).toHaveLength(32);
+  expect(c.fixtures.filter(fixture=>fixture.competition===cup.competition&&fixture.round===6)).toHaveLength(16);
+ });
+});
