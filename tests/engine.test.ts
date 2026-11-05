@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStandings, makeSubstitution, restManagedSquad, resumeMatch, simulateFixture } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
- it("builds a career with eight original clubs and a balanced double round-robin",()=>{
-  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(8);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(56);
-  for(let round=1;round<=14;round++){const fs=c.fixtures.filter(f=>f.round===round);expect(fs).toHaveLength(4);expect(new Set(fs.flatMap(f=>[f.homeClubId,f.awayClubId])).size).toBe(8);}expect(getNextFixture(c)).toBeDefined();
+ it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
+  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(20);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(380);
+  for(let round=1;round<=38;round++){const fs=c.fixtures.filter(f=>f.round===round);expect(fs).toHaveLength(10);expect(new Set(fs.flatMap(f=>[f.homeClubId,f.awayClubId])).size).toBe(20);}expect(getNextFixture(c)).toBeDefined();
  });
  it("pauses at halftime and ends a regular match at 90 minutes",()=>{
   const c=createCareer("Teste","Mister","pato-branco"),m=createLiveMatch(getNextFixture(c)!,c.clubs),r=seeded(34);
