@@ -283,37 +283,6 @@ for (const division of divisions) {
   if (division.id.endsWith("-2") && division.countryCode !== "BR") division.promotionTarget = division.countryCode.toLowerCase() + "-1";
 }
 
-const nationalLeagueNames:Record<string,string>={
- UEFA:"Liga das Nações Europeia",
- CONMEBOL:"Eliminatórias Sul-Americanas",
- AFC:"Eliminatórias Asiáticas",
- CAF:"Eliminatórias Africanas",
- CONCACAF:"Liga das Nações Concacaf",
- OFC:"Copa das Nações da Oceania"
-};
-for(const confederation of ["UEFA","CONMEBOL","AFC","CAF","CONCACAF","OFC"]){
- const teams=NATIONAL_TEAMS.filter(team=>team.confederation===confederation);
- const divisionId="nat-"+confederation.toLowerCase();
- const divisionName=nationalLeagueNames[confederation]!;
- divisions.push({
-  id:divisionId,name:divisionName,countryCode:confederation,country:"Seleções "+confederation,
-  region:confederation,tier:1,clubs:teams.map(team=>"national-"+team.id),
-  promotionPlaces:0,relegationPlaces:0,kind:"national",teamType:"selection"
- });
- for(const team of teams){
-  clubs.push({
-   id:"national-"+team.id,name:team.name,shortName:team.name.slice(0,3).toUpperCase(),
-   countryCode:confederation,country:team.name,region:confederation,
-   divisionId,divisionName,tier:1,city:team.name,stadium:"Estádio Nacional",
-   strength:team.strength,supporters:Math.round(team.strength*50000),
-   budget:Math.round(team.strength*180000),
-   project:"Representar "+team.name+" e conquistar títulos internacionais",
-   teamType:"selection"
-  });
- }
-}
-export const WORLD_DIVISIONS: WorldDivision[] = divisions;
-export const WORLD_CLUBS: WorldClubSeed[] = clubs;
 
 const cupCompetitions: WorldCompetitionSeed[] = [
   { id: "br-copa", name: "Copa Nacional do Brasil", countryCode: "BR", type: "cup", participants: 107 },
@@ -585,6 +554,38 @@ const fifaAdditionalTeams=fifaAssociationSeeds
   return {id:"fifa-"+slug(name),name,confederation,strength:Math.max(40,Math.min(84,(base[confederation]??58)+(hash%13)-6))};
  });
 export const NATIONAL_TEAMS=[...initialNationalTeams,...fifaAdditionalTeams];
+
+const nationalLeagueNames:Record<string,string>={
+ UEFA:"Liga das Nações Europeia",
+ CONMEBOL:"Eliminatórias Sul-Americanas",
+ AFC:"Eliminatórias Asiáticas",
+ CAF:"Eliminatórias Africanas",
+ CONCACAF:"Liga das Nações Concacaf",
+ OFC:"Copa das Nações da Oceania"
+};
+for(const confederation of ["UEFA","CONMEBOL","AFC","CAF","CONCACAF","OFC"]){
+ const teams=NATIONAL_TEAMS.filter(team=>team.confederation===confederation);
+ const divisionId="nat-"+confederation.toLowerCase();
+ const divisionName=nationalLeagueNames[confederation]!;
+ divisions.push({
+  id:divisionId,name:divisionName,countryCode:confederation,country:"Seleções "+confederation,
+  region:confederation,tier:1,clubs:teams.map(team=>"national-"+team.id),
+  promotionPlaces:0,relegationPlaces:0,kind:"national",teamType:"selection"
+ });
+ for(const team of teams){
+  clubs.push({
+   id:"national-"+team.id,name:team.name,shortName:team.name.slice(0,3).toUpperCase(),
+   countryCode:confederation,country:team.name,region:confederation,
+   divisionId,divisionName,tier:1,city:team.name,stadium:"Estádio Nacional",
+   strength:team.strength,supporters:Math.round(team.strength*50000),
+   budget:Math.round(team.strength*180000),
+   project:"Representar "+team.name+" e conquistar títulos internacionais",
+   teamType:"selection"
+  });
+ }
+}
+export const WORLD_DIVISIONS: WorldDivision[] = divisions;
+export const WORLD_CLUBS: WorldClubSeed[] = clubs;
 
 // Generic national leagues for associations without a dedicated country package.
 // They are original P90 content, not representations of official league names.
