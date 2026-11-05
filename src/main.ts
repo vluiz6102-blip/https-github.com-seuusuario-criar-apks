@@ -1,9 +1,11 @@
 import "./styles.css";
-import { addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, money, playerPositionLabel, restManagedSquad, resumeMatch, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
+import { acceptJobOffer, acceptSponsorOffer, addNews, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getClub, getManagedClub, getNextFixture, getStandings, makeSubstitution, migrateCareer, money, playerPositionLabel, restManagedSquad, resumeMatch, setCareerDifficulty, setCareerPace, simulateNextFixtureFast, toggleCareerInvestors, type Career, type Club, type Fixture, type MatchState, type Player, type Screen, type Tactic } from "./engine";
+import { MANAGER_PRESETS, NATIONAL_TEAMS, WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, getDivision, getDivisionClubs, type Difficulty } from "./world-data";
+import { persistCareer, persistCatalog, restoreCareer } from "./persistence";
 
 const STORE="jornada90-save-v1",PREFS="pulso90-preferences-v1",app=document.querySelector<HTMLDivElement>("#app");
 type Preferences={sound:boolean};
-let preferences:Preferences=loadPreferences(),introEntered=false,overlay:"settings"|"credits"|null=null;
+let preferences:Preferences=loadPreferences(),introEntered=false,overlay:"settings"|"credits"|null=null,worldTab="clubes",persistTimer=0;
 let audioContext:AudioContext|null=null;
 function loadPreferences():Preferences{try{const raw=localStorage.getItem(PREFS);if(!raw)return {sound:true};const value=JSON.parse(raw) as Partial<Preferences>;return {sound:value.sound!==false};}catch{return {sound:true};}}
 function savePreferences():void{try{localStorage.setItem(PREFS,JSON.stringify(preferences));}catch(e){console.warn("Não foi possível salvar as preferências.",e);}}
@@ -33,7 +35,13 @@ function loadCareer():Career|null{
   return value;
  }catch{return null;}
 }
-function save():void{if(career)try{localStorage.setItem(STORE,JSON.stringify(career));}catch(e){console.warn("Falha ao salvar a carreira.",e);}}
+function save():void{
+ if(!career)return;
+ try{localStorage.setItem(STORE,JSON.stringify(career));}
+ catch(e){console.warn("Falha no save rápido; IndexedDB continua disponível.",e);}
+ window.clearTimeout(persistTimer);
+ persistTimer=window.setTimeout(()=>{if(career)void persistCareer(STORE,career).catch(error=>console.warn("Falha no save IndexedDB.",error));},500);
+}
 function esc(s:string):string{return s.replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]??ch));}
 function club():Club{return getManagedClub(career!);}
 function next():Fixture|undefined{return getNextFixture(career!);}
@@ -41,7 +49,7 @@ function opponent(f:Fixture,id:string):{club:Club;home:boolean}{const home=f.hom
 function tag(text:string,kind=""):string{return '<span class="badge '+kind+'">'+esc(text)+"</span>";}
 function mark(c:Club,size="normal"):string{return '<span class="club-mark '+size+'">'+esc(c.shortName.slice(0,3))+"</span>";}
 function head(eyebrow:string,title:string,sub=""):string{return '<div class="page-heading"><div><span class="eyebrow">'+esc(eyebrow)+'</span><h1>'+esc(title)+'</h1>'+(sub?'<p>'+esc(sub)+"</p>":"")+"</div></div>";}
-const nav:Array<{id:Screen;label:string;icon:string}>=[{id:"inicio",label:"Início",icon:"⌂"},{id:"elenco",label:"Elenco",icon:"◎"},{id:"taticas",label:"Táticas",icon:"⌘"},{id:"calendario",label:"Jogos",icon:"▦"},{id:"mercado",label:"Mercado",icon:"↔"},{id:"clube",label:"Clube",icon:"◇"},{id:"jornal",label:"Jornal",icon:"▤"}];
+const nav:Array<{id:Screen;label:string;icon:string}>=[{id:"inicio",label:"Início",icon:"⌂"},{id:"elenco",label:"Elenco",icon:"◎"},{id:"taticas",label:"Táticas",icon:"⌘"},{id:"calendario",label:"Jogos",icon:"▦"},{id:"mercado",label:"Mercado",icon:"↔"},{id:"clube",label:"Clube",icon:"◇"},{id:"jornal",label:"Jornal",icon:"▤"},{id:"mundo",label:"Mundo",icon:"◎"}];
 function topbar():string{const c=club();return '<header class="topbar"><button class="brand" data-action="nav" data-value="inicio"><span class="brand-icon pulso-mark">P<span>90</span></span><span class="brand-copy"><strong>PULSO <b>90</b></strong><small>FOOTBALL MANAGEMENT</small></span></button><div class="top-meta"><span class="season-chip">TEMPORADA '+career!.season+'</span><span class="club-chip">'+mark(c,"tiny")+esc(c.shortName)+'</span><button class="icon-button" data-action="toggle-sound" aria-label="Alternar efeitos sonoros" aria-pressed="'+preferences.sound+'" title="Som '+(preferences.sound?"ligado":"desligado")+'">'+(preferences.sound?"♫":"♪")+'</button><button class="icon-button" data-action="export-save" aria-label="Exportar save" title="Exportar carreira">↗</button></div></header>';}
 function bottomnav():string{return '<nav class="bottom-nav" aria-label="Navegação principal">'+nav.map(n=>'<button class="nav-item '+(career!.screen===n.id?"active":"")+'" data-action="nav" data-value="'+n.id+'"><span class="nav-icon">'+n.icon+'</span><span>'+n.label+"</span></button>").join("")+"</nav>";}
 function landing():string{
