@@ -392,21 +392,24 @@ export function processGlobalPromotions(world:WorldState):void{
 
 function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
  const featured: Array<{divisionId:string;divisionName:string;homeClubId:string;awayClubId:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
- const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1"];
+ const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1","nat-uefa","nat-conmebol","nat-afc","nat-caf","nat-concacaf","nat-ofc"];
  for(const league of world.globalLeagues){
   if(league.divisionId===world.divisionId||league.seasonComplete||stableSeed(league.divisionId)%2!==dayBucket)continue;
   const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
   const teams=league.standings.map(row=>getWorldClub(row.clubId)).filter((club):club is WorldClubSeed=>club!==undefined);
   const count=teams.length;
-  if(!division||count<4||count%2!==0)continue;
-  const rounds=count-1;
+  if(!division||count<4)continue;
+  const baseRotation=count%2===0?[...teams]:[...teams,null];
+  const rounds=baseRotation.length-1;
   const round=league.matchday%rounds;
   const leg=Math.floor(league.matchday/rounds);
-  const rotation=[...teams];
+  const rotation=[...baseRotation];
   for(let turn=0;turn<round;turn++){const last=rotation.pop()!;rotation.splice(1,0,last);}
   const results:GlobalLeagueResult[]=[];
-  for(let pair=0;pair<count/2;pair++){
-   let home=rotation[pair]!,away=rotation[count-1-pair]!;
+  let featuredForLeague=false;
+  for(let pair=0;pair<rotation.length/2;pair++){
+   let home=rotation[pair]!,away=rotation[rotation.length-1-pair]!;
+   if(!home||!away)continue;
    if((round+pair+leg)%2===1){const swap=home;home=away;away=swap;}
    const random=randomFrom(world.randomSeed+stableSeed(league.divisionId+"-"+league.season+"-"+league.matchday+"-"+pair));
    const difference=home.strength-away.strength;
@@ -422,8 +425,9 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
    if(homeGoals>awayGoals){homeRow.wins++;awayRow.losses++;homeRow.points+=3;}
    else if(homeGoals<awayGoals){awayRow.wins++;homeRow.losses++;awayRow.points+=3;}
    else{homeRow.draws++;awayRow.draws++;homeRow.points++;awayRow.points++;}
-   if((featuredIds.includes(league.divisionId)||featured.length===0)&&pair===0){
+   if(!featuredForLeague&&(featuredIds.includes(league.divisionId)||featured.length===0)){
     featured.push({divisionId:league.divisionId,divisionName:division.name,homeClubId:home.id,awayClubId:away.id,homeName:home.name,awayName:away.name,homeGoals,awayGoals,season:league.season,matchday:league.matchday+1});
+    featuredForLeague=true;
    }
   }
   league.recentResults=[...league.recentResults,...results].slice(-20);
