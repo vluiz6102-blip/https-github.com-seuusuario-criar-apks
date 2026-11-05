@@ -173,7 +173,6 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
   seeds=divisions.flatMap(division=>getDivisionClubs(division.id));
  }
  const unique=new Map(seeds.map(seed=>[seed.id,seed]));
- const managedSeed=getWorldClub(c.clubId);
  if(managedSeed&&!unique.has(managedSeed.id)){
   unique.set(managedSeed.id,{...managedSeed,divisionId:c.world.divisionId,divisionName:c.world.competitionName,countryCode:c.world.countryCode});
  }
