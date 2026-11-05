@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, countryDivisionCount, getAdjacentDivision, getDivisionClubs } from "../src/world-data";
+import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, countryDivisionCount, getAdjacentDivision, getDivision, getDivisionClubs } from "../src/world-data";
 
 describe("Pulso 90 original global database",()=>{
  it("provides at least two playable divisions for each represented nation",()=>{
@@ -27,3 +27,14 @@ describe("Pulso 90 original global database",()=>{
   expect(WORLD_DIVISIONS.every(item=>item.clubs.length>=8)).toBe(true);
  });
 });
+
+ it("defines explicit promotion and relegation places for the Brazilian pyramid",()=>{
+  expect(getDivision("br-a")?.promotionPlaces).toBe(0);
+  expect(getDivision("br-a")?.relegationPlaces).toBe(4);
+  expect(getDivision("br-b")?.promotionPlaces).toBe(4);
+  expect(getDivision("br-c")?.promotionPlaces).toBe(4);
+  expect(getDivision("br-d")?.promotionPlaces).toBe(4);
+  expect(getDivision("br-pr-a")?.promotionPlaces).toBe(1);
+  expect(getDivision("br-pr-b")?.promotionPlaces).toBe(2);
+  expect(getDivision("br-varzea-pr")?.promotionPlaces).toBe(2);
+ });
