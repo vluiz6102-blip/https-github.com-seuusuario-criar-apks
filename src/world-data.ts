@@ -198,6 +198,19 @@ for (const [uf,state,cities,strength] of brazilStates) {
  const amateurNames = cities.map((city,index)=>["Raiz","Bairro","Várzea","Juventude","Campo","Parque","Comunidade","Esperança"][index]+" "+city);
  addDivision("br-varzea-"+uf,"Liga de Várzea "+state,"BR","Brasil",state,7,"amateur",amateurNames.join("|"),cities.join("|"),strength-16);
 }
+// Complete the same access and amateur layers for the eight state leagues
+// that were part of the original seed set.
+for (const top of divisions.filter(item=>item.countryCode==="BR"&&item.kind==="state"&&item.id.endsWith("-a"))) {
+ const uf=top.id.slice(3,-2);
+ const cities=clubs.filter(club=>club.divisionId===top.id).map(club=>club.city);
+ if(!divisions.some(item=>item.id==="br-"+uf+"-b")){
+  const base=Math.max(38,Math.round(clubs.filter(club=>club.divisionId===top.id).reduce((sum,club)=>sum+club.strength,0)/Math.max(1,cities.length))-7);
+  const accessNames=cities.map((city,index)=>["Boreal","Pioneiros","Portuária","Ferroviário","Ribeira","Central","Montanha","Horizonte"][index]+" "+city);
+  addDivision("br-"+uf+"-b","Campeonato "+top.region+" · Divisão de Acesso","BR","Brasil",top.region,6,"state",accessNames.join("|"),cities.join("|"),base);
+  const amateurNames=cities.map((city,index)=>["Raiz","Bairro","Várzea","Juventude","Campo","Parque","Comunidade","Esperança"][index]+" "+city);
+  addDivision("br-varzea-"+uf,"Liga de Várzea "+top.region,"BR","Brasil",top.region,7,"amateur",amateurNames.join("|"),cities.join("|"),base-9);
+ }
+}
 for (const division of divisions) {
  if (division.countryCode==="BR" && division.kind==="state") {
   const uf=division.id.slice(3,-2);

@@ -373,7 +373,7 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
    league.recentResults=[];
   }
  }
- for(const item of featured.slice(0,4)){
+ for(const item of featured){
   const source=item.divisionId==="br-a"||item.divisionId==="br-b"?"P90 Futebol Brasil":"Central 90";
   world.worldNews.unshift({
    id:"global-match-"+item.divisionId+"-"+item.season+"-"+item.matchday,
