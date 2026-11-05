@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptSponsorOffer, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture } from "../src/engine";
+import { acceptSponsorOffer, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldNews } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
@@ -115,7 +115,8 @@ describe("Pulso 90 lineup management",()=>{
   expect(setStartingPlayer(c,9,bench.id)).toBe(false);
   const fixture=getNextFixture(c)!;
   const match=createLiveMatch(fixture,c.clubs);
-  expect(match.homeLineup).toContain(bench.id);
+  const managedLineup=fixture.homeClubId===managed.id?match.homeLineup:match.awayLineup;
+  expect(managedLineup).toContain(bench.id);
  });
  it("rejects an out-of-position goalkeeper and lineup changes during a live match",()=>{
   const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc"),managed=c.clubs.find(item=>item.id===c.clubId)!;
@@ -124,5 +125,19 @@ describe("Pulso 90 lineup management",()=>{
   const match=createLiveMatch(getNextFixture(c)!,c.clubs);c.currentMatch=match;
   const bench=managed.players.find(player=>player.position==="DEF"&&!getStartingLineup(managed).some(starter=>starter.id===player.id))!;
   expect(setStartingPlayer(c,1,bench.id)).toBe(false);
+ });
+});
+
+describe("Pulso 90 world newspaper synchronization",()=>{
+ it("publishes signed sponsor events once in the main newspaper",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
+  const offer=c.world!.sponsorOffers[0]!;
+  expect(acceptSponsorOffer(c,offer.id)).toBe(true);
+  const eventId="sponsor-signed-"+offer.id;
+  expect(c.news.filter(item=>item.eventId===eventId)).toHaveLength(1);
+  const before=c.news.length;
+  syncWorldNews(c);
+  expect(c.news.length).toBe(before);
+  expect(c.news.find(item=>item.eventId===eventId)?.source).toBe("Mercado & Negócios");
  });
 });
