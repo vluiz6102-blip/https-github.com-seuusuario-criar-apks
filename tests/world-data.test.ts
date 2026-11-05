@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, countryDivisionCount, getAdjacentDivision, getDivision, getDivisionClubs } from "../src/world-data";
+import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, SPONSOR_CATALOG, countryDivisionCount, getAdjacentDivision, getDivision, getDivisionClubs } from "../src/world-data";
 
 describe("Pulso 90 original global database",()=>{
  it("provides at least two playable divisions for each represented nation",()=>{
@@ -62,7 +62,7 @@ describe("Pulso 90 global football simulation",()=>{
  it("ships a substantial original playable catalogue",()=>{
   expect(WORLD_DIVISIONS).toHaveLength(512);
   expect(WORLD_CLUBS).toHaveLength(5155);
-  expect(WORLD_COMPETITIONS).toHaveLength(765);
+  expect(WORLD_COMPETITIONS).toHaveLength(769);
   expect(NATIONAL_TEAMS).toHaveLength(211);
   expect(WORLD_DIVISIONS.filter(division=>division.teamType==="selection")).toHaveLength(6);
   expect(WORLD_CLUBS.filter(club=>club.teamType==="selection")).toHaveLength(211);
@@ -109,5 +109,14 @@ describe("Pulso 90 national team divisions",()=>{
   expect(league.standings.reduce((sum,row)=>sum+row.played,0)).toBe(54);
   expect(league.recentResults.every(result=>result.homeClubId!==result.awayClubId)).toBe(true);
   expect(world.worldNews.some(item=>item.id.startsWith("global-match-nat-uefa-"))).toBe(true);
+ });
+});
+
+describe("Pulso 90 sponsor marketplace",()=>{
+ it("offers a broad mix of fictional brands across business sectors and sizes",()=>{
+  expect(SPONSOR_CATALOG.length).toBeGreaterThanOrEqual(35);
+  expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.sector)).size).toBeGreaterThanOrEqual(20);
+  expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.tier))).toEqual(new Set([1,2,3,4,5]));
+  expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.id)).size).toBe(SPONSOR_CATALOG.length);
  });
 });
