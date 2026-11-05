@@ -83,7 +83,22 @@ export function createCareer(managerName:string,managerNickname:string,clubId:st
  return career;
 }
 export function migrateCareer(career:Career):Career {
+ const legacyCompetition=career.fixtures[0]?.competition??"Liga das Araucárias";
+ if(!getWorldClub(career.clubId)){
+  const world=migrateWorldState(career.world,career.clubId);
+  world.divisionId="legacy";
+  world.competitionName=legacyCompetition;
+  world.countryCode="BR";
+  world.jobOffers=[];
+  world.sponsorOffers=[];
+  career.world=world;
+  return career;
+ }
  career.world=migrateWorldState(career.world,career.clubId);
+ if(career.world.divisionId!==getWorldClub(career.clubId)?.divisionId){
+  const clubSeed=getWorldClub(career.clubId);
+  if(clubSeed){career.world.divisionId=clubSeed.divisionId;career.world.competitionName=clubSeed.divisionName;career.world.countryCode=clubSeed.countryCode;}
+ }
  return career;
 }
 export function getClub(career:Career,id:string):Club{return career.clubs.find(c=>c.id===id)??career.clubs[0]!;}
@@ -301,7 +316,7 @@ export function advanceSeason(c:Career):Career{
  }
  c.fixtures=createFixtures(c.clubs,c.season,c.world?.competitionName??"Liga das Araucárias");
  const marketRandom=seeded(9031+c.season*7919);
- c.transferMarket=Array.from({length:36},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+marketRandom()*33,marketRandom)).sort((a,b)=>b.overall-a.overall);
+ c.transferMarket=Array.from({length:18},(_,i)=>makePlayer("free-"+c.season+"-"+(i+1),"free-agent",(["GOL","DEF","MEI","ATA"] as Position[])[i%4]!,48+marketRandom()*33,marketRandom)).sort((a,b)=>b.overall-a.overall);
  c.currentMatch=null;c.screen="inicio";
  c.news.unshift({id:"news-"+c.nextNewsId++,day:1,tag:"clube",title:"Nova temporada, novas metas",body:"A diretoria definiu um novo ciclo. Reavalie o elenco, a folha salarial e os objetivos antes da estreia.",source:"Jornal do Clube",publisherId:"jornal-do-clube",eventId:"season-"+c.season,truthLevel:"confirmed"});
  c.news=c.news.slice(0,120);
