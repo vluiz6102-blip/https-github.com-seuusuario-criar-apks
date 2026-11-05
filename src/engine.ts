@@ -71,7 +71,9 @@ function stableSeed(value:string):number{let hash=2166136261;for(let i=0;i<value
 function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,random:()=>number,managerClub:boolean,difficulty:Difficulty):Club {
  const adjustment=managerClub?0:getDifficultyStrengthAdjustment(difficulty);
  const strength=clamp(Math.round(seed.strength+adjustment),30,98);
- const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random,seed.country)};
+ const players=makeSquad(seed.id,strength,random,seed.country);
+ const payroll=players.reduce((total,player)=>total+player.wage,0);
+ const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.max(Math.round(seed.budget/36),Math.ceil(payroll*1.15)),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players};
  club.startingXI=selectLineup(club,club.formation);
  return club;
 }

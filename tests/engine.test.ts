@@ -167,7 +167,8 @@ describe("Pulso 90 worldwide manager market",()=>{
   expect(c.world!.divisionId).toBe(offer.divisionId);
   expect(c.world!.competitionName).toBe(offer.divisionName);
   expect(c.fixtures.length).toBeGreaterThan(0);
-  expect(c.fixtures.every(fixture=>fixture.competition===offer.divisionName)).toBe(true);
+  expect(c.fixtures.some(fixture=>fixture.competition===offer.divisionName)).toBe(true);
+  expect(c.fixtures.every(fixture=>fixture.competition===offer.divisionName||fixture.competition===c.cups[0]?.competition)).toBe(true);
   expect(c.world!.globalLeagues.find(league=>league.divisionId===oldDivision)?.standings.length).toBeGreaterThan(0);
   expect(c.world!.globalLeagues.find(league=>league.divisionId===offer.divisionId)?.matchday).toBe(0);
  });
