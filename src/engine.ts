@@ -1,5 +1,5 @@
 import { createMatchNews } from "./newsroom";
-import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, type Difficulty } from "./world-data";
+import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, WORLD_DIVISIONS, type Difficulty } from "./world-data";
 import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type CareerPace, type WorldState } from "./world-simulation";
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
@@ -341,7 +341,13 @@ export function advanceSeason(c:Career):Career{
  if(c.world){
   let targetDivision:string|undefined;
   if(managedPosition>0&&managedPosition<=2)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
-  else if(managedPosition>=Math.max(5,Math.ceil(c.clubs.length*.85)))targetDivision=getAdjacentDivision(c.world.divisionId,"down");
+  else if(managedPosition>=Math.max(5,Math.ceil(c.clubs.length*.85))){
+   if(c.world.divisionId==="br-d"){
+    const city=getManagedClub(c).city;
+    targetDivision=WORLD_DIVISIONS.filter(item=>item.countryCode==="BR"&&item.kind==="state"&&item.id.endsWith("-a"))
+     .find(item=>getDivisionClubs(item.id).some(seed=>seed.city===city))?.id??getAdjacentDivision(c.world.divisionId,"down");
+   }else targetDivision=getAdjacentDivision(c.world.divisionId,"down");
+  }
   if(targetDivision){
    const target=getDivision(targetDivision);
    const managed=getManagedClub(c);
