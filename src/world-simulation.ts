@@ -196,7 +196,6 @@ export function createWorldState(
   const club = getWorldClub(clubId) ?? getWorldClub("br-a-fl4mengo") ?? getDivisionClubs("br-a")[0]!;
   const day = 1;
   const seed = stableSeed(club.id + "-" + managerProfileId + "-" + difficulty);
-  const divisionClubs = getDivisionClubs(club.divisionId);
   const selectedManager=MANAGER_PRESETS.find(preset=>preset.id===managerProfileId);
   const managerReputation=selectedManager?.reputation ?? (managerProfileId.startsWith("retired-") ? 60 : 25);
   const jobs=createWorldJobOffers(club.id,day,seed,managerReputation);
