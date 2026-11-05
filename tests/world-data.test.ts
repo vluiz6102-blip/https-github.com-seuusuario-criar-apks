@@ -45,7 +45,7 @@ describe("Pulso 90 global football simulation",()=>{
   const world=createWorldState("br-d-p4t0-br4nc0-fc");
   const league=world.globalLeagues.find(item=>item.divisionId==="en-1")!;
   expect(league).toBeDefined();
-  for(let day=0;day<6;day++)advanceWorldDay(world,"br-d-p4t0-br4nc0-fc");
+  for(let day=0;day<2;day++)advanceWorldDay(world,"br-d-p4t0-br4nc0-fc");
   expect(league.matchday).toBe(1);
   expect(league.recentResults).toHaveLength(5);
   expect(league.standings.reduce((sum,row)=>sum+row.played,0)).toBe(10);
@@ -57,3 +57,10 @@ describe("Pulso 90 global football simulation",()=>{
   expect(headline!.body).toContain(home.name+" "+result.homeGoals+" x "+result.awayGoals+" "+away.name);
  });
 });
+
+ it("ships a substantial original playable catalogue",()=>{
+  expect(WORLD_DIVISIONS).toHaveLength(170);
+  expect(WORLD_CLUBS).toHaveLength(1584);
+  expect(WORLD_COMPETITIONS).toHaveLength(186);
+  expect(NATIONAL_TEAMS).toHaveLength(48);
+ });

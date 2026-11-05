@@ -313,12 +313,15 @@ export const NATIONAL_TEAMS: Array<{ id: string; name: string; confederation: st
   ["rs","Sérvia","UEFA",82],["ro","Romênia","UEFA",76],["gr","Grécia","UEFA",75],["jm","Jamaica","CONCACAF",72]
 ].map(([id,name,confederation,strength]) => ({ id: String(id), name: String(name), confederation: String(confederation), strength: Number(strength) }));
 
+const worldClubById = new Map(WORLD_CLUBS.map(club => [club.id, club] as const));
+const worldDivisionById = new Map(WORLD_DIVISIONS.map(division => [division.id, division] as const));
+
 export function getWorldClub(id: string): WorldClubSeed | undefined {
-  return WORLD_CLUBS.find(club => club.id === id);
+  return worldClubById.get(id);
 }
 
 export function getDivision(id: string): WorldDivision | undefined {
-  return WORLD_DIVISIONS.find(division => division.id === id);
+  return worldDivisionById.get(id);
 }
 
 export function getDivisionClubs(id: string): WorldClubSeed[] {

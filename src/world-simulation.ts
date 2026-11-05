@@ -325,11 +325,11 @@ export function applyFanMatchReaction(
   return article;
 }
 
-function simulateGlobalMatchdays(world:WorldState):void{
+function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
  const featured: Array<{divisionId:string;divisionName:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
  const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1"];
  for(const league of world.globalLeagues){
-  if(league.divisionId===world.divisionId)continue;
+  if(league.divisionId===world.divisionId||stableSeed(league.divisionId)%2!==dayBucket)continue;
   const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
   const teams=getDivisionClubs(league.divisionId);
   const count=teams.length;
@@ -357,7 +357,7 @@ function simulateGlobalMatchdays(world:WorldState):void{
    if(homeGoals>awayGoals){homeRow.wins++;awayRow.losses++;homeRow.points+=3;}
    else if(homeGoals<awayGoals){awayRow.wins++;homeRow.losses++;awayRow.points+=3;}
    else{homeRow.draws++;awayRow.draws++;homeRow.points++;awayRow.points++;}
-   if(featuredIds.includes(league.divisionId)&&pair===0){
+   if((featuredIds.includes(league.divisionId)||featured.length===0)&&pair===0){
     featured.push({divisionId:league.divisionId,divisionName:division.name,homeName:home.name,awayName:away.name,homeGoals,awayGoals,season:league.season,matchday:league.matchday+1});
    }
   }
@@ -373,7 +373,7 @@ function simulateGlobalMatchdays(world:WorldState):void{
    league.recentResults=[];
   }
  }
- for(const item of featured){
+ for(const item of featured.slice(0,4)){
   const source=item.divisionId==="br-a"||item.divisionId==="br-b"?"P90 Futebol Brasil":"Central 90";
   world.worldNews.unshift({
    id:"global-match-"+item.divisionId+"-"+item.season+"-"+item.matchday,
@@ -388,7 +388,7 @@ function simulateGlobalMatchdays(world:WorldState):void{
 
 export function advanceWorldDay(world: WorldState, clubId: string): void {
   world.worldDay += 1;
-  if(world.worldDay%7===0)simulateGlobalMatchdays(world);
+  simulateGlobalMatchdays(world,world.worldDay%2);
   if (world.activeSponsor) {
     world.activeSponsor.remainingDays = Math.max(0, world.activeSponsor.remainingDays - 1);
     if (world.activeSponsor.remainingDays === 0) {
