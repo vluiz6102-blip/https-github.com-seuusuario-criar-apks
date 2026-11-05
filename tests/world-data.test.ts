@@ -38,3 +38,22 @@ describe("Pulso 90 original global database",()=>{
   expect(getDivision("br-pr-b")?.promotionPlaces).toBe(2);
   expect(getDivision("br-varzea-pr")?.promotionPlaces).toBe(2);
  });
+
+import { advanceWorldDay, createWorldState } from "../src/world-simulation";
+describe("Pulso 90 global football simulation",()=>{
+ it("simulates global league rounds and publishes headlines tied to real saved scores",()=>{
+  const world=createWorldState("br-d-p4t0-br4nc0-fc");
+  const league=world.globalLeagues.find(item=>item.divisionId==="en-1")!;
+  expect(league).toBeDefined();
+  for(let day=0;day<6;day++)advanceWorldDay(world,"br-d-p4t0-br4nc0-fc");
+  expect(league.matchday).toBe(1);
+  expect(league.recentResults).toHaveLength(5);
+  expect(league.standings.reduce((sum,row)=>sum+row.played,0)).toBe(10);
+  const headline=world.worldNews.find(item=>item.id.startsWith("global-match-en-1-"));
+  expect(headline).toBeDefined();
+  const result=league.recentResults[0]!;
+  const home=WORLD_CLUBS.find(club=>club.id===result.homeClubId)!;
+  const away=WORLD_CLUBS.find(club=>club.id===result.awayClubId)!;
+  expect(headline!.body).toContain(home.name+" "+result.homeGoals+" x "+result.awayGoals+" "+away.name);
+ });
+});

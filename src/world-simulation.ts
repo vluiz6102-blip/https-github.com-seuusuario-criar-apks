@@ -1,6 +1,7 @@
 import {
   getDivisionClubs,
   getWorldClub,
+  WORLD_DIVISIONS,
   MANAGER_PRESETS,
   PROJECT_TEMPLATES,
   SPONSOR_CATALOG,
@@ -56,8 +57,36 @@ export interface WorldNewsRecord {
   category: "torcida" | "mercado" | "diretoria" | "mundo" | "carreira";
 }
 
+export interface GlobalLeagueStanding {
+  clubId: string;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+}
+
+export interface GlobalLeagueResult {
+  matchday: number;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+}
+
+export interface GlobalLeagueState {
+  divisionId: string;
+  season: number;
+  matchday: number;
+  standings: GlobalLeagueStanding[];
+  recentResults: GlobalLeagueResult[];
+}
+
 export interface WorldState {
   version: 1;
+  globalLeagues: GlobalLeagueState[];
   difficulty: Difficulty;
   pace: "normal" | "tranquilo" | "delegado";
   divisionId: string;
@@ -134,6 +163,18 @@ function makeSponsorOffers(club: WorldClubSeed, day: number, seed: number): Spon
   });
 }
 
+function createGlobalLeagueStates(currentDivisionId:string):GlobalLeagueState[]{
+ return WORLD_DIVISIONS.filter(division=>division.id!==currentDivisionId).map(division=>({
+  divisionId:division.id,
+  season:2026,
+  matchday:0,
+  standings:getDivisionClubs(division.id).map(club=>({
+   clubId:club.id,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0
+  })),
+  recentResults:[]
+ }));
+}
+
 export function createWorldState(
   clubId: string,
   managerProfileId = "custom",
@@ -152,6 +193,7 @@ export function createWorldState(
   const selectedManager=MANAGER_PRESETS.find(preset=>preset.id===managerProfileId);
   return {
     version: 1,
+    globalLeagues: createGlobalLeagueStates(club.divisionId),
     difficulty,
     pace,
     divisionId: club.divisionId,
@@ -283,8 +325,70 @@ export function applyFanMatchReaction(
   return article;
 }
 
+function simulateGlobalMatchdays(world:WorldState):void{
+ const featured: Array<{divisionId:string;divisionName:string;homeName:string;awayName:string;homeGoals:number;awayGoals:number;season:number;matchday:number}>=[];
+ const featuredIds=["br-a","br-b","en-1","es-1","ar-1","jp-1","ma-1"];
+ for(const league of world.globalLeagues){
+  if(league.divisionId===world.divisionId)continue;
+  const division=WORLD_DIVISIONS.find(item=>item.id===league.divisionId);
+  const teams=getDivisionClubs(league.divisionId);
+  const count=teams.length;
+  if(!division||count<4||count%2!==0)continue;
+  const rounds=count-1;
+  const round=league.matchday%rounds;
+  const leg=Math.floor(league.matchday/rounds);
+  const rotation=[...teams];
+  for(let turn=0;turn<round;turn++){const last=rotation.pop()!;rotation.splice(1,0,last);}
+  const results:GlobalLeagueResult[]=[];
+  for(let pair=0;pair<count/2;pair++){
+   let home=rotation[pair]!,away=rotation[count-1-pair]!;
+   if((round+pair+leg)%2===1){const swap=home;home=away;away=swap;}
+   const random=randomFrom(world.randomSeed+stableSeed(league.divisionId+"-"+league.season+"-"+league.matchday+"-"+pair));
+   const difference=home.strength-away.strength;
+   const homeGoals=clamp(Math.round(1.15+difference/31+(random()-.5)*2.8),0,6);
+   const awayGoals=clamp(Math.round(1.0-difference/34+(random()-.5)*2.8),0,6);
+   const result={matchday:league.matchday+1,homeClubId:home.id,awayClubId:away.id,homeGoals,awayGoals};
+   results.push(result);
+   const homeRow=league.standings.find(row=>row.clubId===home.id)!;
+   const awayRow=league.standings.find(row=>row.clubId===away.id)!;
+   homeRow.played++;awayRow.played++;
+   homeRow.goalsFor+=homeGoals;homeRow.goalsAgainst+=awayGoals;
+   awayRow.goalsFor+=awayGoals;awayRow.goalsAgainst+=homeGoals;
+   if(homeGoals>awayGoals){homeRow.wins++;awayRow.losses++;homeRow.points+=3;}
+   else if(homeGoals<awayGoals){awayRow.wins++;homeRow.losses++;awayRow.points+=3;}
+   else{homeRow.draws++;awayRow.draws++;homeRow.points++;awayRow.points++;}
+   if(featuredIds.includes(league.divisionId)&&pair===0){
+    featured.push({divisionId:league.divisionId,divisionName:division.name,homeName:home.name,awayName:away.name,homeGoals,awayGoals,season:league.season,matchday:league.matchday+1});
+   }
+  }
+  league.recentResults=[...league.recentResults,...results].slice(-20);
+  league.matchday++;
+  if(league.matchday>=rounds*2){
+   const champion=[...league.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))[0];
+   const championName=teams.find(team=>team.id===champion?.clubId)?.name??"Um clube";
+   world.worldNews.unshift({id:"global-champion-"+league.divisionId+"-"+league.season,day:world.worldDay,source:"Central 90",title:championName+" conquista "+division.name,body:"A equipe encerrou a temporada simulada com "+(champion?.points??0)+" pontos e terminou na liderança da competição.",category:"mundo"});
+   league.season++;
+   league.matchday=0;
+   league.standings=teams.map(team=>({clubId:team.id,played:0,wins:0,draws:0,losses:0,goalsFor:0,goalsAgainst:0,points:0}));
+   league.recentResults=[];
+  }
+ }
+ for(const item of featured){
+  const source=item.divisionId==="br-a"||item.divisionId==="br-b"?"P90 Futebol Brasil":"Central 90";
+  world.worldNews.unshift({
+   id:"global-match-"+item.divisionId+"-"+item.season+"-"+item.matchday,
+   day:world.worldDay,
+   source,
+   title:item.homeGoals===item.awayGoals?"Empate movimenta "+item.divisionName:item.homeGoals>item.awayGoals?item.homeName+" vence na "+item.divisionName:item.awayName+" surpreende na "+item.divisionName,
+   body:item.homeName+" "+item.homeGoals+" x "+item.awayGoals+" "+item.awayName+". Resultado da rodada "+item.matchday+" da "+item.divisionName+".",
+   category:"mundo"
+  });
+ }
+}
+
 export function advanceWorldDay(world: WorldState, clubId: string): void {
   world.worldDay += 1;
+  if(world.worldDay%7===0)simulateGlobalMatchdays(world);
   if (world.activeSponsor) {
     world.activeSponsor.remainingDays = Math.max(0, world.activeSponsor.remainingDays - 1);
     if (world.activeSponsor.remainingDays === 0) {
@@ -356,6 +460,7 @@ export function migrateWorldState(world: Partial<WorldState> | undefined, clubId
       jobOffers: Array.isArray(world.jobOffers) ? world.jobOffers : [],
       retiredPlayers: Array.isArray(world.retiredPlayers) ? world.retiredPlayers : [],
       worldNews: Array.isArray(world.worldNews) ? world.worldNews : [],
+      globalLeagues: Array.isArray(world.globalLeagues) ? world.globalLeagues : createGlobalLeagueStates(world.divisionId),
       activeSponsor: world.activeSponsor ?? null
     } as WorldState;
   }

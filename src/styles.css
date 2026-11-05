@@ -158,3 +158,4 @@ body{background:radial-gradient(ellipse at 78% 0%,rgba(65,108,255,.16),transpare
 .lineup-slot select{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#f3fff7;font-size:10px;font-weight:700;text-align:center}
 .lineup-slot option{background:#10251d;color:#f3fff7}
 @media(max-width:620px){.lineup-pitch{padding:17px 6px;gap:9px}.lineup-row{gap:4px}.lineup-role{width:55px;flex-basis:55px;font-size:7px}.lineup-slots{gap:3px}.lineup-slot{padding:5px 2px;border-radius:7px}.lineup-slot select{font-size:8px}.lineup-slot>span{font-size:7px}}
+.world-competition-detail{display:block;margin-top:5px;color:var(--muted2);font-size:9px}

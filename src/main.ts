@@ -100,7 +100,15 @@ function worldPage():string{
  if(worldTab==="clubes"){
   body='<div class="world-grid">'+clubs.map(item=>'<article class="world-club-card"><div class="world-club-head"><span class="club-mark">'+esc(item.shortName.slice(0,3))+'</span><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.city)+' · '+esc(item.country)+'</small></div></div><div class="world-club-meta"><span>FORÇA '+item.strength+'</span><span>'+money(item.budget)+'</span></div><p>'+esc(item.project)+'</p>'+(item.id===career!.clubId?tag("SEU CLUBE","green"):tag(item.divisionName,"quiet"))+'</article>').join("")+'</div><p class="footnote">Esta divisão tem '+(division?.clubs.length??clubs.length)+' clubes. O catálogo contém '+WORLD_CLUBS.length+' equipes cadastradas.</p>';
  }else if(worldTab==="competicoes"){
-  body='<div class="world-list">'+WORLD_COMPETITIONS.map(item=>'<article class="world-list-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.countryCode)+' · '+esc(item.type.toUpperCase())+'</small></div><span>'+item.participants+' equipes</span></article>').join("")+'</div>';
+  const currentTable=getStandings(career!);
+  body='<div class="world-list">'+WORLD_COMPETITIONS.map(item=>{
+   const league=item.divisionId?world.globalLeagues.find(state=>state.divisionId===item.divisionId):undefined;
+   const current=item.divisionId===world.divisionId?currentTable[0]:undefined;
+   const leader=current?current.club:league?WORLD_CLUBS.find(club=>club.id===[...league.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))[0]?.clubId):undefined;
+   const matchday=league?.matchday??(current?current.played:undefined);
+   const detail=leader?(current?"Sua carreira · líder "+leader.name+" ("+current.points+" pts)":"Rodada "+(matchday??0)+" · líder "+leader.name+" ("+([...league!.standings].sort((a,b)=>b.points-a.points)[0]?.points??0)+" pts)"):"Formato "+item.type.toUpperCase()+" · "+item.participants+" vagas";
+   return '<article class="world-list-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.countryCode)+' · '+esc(item.type.toUpperCase())+'</small><small class="world-competition-detail">'+esc(detail)+'</small></div><span>'+item.participants+' equipes</span></article>';
+  }).join("")+'</div>';
  }else if(worldTab==="selecoes"){
   body='<div class="national-grid">'+NATIONAL_TEAMS.map(team=>'<article class="national-card"><span class="national-flag">'+esc(team.id.toUpperCase())+'</span><div><strong>'+esc(team.name)+'</strong><small>'+esc(team.confederation)+'</small></div><b>'+team.strength+'</b></article>').join("")+'</div>';
  }else if(worldTab==="empregos"){
