@@ -143,3 +143,18 @@ body{background:radial-gradient(ellipse at 78% 0%,rgba(65,108,255,.16),transpare
  .nav-item{min-width:30px;font-size:7px;gap:2px}
  .nav-icon{font-size:14px}
 }
+
+/* Interactive 2D lineup builder */
+.lineup-panel{margin-bottom:18px;overflow:hidden}
+.lineup-pitch{position:relative;overflow:hidden;padding:20px 12px;border:1px solid rgba(185,255,69,.2);border-radius:18px;background:repeating-linear-gradient(0deg,rgba(39,110,72,.22) 0 54px,rgba(27,91,58,.28) 54px 108px),linear-gradient(135deg,#102d24,#153c2b);display:flex;flex-direction:column;gap:12px}
+.lineup-pitch:before{content:"";position:absolute;inset:10px;border:1px solid rgba(226,255,237,.22);border-radius:12px;pointer-events:none}
+.lineup-pitch:after{content:"";position:absolute;left:10px;right:10px;top:50%;height:1px;background:rgba(226,255,237,.2);pointer-events:none}
+.pitch-halfway{position:absolute;left:50%;top:50%;width:84px;height:84px;border:1px solid rgba(226,255,237,.2);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.lineup-row{position:relative;z-index:1;display:flex;align-items:center;gap:10px;justify-content:center}
+.lineup-role{width:76px;flex:0 0 76px;color:rgba(237,255,244,.62);font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.8px}
+.lineup-slots{display:flex;flex:1;justify-content:center;gap:7px;min-width:0}
+.lineup-slot{min-width:0;max-width:190px;flex:1;display:flex;flex-direction:column;gap:5px;padding:7px;border:1px solid rgba(224,255,236,.18);border-radius:10px;background:rgba(5,19,14,.74)}
+.lineup-slot>span{color:#c9f7d7;font-size:8px;font-weight:900;text-align:center}
+.lineup-slot select{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#f3fff7;font-size:10px;font-weight:700;text-align:center}
+.lineup-slot option{background:#10251d;color:#f3fff7}
+@media(max-width:620px){.lineup-pitch{padding:17px 6px;gap:9px}.lineup-row{gap:4px}.lineup-role{width:55px;flex-basis:55px;font-size:7px}.lineup-slots{gap:3px}.lineup-slot{padding:5px 2px;border-radius:7px}.lineup-slot select{font-size:8px}.lineup-slot>span{font-size:7px}}
