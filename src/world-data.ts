@@ -26,6 +26,8 @@ export interface WorldDivision {
   country: string;
   tier: number;
   clubs: string[];
+  promotionPlaces?: number;
+  relegationPlaces?: number;
   promotionTarget?: string;
   relegationTarget?: string;
   kind: "national" | "state" | "regional" | "amateur";
@@ -82,7 +84,11 @@ function buildDivision(
     };
   });
   clubs.forEach(club => { club.divisionName = name; });
-  return { division: { id, name, countryCode, country, tier, clubs: clubs.map(c => c.id), kind }, clubs };
+  return { division: {
+    id, name, countryCode, country, tier, clubs: clubs.map(c => c.id), kind,
+    promotionPlaces: tier===1?0:tier<=4?4:tier===5?1:2,
+    relegationPlaces: tier===1?4:tier<=4?4:tier===5||tier===6?2:0
+  }, clubs };
 }
 
 function nameForDivision(_club: string, _id: string, fallback: string): string { return fallback; }
