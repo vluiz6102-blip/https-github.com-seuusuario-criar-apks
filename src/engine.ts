@@ -163,7 +163,7 @@ function startContinentalClubCup(c:Career,previousClubs?:Map<string,Club>):void{
  for(const club of c.clubs)clubCache.set(club.id,club);
  for(const seed of participants)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(clubCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*271+stableSeed(seed.id)),false,c.world!.difficulty));
  const bracketSize=2**Math.floor(Math.log2(participants.length));
- const byeCount=Math.max(0,2*bracketSize-participants.length);
+ const byeCount=participants.length>bracketSize?2*bracketSize-participants.length:0;
  const byes=participants.slice(0,byeCount).map(seed=>seed.id);
  const playing=participants.slice(byeCount);
  const fixtureRound=6;
@@ -186,7 +186,7 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
   for(const club of c.clubs)clubCache.set(club.id,club);
   for(const seed of participants)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(clubCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*157+stableSeed(seed.id)),false,c.world.difficulty));
   const bracketSize=2**Math.floor(Math.log2(participants.length));
-  const byeCount=Math.max(0,2*bracketSize-participants.length);
+  const byeCount=participants.length>bracketSize?2*bracketSize-participants.length:0;
   const byes=participants.slice(0,byeCount).map(seed=>seed.id);
   const playing=participants.slice(byeCount);
   const fixtureRound=4;
@@ -222,7 +222,7 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
   c.clubs.push(clubCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*157+stableSeed(seed.id)),false,c.world.difficulty));
  }
  const bracketSize=2**Math.floor(Math.log2(participants.length));
- const byeCount=Math.max(0,2*bracketSize-participants.length);
+ const byeCount=participants.length>bracketSize?2*bracketSize-participants.length:0;
  const byes=participants.slice(0,byeCount).map(seed=>seed.id);
  const playing=participants.slice(byeCount);
  const fixtureRound=4;
