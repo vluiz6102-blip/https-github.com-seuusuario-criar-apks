@@ -1,5 +1,5 @@
 import { createMatchNews } from "./newsroom";
-import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, WORLD_DIVISIONS, type CareerPace, type Difficulty } from "./world-data";
+import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, NATIONAL_TEAMS, WORLD_DIVISIONS, type CareerPace, type Difficulty } from "./world-data";
 import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type WorldState } from "./world-simulation";
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
@@ -18,12 +18,26 @@ export interface CareerOptions { difficulty?:Difficulty; pace?:CareerPace; manag
 
 const firstNames = ["Lucas","Gabriel","Mateus","Rafael","Bruno","Caio","Pedro","João","Enzo","Davi","Henrique","André","Miguel","Thiago","Vitor","Felipe","Murilo","Arthur","Cauã","Diego","Samuel","Nicolas","Lorenzo","Gustavo","Luan","Eduardo","Daniel","Yuri","Ícaro","Leandro","Alex","Renan","Heitor","Marcos","Otávio","Wesley"];
 const lastNames = ["Almeida","Barbosa","Cardoso","Dias","Ferreira","Gomes","Lopes","Mendes","Nunes","Oliveira","Pereira","Ramos","Ribeiro","Silva","Souza","Teixeira","Vieira","Costa","Martins","Azevedo","Rocha","Freitas","Campos","Machado","Monteiro","Moraes","Farias","Borges","Prado","Tavares","Batista","Melo"];
+const internationalNamePools:Record<string,{first:string[];last:string[]}>={
+ UEFA:{first:["Liam","Noah","Lucas","Mateo","Oliver","Hugo","Theo","Marco","Leon","Nico","Julian","Santiago","Antoine","Felix","Milan"],last:["Smith","Müller","Garcia","Rossi","Dubois","Martin","Schneider","Kovacs","Silva","Costa","Nowak","Popescu","Jansen","Bianchi","Novak"]},
+ CONMEBOL:{first:["Mateo","Santiago","Joaquin","Thiago","Lautaro","Agustin","Facundo","Enzo","Nicolas","Julian","Bruno","Diego"],last:["González","Rodríguez","Fernández","Pérez","Gómez","Martínez","López","Romero","Torres","Castro","Vargas","Rojas"]},
+ AFC:{first:["Haruto","Yuto","Sota","Kaito","Min-jun","Ji-ho","Wei","Jun","Ravi","Arjun","Omar","Ali"],last:["Sato","Tanaka","Suzuki","Kim","Park","Lee","Wang","Chen","Singh","Patel","Hassan","Rahman"]},
+ CAF:{first:["Amadou","Ibrahim","Kofi","Kwame","Chinedu","Moussa","Youssef","Sadio","Mamadou","Ousmane","Jean","Emmanuel"],last:["Diallo","Traoré","Mensah","Okafor","Koné","Sow","Kamara","Ndiaye","Bamba","Mendy","Touré","Bello"]},
+ CONCACAF:{first:["Diego","Carlos","Luis","Javier","Miguel","Jordan","Tyler","Cameron","Noah","Ethan","Mateo","Andrés"],last:["Hernández","García","Martínez","López","Ramírez","Johnson","Williams","Brown","Davis","Wilson","Sánchez","Mendoza"]},
+ OFC:{first:["Tane","Mika","Sione","Noa","Manu","Tama","Rangi","Luka","Jone","Kalo"],last:["Tupou","Tui","Mata","Nuku","Fetu","Vaka","Ratu","Latu","Koro","Mafi"]}
+};
+
 
 function seeded(seed:number):()=>number { let state=seed>>>0; return ()=>{state=(state*1664525+1013904223)>>>0;return state/4294967296;}; }
 function clamp(value:number,min:number,max:number):number{return Math.max(min,Math.min(max,value));}
 function pick<T>(arr:readonly T[],random:()=>number):T{return arr[Math.floor(random()*arr.length)]!;}
-function playerName(random:()=>number):string{return pick(firstNames,random)+" "+pick(lastNames,random);}
-function makePlayer(id:string,clubId:string,position:Position,target:number,random:()=>number,age?:number):Player {
+function playerName(random:()=>number,country="Brasil"):string{
+ if(country==="Brasil")return pick(firstNames,random)+" "+pick(lastNames,random);
+ const confederation=NATIONAL_TEAMS.find(team=>team.name===country)?.confederation??"CONMEBOL";
+ const pool=internationalNamePools[confederation]??internationalNamePools.CONMEBOL!;
+ return pick(pool.first,random)+" "+pick(pool.last,random);
+}
+function makePlayer(id:string,clubId:string,position:Position,target:number,random:()=>number,age?:number,country="Brasil"):Player {
  const overall=clamp(Math.round(target+(random()*18-9)),42,89);
  const potential=clamp(overall+Math.round(random()*17),overall,94);
  const finishing=clamp(overall+(position==="ATA"?7:position==="MEI"?1:-10)+Math.round(random()*10-5),35,95);
@@ -32,11 +46,11 @@ function makePlayer(id:string,clubId:string,position:Position,target:number,rand
  const handling=clamp(overall+(position==="GOL"?17:-25)+Math.round(random()*8-4),25,96);
  const playerAge=age??17+Math.floor(random()*18);
  const value=Math.round(Math.pow(Math.max(1,overall-35),2.1)*680+Math.max(0,potential-overall)*28000);
- return {id,name:playerName(random),age:playerAge,position,overall,potential,finishing,passing,defending,pace:clamp(overall+Math.round(random()*16-8),32,96),stamina:clamp(overall+Math.round(random()*14-7),35,96),handling,creativity:clamp(overall+Math.round(random()*16-8),30,96),fitness:82+Math.floor(random()*19),value,wage:Math.max(900,Math.round(overall*overall*2)),goals:0,assists:0,appearances:0,clubId};
+ return {id,name:playerName(random,country),age:playerAge,position,overall,potential,finishing,passing,defending,pace:clamp(overall+Math.round(random()*16-8),32,96),stamina:clamp(overall+Math.round(random()*14-7),35,96),handling,creativity:clamp(overall+Math.round(random()*16-8),30,96),fitness:82+Math.floor(random()*19),value,wage:Math.max(900,Math.round(overall*overall*2)),goals:0,assists:0,appearances:0,clubId};
 }
-function makeSquad(clubId:string,strength:number,random:()=>number):Player[] {
+function makeSquad(clubId:string,strength:number,random:()=>number,country="Brasil"):Player[] {
  const positions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
- return positions.map((pos,i)=>makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,pos,strength+(i<11?3:-3),random));
+ return positions.map((pos,i)=>makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,pos,strength+(i<11?3:-3),random,undefined,country));
 }
 function createFixtures(clubs:Club[],season:number,competitionName="Liga das Araucárias"):Fixture[] {
  const ids=clubs.map(c=>c.id),fixtures:Fixture[]=[];
@@ -56,7 +70,7 @@ function stableSeed(value:string):number{let hash=2166136261;for(let i=0;i<value
 function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,random:()=>number,managerClub:boolean,difficulty:Difficulty):Club {
  const adjustment=managerClub?0:getDifficultyStrengthAdjustment(difficulty);
  const strength=clamp(Math.round(seed.strength+adjustment),30,98);
- const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random)};
+ const club:Club={id:seed.id,name:seed.name,shortName:seed.shortName,city:seed.city,stadium:seed.stadium,strength,budget:seed.budget,wageBudget:Math.round(seed.budget/36),supporters:seed.supporters,formation:"4-3-3",tactic:"equilibrada",players:makeSquad(seed.id,strength,random,seed.country)};
  club.startingXI=selectLineup(club,club.formation);
  return club;
 }
@@ -352,7 +366,7 @@ export function advanceSeason(c:Career):Career{
   let academyIndex=0;
   while(club.players.length<18){
    const position=(["GOL","DEF","MEI","ATA"] as Position[])[club.players.length%4]!;
-   club.players.push(makePlayer("academy-"+c.season+"-"+club.id+"-"+academyIndex++,club.id,position,club.strength-15,seasonRandom,16+Math.floor(seasonRandom()*3)));
+   club.players.push(makePlayer("academy-"+c.season+"-"+club.id+"-"+academyIndex++,club.id,position,club.strength-15,seasonRandom,16+Math.floor(seasonRandom()*3),getWorldClub(club.id)?.country??"Brasil"));
   }
   club.budget+=Math.round(club.supporters*28);
   if(c.world?.investorMode)club.budget=999999999999;

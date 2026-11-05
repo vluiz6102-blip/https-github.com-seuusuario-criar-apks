@@ -1,3 +1,4 @@
+import { WORLD_CLUBS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
 import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
@@ -169,5 +170,14 @@ describe("Pulso 90 worldwide manager market",()=>{
   expect(c.fixtures.every(fixture=>fixture.competition===offer.divisionName)).toBe(true);
   expect(c.world!.globalLeagues.find(league=>league.divisionId===oldDivision)?.standings.length).toBeGreaterThan(0);
   expect(c.world!.globalLeagues.find(league=>league.divisionId===offer.divisionId)?.matchday).toBe(0);
+ });
+});
+
+describe("Pulso 90 international squads",()=>{
+ it("generates player names from the club's confederation outside Brazil",()=>{
+  const japanClub=WORLD_CLUBS.find(club=>club.country==="Japão")!;
+  const career=createCareer("Teste","Mister",japanClub.id);
+  const japaneseFirstNames=new Set(["Haruto","Yuto","Sota","Kaito","Min-jun","Ji-ho","Wei","Jun","Ravi","Arjun","Omar","Ali"]);
+  expect(career.clubs[0]!.players.every(player=>japaneseFirstNames.has(player.name.split(" ")[0]!))).toBe(true);
  });
 });
