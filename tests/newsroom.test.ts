@@ -26,7 +26,6 @@ describe("Pulso 90 newsroom", () => {
       expect(article.body).toContain("Pato Branco FC 2 x 1 Aurora Esporte Clube");
     }
     expect(articles.map(article=>article.source)).toEqual(expect.arrayContaining(["P90 Agência","Central 90","TV Campo","Diário da Bola","Jornal do Clube"]));
-    }
   });
 
   it("does not publish a club-specific article for a match without the managed club", () => {
