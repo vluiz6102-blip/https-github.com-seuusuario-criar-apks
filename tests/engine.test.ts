@@ -1,10 +1,10 @@
 import { WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
-import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
+import { acceptJobOffer, acceptSponsorOffer, advanceCupTournaments, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
-  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(20);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(380);
+  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(92);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(408);
   for(let round=1;round<=38;round++){const fs=c.fixtures.filter(f=>f.round===round);expect(fs).toHaveLength(10);expect(new Set(fs.flatMap(f=>[f.homeClubId,f.awayClubId])).size).toBe(20);}expect(getNextFixture(c)).toBeDefined();
  });
  it("pauses at halftime and ends a regular match at 90 minutes",()=>{
@@ -209,5 +209,23 @@ describe("Pulso 90 national cup engine",()=>{
   expect(c.cups).toHaveLength(1);
   expect(c.cups[0]!.countryCode).toBe(japan.countryCode);
   expect(c.cups[0]!.participants.length).toBeGreaterThanOrEqual(16);
+ });
+});
+
+describe("Pulso 90 cup bracket progression",()=>{
+ it("advances a 92-team cup from preliminary round to a 64-team bracket",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
+  const cup=c.cups[0]!;
+  const firstRound=c.fixtures.filter(f=>f.competition===cup.competition&&f.round===cup.fixtureRound);
+  for(const fixture of firstRound){
+   fixture.played=true;
+   fixture.homeScore=2;
+   fixture.awayScore=1;
+  }
+  advanceCupTournaments(c,cup.fixtureRound);
+  expect(cup.currentStage).toBe(2);
+  expect(cup.fixtureRound).toBe(8);
+  expect(c.fixtures.filter(f=>f.competition===cup.competition&&f.round===8)).toHaveLength(32);
+  expect(cup.byes).toHaveLength(0);
  });
 });

@@ -84,6 +84,15 @@ function rebuildCurrentLeagueClubs(c:Career,previousClubs:Map<string,Club>):void
  c.clubs=[managed,...peers.map(seed=>previousClubs.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*73+stableSeed(seed.id)),false,c.world!.difficulty))];
 }
 
+function setSimulatedPenaltyScore(c:Career,fixture:Fixture):void{
+ if(!fixture.knockout||fixture.homeScore===undefined||fixture.awayScore===undefined||fixture.homeScore!==fixture.awayScore)return;
+ const homeStrength=getClub(c,fixture.homeClubId).strength,awayStrength=getClub(c,fixture.awayClubId).strength;
+ const random=seeded(c.season*7919+stableSeed(fixture.id));
+ let homePens=5+Math.floor(random()*3),awayPens=5+Math.floor(random()*3);
+ if(homePens===awayPens){if(homeStrength>=awayStrength)homePens++;else awayPens++;}
+ fixture.homePenaltyScore=homePens;fixture.awayPenaltyScore=awayPens;
+}
+
 function cupWinner(c:Career,fixture:Fixture):string{
  if((fixture.homeScore??0)>(fixture.awayScore??0))return fixture.homeClubId;
  if((fixture.awayScore??0)>(fixture.homeScore??0))return fixture.awayClubId;
@@ -172,13 +181,7 @@ export function advanceCupTournaments(c:Career,completedRound:number):Fixture[]{
    for(const fixture of stageFixtures.filter(item=>!item.played)){
     const score=simulateFixture(fixture,c.clubs);
     fixture.homeScore=score.homeScore;fixture.awayScore=score.awayScore;
-    if(fixture.knockout&&score.homeScore===score.awayScore){
-     const homeStrength=getClub(c,fixture.homeClubId).strength,awayStrength=getClub(c,fixture.awayClubId).strength;
-     const random=seeded(c.season*7919+stableSeed(fixture.id));
-     let homePens=5+Math.floor(random()*3),awayPens=5+Math.floor(random()*3);
-     if(homePens===awayPens){if(homeStrength>=awayStrength)homePens++;else awayPens++;}
-     fixture.homePenaltyScore=homePens;fixture.awayPenaltyScore=awayPens;
-    }
+    setSimulatedPenaltyScore(c,fixture);
     fixture.played=true;newlyCompleted.push(fixture);
    }
    const winners=[...cup.byes];
@@ -189,6 +192,7 @@ export function advanceCupTournaments(c:Career,completedRound:number):Fixture[]{
     const article={id:"cup-champion-"+cup.id+"-"+c.season,day:c.day,tag:"clube" as const,title:champion.name+" conquista "+cup.competition,body:"O clube venceu a final e levantou a taça nacional após uma campanha eliminatória.",source:"Central 90",publisherId:"central-90",eventId:"cup-winner-"+cup.id+"-"+c.season,truthLevel:"confirmed" as const};
     c.news.unshift(article);
     c.world?.worldNews.unshift({id:article.id,day:c.world.worldDay,source:"Central 90",title:article.title,body:article.body,category:"mundo"});
+    c.news=c.news.slice(0,120);
     break;
    }
    const random=seeded(c.season*7919+stableSeed(cup.id+"-"+(cup.currentStage+1)));
@@ -241,6 +245,7 @@ export function migrateCareer(career:Career):Career {
   world.jobOffers=[];
   world.sponsorOffers=[];
   career.world=world;
+  career.cups=Array.isArray(career.cups)?career.cups:[];
   return career;
  }
  career.world=migrateWorldState(career.world,career.clubId);
@@ -430,6 +435,7 @@ export function completeRound(c:Career,m:MatchState):void{
   const score=simulateFixture(other,c.clubs);
   other.homeScore=score.homeScore;
   other.awayScore=score.awayScore;
+  setSimulatedPenaltyScore(c,other);
   other.played=true;
  }
 
@@ -487,7 +493,7 @@ export function advanceSeason(c:Career):Career{
   const promotionPlaces=currentDivision?.promotionPlaces??2;
   const relegationPlaces=currentDivision?.relegationPlaces??3;
   if(promotionPlaces>0&&managedPosition>0&&managedPosition<=promotionPlaces)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
-  else if(relegationPlaces>0&&managedPosition>c.clubs.length-relegationPlaces){
+  else if(relegationPlaces>0&&managedPosition>finalTable.length-relegationPlaces){
    if(c.world.divisionId==="br-d"){
     const city=getManagedClub(c).city;
     targetDivision=WORLD_DIVISIONS.filter(item=>item.countryCode==="BR"&&item.kind==="state"&&item.id.endsWith("-a"))
