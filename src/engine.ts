@@ -295,7 +295,7 @@ export function advanceSeason(c:Career):Career{
  if(c.world){
   let targetDivision:string|undefined;
   if(managedPosition>0&&managedPosition<=2)targetDivision=getAdjacentDivision(c.world.divisionId,"up");
-  else if(managedPosition>=7)targetDivision=getAdjacentDivision(c.world.divisionId,"down");
+  else if(managedPosition>=Math.max(5,Math.ceil(c.clubs.length*.85)))targetDivision=getAdjacentDivision(c.world.divisionId,"down");
   if(targetDivision){
    const target=getDivision(targetDivision);
    const managed=getManagedClub(c);
@@ -303,7 +303,8 @@ export function advanceSeason(c:Career):Career{
    const peers=getDivisionClubs(targetDivision);
    if(target&&source){
     const movedSeed={...source,divisionId:target.id,divisionName:target.name,tier:target.tier};
-    const seeds=[movedSeed,...peers.filter(item=>item.id!==managed.id)];
+    const destinationPeers=peers.filter(item=>item.id!==managed.id).sort((a,b)=>b.strength-a.strength);
+    const seeds=[movedSeed,...destinationPeers.slice(0,Math.max(0,destinationPeers.length-1))];
     const previousClubs=new Map(c.clubs.map(club=>[club.id,club]));
     c.clubs=seeds.map(seed=>{
      const existing=previousClubs.get(seed.id);
