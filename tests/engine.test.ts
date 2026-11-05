@@ -1,4 +1,4 @@
-import { WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
+import { getDivisionClubs, WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
 import { acceptJobOffer, acceptSponsorOffer, advanceCupTournaments, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
@@ -229,5 +229,17 @@ describe("Pulso 90 cup bracket progression",()=>{
   expect(cup.fixtureRound).toBe(8);
   expect(c.fixtures.filter(f=>f.competition===cup.competition&&f.round===8)).toHaveLength(32);
   expect(cup.byes).toHaveLength(0);
+ });
+});
+
+describe("Pulso 90 state club cup access",()=>{
+ it("keeps all 27 state champions and adds a lower-division managed club",()=>{
+  const stateChampions=WORLD_DIVISIONS.filter(division=>division.countryCode==="BR"&&division.kind==="state"&&division.id.endsWith("-a"))
+   .map(division=>getDivisionClubs(division.id).sort((a,b)=>b.strength-a.strength)[0]!.id);
+  const stateClub=getDivisionClubs("br-pr-a").find(seed=>!stateChampions.includes(seed.id))!;
+  const c=createCareer("Teste","Mister",stateClub.id);
+  expect(c.cups[0]!.participants).toHaveLength(108);
+  expect(stateChampions.every(id=>c.cups[0]!.participants.includes(id))).toBe(true);
+  expect(c.cups[0]!.participants).toContain(stateClub.id);
  });
 });

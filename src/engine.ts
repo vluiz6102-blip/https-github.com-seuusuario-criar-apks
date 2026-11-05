@@ -147,8 +147,6 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
  const unique=new Map(seeds.map(seed=>[seed.id,seed]));
  const managedSeed=getWorldClub(c.clubId);
  if(managedSeed&&!unique.has(managedSeed.id)){
-  const weakest=[...unique.values()].sort((a,b)=>a.strength-b.strength)[0];
-  if(weakest)unique.delete(weakest.id);
   unique.set(managedSeed.id,{...managedSeed,divisionId:c.world.divisionId,divisionName:c.world.competitionName,countryCode:c.world.countryCode});
  }
  const participants=[...unique.values()].sort((a,b)=>b.strength-a.strength);

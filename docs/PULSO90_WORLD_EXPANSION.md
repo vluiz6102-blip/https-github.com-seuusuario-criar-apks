@@ -143,3 +143,6 @@ Esses números descrevem o universo original atualmente implementado, não uma a
 
 
 A Copa Nacional do Brasil reúne os 80 clubes das Séries A, B, C e D e os 27 campeões estaduais, totalizando 107 participantes.
+
+
+Quando a carreira começa em uma divisão estadual abaixo dos campeões, o clube escolhido ganha uma vaga adicional na Copa Nacional do Brasil, sem retirar nenhum dos 27 campeões estaduais.

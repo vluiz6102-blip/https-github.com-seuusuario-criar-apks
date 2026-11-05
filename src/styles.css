@@ -163,3 +163,11 @@ body{background:radial-gradient(ellipse at 78% 0%,rgba(65,108,255,.16),transpare
 .national-filter,.competition-filter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
 .national-filter input,.competition-filter input{flex:1;min-width:0;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-size:12px}
 .national-filter span,.competition-filter span{color:var(--muted2);font-size:10px;font-weight:800;white-space:nowrap}
+
+/* National cup summary on the manager dashboard */
+.cup-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding:16px 18px;border:1px solid rgba(185,255,69,.2);border-radius:16px;background:linear-gradient(120deg,rgba(185,255,69,.07),rgba(20,32,56,.82))}
+.cup-summary>div{display:grid;gap:5px;min-width:0}
+.cup-summary strong{font-size:13px;line-height:1.35}
+.cup-summary small{font-size:10px;color:var(--muted)}
+.cup-summary .text-button{white-space:nowrap}
+@media(max-width:480px){.cup-summary{align-items:flex-start;flex-direction:column}}
