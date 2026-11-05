@@ -171,6 +171,32 @@ function startContinentalClubCup(c:Career,previousClubs?:Map<string,Club>):void{
  for(let i=0;i<playing.length/2;i++)fixtures.push({id:"cup-"+c.season+"-"+cup.id+"-stage-1-"+i,round:fixtureRound,competition:cup.name,homeClubId:playing[i]!.id,awayClubId:playing[playing.length-1-i]!.id,knockout:true,played:false});
  c.cups.push({id:cup.id,competition:cup.name,countryCode:cup.countryCode,participants:participants.map(seed=>seed.id),byes,currentStage:1,fixtureRound,finished:false});
  c.fixtures.push(...fixtures);
+
+ if(c.season%4===2&&managedStrength>=74){
+  const worldCupSeed=WORLD_COMPETITIONS.find(item=>item.id==="fifa-club-world");
+  if(worldCupSeed){
+   const globalCandidates=WORLD_DIVISIONS.filter(item=>item.teamType!=="selection"&&item.kind==="national"&&item.tier===1).flatMap(item=>getDivisionClubs(item.id)).sort((a,b)=>b.strength-a.strength);
+   const worldUnique=new Map(globalCandidates.slice(0,worldCupSeed.participants).map(seed=>[seed.id,seed]));
+   if(!worldUnique.has(managedSeed.id)){
+    const weakest=[...worldUnique.values()].sort((a,b)=>a.strength-b.strength)[0];
+    if(weakest)worldUnique.delete(weakest.id);
+    worldUnique.set(managedSeed.id,{...managedSeed,divisionId:c.world!.divisionId,divisionName:c.world!.competitionName,countryCode:c.world!.countryCode,tier:1});
+   }
+   const worldParticipants=[...worldUnique.values()].sort((a,b)=>b.strength-a.strength);
+   const worldCache=new Map(previousClubs??[]);
+   for(const club of c.clubs)worldCache.set(club.id,club);
+   for(const seed of worldParticipants)if(!c.clubs.some(club=>club.id===seed.id))c.clubs.push(worldCache.get(seed.id)??clubFromWorldSeed(seed,seeded(c.season*557+stableSeed(seed.id)),false,c.world!.difficulty));
+   const worldBracketSize=2**Math.floor(Math.log2(worldParticipants.length));
+   const worldByeCount=worldParticipants.length>worldBracketSize?2*worldBracketSize-worldParticipants.length:0;
+   const worldByes=worldParticipants.slice(0,worldByeCount).map(seed=>seed.id);
+   const worldPlaying=worldParticipants.slice(worldByeCount);
+   const worldRound=28;
+   const worldFixtures:Fixture[]=[];
+   for(let i=0;i<worldPlaying.length/2;i++)worldFixtures.push({id:"cup-"+c.season+"-fifa-club-world-stage-1-"+i,round:worldRound,competition:worldCupSeed.name,homeClubId:worldPlaying[i]!.id,awayClubId:worldPlaying[worldPlaying.length-1-i]!.id,knockout:true,played:false});
+   c.cups.push({id:worldCupSeed.id,competition:worldCupSeed.name,countryCode:worldCupSeed.countryCode,participants:worldParticipants.map(seed=>seed.id),byes:worldByes,currentStage:1,fixtureRound:worldRound,finished:false});
+   c.fixtures.push(...worldFixtures);
+  }
+ }
 }
 
 export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{

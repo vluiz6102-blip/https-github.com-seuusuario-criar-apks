@@ -274,6 +274,9 @@ describe("Pulso 90 continental club qualification",()=>{
   const cup=c.cups.find(item=>item.id==="conmebol-libertadores")!;
   expect(cup.participants).toHaveLength(32);
   expect(c.fixtures.filter(fixture=>fixture.competition===cup.competition&&fixture.round===6)).toHaveLength(16);
+  const worldCup=c.cups.find(item=>item.id==="fifa-club-world")!;
+  expect(worldCup.participants).toHaveLength(32);
+  expect(c.fixtures.filter(fixture=>fixture.competition===worldCup.competition&&fixture.round===28)).toHaveLength(16);
  });
 });
 

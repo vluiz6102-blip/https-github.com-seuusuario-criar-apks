@@ -79,7 +79,7 @@ function dashboard():string{
  const c=club(),f=next(),opp=f?opponent(f,c.id):null,table=getStandings(career!),place=table.findIndex(r=>r.club.id===c.id)+1,leagueFixtures=career!.fixtures.filter(x=>x.competition===(career!.world?.competitionName??"Liga das Araucárias")&&(x.homeClubId===c.id||x.awayClubId===c.id)),played=leagueFixtures.filter(x=>x.played).length,crow=table.find(r=>r.club.id===c.id),ovr=Math.round(c.players.reduce((s,p)=>s+p.overall,0)/c.players.length),upcoming=career!.fixtures.filter(x=>!x.played&&(x.homeClubId===c.id||x.awayClubId===c.id)).sort((a,b)=>a.round-b.round).slice(0,3),cups=career!.cups??[],selection=career!.clubId.startsWith("national-");
  const cupSummary=cups.map(cup=>{
   const cupStatus=cup.finished?"Campeão: "+(cup.championId?getClub(career!,cup.championId).name:"definido"):"Fase "+cup.currentStage+" · "+cup.participants.length+" equipes";
-  const label=cup.id==="fifa-world-cup"?"MUNDIAL":selection||(!cup.id.startsWith("national-cup-")&&cup.id!=="br-copa")?"COPA CONTINENTAL":"COPA NACIONAL";
+  const label=(cup.id==="fifa-world-cup"||cup.id==="fifa-club-world")?"MUNDIAL":selection||(!cup.id.startsWith("national-cup-")&&cup.id!=="br-copa")?"COPA CONTINENTAL":"COPA NACIONAL";
   return '<article class="cup-summary"><div><span class="eyebrow">'+label+'</span><strong>'+esc(cup.competition)+'</strong><small>'+esc(cupStatus)+'</small></div><button class="text-button" data-action="nav" data-value="calendario">Ver jogos ↗</button></article>';
  }).join("");
  const news=career!.news.slice(0,3);
