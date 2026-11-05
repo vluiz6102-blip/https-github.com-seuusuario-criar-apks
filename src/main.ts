@@ -89,6 +89,32 @@ function newsroom():string{
  '<section class="newsroom-section"><div class="section-head"><div><span class="eyebrow">ARQUIVO EDITORIAL</span><h2>Últimas publicações</h2></div><span class="muted">'+articles.length+' matérias</span></div><div class="newsroom-feed">'+articles.map(n=>'<article class="newsroom-article"><div class="newsroom-byline"><strong>'+esc(n.source||"Jornal do Clube")+'</strong><span>DIA '+n.day+'</span></div><span class="newsroom-category">'+esc(n.tag.toUpperCase())+(n.truthLevel==="confirmed"?" · CONFIRMADO":n.truthLevel==="rumor"?" · RUMOR":"")+'</span><h3>'+esc(n.title)+'</h3><p>'+esc(n.body)+'</p></article>').join("")+'</div></section>';
 }
 
+
+function worldPage():string{
+ const world=career!.world!;
+ const division=getDivision(world.divisionId);
+ const clubs=getDivisionClubs(world.divisionId);
+ const tabs=[["clubes","Clubes"],["competicoes","Competições"],["selecoes","Seleções"],["empregos","Empregos"],["patrocinios","Patrocínios"]];
+ const tabBar='<div class="world-tabs">'+tabs.map(item=>'<button class="world-tab '+(worldTab===item[0]?"active":"")+'" data-action="world-tab" data-value="'+item[0]+'">'+item[1]+'</button>').join("")+'</div>';
+ let body="";
+ if(worldTab==="clubes"){
+  body='<div class="world-grid">'+clubs.map(item=>'<article class="world-club-card"><div class="world-club-head"><span class="club-mark">'+esc(item.shortName.slice(0,3))+'</span><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.city)+' · '+esc(item.country)+'</small></div></div><div class="world-club-meta"><span>FORÇA '+item.strength+'</span><span>'+money(item.budget)+'</span></div><p>'+esc(item.project)+'</p>'+(item.id===career!.clubId?tag("SEU CLUBE","green"):tag(item.divisionName,"quiet"))+'</article>').join("")+'</div><p class="footnote">Esta divisão tem '+(division?.clubs.length??clubs.length)+' clubes. O catálogo contém '+WORLD_CLUBS.length+' equipes cadastradas.</p>';
+ }else if(worldTab==="competicoes"){
+  body='<div class="world-list">'+WORLD_COMPETITIONS.map(item=>'<article class="world-list-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.countryCode)+' · '+esc(item.type.toUpperCase())+'</small></div><span>'+item.participants+' equipes</span></article>').join("")+'</div>';
+ }else if(worldTab==="selecoes"){
+  body='<div class="national-grid">'+NATIONAL_TEAMS.map(team=>'<article class="national-card"><span class="national-flag">'+esc(team.id.toUpperCase())+'</span><div><strong>'+esc(team.name)+'</strong><small>'+esc(team.confederation)+'</small></div><b>'+team.strength+'</b></article>').join("")+'</div>';
+ }else if(worldTab==="empregos"){
+  body='<div class="world-offer-grid">'+(world.jobOffers.length?world.jobOffers.map(offer=>'<article class="world-offer"><span class="eyebrow">VAGA DE TREINADOR</span><h3>'+esc(offer.clubName)+'</h3><p>'+esc(offer.divisionName)+'</p><strong>'+esc(offer.project)+'</strong><div class="offer-facts"><span>Salário '+money(offer.salary)+'</span><span>Paciência '+offer.boardPatience+'%</span></div><button class="button primary wide" data-action="accept-job" data-id="'+offer.id+'">Assumir projeto</button></article>').join(""):'<div class="empty-card"><h3>Sem vagas abertas</h3><p>Novos clubes podem procurar treinador conforme a carreira avança.</p></div>')+'</div><section class="table-card"><div class="table-heading"><div><span class="eyebrow">EX-ATLETAS</span><h2>Ídolos que viraram treinadores</h2></div><span class="muted">'+world.retiredPlayers.length+' aposentados</span></div>'+(world.retiredPlayers.filter(item=>item.canBecomeManager).length?'<div class="world-list">'+world.retiredPlayers.filter(item=>item.canBecomeManager).slice(0,12).map(item=>'<article class="world-list-row"><div><strong>'+esc(item.name)+'</strong><small>'+esc(item.formerClubName)+' · aposentou aos '+item.age+'</small></div><button class="button secondary small-button" data-action="retired-manager" data-id="'+item.id+'">Virar técnico</button></article>').join("")+'</div>':'<p class="muted">Quando jogadores encerrarem suas carreiras, alguns poderão assumir o banco.</p>')+'</section>';
+ }else{
+  body='<div class="world-offer-grid">'+(world.activeSponsor?'<article class="world-offer active-deal"><span class="eyebrow">PATROCINADOR ATUAL</span><h3>'+esc(world.activeSponsor.brand)+'</h3><p>'+esc(world.activeSponsor.sector)+'</p><strong>'+money(world.activeSponsor.amount)+' por contrato</strong><div class="offer-facts"><span>'+world.activeSponsor.remainingDays+' dias restantes</span><span>Entrada '+money(world.activeSponsor.upfront)+'</span></div></article>':'')+(world.sponsorOffers.length?world.sponsorOffers.map(offer=>'<article class="world-offer"><span class="eyebrow">'+esc(offer.sector.toUpperCase())+'</span><h3>'+esc(offer.brand)+'</h3><strong>'+money(offer.amount)+' / temporada</strong><p>'+esc(offer.clauses)+'</p><div class="offer-facts"><span>Entrada '+money(offer.upfront)+'</span><span>'+offer.duration+' dias</span></div><button class="button primary wide" data-action="accept-sponsor" data-id="'+offer.id+'">Aceitar proposta</button></article>').join(""):'<div class="empty-card"><h3>Novas propostas em breve</h3><p>As empresas avaliam alcance, reputação e desempenho antes de patrocinar o clube.</p></div>')+'</div>';
+ }
+ const fanLabel=world.fanMood>=85?"Em êxtase":world.fanMood>=68?"Confiante":world.fanMood>=48?"Esperançosa":world.fanMood>=28?"Impaciente":"Revoltada";
+ return head("CENTRAL DO FUTEBOL","Um mundo em movimento.","Clubes, torneios, seleções, vagas e negócios do universo PULSO 90.")+
+ '<section class="world-overview"><div><span>CLUBES</span><strong>'+WORLD_CLUBS.length+'</strong></div><div><span>DIVISÕES</span><strong>'+WORLD_DIVISIONS.length+'</strong></div><div><span>COMPETIÇÕES</span><strong>'+WORLD_COMPETITIONS.length+'</strong></div><div><span>SELEÇÕES</span><strong>'+NATIONAL_TEAMS.length+'</strong></div></section>'+
+ '<section class="world-status table-card"><div><div><span class="eyebrow">SUA CARREIRA</span><h2>'+esc(club().name)+'</h2><p>'+esc(world.competitionName)+' · '+world.fanMood+'/100 · torcida '+fanLabel+'</p></div><button class="button secondary" data-action="toggle-investors">'+(world.investorMode?"Investidores ON":"Ativar investidores")+'</button></div><p class="world-fan-reaction">'+esc(world.fanReaction)+'</p></section>'+
+ tabBar+body;
+}
+
 function rating(p:Player):string{const level=p.overall>=78?"high":p.overall>=68?"mid":"low";return '<div class="rating-cell"><strong class="'+level+'">'+p.overall+'</strong><span class="rating-track"><i class="'+level+'" style="width:'+p.overall+'%"></i></span></div>';}
 function squad():string{
  const players=[...club().players].sort((a,b)=>b.overall-a.overall),ovr=Math.round(players.reduce((s,p)=>s+p.overall,0)/players.length);
@@ -126,7 +152,7 @@ function render():void{
  if(!introEntered){app!.innerHTML=landing();return;}
  if(!career){setup();return;}
  let content="";
- switch(career.screen){case"inicio":content=dashboard();break;case"elenco":content=squad();break;case"taticas":content=tacticsPage();break;case"calendario":content=calendar();break;case"mercado":content=market();break;case"clube":content=clubPage();break;case"jornal":content=newsroom();break;case"partida":content=matchPage();break;}
+ switch(career.screen){case"inicio":content=dashboard();break;case"elenco":content=squad();break;case"taticas":content=tacticsPage();break;case"calendario":content=calendar();break;case"mercado":content=market();break;case"clube":content=clubPage();break;case"jornal":content=newsroom();break;case"mundo":content=worldPage();break;case"partida":content=matchPage();break;}
  app!.innerHTML='<div class="app-shell">'+topbar()+'<main class="page '+(career.screen==="partida"?"match-page":"")+'">'+content+'</main>'+(career.screen==="partida"?"":bottomnav())+'<div id="toast" class="toast" role="status" aria-live="polite"></div></div>';save();
 }
 function startNext():void{
@@ -152,7 +178,8 @@ function action(target:HTMLElement):void{
  if(act==="toggle-sound"){preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();return;}
  if(!career)return;
  switch(act){
- case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","jornal","partida"].includes(v)){career.screen=v as Screen;render();}break;
+ case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","jornal","mundo","partida"].includes(v)){career.screen=v as Screen;render();}break;
+  case"world-tab":if(v){worldTab=v;render();}break;
  case"start-next":startNext();break;
  case"resume-match":if(career.currentMatch){resumeMatch(career.currentMatch);save();render();}break;
  case"substitute":if(career.currentMatch&&makeSubstitution(career.currentMatch,career.clubs,career.currentMatch.homeClubId===career.clubId?"home":"away")){save();render();showToast("Substituição realizada.");}else showToast("Não foi possível substituir. Confira o banco e o limite.");break;
