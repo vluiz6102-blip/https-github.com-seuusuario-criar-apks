@@ -131,10 +131,12 @@ Cada fase precisa de testes e build Android antes da próxima expansão de dados
 ## Base de conteúdo construída para a primeira versão mundial
 
 A base original atual contém:
-- 44 países representados: Brasil + 43 países com duas divisões nacionais cada.
-- 27 estruturas estaduais brasileiras, cada uma com divisão principal, acesso e liga de várzea.
+- 211 associações nacionais filiadas à FIFA, cada uma com duas divisões nacionais no universo P90.
+- 27 estruturas estaduais brasileiras, cada uma com divisão principal, acesso, liga de várzea e copa estadual.
 - 4 divisões nacionais brasileiras (Série A, B, C e D).
-- 172 divisões, 1.604 clubes originais, 188 competições catalogadas e 48 seleções.
+- 508 divisões, 4.964 clubes originais, 719 competições catalogadas e 211 seleções.
 - Simulação diária escalonada das ligas globais: cada dia de carreira atualiza metade das divisões, mantendo resultados e tabelas persistidos no save. As manchetes globais são criadas a partir dos placares calculados.
+
+A lista das 211 associações segue a relação pública da FIFA em https://inside.fifa.com/associations; as divisões e copas genéricas acrescentadas aos países sem pacote específico são conteúdo fictício P90, e as forças são parâmetros de equilíbrio, não o ranking oficial da FIFA.
 
 Esses números descrevem o universo original atualmente implementado, não uma alegação de que todas as competições oficiais reais do planeta já estejam incluídas. A arquitetura permite acrescentar países, divisões, copas e calendários sem reescrever o motor.
