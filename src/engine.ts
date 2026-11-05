@@ -64,7 +64,7 @@ export function createCareer(managerName:string,managerNickname:string,clubId:st
  const difficulty=options.difficulty??"medio";
  const world=createWorldState(selected.id,options.managerProfileId??"custom",difficulty,options.pace??"normal");
  const peers=getDivisionClubs(selected.divisionId);
- const chosen=[selected,...peers.filter(item=>item.id!==selected.id)].slice(0,8);
+ const chosen=[selected,...peers.filter(item=>item.id!==selected.id)];
  const clubs:Club[]=chosen.map((seed,i)=>clubFromWorldSeed(seed,seeded(9031+stableSeed(seed.id)),i===0,difficulty));
  const effectiveClubId=selected.id;
  const transferRandom=seeded(9031+stableSeed(effectiveClubId+"-market"));
@@ -272,12 +272,14 @@ export function advanceSeason(c:Career):Career{
  const seasonRandom=seeded(9031+c.season*7919);
  for(const club of c.clubs){
   const survivors:Player[]=[];
-  for(const p of club.players){
+  for(let playerIndex=0;playerIndex<club.players.length;playerIndex++){
+   const p=club.players[playerIndex]!;
    p.age++;
    p.fitness=Math.round(clamp(p.fitness+14,40,100));
    if(p.age<24&&p.overall<p.potential&&seasonRandom()<.55)p.overall=Math.min(p.potential,p.overall+1);
    const retire=p.age>=38||(p.age>=35&&seasonRandom()<.22);
-   if(retire&&club.players.length-survivors.length>16){
+   const remaining=club.players.length-playerIndex-1;
+   if(retire&&survivors.length+remaining>=16){
     if(c.world){const record=toRetiredPlayerRecord(p,club,previousSeason);c.world.retiredPlayers.unshift(record);if(record.canBecomeManager)c.world.worldNews.unshift({id:"retire-"+p.id,day:1,source:"Central 90",title:p.name+" encerra a carreira",body:p.name+" pendura as chuteiras no "+club.name+". O ex-atleta poderá iniciar uma carreira como treinador.",category:"carreira"});}
    }else survivors.push(p);
   }
@@ -301,7 +303,7 @@ export function advanceSeason(c:Career):Career{
    const peers=getDivisionClubs(targetDivision);
    if(target&&source){
     const movedSeed={...source,divisionId:target.id,divisionName:target.name,tier:target.tier};
-    const seeds=[movedSeed,...peers.filter(item=>item.id!==managed.id)].slice(0,8);
+    const seeds=[movedSeed,...peers.filter(item=>item.id!==managed.id)];
     const previousClubs=new Map(c.clubs.map(club=>[club.id,club]));
     c.clubs=seeds.map(seed=>{
      const existing=previousClubs.get(seed.id);
