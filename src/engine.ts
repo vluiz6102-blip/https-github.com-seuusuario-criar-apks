@@ -116,6 +116,7 @@ export function migrateCareer(career:Career):Career {
   const clubSeed=getWorldClub(career.clubId);
   if(clubSeed){career.world.divisionId=clubSeed.divisionId;career.world.competitionName=clubSeed.divisionName;career.world.countryCode=clubSeed.countryCode;}
  }
+ syncWorldLeagueFromCareer(career);
  return career;
 }
 export function getClub(career:Career,id:string):Club{return career.clubs.find(c=>c.id===id)??career.clubs[0]!;}
@@ -128,7 +129,7 @@ export function syncWorldLeagueFromCareer(c:Career):void{
  const matchday=completed.reduce((max,item)=>Math.max(max,item.round),0);
  const state=c.world.globalLeagues.find(item=>item.divisionId===c.world!.divisionId);
  if(state){state.season=c.season;state.matchday=matchday;state.standings=standings;state.recentResults=recentResults;state.seasonComplete=false;}
- else c.world.globalLeagues.push({divisionId:c.world.divisionId,season:c.season,matchday,standings,recentResults});
+ else c.world.globalLeagues.push({divisionId:c.world.divisionId,season:c.season,matchday,standings,recentResults,seasonComplete:false});
 }
 export function syncWorldNews(c:Career):void{
  if(!c.world)return;

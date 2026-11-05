@@ -517,7 +517,7 @@ export function migrateWorldState(world: Partial<WorldState> | undefined, clubId
       ...defaults,
       ...world,
       sponsorOffers: Array.isArray(world.sponsorOffers) ? world.sponsorOffers : [],
-      jobOffers: Array.isArray(world.jobOffers) ? world.jobOffers : [],
+      jobOffers: Array.isArray(world.jobOffers) ? world.jobOffers.map(offer=>({...offer,divisionId:offer.divisionId??getWorldClub(offer.clubId)?.divisionId??world.divisionId})) : [],
       retiredPlayers: Array.isArray(world.retiredPlayers) ? world.retiredPlayers : [],
       worldNews: Array.isArray(world.worldNews) ? world.worldNews : [],
       globalLeagues: defaults.globalLeagues.map(league=>{const existingLeague=byDivision.get(league.divisionId);return existingLeague?{...league,...existingLeague,seasonComplete:existingLeague.seasonComplete??false}:league;}),

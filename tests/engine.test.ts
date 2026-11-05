@@ -1,6 +1,6 @@
 import { WORLD_CLUBS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
-import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews } from "../src/engine";
+import { acceptJobOffer, acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
@@ -179,5 +179,17 @@ describe("Pulso 90 international squads",()=>{
   const career=createCareer("Teste","Mister",japanClub.id);
   const japaneseFirstNames=new Set(["Haruto","Yuto","Sota","Kaito","Min-jun","Ji-ho","Wei","Jun","Ravi","Arjun","Omar","Ali"]);
   expect(career.clubs[0]!.players.every(player=>japaneseFirstNames.has(player.name.split(" ")[0]!))).toBe(true);
+ });
+});
+
+describe("Pulso 90 save migration",()=>{
+ it("restores global divisions and repairs old job offers without losing the career",()=>{
+  const current=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
+  const legacy={...current,world:{...current.world!,globalLeagues:current.world!.globalLeagues.slice(0,2),jobOffers:current.world!.jobOffers.map(offer=>({...offer,divisionId:undefined as unknown as string}))}} as Career;
+  const migrated=migrateCareer(legacy);
+  expect(migrated.clubId).toBe(current.clubId);
+  expect(migrated.world!.globalLeagues).toHaveLength(WORLD_CLUBS.length?506:0);
+  expect(migrated.world!.jobOffers.every(offer=>Boolean(offer.divisionId))).toBe(true);
+  expect(migrated.world!.globalLeagues.find(league=>league.divisionId===migrated.world!.divisionId)?.standings.length).toBeGreaterThan(0);
  });
 });
