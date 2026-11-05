@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptSponsorOffer, advanceMinute, advanceSeason, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldNews } from "../src/engine";
+import { acceptSponsorOffer, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldNews } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
@@ -139,5 +139,18 @@ describe("Pulso 90 world newspaper synchronization",()=>{
   syncWorldNews(c);
   expect(c.news.length).toBe(before);
   expect(c.news.find(item=>item.eventId===eventId)?.source).toBe("Mercado & Negócios");
+ });
+});
+
+describe("Pulso 90 automatic lineup",()=>{
+ it("rebuilds the best available eleven for the selected formation",()=>{
+  const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc"),managed=c.clubs.find(item=>item.id===c.clubId)!;
+  const initial=getStartingLineup(managed);
+  const weaker=managed.players.find(player=>player.position==="ATA"&&!initial.some(starter=>starter.id===player.id))!;
+  expect(setStartingPlayer(c,8,weaker.id)).toBe(true);
+  expect(autoSelectLineup(c)).toBe(true);
+  const rebuilt=getStartingLineup(managed);
+  expect(rebuilt.some(player=>player.id===weaker.id)).toBe(false);
+  expect(rebuilt).toHaveLength(11);
  });
 });

@@ -143,6 +143,12 @@ export function getStartingLineup(club:Club):Player[]{
  const ids=resolveLineup(club);
  return ids.map(id=>club.players.find(player=>player.id===id)!).filter(Boolean);
 }
+export function autoSelectLineup(c:Career):boolean{
+ if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
+ const managed=getManagedClub(c);
+ managed.startingXI=selectLineup(managed,managed.formation);
+ return true;
+}
 export function setStartingPlayer(c:Career,slot:number,playerId:string):boolean{
  if(!Number.isInteger(slot)||slot<0||slot>=11)return false;
  if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
