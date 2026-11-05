@@ -314,7 +314,7 @@ export function applyFanMatchReaction(
     category: "torcida"
   };
   world.worldNews.unshift(article);
-  world.worldNews = world.worldNews.slice(0, 40);
+  world.worldNews = world.worldNews.slice(0, 80);
   return article;
 }
 
@@ -430,7 +430,7 @@ function simulateGlobalMatchdays(world:WorldState,dayBucket:number):void{
     featuredForLeague=true;
    }
   }
-  league.recentResults=[...league.recentResults,...results].slice(-20);
+  league.recentResults=[...league.recentResults,...results].slice(-30);
   league.matchday++;
   if(league.matchday>=rounds*2){
    const champion=[...league.standings].sort((a,b)=>b.points-a.points||(b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst))[0];
