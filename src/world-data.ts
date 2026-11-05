@@ -334,11 +334,19 @@ export function countryDivisionCount(countryCode: string): number {
 export const MANAGER_PRESETS = [
   { id: "custom", name: "Criar meu treinador", reputation: 25, experience: "Iniciante", style: "Personalizado" },
   { id: "pep-guardiola", name: "Pep Guardiola", reputation: 98, experience: "Elite mundial", style: "Posse e pressão" },
+  { id: "carlo-ancelotti", name: "Carlo Ancelotti", reputation: 97, experience: "Elite mundial", style: "Gestão de estrelas" },
+  { id: "jose-mourinho", name: "José Mourinho", reputation: 95, experience: "Elite mundial", style: "Estratégia competitiva" },
+  { id: "abel-ferreira", name: "Abel Ferreira", reputation: 90, experience: "Elite nacional", style: "Intensidade e organização" },
+  { id: "dorival-junior", name: "Dorival Júnior", reputation: 84, experience: "Clubes e seleção", style: "Equilíbrio" },
   { id: "manager-elite", name: "Treinador de elite", reputation: 90, experience: "Títulos continentais", style: "Tático" },
   { id: "manager-national", name: "Técnico internacional", reputation: 82, experience: "Seleções e grandes clubes", style: "Equilibrado" },
   { id: "manager-rising", name: "Jovem treinador promissor", reputation: 55, experience: "Projeto em ascensão", style: "Desenvolvimento" },
   { id: "manager-lower", name: "Treinador de divisões inferiores", reputation: 24, experience: "Várzea e Série D", style: "Competitivo" },
-  { id: "former-player", name: "Ex-jogador aposentado", reputation: 42, experience: "Carreira dentro de campo", style: "Liderança" }
+  { id: "manager-varzea", name: "Treinador de várzea", reputation: 12, experience: "Futebol amador", style: "Raça e comunidade" },
+  { id: "former-player", name: "Ex-jogador aposentado", reputation: 42, experience: "Carreira dentro de campo", style: "Liderança" },
+  { id: "retired-rafael-monteiro", name: "Rafael Monteiro", reputation: 64, experience: "Ex-jogador aposentado · ídolo nacional", style: "Liderança" },
+  { id: "retired-davi-ventura", name: "Davi Ventura", reputation: 57, experience: "Ex-jogador aposentado · ídolo regional", style: "Desenvolvimento" },
+  { id: "retired-leandro-farias", name: "Leandro Farias", reputation: 49, experience: "Ex-jogador aposentado · carreira de clube", style: "Competitivo" }
 ] as const;
 
 export const SPONSOR_CATALOG = [
