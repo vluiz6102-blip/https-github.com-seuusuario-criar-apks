@@ -148,7 +148,7 @@ for (const [code, country, leagueName, topNames, cityNames, strength] of interna
   addDivision(code + "-1", leagueName, code.toUpperCase(), country, "Nacional", 1, "national", topNames, cityNames, strength);
   const roots = topNames.split("|");
   const cities = cityNames.split("|");
-  const lower = roots.map((name, i) => "ATLÉTICO " + name.replace(/[0-9]/g, "") + " B");
+  const lower = roots.map(name => "ATLÉTICO " + name.replace(/[0-9]/g, "") + " B");
   addDivision(code + "-2", country + " Segunda Divisão", code.toUpperCase(), country, "Nacional", 2, "national", lower.join("|"), cities.join("|"), strength - 13);
 }
 
