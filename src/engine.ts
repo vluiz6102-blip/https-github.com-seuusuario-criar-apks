@@ -136,7 +136,7 @@ export function startCareerCups(c:Career,previousClubs?:Map<string,Club>):void{
   seeds=["br-a","br-b","br-c","br-d"].flatMap(id=>getDivisionClubs(id));
   const stateChampions=WORLD_DIVISIONS.filter(division=>division.countryCode==="BR"&&division.kind==="state"&&division.id.endsWith("-a"))
    .map(division=>getDivisionClubs(division.id).sort((a,b)=>b.strength-a.strength)[0]!)
-   .filter(Boolean).sort((a,b)=>b.strength-a.strength).slice(0,12);
+   .filter(Boolean).sort((a,b)=>b.strength-a.strength);
   seeds.push(...stateChampions);
  }else{
   const divisions=WORLD_DIVISIONS.filter(division=>division.countryCode===c.world!.countryCode).sort((a,b)=>a.tier-b.tier).slice(0,2);
@@ -250,11 +250,11 @@ export function migrateCareer(career:Career):Career {
  }
  career.world=migrateWorldState(career.world,career.clubId);
  career.cups=Array.isArray(career.cups)?career.cups:[];
- if(career.world.divisionId!=="legacy"&&career.cups.length===0)startCareerCups(career);
  if(career.world.divisionId!==getWorldClub(career.clubId)?.divisionId){
   const clubSeed=getWorldClub(career.clubId);
   if(clubSeed){career.world.divisionId=clubSeed.divisionId;career.world.competitionName=clubSeed.divisionName;career.world.countryCode=clubSeed.countryCode;}
  }
+ if(career.world.divisionId!=="legacy"&&career.cups.length===0)startCareerCups(career);
  syncWorldLeagueFromCareer(career);
  return career;
 }

@@ -4,7 +4,7 @@ import { acceptJobOffer, acceptSponsorOffer, advanceCupTournaments, advanceMinut
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
 describe("Jornada 90 match engine",()=>{
  it("builds a career with every club in its selected division and a balanced double round-robin",()=>{
-  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(92);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(408);
+  const c=createCareer("Teste","Mister","pato-branco");expect(c.clubs).toHaveLength(107);expect(c.clubs.every(x=>x.players.length>=18)).toBe(true);expect(c.clubs.every(x=>x.players.reduce((sum,p)=>sum+p.wage,0)<=x.wageBudget)).toBe(true);expect(c.fixtures).toHaveLength(423);
   for(let round=1;round<=38;round++){const fs=c.fixtures.filter(f=>f.round===round);expect(fs).toHaveLength(10);expect(new Set(fs.flatMap(f=>[f.homeClubId,f.awayClubId])).size).toBe(20);}expect(getNextFixture(c)).toBeDefined();
  });
  it("pauses at halftime and ends a regular match at 90 minutes",()=>{
@@ -195,12 +195,12 @@ describe("Pulso 90 save migration",()=>{
 });
 
 describe("Pulso 90 national cup engine",()=>{
- it("creates a Brazilian national cup with 92 clubs while keeping the league table separate",()=>{
+ it("creates a Brazilian national cup with 107 clubs while keeping the league table separate",()=>{
   const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
   expect(c.cups).toHaveLength(1);
-  expect(c.cups[0]!.participants).toHaveLength(92);
-  expect(c.fixtures.filter(f=>f.competition===c.cups[0]!.competition&&f.round===4)).toHaveLength(28);
-  expect(c.cups[0]!.byes).toHaveLength(36);
+  expect(c.cups[0]!.participants).toHaveLength(107);
+  expect(c.fixtures.filter(f=>f.competition===c.cups[0]!.competition&&f.round===4)).toHaveLength(43);
+  expect(c.cups[0]!.byes).toHaveLength(21);
   expect(getStandings(c)).toHaveLength(20);
  });
  it("creates a national cup for an international career",()=>{
@@ -213,10 +213,11 @@ describe("Pulso 90 national cup engine",()=>{
 });
 
 describe("Pulso 90 cup bracket progression",()=>{
- it("advances a 92-team cup from preliminary round to a 64-team bracket",()=>{
+ it("advances a 107-team cup from preliminary round to a 64-team bracket",()=>{
   const c=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc");
   const cup=c.cups[0]!;
   const firstRound=c.fixtures.filter(f=>f.competition===cup.competition&&f.round===cup.fixtureRound);
+  expect(firstRound).toHaveLength(43);
   for(const fixture of firstRound){
    fixture.played=true;
    fixture.homeScore=2;

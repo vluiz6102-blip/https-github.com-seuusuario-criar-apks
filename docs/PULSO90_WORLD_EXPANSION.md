@@ -140,3 +140,6 @@ A base original atual contém:
 A lista das 211 associações segue a relação pública da FIFA em https://inside.fifa.com/associations; as divisões e copas genéricas acrescentadas aos países sem pacote específico são conteúdo fictício P90, e as forças são parâmetros de equilíbrio, não o ranking oficial da FIFA.
 
 Esses números descrevem o universo original atualmente implementado, não uma alegação de que todas as competições oficiais reais do planeta já estejam incluídas. A arquitetura permite acrescentar países, divisões, copas e calendários sem reescrever o motor.
+
+
+A Copa Nacional do Brasil reúne os 80 clubes das Séries A, B, C e D e os 27 campeões estaduais, totalizando 107 participantes.

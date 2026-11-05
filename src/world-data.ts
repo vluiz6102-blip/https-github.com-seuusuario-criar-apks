@@ -285,7 +285,7 @@ export const WORLD_DIVISIONS: WorldDivision[] = divisions;
 export const WORLD_CLUBS: WorldClubSeed[] = clubs;
 
 const cupCompetitions: WorldCompetitionSeed[] = [
-  { id: "br-copa", name: "Copa Nacional do Brasil", countryCode: "BR", type: "cup", participants: 92 },
+  { id: "br-copa", name: "Copa Nacional do Brasil", countryCode: "BR", type: "cup", participants: 107 },
   { id: "br-super", name: "Supercopa do Brasil", countryCode: "BR", type: "cup", participants: 2 },
   { id: "br-estaduais", name: "Copas Estaduais", countryCode: "BR", type: "cup", participants: 128 },
   { id: "conmebol-libertadores", name: "Copa Libertadores Continental", countryCode: "CONMEBOL", type: "continental", participants: 32 },
