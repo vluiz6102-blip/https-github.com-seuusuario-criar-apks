@@ -32,7 +32,7 @@ function loadCareer():Career|null{
   const normalizeWage=(p:Player):void=>{if(Number.isFinite(p.overall)&&Number.isFinite(p.wage)&&p.wage>p.overall*p.overall*2.5)p.wage=Math.max(900,Math.round(p.overall*p.overall*2));};
   for(const c of value.clubs)for(const p of c.players)normalizeWage(p);
   for(const p of value.transferMarket)normalizeWage(p);
-  return value;
+  return migrateCareer(value);
  }catch{return null;}
 }
 function save():void{
