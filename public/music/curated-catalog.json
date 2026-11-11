@@ -1,7 +1,7 @@
 {
-  "title": "Pulso 90 - Curadoria musical inicial",
-  "version": 1,
-  "note": "Seleção editorial de faixas para licenciamento. Este catálogo não contém gravações de áudio nem concede direitos de uso. Só incluir arquivos depois de obter autorização dos titulares.",
+  "title": "Pulso 90 - Trilha sonora oficial (curadoria de 80 faixas)",
+  "version": 2,
+  "note": "Catálogo editorial com 80 faixas conhecidas de trilhas FIFA e futebol. As gravações comerciais continuam protegidas por direitos autorais: audioFile permanece null até o licenciamento. streamingSearchUrl abre a busca da faixa no Spotify; não fornece áudio embutido nem substitui licença.",
   "tracks": [
     {
       "title": "Love Me Again (Vice Remix)",
@@ -200,6 +200,678 @@
       "source": "FIFA 09",
       "audioFile": null,
       "licenseStatus": "pending"
+    },
+    {
+      "title": "Dreaming",
+      "artist": "Smallpools",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Dreaming%20Smallpools"
+    },
+    {
+      "title": "On Top of the World",
+      "artist": "Imagine Dragons",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 13",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/On%20Top%20of%20the%20World%20Imagine%20Dragons"
+    },
+    {
+      "title": "Club Foot",
+      "artist": "Kasabian",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 13",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Club%20Foot%20Kasabian"
+    },
+    {
+      "title": "Love Natural",
+      "artist": "Crystal Fighters",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Love%20Natural%20Crystal%20Fighters"
+    },
+    {
+      "title": "My Type",
+      "artist": "Saint Motel",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 15",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/My%20Type%20Saint%20Motel"
+    },
+    {
+      "title": "Walk",
+      "artist": "Kwabs",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 15",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Walk%20Kwabs"
+    },
+    {
+      "title": "Jungle",
+      "artist": "Jamie N Commons",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Jungle%20Jamie%20N%20Commons"
+    },
+    {
+      "title": "First",
+      "artist": "Cold War Kids",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/First%20Cold%20War%20Kids"
+    },
+    {
+      "title": "Mountain at My Gates",
+      "artist": "Foals",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Mountain%20at%20My%20Gates%20Foals"
+    },
+    {
+      "title": "Can't Do Without You",
+      "artist": "Caribou",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 15",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Can't%20Do%20Without%20You%20Caribou"
+    },
+    {
+      "title": "Way Down We Go",
+      "artist": "KALEO",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Way%20Down%20We%20Go%20KALEO"
+    },
+    {
+      "title": "Busy Earnin'",
+      "artist": "Jungle",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 15",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Busy%20Earnin'%20Jungle"
+    },
+    {
+      "title": "The Bay",
+      "artist": "Metronomy",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 12",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Bay%20Metronomy"
+    },
+    {
+      "title": "Punching in a Dream",
+      "artist": "The Naked and Famous",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 11",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Punching%20in%20a%20Dream%20The%20Naked%20and%20Famous"
+    },
+    {
+      "title": "Rhinestone Eyes",
+      "artist": "Gorillaz",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 11",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Rhinestone%20Eyes%20Gorillaz"
+    },
+    {
+      "title": "W.A.N.A.",
+      "artist": "Bad Sounds",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 18",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/W.A.N.A.%20Bad%20Sounds"
+    },
+    {
+      "title": "Jerk It Out",
+      "artist": "Caesars",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 04",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Jerk%20It%20Out%20Caesars"
+    },
+    {
+      "title": "Helicopter",
+      "artist": "Bloc Party",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 06",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Helicopter%20Bloc%20Party"
+    },
+    {
+      "title": "Black and Gold",
+      "artist": "Sam Sparro",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 09",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Black%20and%20Gold%20Sam%20Sparro"
+    },
+    {
+      "title": "Paper Planes",
+      "artist": "M.I.A.",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 09",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Paper%20Planes%20M.I.A."
+    },
+    {
+      "title": "Young Folks",
+      "artist": "Peter Bjorn and John",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 08",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Young%20Folks%20Peter%20Bjorn%20and%20John"
+    },
+    {
+      "title": "D.A.N.C.E.",
+      "artist": "Justice",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 08",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/D.A.N.C.E.%20Justice"
+    },
+    {
+      "title": "The Entertainer",
+      "artist": "The Fratellis",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 08",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Entertainer%20The%20Fratellis"
+    },
+    {
+      "title": "Hips Don't Lie",
+      "artist": "Shakira ft. Wyclef Jean",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 07",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Hips%20Don't%20Lie%20Shakira%20ft.%20Wyclef%20Jean"
+    },
+    {
+      "title": "Supermassive Black Hole",
+      "artist": "Muse",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 07",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Supermassive%20Black%20Hole%20Muse"
+    },
+    {
+      "title": "The Runner",
+      "artist": " Foals",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Runner%20%20Foals"
+    },
+    {
+      "title": "Heat Waves",
+      "artist": "Glass Animals",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Heat%20Waves%20Glass%20Animals"
+    },
+    {
+      "title": "Where and When",
+      "artist": "Bastille",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Where%20and%20When%20Bastille"
+    },
+    {
+      "title": "Morrow",
+      "artist": "070 Shake",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Morrow%20070%20Shake"
+    },
+    {
+      "title": "Shine a Light",
+      "artist": "BANNERS",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Shine%20a%20Light%20BANNERS"
+    },
+    {
+      "title": "Stop This Flame",
+      "artist": "Celeste",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Stop%20This%20Flame%20Celeste"
+    },
+    {
+      "title": "Fado",
+      "artist": "Milky Chance",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Fado%20Milky%20Chance"
+    },
+    {
+      "title": "The Business",
+      "artist": "Tiësto",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 21",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Business%20Ti%C3%ABsto"
+    },
+    {
+      "title": "Trampoline",
+      "artist": "SHAED",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 20",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Trampoline%20SHAED"
+    },
+    {
+      "title": "Que Calor",
+      "artist": "Major Lazer ft. J Balvin & El Alfa",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 20",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Que%20Calor%20Major%20Lazer%20ft.%20J%20Balvin%20%26%20El%20Alfa"
+    },
+    {
+      "title": "Yo x Ti, Tu x Mi",
+      "artist": "ROSALÍA & Ozuna",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 20",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Yo%20x%20Ti%2C%20Tu%20x%20Mi%20ROSAL%C3%8DA%20%26%20Ozuna"
+    },
+    {
+      "title": "The Runner",
+      "artist": "Foals",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 20",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Runner%20Foals"
+    },
+    {
+      "title": "Giant",
+      "artist": "Calvin Harris & Rag'n'Bone Man",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 19",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Giant%20Calvin%20Harris%20%26%20Rag'n'Bone%20Man"
+    },
+    {
+      "title": "Jackie Chan",
+      "artist": "Tiësto & Dzeko ft. Preme & Post Malone",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 19",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Jackie%20Chan%20Ti%C3%ABsto%20%26%20Dzeko%20ft.%20Preme%20%26%20Post%20Malone"
+    },
+    {
+      "title": "Eastside",
+      "artist": "benny blanco, Halsey & Khalid",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 19",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Eastside%20benny%20blanco%2C%20Halsey%20%26%20Khalid"
+    },
+    {
+      "title": "Flames",
+      "artist": "David Guetta & Sia",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 19",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Flames%20David%20Guetta%20%26%20Sia"
+    },
+    {
+      "title": "Complicated",
+      "artist": "Kiesza",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 19",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Complicated%20Kiesza"
+    },
+    {
+      "title": "On Hold",
+      "artist": "The xx",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 17",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/On%20Hold%20The%20xx"
+    },
+    {
+      "title": "Go",
+      "artist": "The Chemical Brothers",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 17",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Go%20The%20Chemical%20Brothers"
+    },
+    {
+      "title": "Send Them Off!",
+      "artist": "Bastille",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 17",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Send%20Them%20Off!%20Bastille"
+    },
+    {
+      "title": "Ain't Got Far to Go",
+      "artist": "Jess Glynne",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Ain't%20Got%20Far%20to%20Go%20Jess%20Glynne"
+    },
+    {
+      "title": "She's Not There",
+      "artist": "The Zombies",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/She's%20Not%20There%20The%20Zombies"
+    },
+    {
+      "title": "The World Is Ours",
+      "artist": "David Correy",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20World%20Is%20Ours%20David%20Correy"
+    },
+    {
+      "title": "We Sink",
+      "artist": "Chvrches",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/We%20Sink%20Chvrches"
+    },
+    {
+      "title": "Alive",
+      "artist": "Empire of the Sun",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 14",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Alive%20Empire%20of%20the%20Sun"
+    },
+    {
+      "title": "Colours",
+      "artist": "Housse de Racket",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 12",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Colours%20Housse%20de%20Racket"
+    },
+    {
+      "title": "The Big Bang",
+      "artist": "Rock Mafia",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 12",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Big%20Bang%20Rock%20Mafia"
+    },
+    {
+      "title": "Wolves",
+      "artist": "Rag'n'Bone Man",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 17",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Wolves%20Rag'n'Bone%20Man"
+    },
+    {
+      "title": "Lionsong",
+      "artist": "Björk",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 16",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Lionsong%20Bj%C3%B6rk"
+    },
+    {
+      "title": "Jungle",
+      "artist": "Tash Sultana",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 18",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Jungle%20Tash%20Sultana"
+    },
+    {
+      "title": "Love Is Mystical",
+      "artist": "Cold War Kids",
+      "style": [
+        "indie",
+        "pop"
+      ],
+      "source": "FIFA 18",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Love%20Is%20Mystical%20Cold%20War%20Kids"
     }
   ]
 }
