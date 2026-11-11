@@ -60,6 +60,16 @@ function resolveTrackFile(track: CatalogTrack, index: number, files: Array<[stri
   return null;
 }
 
+async function fetchMusicJson(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  try {
+    return await fetch(url, { cache: "no-cache", signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 function publicMusicUrl(path: string): string {
   const cleanPath = path.replace(/^\.\//, "").replace(/^\//, "");
   return new URL(cleanPath, new URL(import.meta.env.BASE_URL, document.baseURI)).toString();
@@ -73,8 +83,8 @@ async function loadPlaylist(): Promise<void> {
     try {
       const files = Object.entries(importedAudio).sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
       const [playlistResult, catalogResult] = await Promise.allSettled([
-        fetch(publicMusicUrl("music/playlist.json"), { cache: "no-cache" }),
-        fetch(publicMusicUrl("music/curated-catalog.json"), { cache: "no-cache" })
+        fetchMusicJson(publicMusicUrl("music/playlist.json")),
+        fetchMusicJson(publicMusicUrl("music/curated-catalog.json"))
       ]);
 
       const configuredTracks: CatalogTrack[] = [];
