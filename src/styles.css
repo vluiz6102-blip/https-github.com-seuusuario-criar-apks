@@ -190,3 +190,16 @@ body{background:radial-gradient(ellipse at 78% 0%,rgba(65,108,255,.16),transpare
 .bench-fitness{grid-column:2/-1;color:var(--muted2);font-size:8px;text-align:right}
 @media(max-width:700px){.bench-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.bench-grid{grid-template-columns:minmax(0,1fr)}.lineup-summary>div{padding:9px 7px;gap:5px}.lineup-summary strong{font-size:17px}.lineup-summary span{font-size:7px}}
+
+/* Rádio Pulso 90 */
+.music-player{display:flex;align-items:center;gap:10px;min-width:250px;max-width:390px;padding:7px 10px;border:1px solid rgba(74,224,160,.2);border-radius:14px;background:rgba(17,30,25,.88)}
+.music-player-info{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.music-player-live{font-size:7px;letter-spacing:1.4px;font-weight:900;color:var(--green)}
+.music-player-info strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;max-width:155px}
+.music-player-info small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:8px;max-width:155px}
+.music-player-controls{display:flex;gap:5px}
+.music-player-controls button{width:29px;height:29px;border:1px solid var(--line);border-radius:9px;background:#1b2a23;color:var(--green);font-weight:900}
+.music-volume{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}
+.music-volume input{width:62px;height:4px;accent-color:var(--green)}
+@media(max-width:900px){.music-player{min-width:0;max-width:190px;padding:6px 7px;gap:6px}.music-player-info strong,.music-player-info small{max-width:75px}.music-volume input{width:42px}}
+@media(max-width:620px){.topbar{height:auto;min-height:72px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;gap:8px}.top-meta{gap:6px;flex-wrap:wrap;justify-content:flex-end}.music-player{order:5;flex-basis:100%;max-width:none}.music-player-info strong,.music-player-info small{max-width:none}.music-volume{margin-left:auto}.music-volume input{width:90px}.season-chip{display:none}}
