@@ -15,6 +15,8 @@ let musicWanted = false;
 let volume = 0.28;
 let loadingPlaylist: Promise<void> | null = null;
 let onPlayerChange: (() => void) | null = null;
+let failedTrackAttempts = 0;
+let audioUnlocked = false;
 
 function getAudioContext(): AudioContext | null {
   const AudioCtor = window.AudioContext;
@@ -97,6 +99,12 @@ function notifyPlayer(): void {
 }
 
 function unlockAudio(): void {
+  if (!audioUnlocked) {
+    audioUnlocked = true;
+    const silentAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=");
+    silentAudio.volume = 0;
+    void silentAudio.play().then(() => silentAudio.pause()).catch(() => undefined);
+  }
   const ctx = getAudioContext();
   if (ctx?.state === "suspended") void ctx.resume().catch(() => undefined);
   if (musicWanted && !currentAudio && tracks.length) void playCurrentTrack();
@@ -129,10 +137,13 @@ async function playCurrentTrack(): Promise<void> {
     if (currentAudio !== audio) return;
     console.warn("Faixa local indisponível:", track.src);
     currentAudio = null;
-    if (musicWanted && tracks.length > 1) {
+    if (musicWanted && tracks.length > 1 && failedTrackAttempts < tracks.length) {
+      failedTrackAttempts += 1;
       currentIndex = (currentIndex + 1) % tracks.length;
       void playCurrentTrack();
     } else {
+      musicWanted = false;
+      failedTrackAttempts = 0;
       notifyPlayer();
     }
   }, { once: true });
@@ -140,6 +151,7 @@ async function playCurrentTrack(): Promise<void> {
   currentAudio = audio;
   try {
     await audio.play();
+    failedTrackAttempts = 0;
   } catch (error) {
     if (currentAudio === audio) currentAudio = null;
     console.debug("A reprodução será iniciada após uma interação do usuário.", error);
