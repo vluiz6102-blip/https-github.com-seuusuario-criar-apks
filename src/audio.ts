@@ -38,8 +38,7 @@ function normalizeFileName(value: string): string {
 
 function resolveTrackFile(track: CatalogTrack, index: number, files: Array<[string, string]>): string | null {
   if (track.audioFile) {
-    const explicit = track.audioFile.startsWith("/") ? track.audioFile : "/" + track.audioFile.replace(/^\.\//, "");
-    return explicit;
+    return publicMusicUrl(track.audioFile);
   }
 
   const titleKey = normalizeFileName(track.title ?? "");
