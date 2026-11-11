@@ -113,7 +113,11 @@ describe("Pulso 90 lineup management",()=>{
   expect(initial[0]?.position).toBe("GOL");
   const bench=managed.players.find(player=>player.position==="ATA"&&!initial.some(starter=>starter.id===player.id))!;
   expect(setStartingPlayer(c,8,bench.id)).toBe(true);
-  expect(setStartingPlayer(c,9,bench.id)).toBe(false);
+  const displaced=getStartingLineup(managed)[9]!.id;
+  expect(setStartingPlayer(c,9,bench.id)).toBe(true);
+  expect(getStartingLineup(managed)[8]!.id).toBe(displaced);
+  expect(getStartingLineup(managed)[9]!.id).toBe(bench.id);
+  expect(new Set(getStartingLineup(managed).map(player=>player.id)).size).toBe(11);
   const fixture=getNextFixture(c)!;
   const match=createLiveMatch(fixture,c.clubs);
   const managedLineup=fixture.homeClubId===managed.id?match.homeLineup:match.awayLineup;
