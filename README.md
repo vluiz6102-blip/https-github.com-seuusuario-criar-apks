@@ -34,6 +34,10 @@ O resultado web compilado fica em `dist/`. O APK Android deve ser considerado va
 
 Criação e direção do projeto: Victor Luiz. Pulso 90 é uma identidade original desta branch, sem reutilizar código-fonte, imagens ou recursos proprietários de OpenFoot Manager, OpenSWOS ou outro jogo. Os nomes do elenco do Azuriz foram consultados na página oficial do clube; seus atributos numéricos continuam sendo estimativas do simulador. A pasta public/music aceita somente faixas próprias ou licenciadas.
 
+## Curadoria musical inicial
+
+O arquivo `public/music/curated-catalog.json` reúne 18 sugestões de faixas associadas a trilhas de FIFA e estilos próximos, incluindo pop, indie, eletrônico, rap e artistas brasileiros. É uma lista de seleção/licenciamento, não contém áudio e não significa que as músicas já estejam tocando no jogo. Cada gravação só deve ser adicionada a `public/music/tracks/` depois da autorização dos titulares dos direitos.
+
 ## Música própria e faixas licenciadas
 
 A trilha instrumental padrão é gerada pelo próprio jogo. Para adicionar música externa, coloque apenas arquivos autorizados em `public/music/tracks/` e liste-os em `public/music/playlist.json`, com caminhos iniciados por `/music/tracks/`. Não inclua gravações comerciais sem autorização expressa dos titulares dos direitos.
