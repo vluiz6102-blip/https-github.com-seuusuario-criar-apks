@@ -1086,5 +1086,643 @@
       "name": "Néiser Villarreal",
       "position": "ATA"
     }
+  ],
+  "br-a-grem1o": [
+    {
+      "name": "Gabriel Grando",
+      "position": "GOL"
+    },
+    {
+      "name": "Weverton",
+      "position": "GOL"
+    },
+    {
+      "name": "Thiago Beltrame",
+      "position": "GOL"
+    },
+    {
+      "name": "Gabriel Menegon",
+      "position": "GOL"
+    },
+    {
+      "name": "Gustavo Martins",
+      "position": "DEF"
+    },
+    {
+      "name": "Wallace",
+      "position": "DEF"
+    },
+    {
+      "name": "Wagner Leonardo",
+      "position": "DEF"
+    },
+    {
+      "name": "Fabián Balbuena",
+      "position": "DEF"
+    },
+    {
+      "name": "Luis Eduardo",
+      "position": "DEF"
+    },
+    {
+      "name": "Walter Kannemann",
+      "position": "DEF"
+    },
+    {
+      "name": "Athos Thawan",
+      "position": "DEF"
+    },
+    {
+      "name": "Marlon",
+      "position": "DEF"
+    },
+    {
+      "name": "Pedro Gabriel",
+      "position": "DEF"
+    },
+    {
+      "name": "Caio Paulista",
+      "position": "DEF"
+    },
+    {
+      "name": "Diego Caito",
+      "position": "DEF"
+    },
+    {
+      "name": "João Pedro",
+      "position": "DEF"
+    },
+    {
+      "name": "Marcos Rocha",
+      "position": "DEF"
+    },
+    {
+      "name": "Erick Noriega",
+      "position": "MEI"
+    },
+    {
+      "name": "Mathías Villasanti",
+      "position": "MEI"
+    },
+    {
+      "name": "Danilo Barbosa",
+      "position": "MEI"
+    },
+    {
+      "name": "Filip Krovinovic",
+      "position": "MEI"
+    },
+    {
+      "name": "Dodi",
+      "position": "MEI"
+    },
+    {
+      "name": "Juan Nardoni",
+      "position": "MEI"
+    },
+    {
+      "name": "Tiago Augusto",
+      "position": "MEI"
+    },
+    {
+      "name": "Riquelme",
+      "position": "MEI"
+    },
+    {
+      "name": "Francis Amuzu",
+      "position": "ATA"
+    },
+    {
+      "name": "Jovane Cabral",
+      "position": "ATA"
+    },
+    {
+      "name": "Tetê",
+      "position": "ATA"
+    },
+    {
+      "name": "Cristian Pavón",
+      "position": "ATA"
+    },
+    {
+      "name": "José Enamorado",
+      "position": "ATA"
+    },
+    {
+      "name": "Roger",
+      "position": "ATA"
+    },
+    {
+      "name": "Carlos Vinícius",
+      "position": "ATA"
+    },
+    {
+      "name": "Matheus Nascimento",
+      "position": "ATA"
+    },
+    {
+      "name": "Martin Braithwaite",
+      "position": "ATA"
+    }
+  ],
+  "br-a-1nternac10nal": [
+    {
+      "name": "Anthoni",
+      "position": "GOL"
+    },
+    {
+      "name": "Matheus Cunha",
+      "position": "GOL"
+    },
+    {
+      "name": "Sergio Rochet",
+      "position": "GOL"
+    },
+    {
+      "name": "Kauan",
+      "position": "GOL"
+    },
+    {
+      "name": "Diego Esser",
+      "position": "GOL"
+    },
+    {
+      "name": "Victor Gabriel",
+      "position": "DEF"
+    },
+    {
+      "name": "Guillermo Maripán",
+      "position": "DEF"
+    },
+    {
+      "name": "Félix Torres",
+      "position": "DEF"
+    },
+    {
+      "name": "Juninho",
+      "position": "DEF"
+    },
+    {
+      "name": "Gabriel Mercado",
+      "position": "DEF"
+    },
+    {
+      "name": "Alexandro Bernabei",
+      "position": "DEF"
+    },
+    {
+      "name": "Matheus Bahia",
+      "position": "DEF"
+    },
+    {
+      "name": "Bruno Gomes",
+      "position": "DEF"
+    },
+    {
+      "name": "Braian Aguirre",
+      "position": "DEF"
+    },
+    {
+      "name": "Rodrigo Villagra",
+      "position": "MEI"
+    },
+    {
+      "name": "Ronaldo",
+      "position": "MEI"
+    },
+    {
+      "name": "Thiago Maia",
+      "position": "MEI"
+    },
+    {
+      "name": "Benjamin",
+      "position": "MEI"
+    },
+    {
+      "name": "Paulinho Paula",
+      "position": "MEI"
+    },
+    {
+      "name": "Bruno Henrique",
+      "position": "MEI"
+    },
+    {
+      "name": "Niclas Eliasson",
+      "position": "MEI"
+    },
+    {
+      "name": "Alan Patrick",
+      "position": "MEI"
+    },
+    {
+      "name": "Calebe",
+      "position": "MEI"
+    },
+    {
+      "name": "Allex",
+      "position": "MEI"
+    },
+    {
+      "name": "Yago Noal",
+      "position": "MEI"
+    },
+    {
+      "name": "Johan Carbonero",
+      "position": "ATA"
+    },
+    {
+      "name": "Vitinho",
+      "position": "ATA"
+    },
+    {
+      "name": "Kayky",
+      "position": "ATA"
+    },
+    {
+      "name": "Alerrandro",
+      "position": "ATA"
+    },
+    {
+      "name": "Antonio Sanabria",
+      "position": "ATA"
+    },
+    {
+      "name": "Raykkonen",
+      "position": "ATA"
+    }
+  ],
+  "br-a-g0ias": [
+    {
+      "name": "Walter",
+      "position": "GOL"
+    },
+    {
+      "name": "Alex Muralha",
+      "position": "GOL"
+    },
+    {
+      "name": "Georgemy",
+      "position": "GOL"
+    },
+    {
+      "name": "Thomazella",
+      "position": "GOL"
+    },
+    {
+      "name": "Willian Machado",
+      "position": "DEF"
+    },
+    {
+      "name": "João Victor",
+      "position": "DEF"
+    },
+    {
+      "name": "Lucas Oliveira",
+      "position": "DEF"
+    },
+    {
+      "name": "Gabriel",
+      "position": "DEF"
+    },
+    {
+      "name": "Reinaldo",
+      "position": "DEF"
+    },
+    {
+      "name": "Victor Luís",
+      "position": "DEF"
+    },
+    {
+      "name": "Igor Formiga",
+      "position": "DEF"
+    },
+    {
+      "name": "Elias",
+      "position": "DEF"
+    },
+    {
+      "name": "Daniel Borges",
+      "position": "DEF"
+    },
+    {
+      "name": "Neto Moura",
+      "position": "MEI"
+    },
+    {
+      "name": "Wallisson",
+      "position": "MEI"
+    },
+    {
+      "name": "Gustavo Cazonatti",
+      "position": "MEI"
+    },
+    {
+      "name": "Denilson",
+      "position": "MEI"
+    },
+    {
+      "name": "Aldo Filho",
+      "position": "MEI"
+    },
+    {
+      "name": "Japa",
+      "position": "MEI"
+    },
+    {
+      "name": "Shaylon",
+      "position": "MEI"
+    },
+    {
+      "name": "Eduardo",
+      "position": "MEI"
+    },
+    {
+      "name": "Chico Kim",
+      "position": "MEI"
+    },
+    {
+      "name": "Alesson",
+      "position": "ATA"
+    },
+    {
+      "name": "Fernandinho",
+      "position": "ATA"
+    },
+    {
+      "name": "Negueba",
+      "position": "ATA"
+    },
+    {
+      "name": "Gustavo Silva",
+      "position": "ATA"
+    },
+    {
+      "name": "Carlos Eduardo",
+      "position": "ATA"
+    },
+    {
+      "name": "Luiz Filipe",
+      "position": "ATA"
+    },
+    {
+      "name": "Edson Carioca",
+      "position": "ATA"
+    },
+    {
+      "name": "André Luis",
+      "position": "ATA"
+    },
+    {
+      "name": "Zé Roberto",
+      "position": "ATA"
+    },
+    {
+      "name": "Bruno Santos",
+      "position": "ATA"
+    }
+  ],
+  "br-a-palme1ras": [
+    {
+      "name": "Carlos Miguel",
+      "position": "GOL"
+    },
+    {
+      "name": "Marcelo Lomba",
+      "position": "GOL"
+    },
+    {
+      "name": "Bruno Bertinato",
+      "position": "GOL"
+    },
+    {
+      "name": "Murilo",
+      "position": "DEF"
+    },
+    {
+      "name": "Alexander Barboza",
+      "position": "DEF"
+    },
+    {
+      "name": "Bruno Fuchs",
+      "position": "DEF"
+    },
+    {
+      "name": "Luis Benedetti",
+      "position": "DEF"
+    },
+    {
+      "name": "Gustavo Gómez",
+      "position": "DEF"
+    },
+    {
+      "name": "Joaquín Piquerez",
+      "position": "DEF"
+    },
+    {
+      "name": "Jefté",
+      "position": "DEF"
+    },
+    {
+      "name": "Arthur Gabriel",
+      "position": "DEF"
+    },
+    {
+      "name": "Agustín Giay",
+      "position": "DEF"
+    },
+    {
+      "name": "Khellven",
+      "position": "DEF"
+    },
+    {
+      "name": "Marlon Freitas",
+      "position": "MEI"
+    },
+    {
+      "name": "Emiliano Martínez",
+      "position": "MEI"
+    },
+    {
+      "name": "Luis Pacheco",
+      "position": "MEI"
+    },
+    {
+      "name": "Andreas Pereira",
+      "position": "MEI"
+    },
+    {
+      "name": "Lucas Evangelista",
+      "position": "MEI"
+    },
+    {
+      "name": "Larson",
+      "position": "MEI"
+    },
+    {
+      "name": "Mauricio",
+      "position": "MEI"
+    },
+    {
+      "name": "Erick Belé",
+      "position": "MEI"
+    },
+    {
+      "name": "Ramón Sosa",
+      "position": "ATA"
+    },
+    {
+      "name": "Felipe Anderson",
+      "position": "ATA"
+    },
+    {
+      "name": "Jhon Arias",
+      "position": "ATA"
+    },
+    {
+      "name": "Paulinho",
+      "position": "ATA"
+    },
+    {
+      "name": "Vitor Roque",
+      "position": "ATA"
+    },
+    {
+      "name": "José Manuel López",
+      "position": "ATA"
+    }
+  ],
+  "br-a-br4gant1n0": [
+    {
+      "name": "Cleiton",
+      "position": "GOL"
+    },
+    {
+      "name": "Tiago Volpi",
+      "position": "GOL"
+    },
+    {
+      "name": "Fabrício",
+      "position": "GOL"
+    },
+    {
+      "name": "Gustavo Reis",
+      "position": "GOL"
+    },
+    {
+      "name": "Gustavo Marques",
+      "position": "DEF"
+    },
+    {
+      "name": "Alix",
+      "position": "DEF"
+    },
+    {
+      "name": "Guzmán Rodríguez",
+      "position": "DEF"
+    },
+    {
+      "name": "Eduardo",
+      "position": "DEF"
+    },
+    {
+      "name": "Juninho Capixaba",
+      "position": "DEF"
+    },
+    {
+      "name": "Vanderlan",
+      "position": "DEF"
+    },
+    {
+      "name": "Cauê Nascimento",
+      "position": "DEF"
+    },
+    {
+      "name": "Agustín Sant'Anna",
+      "position": "DEF"
+    },
+    {
+      "name": "José Andrés Hurtado",
+      "position": "DEF"
+    },
+    {
+      "name": "Ryan Augusto",
+      "position": "DEF"
+    },
+    {
+      "name": "Fabinho",
+      "position": "MEI"
+    },
+    {
+      "name": "Patrick",
+      "position": "MEI"
+    },
+    {
+      "name": "Matheus Fernandes",
+      "position": "MEI"
+    },
+    {
+      "name": "Gabriel",
+      "position": "MEI"
+    },
+    {
+      "name": "Ignacio Sosa",
+      "position": "MEI"
+    },
+    {
+      "name": "Eric Ramires",
+      "position": "MEI"
+    },
+    {
+      "name": "Gustavo Neves",
+      "position": "MEI"
+    },
+    {
+      "name": "Rodriguinho",
+      "position": "MEI"
+    },
+    {
+      "name": "Bruninho",
+      "position": "MEI"
+    },
+    {
+      "name": "Marcelinho Braz",
+      "position": "MEI"
+    },
+    {
+      "name": "Henry Mosquera",
+      "position": "ATA"
+    },
+    {
+      "name": "Vinicinho",
+      "position": "ATA"
+    },
+    {
+      "name": "Davi Gomes",
+      "position": "ATA"
+    },
+    {
+      "name": "Lucas Barbosa",
+      "position": "ATA"
+    },
+    {
+      "name": "José Herrera",
+      "position": "ATA"
+    },
+    {
+      "name": "Isidro Pitta",
+      "position": "ATA"
+    },
+    {
+      "name": "Wallace Yan",
+      "position": "ATA"
+    },
+    {
+      "name": "Fernando",
+      "position": "ATA"
+    },
+    {
+      "name": "Eduardo Sasha",
+      "position": "ATA"
+    }
   ]
 }
