@@ -37,3 +37,7 @@ Criação e direção do projeto: Victor Luiz. Pulso 90 é uma identidade origin
 ## Música própria e faixas licenciadas
 
 A trilha instrumental padrão é gerada pelo próprio jogo. Para adicionar música externa, coloque apenas arquivos autorizados em `public/music/tracks/` e liste-os em `public/music/playlist.json`, com caminhos iniciados por `/music/tracks/`. Não inclua gravações comerciais sem autorização expressa dos titulares dos direitos.
+
+## Dados de elenco
+
+Os 20 elencos da Série A foram transcritos das páginas de elenco do Transfermarkt identificadas como temporada 2026, consultadas em 11/11/2026. O elenco do Azuriz foi transcrito da página oficial do clube. Idade, atributos, potencial, salários e valores usados pelo simulador continuam sendo estimativas próprias, não valores oficiais.

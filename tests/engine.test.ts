@@ -1,4 +1,4 @@
-import { getDivisionClubs, WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
+import { getDivisionClubs, REAL_PLAYER_ROSTERS, WORLD_CLUBS, WORLD_DIVISIONS } from "../src/world-data";
 import { describe, expect, it } from "vitest";
 import { acceptJobOffer, acceptSponsorOffer, advanceCupTournaments, advanceMinute, advanceSeason, autoSelectLineup, completeRound, createCareer, createLiveMatch, getNextFixture, getStartingLineup, getStandings, makeSubstitution, migrateCareer, restManagedSquad, resumeMatch, setStartingPlayer, simulateFixture, syncWorldLeagueFromCareer, syncWorldNews, type Career } from "../src/engine";
 function seeded(seed:number):()=>number{let s=seed>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
@@ -323,5 +323,25 @@ describe("Pulso 90 lineup interaction",()=>{
   expect(setStartingPlayer(career,slot,reserve.id)).toBe(true);expect(getStartingLineup(managed)[slot]!.id).toBe(reserve.id);
   expect(setStartingPlayer(career,slot,previous.id)).toBe(true);expect(getStartingLineup(managed)[slot]!.id).toBe(previous.id);
   expect(new Set(getStartingLineup(managed).map(p=>p.id)).size).toBe(11);
+ });
+});
+
+describe("Pulso 90 official squad integration",()=>{
+ it("creates all named Flamengo players and keeps an editable unique starting eleven",()=>{
+  const id="br-a-fl4mengo",career=createCareer("Teste","Mister",id),club=career.clubs.find(item=>item.id===id)!;
+  const roster=REAL_PLAYER_ROSTERS[id]!;
+  expect(club.players).toHaveLength(roster.length);
+  expect(club.players.map(player=>player.name)).toEqual(roster.map(player=>player.name));
+  expect(getStartingLineup(club)).toHaveLength(11);
+  expect(new Set(getStartingLineup(club).map(player=>player.id)).size).toBe(11);
+ });
+ it("migrates an older short Palmeiras squad without duplicate IDs or losing its club identity",()=>{
+  const id="br-a-palme1ras",career=createCareer("Teste","Mister",id),oldClub=career.clubs.find(item=>item.id===id)!;
+  oldClub.players=oldClub.players.slice(0,18);
+  const migrated=migrateCareer(career),club=migrated.clubs.find(item=>item.id===id)!;
+  expect(club.name).toBe("Palmeiras");
+  expect(club.players).toHaveLength(REAL_PLAYER_ROSTERS[id]!.length);
+  expect(new Set(club.players.map(player=>player.id)).size).toBe(club.players.length);
+  expect(getStartingLineup(club)).toHaveLength(11);
  });
 });

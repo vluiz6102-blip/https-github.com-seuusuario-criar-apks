@@ -133,3 +133,24 @@ describe("Verified Brazilian club data",()=>{
   expect(roster.filter(p=>p.position==="ATA")).toHaveLength(9);
  });
 });
+
+describe("2026 Brasileirão Série A real squads",()=>{
+ const ids=["br-a-athlet1c0-pr","br-a-atlet1c0-mg","br-a-b4h1a","br-a-b0taf0g0","br-a-f0rt4leza","br-a-c0r1nthians","br-a-c3ara","br-a-cruz31r0","br-a-grem1o","br-a-1nternac10nal","br-a-g0ias","br-a-palme1ras","br-a-br4gant1n0","br-a-cui4ba","br-a-sant0s","br-a-v4sc0-da-g4ma","br-a-v1t0r1a","br-a-fl4mengo","br-a-flum1nense","br-a-s4o-paul0"];
+ it("loads 20 real clubs and at least 650 named players with valid positions",()=>{
+  expect(getDivisionClubs("br-a")).toHaveLength(20);
+  expect(ids).toHaveLength(20);
+  expect(ids.reduce((sum,id)=>sum+(REAL_PLAYER_ROSTERS[id]?.length??0),0)).toBeGreaterThanOrEqual(650);
+  for(const id of ids){
+   const roster=REAL_PLAYER_ROSTERS[id]!;
+   expect(roster.length).toBeGreaterThanOrEqual(25);
+   expect(new Set(roster.map(player=>player.name.toLocaleLowerCase())).size).toBe(roster.length);
+   for(const position of ["GOL","DEF","MEI","ATA"] as const)expect(roster.some(player=>player.position===position)).toBe(true);
+  }
+ });
+ it("renames the four promoted/current clubs without breaking their stable IDs",()=>{
+  const clubs=getDivisionClubs("br-a");
+  for(const [id,name] of [["br-a-f0rt4leza","Chapecoense"],["br-a-c3ara","Coritiba"],["br-a-g0ias","Mirassol"],["br-a-cui4ba","Remo"]]){
+   expect(clubs.find(club=>club.id===id)?.name).toBe(name);
+  }
+ });
+});

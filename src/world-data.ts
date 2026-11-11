@@ -1,3 +1,5 @@
+import serieARosters2026 from "./real-rosters-2026.json";
+
 export type Difficulty = "facil" | "medio" | "dificil" | "quase-impossivel";
 export type CareerPace = "normal" | "tranquilo" | "delegado";
 
@@ -604,12 +606,12 @@ const brazilClubAliases: Record<string,{name:string;shortName:string}> = {
   "br-a|CRUZ31R0":{name:"Cruzeiro",shortName:"CRU"},
   "br-a|B4H1A":{name:"Bahia",shortName:"BAH"},
   "br-a|V1T0R1A":{name:"Vitória",shortName:"VIT"},
-  "br-a|F0RT4LEZA":{name:"Fortaleza",shortName:"FOR"},
-  "br-a|C3ARÁ":{name:"Ceará",shortName:"CEA"},
+  "br-a|F0RT4LEZA":{name:"Chapecoense",shortName:"CHA"},
+  "br-a|C3ARÁ":{name:"Coritiba",shortName:"CFC"},
   "br-a|ATHLET1C0-PR":{name:"Athletico Paranaense",shortName:"CAP"},
   "br-a|BR4GANT1N0":{name:"Red Bull Bragantino",shortName:"RBB"},
-  "br-a|G0IÁS":{name:"Goiás",shortName:"GOI"},
-  "br-a|CUI4BÁ":{name:"Cuiabá",shortName:"CUI"},
+  "br-a|G0IÁS":{name:"Mirassol",shortName:"MIR"},
+  "br-a|CUI4BÁ":{name:"Remo",shortName:"REM"},
   "br-b|C0R1T1BA":{name:"Coritiba",shortName:"CFC"},
   "br-b|AVA1":{name:"Avaí",shortName:"AVA"},
   "br-b|CH4PEC0ENSE":{name:"Chapecoense",shortName:"CHA"},
@@ -679,14 +681,70 @@ const brazilClubAliases: Record<string,{name:string;shortName:string}> = {
   "br-pr-a|PRUDENTÓPOLIS":{name:"São Joseense",shortName:"SJO"}
 };
 for(const seed of clubs){const alias=brazilClubAliases[seed.divisionId+"|"+seed.name];if(alias){seed.name=alias.name;seed.shortName=alias.shortName;}}
+
+const brazilClubLocations: Record<string,{city:string;stadium:string}> = {
+ "br-a-athlet1c0-pr":{city:"Curitiba",stadium:"Ligga Arena"},
+ "br-a-atlet1c0-mg":{city:"Belo Horizonte",stadium:"Arena MRV"},
+ "br-a-b4h1a":{city:"Salvador",stadium:"Arena Fonte Nova"},
+ "br-a-b0taf0g0":{city:"Rio de Janeiro",stadium:"Estádio Nilton Santos"},
+ "br-a-f0rt4leza":{city:"Chapecó",stadium:"Arena Condá"},
+ "br-a-c0r1nthians":{city:"São Paulo",stadium:"Neo Química Arena"},
+ "br-a-c3ara":{city:"Curitiba",stadium:"Couto Pereira"},
+ "br-a-cruz31r0":{city:"Belo Horizonte",stadium:"Mineirão"},
+ "br-a-fl4mengo":{city:"Rio de Janeiro",stadium:"Maracanã"},
+ "br-a-flum1nense":{city:"Rio de Janeiro",stadium:"Maracanã"},
+ "br-a-grem1o":{city:"Porto Alegre",stadium:"Arena do Grêmio"},
+ "br-a-1nternac10nal":{city:"Porto Alegre",stadium:"Beira-Rio"},
+ "br-a-g0ias":{city:"Mirassol",stadium:"Estádio José Maria de Campos Maia"},
+ "br-a-palme1ras":{city:"São Paulo",stadium:"Allianz Parque"},
+ "br-a-br4gant1n0":{city:"Bragança Paulista",stadium:"Estádio Nabi Abi Chedid"},
+ "br-a-cui4ba":{city:"Belém",stadium:"Mangueirão"},
+ "br-a-sant0s":{city:"Santos",stadium:"Vila Belmiro"},
+ "br-a-s4o-paul0":{city:"São Paulo",stadium:"MorumBIS"},
+ "br-a-v4sc0-da-g4ma":{city:"Rio de Janeiro",stadium:"São Januário"},
+ "br-a-v1t0r1a":{city:"Salvador",stadium:"Barradão"}
+};
+for(const seed of clubs){const place=brazilClubLocations[seed.id];if(place){seed.city=place.city;seed.stadium=place.stadium;}}
 const azurizSeed=clubs.find(seed=>seed.id==="br-d-p4t0-br4nc0-fc");
 if(azurizSeed){azurizSeed.name="Azuriz Futebol Clube";azurizSeed.shortName="AZURIZ";azurizSeed.city="Pato Branco";azurizSeed.stadium="Estádio Os Pioneiros";azurizSeed.region="Paraná";}
-export const REAL_PLAYER_ROSTERS: Record<string,ReadonlyArray<{name:string;position:"GOL"|"DEF"|"MEI"|"ATA"}>> = {
+type RealRosterPosition = "GOL" | "DEF" | "MEI" | "ATA";
+type RealRosterPlayer = { name: string; position: RealRosterPosition };
+export const REAL_PLAYER_ROSTERS: Record<string,ReadonlyArray<RealRosterPlayer>> = {
+ ...serieARosters2026 as Record<string,ReadonlyArray<RealRosterPlayer>>,
  "br-d-p4t0-br4nc0-fc":[
-  {name:"Enzo",position:"GOL"},{name:"Gabriel Buzzetto",position:"GOL"},{name:"Leandro",position:"GOL"},{name:"Matheus Dal Vesco",position:"GOL"},{name:"Rafael William",position:"GOL"},
-  {name:"Ary",position:"DEF"},{name:"Brunão",position:"DEF"},{name:"Hygor",position:"DEF"},{name:"João Pedro",position:"DEF"},{name:"Lauan",position:"DEF"},{name:"Luciano",position:"DEF"},{name:"Ulises",position:"DEF"},{name:"Vinicio",position:"DEF"},{name:"Vinicios",position:"DEF"},
-  {name:"Caetano",position:"MEI"},{name:"Carlos Biro",position:"MEI"},{name:"Gabriel Oliveira",position:"MEI"},{name:"Gabriel Zeca",position:"MEI"},{name:"Igor Pimenta",position:"MEI"},{name:"Igor Scheis",position:"MEI"},{name:"João Felipe",position:"MEI"},{name:"Jorginho",position:"MEI"},{name:"Luiz Henrique",position:"MEI"},{name:"Victor Yan",position:"MEI"},
-  {name:"José Hugo",position:"ATA"},{name:"Léo Guerra",position:"ATA"},{name:"Léo Pedro",position:"ATA"},{name:"Lucas Santos",position:"ATA"},{name:"Luizão",position:"ATA"},{name:"Maranhão",position:"ATA"},{name:"Marquinhos",position:"ATA"},{name:"Matheus Guimarães",position:"ATA"},{name:"Mineiro",position:"ATA"}
+  {name:"Enzo",position:"GOL"},
+  {name:"Gabriel Buzzetto",position:"GOL"},
+  {name:"Leandro",position:"GOL"},
+  {name:"Matheus Dal Vesco",position:"GOL"},
+  {name:"Rafael William",position:"GOL"},
+  {name:"Ary",position:"DEF"},
+  {name:"Brunão",position:"DEF"},
+  {name:"Hygor",position:"DEF"},
+  {name:"João Pedro",position:"DEF"},
+  {name:"Lauan",position:"DEF"},
+  {name:"Luciano",position:"DEF"},
+  {name:"Ulises",position:"DEF"},
+  {name:"Vinicio",position:"DEF"},
+  {name:"Vinicios",position:"DEF"},
+  {name:"Caetano",position:"MEI"},
+  {name:"Carlos Biro",position:"MEI"},
+  {name:"Gabriel Oliveira",position:"MEI"},
+  {name:"Gabriel Zeca",position:"MEI"},
+  {name:"Igor Pimenta",position:"MEI"},
+  {name:"Igor Scheis",position:"MEI"},
+  {name:"João Felipe",position:"MEI"},
+  {name:"Jorginho",position:"MEI"},
+  {name:"Luiz Henrique",position:"MEI"},
+  {name:"Victor Yan",position:"MEI"},
+  {name:"José Hugo",position:"ATA"},
+  {name:"Léo Guerra",position:"ATA"},
+  {name:"Léo Pedro",position:"ATA"},
+  {name:"Lucas Santos",position:"ATA"},
+  {name:"Luizão",position:"ATA"},
+  {name:"Maranhão",position:"ATA"},
+  {name:"Marquinhos",position:"ATA"},
+  {name:"Matheus Guimarães",position:"ATA"},
+  {name:"Mineiro",position:"ATA"},
  ]
 };
 

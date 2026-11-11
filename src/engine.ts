@@ -100,6 +100,7 @@ function syncOfficialClubData(club:Club):void{
  });
  const retained=club.players.filter(player=>!/^.+-p\d{2}$/.test(player.id));
  club.players=[...official,...retained];club.startingXI=selectLineup(club,club.formation);
+ const payroll=club.players.reduce((sum,player)=>sum+player.wage,0);club.wageBudget=Math.max(club.wageBudget,Math.ceil(payroll*1.15));
 }
 
 function rebuildCurrentLeagueClubs(c:Career,previousClubs:Map<string,Club>):void{
