@@ -7,13 +7,13 @@ Pulso 90 é um jogo original de gestão de futebol para web e Android. A experi�
 A branch **jornada90-original** contém o projeto Pulso 90. A branch `main` e o projeto Openfoot não fazem parte desta reformulação.
 
 - Tela de abertura cinematográfica, menu de carreira, créditos e preferências.
-- Efeitos sonoros sintetizados, com controle para ativar ou desativar.
+- Efeitos sonoros e trilha instrumental original gerada localmente, com controles independentes.
 - Carreira local com nome e apelido do treinador e escolha de clube.
-- Oito clubes demonstrativos e elencos gerados para cada nova carreira.
+- Nomes de clubes brasileiros revisados e elenco publicado do Azuriz FC (33 atletas); outros elencos ainda usam dados de simulação até receber fontes oficiais.
 - Liga de turno e returno com 56 partidas por temporada.
 - Motor de partidas por minuto, intervalo, comentários, estatísticas, condição física e substituições.
 - Suporte de motor para prorrogação e pênaltis em partidas eliminatórias.
-- Formações, seis estilos táticos, mercado demonstrativo e evolução de temporada.
+- Formações, seis estilos táticos, titulares com banco visível e troca direta de jogadores da mesma posição.
 - Salvamento automático no dispositivo e exportação do save em JSON.
 - A chave de armazenamento da carreira foi preservada para manter compatibilidade com saves locais existentes.
 
@@ -32,4 +32,8 @@ O resultado web compilado fica em `dist/`. O APK Android deve ser considerado va
 
 ## Créditos
 
-Criação e direção do projeto: Victor Luiz. Pulso 90 é uma identidade original desta branch, sem reutilizar código-fonte, imagens ou recursos proprietários de OpenFoot Manager, OpenSWOS ou outro jogo. Clubes e atletas da versão atual são demonstrativos.
+Criação e direção do projeto: Victor Luiz. Pulso 90 é uma identidade original desta branch, sem reutilizar código-fonte, imagens ou recursos proprietários de OpenFoot Manager, OpenSWOS ou outro jogo. Os nomes do elenco do Azuriz foram consultados na página oficial do clube; seus atributos numéricos continuam sendo estimativas do simulador. A pasta public/music aceita somente faixas próprias ou licenciadas.
+
+## Música própria e faixas licenciadas
+
+A trilha instrumental padrão é gerada pelo próprio jogo. Para adicionar música externa, coloque apenas arquivos autorizados em `public/music/tracks/` e liste-os em `public/music/playlist.json`, com caminhos iniciados por `/music/tracks/`. Não inclua gravações comerciais sem autorização expressa dos titulares dos direitos.

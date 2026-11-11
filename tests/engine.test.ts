@@ -311,3 +311,13 @@ describe("Pulso 90 multi-competition matchdays",()=>{
   expect(c.fixtures.filter(fixture=>fixture.competition===cup.competition&&fixture.round===8)).toHaveLength(32);
  });
 });
+
+describe("Pulso 90 lineup interaction",()=>{
+ it("can select a reserve and swap same-position starters without duplicates",()=>{
+  const career=createCareer("Teste","Mister","br-d-p4t0-br4nc0-fc"),managed=career.clubs.find(club=>club.id===career.clubId)!;
+  const starters=getStartingLineup(managed),reserve=managed.players.find(p=>p.position==="DEF"&&!starters.some(s=>s.id===p.id))!,previous=starters.find(p=>p.position==="DEF")!,slot=starters.findIndex(p=>p.id===previous.id);
+  expect(setStartingPlayer(career,slot,reserve.id)).toBe(true);expect(getStartingLineup(managed)[slot]!.id).toBe(reserve.id);
+  expect(setStartingPlayer(career,slot,previous.id)).toBe(true);expect(getStartingLineup(managed)[slot]!.id).toBe(previous.id);
+  expect(new Set(getStartingLineup(managed).map(p=>p.id)).size).toBe(11);
+ });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, SPONSOR_CATALOG, countryDivisionCount, getAdjacentDivision, getDivision, getDivisionClubs } from "../src/world-data";
+import { WORLD_CLUBS, WORLD_COMPETITIONS, WORLD_DIVISIONS, NATIONAL_TEAMS, REAL_PLAYER_ROSTERS, SPONSOR_CATALOG, countryDivisionCount, getAdjacentDivision, getDivision, getDivisionClubs } from "../src/world-data";
 
 describe("Pulso 90 original global database",()=>{
  it("provides at least two playable divisions for each represented nation",()=>{
@@ -118,5 +118,18 @@ describe("Pulso 90 sponsor marketplace",()=>{
   expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.sector)).size).toBeGreaterThanOrEqual(20);
   expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.tier))).toEqual(new Set([1,2,3,4,5]));
   expect(new Set(SPONSOR_CATALOG.map(sponsor=>sponsor.id)).size).toBe(SPONSOR_CATALOG.length);
+ });
+});
+
+describe("Verified Brazilian club data",()=>{
+ it("uses Azuriz FC for Pato Branco and keeps its stable save ID",()=>{
+  const azuriz=WORLD_CLUBS.find(club=>club.id==="br-d-p4t0-br4nc0-fc")!;
+  expect(azuriz.name).toBe("Azuriz Futebol Clube");expect(azuriz.city).toBe("Pato Branco");expect(azuriz.stadium).toBe("Estádio Os Pioneiros");
+ });
+ it("contains the 33 published Azuriz first-team names grouped by position",()=>{
+  const roster=REAL_PLAYER_ROSTERS["br-d-p4t0-br4nc0-fc"]!;
+  expect(roster).toHaveLength(33);expect(roster.filter(p=>p.position==="GOL")).toHaveLength(5);
+  expect(roster.filter(p=>p.position==="DEF")).toHaveLength(9);expect(roster.filter(p=>p.position==="MEI")).toHaveLength(10);
+  expect(roster.filter(p=>p.position==="ATA")).toHaveLength(9);
  });
 });

@@ -1,5 +1,5 @@
 import { createMatchNews } from "./newsroom";
-import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, NATIONAL_TEAMS, WORLD_COMPETITIONS, WORLD_DIVISIONS, type CareerPace, type Difficulty } from "./world-data";
+import { getAdjacentDivision, getDivision, getDivisionClubs, getWorldClub, NATIONAL_TEAMS, REAL_PLAYER_ROSTERS, WORLD_COMPETITIONS, WORLD_DIVISIONS, type CareerPace, type Difficulty } from "./world-data";
 import { acceptSponsor, advanceWorldDay, applyFanMatchReaction, createWorldState, getDifficultyStrengthAdjustment, migrateWorldState, refreshWorldOffers, toRetiredPlayerRecord, toggleInvestor, updateWorldJobMarket, type WorldState } from "./world-simulation";
 export type Position = "GOL" | "DEF" | "MEI" | "ATA";
 export type Formation = "4-3-3" | "4-4-2" | "3-5-2" | "4-2-3-1";
@@ -52,6 +52,8 @@ function makePlayer(id:string,clubId:string,position:Position,target:number,rand
 function makeSquad(clubId:string,strength:number,random:()=>number,country="Brasil",selection=false):Player[] {
  const clubPositions:Position[]=["GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA"];
  const selectionPositions:Position[]=["GOL","GOL","GOL","DEF","DEF","DEF","DEF","DEF","DEF","DEF","DEF","MEI","MEI","MEI","MEI","MEI","MEI","MEI","ATA","ATA","ATA","ATA","ATA"];
+ const official=REAL_PLAYER_ROSTERS[clubId];
+ if(official?.length)return official.map((entry,i)=>({...makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,entry.position,strength+(i<11?3:-3),random,undefined,country),name:entry.name}));
  const positions=selection?selectionPositions:clubPositions;
  return positions.map((pos,i)=>makePlayer(clubId+"-p"+String(i+1).padStart(2,"0"),clubId,pos,strength+(i<11?3:-3),random,undefined,country));
 }
@@ -84,6 +86,22 @@ function clubFromWorldSeed(seed:NonNullable<ReturnType<typeof getWorldClub>>,ran
  club.startingXI=selectLineup(club,club.formation);
  return club;
 }
+
+function syncOfficialClubData(club:Club):void{
+ const seed=getWorldClub(club.id);
+ if(seed){club.name=seed.name;club.shortName=seed.shortName;club.city=seed.city;club.stadium=seed.stadium;}
+ const roster=REAL_PLAYER_ROSTERS[club.id];
+ if(!roster?.length||club.players.some(player=>player.id===club.id+"-p"+String(roster.length).padStart(2,"0")))return;
+ const existing=new Map(club.players.map(player=>[player.id,player]));
+ const official=roster.map((entry,index)=>{
+  const id=club.id+"-p"+String(index+1).padStart(2,"0"),previous=existing.get(id);
+  return previous?{...previous,name:entry.name,position:entry.position,clubId:club.id}
+   :{...makePlayer(id,club.id,entry.position,club.strength+(index<11?3:-3),seeded(stableSeed(id)),undefined,seed?.country??"Brasil"),name:entry.name};
+ });
+ const retained=club.players.filter(player=>!/^.+-p\d{2}$/.test(player.id));
+ club.players=[...official,...retained];club.startingXI=selectLineup(club,club.formation);
+}
+
 function rebuildCurrentLeagueClubs(c:Career,previousClubs:Map<string,Club>):void{
  if(!c.world||c.world.divisionId==="legacy")return;
  const division=getDivision(c.world.divisionId);
@@ -353,6 +371,7 @@ export function createCareer(managerName:string,managerNickname:string,clubId:st
 }
 export function migrateCareer(career:Career):Career {
  const legacyCompetition=career.fixtures[0]?.competition??"Liga das Araucárias";
+ for(const existingClub of career.clubs)syncOfficialClubData(existingClub);
  if(!getWorldClub(career.clubId)){
   const world=migrateWorldState(career.world,career.clubId);
   world.divisionId="legacy";
@@ -436,9 +455,11 @@ export function setStartingPlayer(c:Career,slot:number,playerId:string):boolean{
  if(c.currentMatch&&(c.currentMatch.phase!=="full-time"||!c.currentMatch.finishedApplied))return false;
  const managed=getManagedClub(c),player=managed.players.find(item=>item.id===playerId);
  if(!player||player.position!==lineupPosition(managed.formation,slot))return false;
- const ids=resolveLineup(managed);
- if(ids.some((id,index)=>id===playerId&&index!==slot))return false;
- ids[slot]=playerId;
+ const ids=resolveLineup(managed),previousSlot=ids.indexOf(playerId);
+ if(previousSlot>=0&&previousSlot!==slot){
+  if(lineupPosition(managed.formation,previousSlot)!==lineupPosition(managed.formation,slot))return false;
+  [ids[slot],ids[previousSlot]]=[ids[previousSlot]!,ids[slot]!];
+ }else ids[slot]=playerId;
  if(!validLineup(managed,ids))return false;
  managed.startingXI=ids;
  return true;
