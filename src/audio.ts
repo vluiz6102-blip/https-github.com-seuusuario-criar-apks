@@ -1,53 +1,243 @@
-type MusicTrack={title?:string;src:string};
-let audioContext:AudioContext|null=null,musicSource:AudioBufferSourceNode|null=null,musicGain:GainNode|null=null;
-let musicWanted=false,licensedAudio:HTMLAudioElement|null=null,licensedTracks:MusicTrack[]=[],musicBuffer:AudioBuffer|null=null,licensedIndex=0;
-function context():AudioContext{const AudioCtor=window.AudioContext;if(!AudioCtor)throw new Error("Web Audio não disponível");audioContext??=new AudioCtor();return audioContext;}
-function makeOriginalBuffer(ctx:AudioContext):AudioBuffer{
- if(musicBuffer)return musicBuffer;
- const sampleRate=22050,bpm=94,beat=60/bpm,bars=8,length=Math.floor(sampleRate*beat*4*bars),buffer=ctx.createBuffer(1,length,sampleRate),samples=buffer.getChannelData(0);
- const chords=[[261.63,329.63,392],[196,246.94,392],[220,261.63,329.63],[174.61,220,261.63]],melody=[523.25,587.33,659.25,783.99,659.25,587.33,493.88,587.33];let noise=73129;
- for(let i=0;i<length;i++){
-  const t=i/sampleRate,beatPosition=t/beat,beatIndex=Math.floor(beatPosition),bar=Math.floor(beatIndex/4)%4,beatPart=beatPosition-beatIndex,chord=chords[bar]!;
-  let pad=0;for(let n=0;n<chord.length;n++)pad+=Math.sin(2*Math.PI*chord[n]!*t+n*.7)*.018;
-  const bass=Math.sin(2*Math.PI*(chord[0]!/2)*t)*.11*Math.exp(-beatPart*5.5);
-  const melodyStep=Math.floor(beatPosition*2)%melody.length,melodyAge=(beatPosition*2)%1,pluck=Math.sin(2*Math.PI*melody[melodyStep]!*t)*.045*Math.exp(-melodyAge*7);
-  const kickPhase=beatPosition%4,kick=kickPhase<.18?Math.sin(2*Math.PI*(88-kickPhase*210)*t)*Math.exp(-kickPhase*23)*.13:0;
-  const halfBeat=beatPosition%1;noise=(noise*16807)%2147483647;const hat=beatIndex%2===1&&halfBeat<.11?((noise/2147483647)*2-1)*(1-halfBeat/.11)*.018:0;
-  const fade=Math.max(0,Math.min(1,t/.12,(length/sampleRate-t)/.2));samples[i]=Math.max(-.85,Math.min(.85,(pad+bass+pluck+kick+hat)*fade));
- }
- musicBuffer=buffer;return buffer;
+type CatalogTrack = { title?: string; artist?: string; audioFile?: string | null };
+type MusicTrack = { title: string; artist: string; src: string };
+
+type AudioModule = string;
+const importedAudio = {
+  ...import.meta.glob("../assets/audio/*.{mp3,m4a,aac,ogg,wav,webm}", { eager: true, query: "?url", import: "default" }) as Record<string, AudioModule>,
+  ...import.meta.glob("./assets/audio/*.{mp3,m4a,aac,ogg,wav,webm}", { eager: true, query: "?url", import: "default" }) as Record<string, AudioModule>
+};
+
+let audioContext: AudioContext | null = null;
+let tracks: MusicTrack[] = [];
+let currentIndex = 0;
+let currentAudio: HTMLAudioElement | null = null;
+let musicWanted = false;
+let volume = 0.28;
+let loadingPlaylist: Promise<void> | null = null;
+let onPlayerChange: (() => void) | null = null;
+
+function getAudioContext(): AudioContext | null {
+  const AudioCtor = window.AudioContext;
+  if (!AudioCtor) return null;
+  audioContext ??= new AudioCtor();
+  return audioContext;
 }
-function startProcedural():void{
- const ctx=context();if(musicSource)return;
- const source=ctx.createBufferSource(),gain=ctx.createGain();source.buffer=makeOriginalBuffer(ctx);source.loop=true;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.24,ctx.currentTime+1.8);
- source.connect(gain);gain.connect(ctx.destination);source.start();musicSource=source;musicGain=gain;
+
+function normalizeFileName(value: string): string {
+  return value
+    .toLocaleLowerCase("pt-BR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\.(mp3|m4a|aac|ogg|wav|webm)$/i, "")
+    .replace(/^\s*\d{1,3}\s*[-_. )]+/, "")
+    .replace(/[^a-z0-9]+/g, "");
 }
-async function startLicensedTrack():Promise<void>{
- if(!musicWanted||!licensedTracks.length)return;
- const track=licensedTracks[licensedIndex%licensedTracks.length]!,audio=new Audio(track.src);audio.loop=licensedTracks.length===1;audio.volume=0;
- audio.addEventListener("ended",()=>{if(musicWanted&&licensedTracks.length>1){licensedIndex++;void startLicensedTrack();}});
- try{await audio.play();if(!musicWanted){audio.pause();return;}if(licensedAudio)licensedAudio.pause();licensedAudio=audio;
-  let volume=0;const fade=window.setInterval(()=>{if(!musicWanted||licensedAudio!==audio){window.clearInterval(fade);return;}volume=Math.min(.22,volume+.025);audio.volume=volume;if(volume>=.22)window.clearInterval(fade);},80);
-  if(musicSource&&musicGain){const oldSource=musicSource,oldGain=musicGain;oldGain.gain.setTargetAtTime(.0001,context().currentTime,.12);window.setTimeout(()=>{try{oldSource.stop();}catch{}},650);musicSource=null;musicGain=null;}
- }catch(error){console.warn("Faixa da playlist indisponível; mantendo a trilha original.",error);startProcedural();}
+
+function resolveTrackFile(track: CatalogTrack, index: number, files: Array<[string, string]>): string | null {
+  if (track.audioFile) {
+    const explicit = track.audioFile.startsWith("/") ? track.audioFile : "/" + track.audioFile.replace(/^\.\//, "");
+    return explicit;
+  }
+
+  const titleKey = normalizeFileName(track.title ?? "");
+  const artistKey = normalizeFileName(track.artist ?? "");
+  const exact = files.find(([path]) => {
+    const fileKey = normalizeFileName(path.split("/").pop() ?? "");
+    return fileKey === titleKey || (titleKey.length > 4 && fileKey.includes(titleKey));
+  });
+  if (exact) return exact[1];
+
+  const artistMatch = files.find(([path]) => {
+    const fileKey = normalizeFileName(path.split("/").pop() ?? "");
+    return titleKey.length > 4 && artistKey.length > 3 && fileKey.includes(titleKey) && fileKey.includes(artistKey);
+  });
+  if (artistMatch) return artistMatch[1];
+
+  // Se os 80 arquivos estiverem numerados na mesma ordem do catálogo, usa essa ordem.
+  if (files.length === 80) return files[index]?.[1] ?? null;
+  return null;
 }
-async function loadPlaylist():Promise<void>{
- try{const response=await fetch("/music/playlist.json");if(!response.ok)return;const data=await response.json() as {tracks?:unknown};
-  if(!Array.isArray(data.tracks))return;
-  licensedTracks=data.tracks.filter((item):item is MusicTrack=>Boolean(item&&typeof item==="object"&&typeof(item as MusicTrack).src==="string"&&(item as MusicTrack).src.startsWith("/music/tracks/")));
-  if(musicWanted&&licensedTracks.length)void startLicensedTrack();
- }catch{/* Offline: use original local soundtrack. */}
+
+async function loadPlaylist(): Promise<void> {
+  if (loadingPlaylist) return loadingPlaylist;
+  loadingPlaylist = (async () => {
+    try {
+      const response = await fetch("/music/curated-catalog.json");
+      if (!response.ok) throw new Error("Catálogo não encontrado");
+      const catalog = await response.json() as { tracks?: CatalogTrack[] };
+      const files = Object.entries(importedAudio).sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
+      const catalogTracks = Array.isArray(catalog.tracks) ? catalog.tracks : [];
+      tracks = catalogTracks
+        .map((track, index) => {
+          const src = resolveTrackFile(track, index, files);
+          return src && track.title ? { title: track.title, artist: track.artist ?? "", src } : null;
+        })
+        .filter((track): track is MusicTrack => track !== null);
+
+      // Também aceita arquivos servidos diretamente de public/assets/audio.
+      if (!tracks.length && files.length === 0 && catalogTracks.length) {
+        tracks = catalogTracks
+          .filter((track): track is CatalogTrack & { audioFile: string } => Boolean(track.audioFile))
+          .map(track => ({
+            title: track.title ?? "Faixa",
+            artist: track.artist ?? "",
+            src: track.audioFile.startsWith("/") ? track.audioFile : "/" + track.audioFile
+          }));
+      }
+    } catch (error) {
+      console.warn("Não foi possível carregar a playlist local.", error);
+    }
+    notifyPlayer();
+  })();
+  return loadingPlaylist;
 }
-void loadPlaylist();
-export function startBackgroundMusic():void{musicWanted=true;try{const ctx=context();if(ctx.state==="suspended")void ctx.resume();if(licensedTracks.length)void startLicensedTrack();else startProcedural();}catch(error){console.debug("Trilha indisponível neste dispositivo.",error);}}
-export function stopBackgroundMusic():void{
- musicWanted=false;if(licensedAudio){licensedAudio.pause();licensedAudio.currentTime=0;licensedAudio=null;}
- if(musicSource&&musicGain&&audioContext){const source=musicSource,gain=musicGain,now=audioContext.currentTime;gain.gain.cancelScheduledValues(now);gain.gain.setValueAtTime(Math.max(.0001,gain.gain.value),now);gain.gain.exponentialRampToValueAtTime(.0001,now+.35);window.setTimeout(()=>{try{source.stop();}catch{}},420);musicSource=null;musicGain=null;}
+
+function notifyPlayer(): void {
+  onPlayerChange?.();
 }
-export function playUiSound(kind:"tap"|"goal"="tap"):void{
- try{const ctx=context();if(ctx.state==="suspended")void ctx.resume();const oscillator=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime;
-  oscillator.type="sine";oscillator.frequency.setValueAtTime(kind==="goal"?660:520,now);if(kind==="goal")oscillator.frequency.exponentialRampToValueAtTime(990,now+.16);
-  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(kind==="goal"?.12:.035,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+(kind==="goal"?.28:.09));
-  oscillator.connect(gain);gain.connect(ctx.destination);oscillator.start(now);oscillator.stop(now+(kind==="goal"?.3:.11));
- }catch(error){console.debug("Áudio indisponível neste dispositivo.",error);}
+
+function unlockAudio(): void {
+  const ctx = getAudioContext();
+  if (ctx?.state === "suspended") void ctx.resume().catch(() => undefined);
+  if (musicWanted && !currentAudio && tracks.length) void playCurrentTrack();
+}
+
+document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
+document.addEventListener("keydown", unlockAudio, { once: true, capture: true });
+
+async function playCurrentTrack(): Promise<void> {
+  if (!musicWanted || !tracks.length) return;
+  const track = tracks[currentIndex];
+  if (!track) return;
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.removeAttribute("src");
+    currentAudio.load();
+    currentAudio = null;
+  }
+
+  const audio = new Audio(track.src);
+  audio.preload = "auto";
+  audio.volume = volume;
+  audio.addEventListener("ended", () => {
+    if (currentAudio !== audio || !musicWanted) return;
+    currentIndex = (currentIndex + 1) % tracks.length;
+    void playCurrentTrack();
+  }, { once: true });
+  audio.addEventListener("error", () => {
+    if (currentAudio !== audio) return;
+    console.warn("Faixa local indisponível:", track.src);
+    currentAudio = null;
+    if (musicWanted && tracks.length > 1) {
+      currentIndex = (currentIndex + 1) % tracks.length;
+      void playCurrentTrack();
+    } else {
+      notifyPlayer();
+    }
+  }, { once: true });
+
+  currentAudio = audio;
+  try {
+    await audio.play();
+  } catch (error) {
+    if (currentAudio === audio) currentAudio = null;
+    console.debug("A reprodução será iniciada após uma interação do usuário.", error);
+  }
+  notifyPlayer();
+}
+
+export function startBackgroundMusic(): void {
+  musicWanted = true;
+  void loadPlaylist().then(() => {
+    const ctx = getAudioContext();
+    if (ctx?.state === "suspended") void ctx.resume().catch(() => undefined);
+    if (tracks.length && !currentAudio) void playCurrentTrack();
+  });
+}
+
+export function stopBackgroundMusic(): void {
+  musicWanted = false;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  notifyPlayer();
+}
+
+export function toggleMusicPlayback(): void {
+  if (musicWanted && currentAudio && !currentAudio.paused) {
+    currentAudio.pause();
+    musicWanted = false;
+  } else {
+    musicWanted = true;
+    const ctx = getAudioContext();
+    if (ctx?.state === "suspended") void ctx.resume().catch(() => undefined);
+    void loadPlaylist().then(() => {
+      if (!currentAudio || currentAudio.ended) void playCurrentTrack();
+      else void currentAudio.play().catch(error => console.debug("Reprodução aguardando interação.", error));
+    });
+  }
+  notifyPlayer();
+}
+
+export function nextMusicTrack(): void {
+  if (!tracks.length) return;
+  currentIndex = (currentIndex + 1) % tracks.length;
+  musicWanted = true;
+  void playCurrentTrack();
+}
+
+export function setMusicVolume(value: number): void {
+  volume = Math.max(0, Math.min(1, value));
+  if (currentAudio) currentAudio.volume = volume;
+}
+
+export function setMusicPlayerChangeHandler(handler: (() => void) | null): void {
+  onPlayerChange = handler;
+}
+
+export function renderMusicPlayer(): string {
+  const track = tracks[currentIndex];
+  const playing = Boolean(currentAudio && !currentAudio.paused);
+  const title = track ? track.title : "Rádio Pulso 90";
+  const artist = track?.artist || (tracks.length ? "Playlist local" : "Carregando faixas");
+  return '<div class="music-player" aria-label="Reprodutor de música">' +
+    '<div class="music-player-info"><span class="music-player-live">RÁDIO P90</span><strong title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</strong><small>' + escapeHtml(artist) + '</small></div>' +
+    '<div class="music-player-controls"><button type="button" data-music-action="toggle" aria-label="' + (playing ? "Pausar" : "Tocar") + '" title="' + (playing ? "Pausar" : "Tocar") + '">' + (playing ? "Ⅱ" : "▶") + '</button>' +
+    '<button type="button" data-music-action="next" aria-label="Próxima faixa" title="Próxima faixa">»</button></div>' +
+    '<label class="music-volume" title="Volume"><span>♪</span><input data-music-volume type="range" min="0" max="1" step="0.01" value="' + volume + '" aria-label="Volume da música"></label></div>';
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char] ?? char));
+}
+
+export function handleMusicPlayerAction(action: string): void {
+  if (action === "toggle") toggleMusicPlayback();
+  if (action === "next") nextMusicTrack();
+}
+
+export function playUiSound(kind: "tap" | "goal" = "tap"): void {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") void ctx.resume();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(kind === "goal" ? 660 : 520, now);
+    if (kind === "goal") oscillator.frequency.exponentialRampToValueAtTime(990, now + 0.16);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(kind === "goal" ? 0.12 : 0.035, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + (kind === "goal" ? 0.28 : 0.09));
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start(now);
+    oscillator.stop(now + (kind === "goal" ? 0.3 : 0.11));
+  } catch (error) {
+    console.debug("Áudio indisponível neste dispositivo.", error);
+  }
 }
