@@ -1,4 +1,4 @@
-type CatalogTrack = { title?: string; artist?: string; audioFile?: string | null };
+type CatalogTrack = { title?: string; artist?: string; audioFile?: string | null; src?: string | null };
 type MusicTrack = { title: string; artist: string; src: string };
 
 type AudioModule = string;
@@ -17,6 +17,7 @@ let loadingPlaylist: Promise<void> | null = null;
 let onPlayerChange: (() => void) | null = null;
 let failedTrackAttempts = 0;
 let audioUnlocked = false;
+let playlistStatus: "loading" | "ready" | "empty" = "loading";
 
 function getAudioContext(): AudioContext | null {
   const AudioCtor = window.AudioContext;
@@ -60,36 +61,60 @@ function resolveTrackFile(track: CatalogTrack, index: number, files: Array<[stri
   return null;
 }
 
+function publicMusicUrl(path: string): string {
+  const cleanPath = path.replace(/^\.\//, "").replace(/^\//, "");
+  return new URL(cleanPath, new URL(import.meta.env.BASE_URL, document.baseURI)).toString();
+}
+
 async function loadPlaylist(): Promise<void> {
   if (loadingPlaylist) return loadingPlaylist;
+  playlistStatus = "loading";
+  notifyPlayer();
   loadingPlaylist = (async () => {
     try {
-      const response = await fetch("/music/curated-catalog.json");
-      if (!response.ok) throw new Error("Catálogo não encontrado");
-      const catalog = await response.json() as { tracks?: CatalogTrack[] };
       const files = Object.entries(importedAudio).sort(([a], [b]) => a.localeCompare(b, "pt-BR"));
-      const catalogTracks = Array.isArray(catalog.tracks) ? catalog.tracks : [];
-      tracks = catalogTracks
+      const [playlistResult, catalogResult] = await Promise.allSettled([
+        fetch(publicMusicUrl("music/playlist.json"), { cache: "no-cache" }),
+        fetch(publicMusicUrl("music/curated-catalog.json"), { cache: "no-cache" })
+      ]);
+
+      const configuredTracks: CatalogTrack[] = [];
+      if (playlistResult.status === "fulfilled" && playlistResult.value.ok) {
+        const playlist = await playlistResult.value.json() as { tracks?: CatalogTrack[] };
+        if (Array.isArray(playlist.tracks)) configuredTracks.push(...playlist.tracks);
+      }
+
+      let catalogTracks: CatalogTrack[] = [];
+      if (catalogResult.status === "fulfilled" && catalogResult.value.ok) {
+        const catalog = await catalogResult.value.json() as { tracks?: CatalogTrack[] };
+        if (Array.isArray(catalog.tracks)) catalogTracks = catalog.tracks;
+      }
+
+      const configured = configuredTracks
+        .filter(track => Boolean(track.src || track.audioFile))
+        .map(track => ({
+          title: track.title || "Faixa local",
+          artist: track.artist || "Playlist local",
+          src: publicMusicUrl(track.src || track.audioFile || "")
+        }));
+
+      const imported = catalogTracks
         .map((track, index) => {
           const src = resolveTrackFile(track, index, files);
           return src && track.title ? { title: track.title, artist: track.artist ?? "", src } : null;
         })
         .filter((track): track is MusicTrack => track !== null);
 
-      // Também aceita arquivos servidos diretamente de public/assets/audio.
-      if (!tracks.length && files.length === 0 && catalogTracks.length) {
-        tracks = catalogTracks
-          .filter((track): track is CatalogTrack & { audioFile: string } => Boolean(track.audioFile))
-          .map(track => ({
-            title: track.title ?? "Faixa",
-            artist: track.artist ?? "",
-            src: track.audioFile.startsWith("/") ? track.audioFile : "/" + track.audioFile
-          }));
-      }
+      tracks = configured.length ? configured : imported;
+      playlistStatus = tracks.length ? "ready" : "empty";
     } catch (error) {
+      tracks = [];
+      playlistStatus = "empty";
       console.warn("Não foi possível carregar a playlist local.", error);
+    } finally {
+      loadingPlaylist = null;
+      notifyPlayer();
     }
-    notifyPlayer();
   })();
   return loadingPlaylist;
 }
@@ -213,8 +238,8 @@ export function setMusicPlayerChangeHandler(handler: (() => void) | null): void 
 export function renderMusicPlayer(): string {
   const track = tracks[currentIndex];
   const playing = Boolean(currentAudio && !currentAudio.paused);
-  const title = track ? track.title : "Rádio Pulso 90";
-  const artist = track?.artist || (tracks.length ? "Playlist local" : "Carregando faixas");
+  const title = track ? track.title : (playlistStatus === "loading" ? "Rádio Pulso 90" : "Playlist vazia");
+  const artist = track?.artist || (playlistStatus === "loading" ? "Preparando biblioteca..." : "Nenhum áudio local encontrado");
   return '<div class="music-player" aria-label="Reprodutor de música">' +
     '<div class="music-player-info"><span class="music-player-live">RÁDIO P90</span><strong title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</strong><small>' + escapeHtml(artist) + '</small></div>' +
     '<div class="music-player-controls"><button type="button" data-music-action="toggle" aria-label="' + (playing ? "Pausar" : "Tocar") + '" title="' + (playing ? "Pausar" : "Tocar") + '">' + (playing ? "Ⅱ" : "▶") + '</button>' +
