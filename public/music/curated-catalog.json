@@ -872,6 +872,78 @@
       "audioFile": null,
       "licenseStatus": "pending",
       "streamingSearchUrl": "https://open.spotify.com/search/Love%20Is%20Mystical%20Cold%20War%20Kids"
+    },
+    {
+      "title": "The Sound of San Francisco",
+      "artist": "Global Deejays",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 07",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Sound%20of%20San%20Francisco%20Global%20Deejays"
+    },
+    {
+      "title": "Love Generation",
+      "artist": "Bob Sinclar",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 06",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Love%20Generation%20Bob%20Sinclar"
+    },
+    {
+      "title": "Song 2",
+      "artist": "Blur",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 98",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Song%202%20Blur"
+    },
+    {
+      "title": "Tubthumping",
+      "artist": "Chumbawamba",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 98",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/Tubthumping%20Chumbawamba"
+    },
+    {
+      "title": "The Rockafeller Skank",
+      "artist": "Fatboy Slim",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 99",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/The%20Rockafeller%20Skank%20Fatboy%20Slim"
+    },
+    {
+      "title": "19-2000 (Soulchild Remix)",
+      "artist": "Gorillaz",
+      "style": [
+        "dance",
+        "alternative"
+      ],
+      "source": "FIFA 02",
+      "audioFile": null,
+      "licenseStatus": "pending",
+      "streamingSearchUrl": "https://open.spotify.com/search/19-2000%20(Soulchild%20Remix)%20Gorillaz"
     }
   ]
 }
