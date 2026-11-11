@@ -1,0 +1,205 @@
+{
+  "title": "Pulso 90 - Curadoria musical inicial",
+  "version": 1,
+  "note": "Seleção editorial de faixas para licenciamento. Este catálogo não contém gravações de áudio nem concede direitos de uso. Só incluir arquivos depois de obter autorização dos titulares.",
+  "tracks": [
+    {
+      "title": "Love Me Again (Vice Remix)",
+      "artist": "John Newman",
+      "style": [
+        "pop",
+        "dance"
+      ],
+      "source": "FIFA 22 VOLTA",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "The Nights",
+      "artist": "Avicii",
+      "style": [
+        "electronic",
+        "anthem"
+      ],
+      "source": "FIFA 15",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Talk About It",
+      "artist": "Jungle",
+      "style": [
+        "funk",
+        "indie"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Lifetime",
+      "artist": "Swedish House Mafia, Ty Dolla $ign & 070 Shake",
+      "style": [
+        "electronic",
+        "pop"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Baobá",
+      "artist": "Caio Prado",
+      "style": [
+        "brasil",
+        "mpb"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Subida",
+      "artist": "Karol Conká & RDD",
+      "style": [
+        "brasil",
+        "rap"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Good Girls",
+      "artist": "CHVRCHES",
+      "style": [
+        "synth-pop",
+        "indie"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "The Mission",
+      "artist": "Bakar",
+      "style": [
+        "indie",
+        "alternative"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "I Don't Wanna Talk (I Just Wanna Dance)",
+      "artist": "Glass Animals",
+      "style": [
+        "indie",
+        "dance"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Feet Don't Fail Me Now",
+      "artist": "Joy Crookes",
+      "style": [
+        "soul",
+        "pop"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Fallin' Apart",
+      "artist": "Young Franco, Denzel Curry & Pell",
+      "style": [
+        "electronic",
+        "hip-hop"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Tunnel",
+      "artist": "Polo & Pan ft. Channel Tres",
+      "style": [
+        "electronic",
+        "house"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Skeletons",
+      "artist": "Easy Life",
+      "style": [
+        "indie",
+        "alternative"
+      ],
+      "source": "FIFA 22",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Dimension",
+      "artist": "JAE5 ft. Skepta & Rema",
+      "style": [
+        "rap",
+        "afrobeats"
+      ],
+      "source": "FIFA 22 VOLTA",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Pondicherry",
+      "artist": "DJ Snake & Malaa",
+      "style": [
+        "electronic",
+        "house"
+      ],
+      "source": "FIFA 22 VOLTA",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Buzzcut",
+      "artist": "BROCKHAMPTON ft. Danny Brown",
+      "style": [
+        "hip-hop",
+        "rap"
+      ],
+      "source": "FIFA 22 VOLTA",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Walking on a Dream",
+      "artist": "Empire of the Sun",
+      "style": [
+        "electropop",
+        "indie"
+      ],
+      "source": "FIFA 09",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    },
+    {
+      "title": "Kids",
+      "artist": "MGMT",
+      "style": [
+        "indie",
+        "electropop"
+      ],
+      "source": "FIFA 09",
+      "audioFile": null,
+      "licenseStatus": "pending"
+    }
+  ]
+}
