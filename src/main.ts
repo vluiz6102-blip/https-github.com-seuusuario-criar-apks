@@ -201,7 +201,7 @@ function action(target:HTMLElement):void{
  if(act==="open-credits"){overlay="credits";render();return;}
  if(act==="close-overlay"){overlay=null;render();return;}
  if(act==="toggle-sound"){preferences.sound=!preferences.sound;savePreferences();render();showToast(preferences.sound?"Efeitos sonoros ativados.":"Efeitos sonoros desativados.");if(preferences.sound)playUiSound();return;}
- if(act==="toggle-music"){preferences.music=!preferences.music;savePreferences();else stopBackgroundMusic();render();showToast(preferences.music?"Trilha musical ligada.":"Trilha musical desligada.");return;}
+ 
  if(!career)return;
  switch(act){
  case"nav":if(v&&["inicio","elenco","taticas","calendario","mercado","clube","jornal","mundo","partida"].includes(v)){career.screen=v as Screen;render();}break;
