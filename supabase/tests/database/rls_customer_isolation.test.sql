@@ -78,6 +78,12 @@ select is((select count(*)::integer from public.service_orders where id = '30000
 select is((select count(*)::integer from public.service_order_events), 1, 'Cliente B vê somente o evento público próprio');
 select is((select count(*)::integer from public.quotes), 1, 'Cliente B vê somente seu orçamento');
 select is((select count(*)::integer from public.quote_items), 1, 'Cliente B vê somente seus itens de orçamento');
+select ok(
+  not has_table_privilege('authenticated', 'public.service_orders', 'INSERT')
+  and not has_table_privilege('authenticated', 'public.service_orders', 'UPDATE')
+  and not has_table_privilege('authenticated', 'public.service_orders', 'DELETE'),
+  'clientes não têm permissão SQL para escrever ordens'
+);
 
 reset role;
 select * from finish();
