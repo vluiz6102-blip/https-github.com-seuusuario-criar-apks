@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const forbiddenPaths = [
@@ -20,7 +20,7 @@ const forbiddenText = [
   /Pulso\s*90/i,
   /jornada90/i,
   /com\.victorluiz\.jornada90/i,
-  /adminPage|adminInfoPage|data-screen=["']admin/i
+  /admin/i
 ];
 
 async function walk(path) {
@@ -36,7 +36,7 @@ async function walk(path) {
 
 for (const path of forbiddenPaths) {
   try {
-    await readdir(path);
+    await stat(path);
     throw new Error("Arquivo/pasta legado ainda existe: " + path);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
