@@ -1,47 +1,48 @@
-# Pulso 90
+# VIC Assistência | Aplicativo do cliente
 
-Pulso 90 é um jogo original de gestão de futebol para web e Android. A experiência combina carreira local, decisões táticas, partidas narradas, mercado e evolução de temporada, com uma identidade visual esportiva premium.
+Aplicativo Android da VIC Assistência Técnica, destinado exclusivamente aos clientes.
 
-## Estado do projeto
+## Escopo do produto
 
-A branch **jornada90-original** contém o projeto Pulso 90. A branch `main` e o projeto Openfoot não fazem parte desta reformulação.
+- Autenticação individual do cliente.
+- Consulta das próprias ordens de serviço.
+- Acompanhamento do status do conserto.
+- Visualização de orçamentos.
+- Histórico de atendimentos.
+- Contato com a loja.
 
-- Tela de abertura cinematográfica, menu de carreira, créditos e preferências.
-- Efeitos sonoros e trilha instrumental original gerada localmente, com controles independentes.
-- Carreira local com nome e apelido do treinador e escolha de clube.
-- Nomes de clubes brasileiros revisados e elenco publicado do Azuriz FC (33 atletas); outros elencos ainda usam dados de simulação até receber fontes oficiais.
-- Liga de turno e returno com 56 partidas por temporada.
-- Motor de partidas por minuto, intervalo, comentários, estatísticas, condição física e substituições.
-- Suporte de motor para prorrogação e pênaltis em partidas eliminatórias.
-- Formações, seis estilos táticos, titulares com banco visível e troca direta de jogadores da mesma posição.
-- Salvamento automático no dispositivo e exportação do save em JSON.
-- A chave de armazenamento da carreira foi preservada para manter compatibilidade com saves locais existentes.
+Não existe painel administrativo ou área do proprietário dentro do aplicativo.
+
+## Estado desta etapa
+
+Esta etapa remove o código, os dados, as telas, os assets e os textos do jogo antigo. Ela também remove a rota e os estilos de administração local e renomeia a identidade Android para VIC Assistência.
+
+**Ainda não há autenticação, integração com banco de dados ou consulta real de ordens de serviço.** Essas funções serão implementadas em etapas separadas, com backend, regras de acesso e testes de isolamento entre clientes.
 
 ## Desenvolvimento
 
-Requer Node.js 22 ou compatível.
+Requer Node.js 22 e Java 21 para o build Android.
 
 ```sh
 npm install
-npm run dev
+npm run check:clean
 npm test
 npm run build
+npx cap add android
+npx cap sync android
+cd android && ./gradlew assembleDebug
 ```
 
-O resultado web compilado fica em `dist/`. O APK Android deve ser considerado validado somente após execução bem-sucedida do workflow Android e verificação de instalação em dispositivo ou emulador.
+O GitHub Actions gera um APK de depuração e publica o artefato para teste. APK de produção assinado, keystore e distribuição são etapas posteriores. A chave de assinatura não deve ser armazenada neste repositório.
 
-## Créditos
+## Segurança e privacidade
 
-Criação e direção do projeto: Victor Luiz. Pulso 90 é uma identidade original desta branch, sem reutilizar código-fonte, imagens ou recursos proprietários de OpenFoot Manager, OpenSWOS ou outro jogo. Os nomes do elenco do Azuriz foram consultados na página oficial do clube; seus atributos numéricos continuam sendo estimativas do simulador. A pasta public/music aceita somente faixas próprias ou licenciadas.
+- Não inserir credenciais privadas, tokens de serviço ou senhas no código.
+- O backend deverá autenticar usuários e impor isolamento de dados no servidor.
+- A aplicação deverá usar HTTPS e não carregar páginas externas dentro da WebView.
+- A política de privacidade e os prazos de retenção serão definidos antes de receber dados reais de clientes.
+- Não usar dados pessoais reais em testes ou screenshots.
 
-## Curadoria musical inicial
+## Processo de desenvolvimento
 
-O arquivo `public/music/curated-catalog.json` reúne 18 sugestões de faixas associadas a trilhas de FIFA e estilos próximos, incluindo pop, indie, eletrônico, rap e artistas brasileiros. É uma lista de seleção/licenciamento, não contém áudio e não significa que as músicas já estejam tocando no jogo. Cada gravação só deve ser adicionada a `public/music/tracks/` depois da autorização dos titulares dos direitos.
-
-## Música própria e faixas licenciadas
-
-A trilha instrumental padrão é gerada pelo próprio jogo. Para adicionar música externa, coloque apenas arquivos autorizados em `public/music/tracks/` e liste-os em `public/music/playlist.json`, com caminhos iniciados por `/music/tracks/`. Não inclua gravações comerciais sem autorização expressa dos titulares dos direitos.
-
-## Dados de elenco
-
-Os 20 elencos da Série A foram transcritos das páginas de elenco do Transfermarkt identificadas como temporada 2026, consultadas em 11/11/2026. O elenco do Azuriz foi transcrito da página oficial do clube. Idade, atributos, potencial, salários e valores usados pelo simulador continuam sendo estimativas próprias, não valores oficiais.
+Cada etapa deve ocorrer em branch própria e Pull Request. Nenhuma etapa é considerada concluída sem build e checklist de testes documentados.

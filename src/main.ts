@@ -8,7 +8,7 @@ type Service = {
   description: string;
   icon: string;
 };
-type Screen = "inicio" | "servicos" | "pecas" | "sobre" | "solicitar" | "admin";
+type Screen = "inicio" | "servicos" | "pecas" | "sobre" | "solicitar";
 
 const PHONE = "5546991194904";
 const INSTAGRAM = "https://instagram.com/vxctor.luiz";
@@ -84,7 +84,6 @@ function footer(): string {
     '<div class="footer-links">' +
     '<a href="' + buildWhatsAppUrl(PHONE, "Olá! Gostaria de atendimento na VIC.") + '" target="_blank" rel="noopener noreferrer">WhatsApp</a>' +
     '<a href="' + INSTAGRAM + '" target="_blank" rel="noopener noreferrer">Instagram</a>' +
-    '<button data-screen="admin">Informações do painel</button>' +
     "</div>" +
     "<small>© " + new Date().getFullYear() + " VIC Assistência Técnica. Todos os direitos reservados.</small>" +
     "</footer>";
@@ -177,11 +176,6 @@ function aboutPage(): string {
     '<div class="contact-card"><div><span class="eyebrow">FALE DIRETAMENTE</span><h2>Vamos cuidar do seu equipamento?</h2><p>Explique o que você precisa e receba orientação sobre o atendimento.</p></div><a class="button primary" href="' + buildWhatsAppUrl(PHONE, "Olá! Gostaria de conhecer melhor os serviços da VIC.") + '" target="_blank" rel="noopener noreferrer">Chamar no WhatsApp ↗</a></div></main>';
 }
 
-function adminInfoPage(): string {
-  return '<main class="page"><div class="page-hero"><span class="eyebrow">INFORMAÇÃO IMPORTANTE</span><h1>Central interna<br><em>em preparação.</em></h1><p>O atendimento ao cliente já pode ser iniciado pelo aplicativo e concluído diretamente no WhatsApp.</p></div>' +
-    '<div class="admin-readiness"><div class="readiness-mark">!</div><div><h2>O painel administrativo ainda não está conectado.</h2><p>Os pedidos enviados pelos clientes não aparecem em uma lista central neste momento. Eles chegam à VIC pelo WhatsApp somente depois que o cliente toca em enviar. Para ter cadastro de clientes, histórico de serviços, status de pedidos e acesso administrativo seguro em vários aparelhos, é necessário conectar um banco de dados e autenticação.</p><a class="button primary" href="' + buildWhatsAppUrl(PHONE, "Olá! Gostaria de falar sobre uma solicitação recebida pela VIC.") + '" target="_blank" rel="noopener noreferrer">Abrir WhatsApp da VIC ↗</a></div></div></main>';
-}
-
 function render(): void {
   const pages: Record<Screen, () => string> = {
     inicio: homePage,
@@ -189,7 +183,6 @@ function render(): void {
     pecas: partsPage,
     sobre: aboutPage,
     solicitar: serviceRequestPage,
-    admin: adminInfoPage
   };
   app!.innerHTML = nav() + pages[screen]() + footer() +
     '<a class="whatsapp-float" href="' + buildWhatsAppUrl(PHONE, "Olá! Gostaria de atendimento na VIC.") + '" target="_blank" rel="noopener noreferrer" aria-label="Falar com a VIC pelo WhatsApp"><span aria-hidden="true">↗</span></a>' +

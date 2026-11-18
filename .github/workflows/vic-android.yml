@@ -1,0 +1,79 @@
+name: VIC Assistência - verificação e APK Android
+
+on:
+  push:
+    branches: [vic/etapa-1-limpeza-jogo]
+  pull_request:
+    branches: [vic-tech-app]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vic-android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Verificar remoção do jogo e do painel local
+        run: npm run check:clean
+      - name: Executar testes
+        run: npm test
+      - name: Compilar interface
+        run: npm run build
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Preparar Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Criar e sincronizar projeto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Gerar APK de depuração
+        run: ./android/gradlew -p android --no-daemon assembleDebug
+      - name: Validar APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          test -s "$APK"
+          "$TOOLS/zipalign" -c -v 4 "$APK"
+          "$TOOLS/apksigner" verify --verbose "$APK"
+          "$TOOLS/aapt" dump badging "$APK" | grep -q "package: name='br.com.vicassistencia.cliente'"
+          mkdir -p artifacts
+          cp "$APK" artifacts/VIC-Assistencia-cliente-debug.apk
+          (cd artifacts && sha256sum VIC-Assistencia-cliente-debug.apk > VIC-Assistencia-cliente-debug.apk.sha256)
+      - name: Publicar APK para testes
+        uses: actions/upload-artifact@v4
+        with:
+          name: vic-assistencia-cliente-debug
+          path: |
+            artifacts/VIC-Assistencia-cliente-debug.apk
+            artifacts/VIC-Assistencia-cliente-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 14

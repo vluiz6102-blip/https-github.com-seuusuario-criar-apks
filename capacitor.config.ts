@@ -1,3 +1,14 @@
 import type { CapacitorConfig } from "@capacitor/cli";
-const config: CapacitorConfig = { appId: "com.victorluiz.jornada90", appName: "Pulso 90", webDir: "dist", bundledWebRuntime: false, android: { allowMixedContent: false } };
+
+const config: CapacitorConfig = {
+  appId: "br.com.vicassistencia.cliente",
+  appName: "VIC Assistência",
+  webDir: "dist",
+  bundledWebRuntime: false,
+  android: {
+    allowMixedContent: false,
+    webContentsDebuggingEnabled: false
+  }
+};
+
 export default config;
