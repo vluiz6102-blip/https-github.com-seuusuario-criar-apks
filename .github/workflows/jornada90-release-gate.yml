@@ -1,0 +1,109 @@
+name: Jornada 90 Release Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release/jornada90-vic-launch
+  pull_request:
+    branches:
+      - release/jornada90-vic-launch
+
+permissions:
+  contents: read
+
+jobs:
+  web-and-android:
+    name: Build, audit and package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install media tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install JavaScript dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Python image dependency
+        run: python -m pip install --upgrade Pillow
+
+      - name: Synchronize rosters
+        run: npm run data:rosters
+
+      - name: Generate offline content pack
+        env:
+          J90_PACK_TARGET_MB: '1150'
+          J90_PACK_MAX_SCENES: '2400'
+        run: npm run content:build
+
+      - name: Import licensed audio
+        run: npm run audio:import
+
+      - name: Build web bundle
+        run: npm run build
+
+      - name: Validate audio bundle and licenses
+        run: npm run audio:validate
+
+      - name: Run quality scan
+        run: npm run quality:scan
+
+      - name: Run release preflight
+        run: npm run release:preflight
+
+      - name: Add Android platform when absent
+        run: |
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build debug APK for CI verification
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Verify APK archive, alignment and signature
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          unzip -t "$APK"
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/zipalign" -c -v 4 "$APK"
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/apksigner" verify --verbose --print-certs "$APK"
+          sha256sum "$APK" | tee Jornada-90-Manager-debug.apk.sha256
+
+      - name: Upload verified debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: jornada-90-manager-debug-apk
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            Jornada-90-Manager-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
